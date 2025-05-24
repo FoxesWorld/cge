@@ -1,6 +1,5 @@
 package org.foxesworld.cge.renderer.lighting;
 
-
 import com.jme3.light.Light;
 import com.jme3.light.PointLight;
 import com.jme3.math.ColorRGBA;
@@ -80,5 +79,9 @@ public class LightingModule extends EngineModule<LightingConfig> {
         extraLights.add(light);
         logger.info("Added PointLight to {} @ {} (radius={}, intensity={})",
                 target.getName(), pos, radius, intensity);
+    }
+
+    public List<Light> getExtraLights() {
+        return extraLights;
     }
 }

@@ -33,9 +33,11 @@ public class CalistaGameEngine extends SimpleApplication {
         settings.setResolution(1280, 720); // Примерное разрешение
         settings.setSamples(4); // Сглаживание
         settings.setVSync(true);
+        settings.setFrameRate(165);
+        settings.setFullscreen(false);
         settings.setResizable(true);
         app.setSettings(settings);
-        app.setShowSettings(false); // Отключить стандартный диалог настроек
+        app.setShowSettings(false);
         app.start();
     }
 

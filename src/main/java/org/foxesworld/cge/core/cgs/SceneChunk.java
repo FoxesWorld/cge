@@ -16,15 +16,15 @@ public class SceneChunk {
     }
 
     public ByteBuffer getData() {
-        return data;
+        return data.duplicate().order(data.order()); // безопасное повторное чтение
     }
 
     public void cleanup() {
-        // Detach from scenegraph, physics, etc.
+        // TODO: Detach from scenegraph, physics, etc.
     }
 
     public int getType() {
-        return entry.type();
+        return entry.type().ordinal(); // или вернуть ChunkType напрямую
     }
 
     public int getId() {

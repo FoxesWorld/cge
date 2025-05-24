@@ -7,7 +7,7 @@ import com.jme3.math.Vector3f;
  * Configuration for SceneModule loaded from scene.json.
  */
 public class SceneConfig {
-    private String scenePath = "testgrid_4_0_-3.j3o";
+    private String scenePath = "test.cgs";
     private Vector3f translation = new Vector3f(0, 0, 0);
     private Quaternion rotation = new Quaternion();
     private Vector3f scale = new Vector3f(1, 1, 1);
