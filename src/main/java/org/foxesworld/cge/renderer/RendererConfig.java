@@ -12,7 +12,6 @@ public class RendererConfig {
     public float nearClip = 0.1f;
     public float farClip = 1000f;
     public float cameraSpeed = 10f;
-
     public ColorRGBA ambientColor = ColorRGBA.White;
     public ColorRGBA sunColor = ColorRGBA.White;
     public boolean enablePostEffects = true;

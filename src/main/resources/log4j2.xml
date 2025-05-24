@@ -18,6 +18,9 @@
     </Appenders>
 
     <Loggers>
+        <Logger name="com.jme3" level="off" additivity="false">
+            <AppenderRef ref="Console"/>
+        </Logger>
 
         <Root level="${sys:log.level}">
             <AppenderRef ref="Console" />

@@ -1,0 +1,22 @@
+{
+  "gravity": {
+    "x": 0.0,
+    "y": -9.81,
+    "z": 0.0
+  },
+  "broadphaseType": "DBVT",
+  "solverIterations": 10,
+  "debug": false,
+  "timeStep": 0.016666668,
+  "useThreading": true,
+  "rigidDefaultMass": 1.0,
+  "rigidFriction": 0.5,
+  "rigidRestitution": 0.3,
+  "rigidLinearDamping": 0.05,
+  "rigidAngularDamping": 0.05,
+  "softDefaultMass": 1.0,
+  "softStiffness": 1.0,
+  "softDamping": 0.01,
+  "softPressure": 0.0,
+  "softSolverIterations": 10
+}

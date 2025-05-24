@@ -3,17 +3,20 @@ package org.foxesworld.cge.renderer.lighting;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.foxesworld.cge.core.EngineModule;
+import org.foxesworld.cge.CalistaGameEngine;
+import org.foxesworld.cge.core.module.EngineModule;
 import com.jme3.app.Application;
 import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
 import com.jme3.math.Vector3f;
+import org.foxesworld.cge.renderer.RendererModule;
+
 public class LightingModule extends EngineModule<LightingConfig> {
     private static final Logger log = LogManager.getLogger(LightingModule.class);
-    private static final String CONFIG_FILE = "lighting_config.json";
+    private static final String CONFIG_FILE = "lighting_config";
 
-    public LightingModule() {
-        super(CONFIG_FILE, LightingConfig.class);
+    public LightingModule(CalistaGameEngine calistaGameEngine) {
+        super(CONFIG_FILE, LightingConfig.class, calistaGameEngine);
     }
 
     @Override
@@ -32,7 +35,7 @@ public class LightingModule extends EngineModule<LightingConfig> {
     }
 
     @Override
-    protected void initModule(Application app) {
+    protected void initModule(CalistaGameEngine app) {
         var root = ((com.jme3.app.SimpleApplication) app).getRootNode();
         AmbientLight ambient = new AmbientLight();
         ambient.setColor(config.ambientColor);

@@ -1,19 +1,132 @@
-[09:28:22.818][INFO] Configuration 'camera_config.json' loaded successfully for module CameraModule.
-[09:28:22.823][INFO] Configuration 'lighting_config.json' loaded successfully for module LightingModule.
-[09:28:22.825][INFO] Configuration 'postprocessing_config.json' loaded successfully for module PostProcessingModule.
-[09:28:22.842][INFO] Initializing module RendererModule...
-[09:28:22.843][INFO] Module RendererModule initialized.
-[09:28:22.888][INFO] Initializing module CameraModule...
-[09:28:22.888][INFO] Module CameraModule initialized.
-[09:28:22.888][INFO] Initializing module LightingModule...
-[09:28:22.888][INFO] Module LightingModule initialized.
-[09:28:22.889][INFO] Initializing module PostProcessingModule...
-[09:28:22.899][INFO] Module PostProcessingModule initialized.
-[09:28:27.396][INFO] Cleaning up module RendererModule...
-[09:28:27.396][INFO] Module RendererModule cleaned up.
-[09:28:27.396][INFO] Cleaning up module CameraModule...
-[09:28:27.396][INFO] Module CameraModule cleaned up.
-[09:28:27.396][INFO] Cleaning up module LightingModule...
-[09:28:27.396][INFO] Module LightingModule cleaned up.
-[09:28:27.397][INFO] Cleaning up module PostProcessingModule...
-[09:28:27.397][INFO] Module PostProcessingModule cleaned up.
+[13:03:06.618][DEBUG] RendererModule constructor: configFile='null', configClass=Void
+[13:03:06.620][DEBUG] No config to register for module RendererModule
+[13:03:06.621][DEBUG] CameraModule constructor: configFile='camera_config', configClass=CameraConfig
+[13:03:06.621][DEBUG] Registered config 'camera_config' for module CameraModule
+[13:03:06.622][DEBUG] LightingModule constructor: configFile='lighting_config', configClass=LightingConfig
+[13:03:06.622][DEBUG] Registered config 'lighting_config' for module LightingModule
+[13:03:06.623][DEBUG] PostProcessingModule constructor: configFile='postprocessing_config', configClass=PostProcessingConfig
+[13:03:06.623][DEBUG] Registered config 'postprocessing_config' for module PostProcessingModule
+[13:03:06.625][DEBUG] PhysicsModule constructor: configFile='physics.json', configClass=PhysicsConfig
+[13:03:06.625][DEBUG] Registered config 'physics.json' for module PhysicsModule
+[13:03:06.626][DEBUG] SceneModule constructor: configFile='scene', configClass=SceneConfig
+[13:03:06.626][DEBUG] Registered config 'scene' for module SceneModule
+[13:03:06.626][INFO] Attached manual module SceneModule
+[13:03:06.627][INFO] Attached manual module PhysicsModule
+[13:03:06.638][INFO] SceneModule initialize() start
+[13:03:06.638][DEBUG] SceneModule: UNLOADED -> LOADING_CONFIG
+[13:03:06.639][DEBUG] Module 'SceneModule' state <none> -> LOADING_CONFIG
+[13:03:06.642][INFO] PhysicsModule initialize() start
+[13:03:06.642][DEBUG] PhysicsModule: UNLOADED -> LOADING_CONFIG
+[13:03:06.642][DEBUG] Module 'PhysicsModule' state <none> -> LOADING_CONFIG
+[13:03:06.643][DEBUG] SceneModule loading config from 'scene'
+[13:03:06.643][DEBUG] PhysicsModule loading config from 'physics.json'
+[13:03:06.652][DEBUG] SceneModule: LOADING_CONFIG -> INITIALIZING
+[13:03:06.652][DEBUG] Module 'SceneModule' state LOADING_CONFIG -> INITIALIZING
+[13:03:06.652][DEBUG] SceneModule calling initModule
+[13:03:06.652][DEBUG] PhysicsModule: LOADING_CONFIG -> INITIALIZING
+[13:03:06.652][DEBUG] Module 'PhysicsModule' state LOADING_CONFIG -> INITIALIZING
+[13:03:06.653][DEBUG] PhysicsModule calling initModule
+[13:03:06.653][INFO] SceneModule: loading scene...
+[13:03:06.653][INFO] {}: initializing physics...
+[13:03:06.679][DEBUG] BulletAppState attached
+[13:03:06.680][DEBUG] CollisionModule constructor: configFile='physics', configClass=PhysicsConfig
+[13:03:06.680][DEBUG] Registered config 'physics' for module CollisionModule
+[13:03:06.680][INFO] CollisionModule initialize() start
+[13:03:06.681][DEBUG] CollisionModule: UNLOADED -> LOADING_CONFIG
+[13:03:06.681][DEBUG] Module 'CollisionModule' state <none> -> LOADING_CONFIG
+[13:03:06.681][DEBUG] RigidBodyModule constructor: configFile='physics', configClass=PhysicsConfig
+[13:03:06.682][DEBUG] Registered config 'physics' for module RigidBodyModule
+[13:03:06.682][DEBUG] SoftBodyModule constructor: configFile='physics', configClass=PhysicsConfig
+[13:03:06.682][DEBUG] Registered config 'physics' for module SoftBodyModule
+[13:03:06.683][INFO] SoftBodyModule initialize() start
+[13:03:06.683][DEBUG] SoftBodyModule: UNLOADED -> LOADING_CONFIG
+[13:03:06.683][DEBUG] Module 'SoftBodyModule' state <none> -> LOADING_CONFIG
+[13:03:06.683][INFO] Attached manual module CollisionModule
+[13:03:06.683][INFO] Attached manual module RigidBodyModule
+[13:03:06.683][INFO] Attached manual module SoftBodyModule
+[13:03:06.683][INFO] PhysicsModule: physics sub-modules initialized
+[13:03:06.684][INFO] Physics gravity set to (0.0, -9.81, 0.0)
+[13:03:06.684][DEBUG] PhysicsModule: INITIALIZING -> RUNNING
+[13:03:06.684][DEBUG] Module 'PhysicsModule' state INITIALIZING -> RUNNING
+[13:03:06.684][INFO] PhysicsModule initialized and running
+[13:03:06.684][DEBUG] SoftBodyModule loading config from 'physics'
+[13:03:06.685][DEBUG] SoftBodyModule: LOADING_CONFIG -> INITIALIZING
+[13:03:06.685][DEBUG] Module 'SoftBodyModule' state LOADING_CONFIG -> INITIALIZING
+[13:03:06.685][DEBUG] SoftBodyModule calling initModule
+[13:03:06.686][INFO] Initialized SoftBodyModule: mass=1.0, stiffness=1.0, damping=0.01, pressure=0.0, iterations=10
+[13:03:06.687][DEBUG] SoftBodyModule: INITIALIZING -> RUNNING
+[13:03:06.687][DEBUG] Module 'SoftBodyModule' state INITIALIZING -> RUNNING
+[13:03:06.688][INFO] SoftBodyModule initialized and running
+[13:03:06.688][DEBUG] CollisionModule loading config from 'physics'
+[13:03:06.688][DEBUG] CollisionModule: LOADING_CONFIG -> INITIALIZING
+[13:03:06.688][DEBUG] Module 'CollisionModule' state LOADING_CONFIG -> INITIALIZING
+[13:03:06.688][DEBUG] CollisionModule calling initModule
+[13:03:06.688][INFO] CollisionModule initialized and registered listener
+[13:03:06.688][DEBUG] CollisionModule: INITIALIZING -> RUNNING
+[13:03:06.689][DEBUG] Module 'CollisionModule' state INITIALIZING -> RUNNING
+[13:03:06.689][INFO] CollisionModule initialized and running
+[13:03:06.736][INFO] CollisionModule initialize() start
+[13:03:06.737][DEBUG] CollisionModule: RUNNING -> LOADING_CONFIG
+[13:03:06.737][DEBUG] Module 'CollisionModule' state RUNNING -> LOADING_CONFIG
+[13:03:06.737][INFO] SoftBodyModule initialize() start
+[13:03:06.737][DEBUG] CollisionModule loading config from 'physics'
+[13:03:06.737][DEBUG] CollisionModule: LOADING_CONFIG -> INITIALIZING
+[13:03:06.738][DEBUG] Module 'CollisionModule' state LOADING_CONFIG -> INITIALIZING
+[13:03:06.738][DEBUG] CollisionModule calling initModule
+[13:03:06.738][DEBUG] SoftBodyModule: RUNNING -> LOADING_CONFIG
+[13:03:06.738][INFO] CollisionModule initialized and registered listener
+[13:03:06.738][DEBUG] Module 'SoftBodyModule' state RUNNING -> LOADING_CONFIG
+[13:03:06.738][DEBUG] CollisionModule: INITIALIZING -> RUNNING
+[13:03:06.738][DEBUG] Module 'CollisionModule' state INITIALIZING -> RUNNING
+[13:03:06.738][INFO] CollisionModule initialized and running
+[13:03:06.738][DEBUG] SoftBodyModule loading config from 'physics'
+[13:03:06.739][DEBUG] SoftBodyModule: LOADING_CONFIG -> INITIALIZING
+[13:03:06.739][DEBUG] Module 'SoftBodyModule' state LOADING_CONFIG -> INITIALIZING
+[13:03:06.739][DEBUG] SoftBodyModule calling initModule
+[13:03:06.739][INFO] Initialized SoftBodyModule: mass=1.0, stiffness=1.0, damping=0.01, pressure=0.0, iterations=10
+[13:03:06.739][DEBUG] SoftBodyModule: INITIALIZING -> RUNNING
+[13:03:06.739][DEBUG] Module 'SoftBodyModule' state INITIALIZING -> RUNNING
+[13:03:06.740][INFO] SoftBodyModule initialized and running
+[13:03:06.763][DEBUG] SceneModule: INITIALIZING -> RUNNING
+[13:03:06.763][DEBUG] Module 'SceneModule' state INITIALIZING -> RUNNING
+[13:03:06.763][INFO] SceneModule initialized and running
+[13:03:06.777][INFO] Scene 'testgrid_4_0_-3.j3o' attached on render thread
+[13:03:06.778][DEBUG] Module 'SceneModule' state RUNNING -> RUNNING
+[13:03:10.528][INFO] SceneModule cleanup() start, current state=RUNNING
+[13:03:10.528][DEBUG] SceneModule: RUNNING -> SHUTTING_DOWN
+[13:03:10.528][DEBUG] Module 'SceneModule' state RUNNING -> SHUTTING_DOWN
+[13:03:10.528][INFO] SceneModule: scheduling scene detach...
+[13:03:10.529][DEBUG] SceneModule: SHUTTING_DOWN -> CLEANED_UP
+[13:03:10.529][DEBUG] Module 'SceneModule' state SHUTTING_DOWN -> CLEANED_UP
+[13:03:10.529][INFO] SceneModule cleaned up successfully
+[13:03:10.530][INFO] PhysicsModule cleanup() start, current state=RUNNING
+[13:03:10.530][DEBUG] PhysicsModule: RUNNING -> SHUTTING_DOWN
+[13:03:10.530][DEBUG] Module 'PhysicsModule' state RUNNING -> SHUTTING_DOWN
+[13:03:10.530][INFO] {}: cleaning up physics...
+[13:03:10.530][INFO] ModuleManager shutdown complete
+[13:03:10.531][DEBUG] BulletAppState detached
+[13:03:10.531][DEBUG] PhysicsModule: SHUTTING_DOWN -> CLEANED_UP
+[13:03:10.531][DEBUG] Module 'PhysicsModule' state SHUTTING_DOWN -> CLEANED_UP
+[13:03:10.531][INFO] PhysicsModule cleaned up successfully
+[13:03:10.531][INFO] CollisionModule cleanup() start, current state=RUNNING
+[13:03:10.531][DEBUG] CollisionModule: RUNNING -> SHUTTING_DOWN
+[13:03:10.531][DEBUG] Module 'CollisionModule' state RUNNING -> SHUTTING_DOWN
+[13:03:10.531][DEBUG] CollisionModule: SHUTTING_DOWN -> CLEANED_UP
+[13:03:10.531][DEBUG] Module 'CollisionModule' state SHUTTING_DOWN -> CLEANED_UP
+[13:03:10.531][INFO] CollisionModule cleaned up successfully
+[13:03:10.533][INFO] RigidBodyModule cleaned up all bodies
+[13:03:10.533][INFO] RigidBodyModule cleanup() start, current state=UNLOADED
+[13:03:10.533][DEBUG] RigidBodyModule: UNLOADED -> SHUTTING_DOWN
+[13:03:10.533][DEBUG] Module 'RigidBodyModule' state <none> -> SHUTTING_DOWN
+[13:03:10.533][INFO] RigidBodyModule cleaned up all bodies
+[13:03:10.533][DEBUG] RigidBodyModule: SHUTTING_DOWN -> CLEANED_UP
+[13:03:10.533][DEBUG] Module 'RigidBodyModule' state SHUTTING_DOWN -> CLEANED_UP
+[13:03:10.533][INFO] RigidBodyModule cleaned up successfully
+[13:03:10.534][INFO] Cleaned up all soft bodies
+[13:03:10.534][INFO] SoftBodyModule cleanup() start, current state=RUNNING
+[13:03:10.534][DEBUG] SoftBodyModule: RUNNING -> SHUTTING_DOWN
+[13:03:10.534][DEBUG] Module 'SoftBodyModule' state RUNNING -> SHUTTING_DOWN
+[13:03:10.535][INFO] Cleaned up all soft bodies
+[13:03:10.535][DEBUG] SoftBodyModule: SHUTTING_DOWN -> CLEANED_UP
+[13:03:10.535][DEBUG] Module 'SoftBodyModule' state SHUTTING_DOWN -> CLEANED_UP
+[13:03:10.535][INFO] SoftBodyModule cleaned up successfully

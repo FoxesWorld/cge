@@ -1,0 +1,170 @@
+package org.foxesworld.cge.core.module;
+
+import com.google.gson.Gson;
+import com.jme3.app.Application;
+import com.jme3.app.state.AppStateManager;
+import org.foxesworld.cge.CalistaGameEngine;
+import org.foxesworld.cge.core.ConfigService;
+import org.foxesworld.cge.core.TaskScheduler;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.nio.file.*;
+import java.util.*;
+import java.util.concurrent.*;
+import java.util.stream.Collectors;
+
+/**
+ * Enhanced ModuleManager supporting manual and automatic registration,
+ * async init, dependency resolution, and hot-swap.
+ */
+public class ModuleManager {
+    private static final Logger logger = LoggerFactory.getLogger(ModuleManager.class);
+    private final AppStateManager stateManager;
+    private final ConfigService configService;
+    private final TaskScheduler taskScheduler;
+
+    // Manual registry
+    private final TreeMap<Integer, EngineModule<?>> manual = new TreeMap<>();
+    // Auto-loaded instances and descriptors
+    private final Map<String, EngineModule<?>> instances = new ConcurrentHashMap<>();
+
+    private final ExecutorService initExecutor;
+    private final Path modulesDir = Paths.get("modules");
+
+    public ModuleManager(CalistaGameEngine calistaGameEngine) {
+        this.stateManager = calistaGameEngine.getStateManager();
+        this.configService = calistaGameEngine.getConfigService();
+        this.taskScheduler = calistaGameEngine.getTaskScheduler();
+        this.initExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+    }
+
+    /**
+     * Manual registration of a module with explicit priority.
+     */
+    public void register(EngineModule<?> module, int priority) {
+        manual.put(priority, module);
+    }
+
+    /**
+     * Synchronous initialization of all manually registered modules.
+     */
+    public void initializeAll(Application app) {
+        manual.values().forEach(m -> {
+            stateManager.attach(m);
+            logger.info("Attached manual module {}", m.getClass().getSimpleName());
+        });
+    }
+
+    /**
+     * Automatic loading: read module descriptors, resolve dependencies, register,
+     * and initialize modules (manual + auto) asynchronously.
+     */
+    public void loadAll(Application app) throws IOException {
+        List<ModuleDescriptor> descriptors = readManifests(modulesDir);
+        List<ModuleDescriptor> sorted = topologicalSort(descriptors);
+
+        // Instantiate and register all auto modules
+        for (ModuleDescriptor desc : sorted) {
+            try {
+                @SuppressWarnings("unchecked")
+                Class<EngineModule<?>> clazz = (Class<EngineModule<?>>) Class.forName(desc.className);
+                EngineModule<?> module = clazz.getDeclaredConstructor(ConfigService.class, TaskScheduler.class)
+                        .newInstance(configService, taskScheduler);
+                instances.put(desc.name, module);
+                register(module, desc.priority);
+                logger.info("Registered auto module {}", desc.name);
+            } catch (Exception e) {
+                logger.error("Failed to instantiate module {}: {}", desc.name, e.getMessage(), e);
+            }
+        }
+
+        // Initialize all modules
+        for (EngineModule<?> module : manual.values()) {
+            initExecutor.submit(() -> asyncAttach(module, app));
+        }
+    }
+
+    private void asyncAttach(EngineModule<?> module, Application app) {
+        try {
+            stateManager.attach(module);
+            logger.info("Attached module {}", module.getClass().getSimpleName());
+        } catch (Exception e) {
+            logger.error("Error attaching module {}: {}", module.getClass().getSimpleName(), e.getMessage(), e);
+        }
+    }
+
+    private List<ModuleDescriptor> readManifests(Path dir) throws IOException {
+        if (!Files.exists(dir)) {
+            logger.warn("Modules directory '{}' not found", dir);
+            return Collections.emptyList();
+        }
+        List<ModuleDescriptor> list = new ArrayList<>();
+        try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "*.json")) {
+            for (Path path : stream) {
+                ModuleDescriptor desc = new Gson().fromJson(Files.newBufferedReader(path), ModuleDescriptor.class);
+                list.add(desc);
+            }
+        }
+        return list;
+    }
+
+    private List<ModuleDescriptor> topologicalSort(List<ModuleDescriptor> descriptors) {
+        Map<String, ModuleDescriptor> map = descriptors.stream()
+                .collect(Collectors.toMap(d -> d.name, d -> d));
+        List<ModuleDescriptor> sorted = new ArrayList<>();
+        Set<String> visited = new HashSet<>();
+
+        for (ModuleDescriptor d : descriptors) {
+            dfs(d, map, visited, sorted, new HashSet<>());
+        }
+        sorted.sort(Comparator.comparingInt(d -> d.priority));
+        return sorted;
+    }
+
+    private void dfs(ModuleDescriptor d,
+                     Map<String, ModuleDescriptor> map,
+                     Set<String> visited,
+                     List<ModuleDescriptor> sorted,
+                     Set<String> stack) {
+        if (visited.contains(d.name)) return;
+        if (!stack.add(d.name)) throw new IllegalStateException("Cyclic dependency: " + d.name);
+        for (String dep : d.dependencies) {
+            ModuleDescriptor pd = map.get(dep);
+            if (pd != null) dfs(pd, map, visited, sorted, stack);
+        }
+        stack.remove(d.name);
+        visited.add(d.name);
+        sorted.add(d);
+    }
+
+    /**
+     * Hot-reload a module by name (if reloadable).
+     */
+    public void reload(String name) {
+        EngineModule<?> module = instances.get(name);
+        if (module != null && module.isEnabled()) {
+            initExecutor.submit(() -> {
+                module.reloadConfig();
+                logger.info("Reloaded module {}", name);
+            });
+        }
+    }
+
+    /**
+     * Shutdown: detach all and stop executor.
+     */
+    public void shutdown(Application app) {
+        initExecutor.shutdown();
+        manual.values().forEach(m -> stateManager.detach(m));
+        logger.info("ModuleManager shutdown complete");
+    }
+
+    /**
+     * @return all loaded module instances by name.
+     */
+    public Map<String, EngineModule<?>> getInstances() {
+        return Collections.unmodifiableMap(instances);
+    }
+}

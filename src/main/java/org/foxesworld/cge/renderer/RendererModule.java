@@ -1,56 +1,87 @@
-// RendererModule.java
 package org.foxesworld.cge.renderer;
 
-import org.foxesworld.cge.core.ModuleManager;
-import org.foxesworld.cge.core.EngineModule;
 import com.jme3.app.Application;
+import org.foxesworld.cge.CalistaGameEngine;
+import org.foxesworld.cge.core.ConfigService;
+import org.foxesworld.cge.core.TaskScheduler;
+import org.foxesworld.cge.core.module.EngineModule;
+import org.foxesworld.cge.core.module.ModuleManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.renderer.camera.CameraModule;
 import org.foxesworld.cge.renderer.lighting.LightingModule;
 import org.foxesworld.cge.renderer.postProcessing.PostProcessingModule;
 
+import java.util.EnumSet;
+
 /**
- * Универсальный модуль рендеринга, агрегирует камеры, свет и пост-обработку.
+ * Universal RendererModule: aggregates Camera, Lighting, and PostProcessing sub-modules.
  */
 public class RendererModule extends EngineModule<Void> {
+    private static final Logger logger = LogManager.getLogger(RendererModule.class);
     private static final String CONFIG_FILE = null;
 
     private final ModuleManager subManager;
 
-    public RendererModule(Application application) {
-        super(CONFIG_FILE, Void.class);
-        subManager = new ModuleManager(application.getStateManager());
-        // Регистрируем сабмодули с приоритетом
-        subManager.register(new CameraModule(), 10);
-        subManager.register(new LightingModule(), 20);
-        subManager.register(new PostProcessingModule(), 30);
+    public RendererModule(CalistaGameEngine app) {
+        super(CONFIG_FILE, Void.class, app);
+        subManager = new ModuleManager(app);
+        subManager.register(new CameraModule(app), 10);
+        subManager.register(new LightingModule(app), 20);
+        subManager.register(new PostProcessingModule(app), 30);
     }
 
     @Override
     protected void onEnable() {
+        // Получаем объект Renderer
+        com.jme3.renderer.Renderer renderer = getApplication().getRenderer();
 
+        // Логируем основную информацию о рендерере
+        logger.info("Renderer initialized:");
+        //logger.info("Vendor:   {}", renderer.getVendor());
+        //logger.info("Renderer: {}", renderer.getRenderer());
+        //logger.info("Version:  {}", renderer.getVersion());
+
+        // Получаем возможности рендерера
+        EnumSet<com.jme3.renderer.Caps> caps = renderer.getCaps();
+        logger.info("Capabilities:");
+        logger.info(" - Shader Language Support: {}", caps.contains(com.jme3.renderer.Caps.GLSL100));
+        logger.info(" - FrameBuffer Support:     {}", caps.contains(com.jme3.renderer.Caps.FrameBuffer));
+        //logger.info(" - 3D Textures Support:     {}", caps.contains(com.jme3.renderer.Caps.Texture3D));
+        //logger.info(" - Shadow Support:          {}", caps.contains(com.jme3.renderer.Caps.Shadow));
+
+        // Можно логировать и другие Caps при необходимости
+         logger.info(" - Geometry Shader:          {}", caps.contains(com.jme3.renderer.Caps.GeometryShader));
+         logger.info(" - Texture Array:            {}", caps.contains(com.jme3.renderer.Caps.TextureArray));
     }
+
 
     @Override
     protected void onDisable() {
-
+        // No-op
     }
 
     @Override
     protected void onConfigReloaded() {
+        // No configuration
     }
 
     @Override
-    protected void initModule(Application app) {
+    protected void initModule(CalistaGameEngine app) {
+        logger.info("Initializing RendererModule and sub-modules...");
         subManager.initializeAll(app);
+        logger.info("RendererModule initialized.");
     }
 
     @Override
     protected void updateModule(float tpf) {
-        // Всё обновляется через AppState
+        // Sub-modules update via AppState
     }
 
     @Override
     protected void cleanupModule(Application app) {
-        // Подмодули очистят себя
+        logger.info("Cleaning up RendererModule and sub-modules...");
+        // Sub-modules cleanup themselves
+        logger.info("RendererModule cleaned up.");
     }
 }

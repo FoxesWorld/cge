@@ -2,16 +2,17 @@ package org.foxesworld.cge.renderer.camera;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.foxesworld.cge.core.EngineModule;
+import org.foxesworld.cge.CalistaGameEngine;
+import org.foxesworld.cge.core.module.EngineModule;
 import com.jme3.app.Application;
+import org.foxesworld.cge.renderer.RendererModule;
 
-import java.nio.file.Paths;
 public class CameraModule extends EngineModule<CameraConfig> {
     private static final Logger log = LogManager.getLogger(CameraModule.class);
-    private static final String CONFIG_FILE = "camera_config.json";
+    private static final String CONFIG_FILE = "camera_config";
 
-    public CameraModule() {
-        super(CONFIG_FILE, CameraConfig.class);
+    public CameraModule(CalistaGameEngine calistaGameEngine) {
+        super(CONFIG_FILE, CameraConfig.class, calistaGameEngine);
     }
 
     @Override
@@ -30,8 +31,8 @@ public class CameraModule extends EngineModule<CameraConfig> {
     }
 
     @Override
-    protected void initModule(Application app) {
-        setupCamera((com.jme3.app.SimpleApplication) app);
+    protected void initModule(CalistaGameEngine app) {
+        setupCamera(app);
     }
 
     @Override

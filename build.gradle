@@ -17,6 +17,7 @@ dependencies {
     implementation 'org.jmonkeyengine:jme3-lwjgl3:3.8.1-stable'
     implementation 'org.jmonkeyengine:jme3-plugins:3.8.1-stable'
     implementation 'org.jmonkeyengine:jme3-effects:3.8.1-stable'
+    runtimeOnly("org.jmonkeyengine:jme3-awt-dialogs:3.8.1-stable")
 
     // GSON для загрузки конфигурации из JSON
     implementation group: 'com.google.code.gson', name: 'gson', version: '2.11.0'
@@ -24,13 +25,15 @@ dependencies {
     implementation 'org.slf4j:slf4j-api:2.0.9'
     implementation 'org.apache.logging.log4j:log4j-slf4j2-impl:2.20.0'
     implementation 'org.apache.logging.log4j:log4j-core:2.20.0'
+    implementation("org.slf4j:jul-to-slf4j:2.0.0")
 
 
     implementation 'com.github.stephengold:Minie:7.6.0'
+    implementation fileTree(dir: 'libs', include: ['*.jar'])
 }
 
 application {
-    mainClass = 'org.foxesworld.cge.Main'
+    mainClass = 'org.foxesworld.cge.CalistaGameEngine'
 }
 
 java {
