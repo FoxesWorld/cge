@@ -167,4 +167,22 @@ public class ModuleManager {
     public Map<String, EngineModule<?>> getInstances() {
         return Collections.unmodifiableMap(instances);
     }
+
+    @SuppressWarnings("unchecked")
+    public <T extends EngineModule<?>> T getModule(Class<T> moduleClass) {
+        // Поиск в manual
+        for (EngineModule<?> module : manual.values()) {
+            if (moduleClass.isInstance(module)) {
+                return (T) module;
+            }
+        }
+        // Поиск в instances (автомодулях)
+        for (EngineModule<?> module : instances.values()) {
+            if (moduleClass.isInstance(module)) {
+                return (T) module;
+            }
+        }
+        return null;
+    }
+
 }

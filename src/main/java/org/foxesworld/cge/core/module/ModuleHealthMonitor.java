@@ -10,7 +10,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
  * Monitors the health, state transitions, and error statistics of engine modules.
- * Provides querying and listener support for module health data.
+ * Provides querying, listener support, and aggregated statistics for module health data.
  */
 public class ModuleHealthMonitor {
     private static final Logger logger = LoggerFactory.getLogger(ModuleHealthMonitor.class);
@@ -22,11 +22,12 @@ public class ModuleHealthMonitor {
     private final ConcurrentHashMap<String, Throwable> moduleErrors = new ConcurrentHashMap<>();
     // Error counts per module
     private final ConcurrentHashMap<String, Integer> errorCounts = new ConcurrentHashMap<>();
+    // State change counts per module
+    private final ConcurrentHashMap<String, Integer> stateChangeCounts = new ConcurrentHashMap<>();
     // Listeners to receive updates
     private final CopyOnWriteArrayList<HealthListener> listeners = new CopyOnWriteArrayList<>();
 
-    private ModuleHealthMonitor() {
-    }
+    private ModuleHealthMonitor() {}
 
     public static ModuleHealthMonitor getInstance() {
         return INSTANCE;
@@ -37,9 +38,18 @@ public class ModuleHealthMonitor {
      */
     public void reportState(String moduleName, ModuleState newState) {
         ModuleState oldState = moduleStates.put(moduleName, newState);
-        logger.debug("Module '{}' state {} -> {}", moduleName,
-                oldState == null ? "<none>" : oldState, newState);
-        listeners.forEach(l -> l.onStateChange(moduleName, newState));
+        stateChangeCounts.merge(moduleName, 1, Integer::sum);
+        logger.debug("Module '{}' state {} -> {} (transitions={})",
+                moduleName,
+                oldState == null ? "<none>" : oldState,
+                newState,
+                stateChangeCounts.get(moduleName));
+
+        // Notify listeners of state change and updated stats
+        listeners.forEach(l -> {
+            l.onStateChange(moduleName, newState);
+            l.onStatsUpdate(moduleName, getStats(moduleName));
+        });
     }
 
     /**
@@ -48,9 +58,17 @@ public class ModuleHealthMonitor {
     public void reportError(String moduleName, Throwable error) {
         moduleErrors.put(moduleName, error);
         errorCounts.merge(moduleName, 1, Integer::sum);
-        logger.error("Module '{}' reported error (count={}): {}", moduleName,
-                errorCounts.get(moduleName), error.getMessage(), error);
-        listeners.forEach(l -> l.onError(moduleName, error));
+        logger.error("Module '{}' reported error (count={}): {}",
+                moduleName,
+                errorCounts.get(moduleName),
+                error.getMessage(),
+                error);
+
+        // Notify listeners of error and updated stats
+        listeners.forEach(l -> {
+            l.onError(moduleName, error);
+            l.onStatsUpdate(moduleName, getStats(moduleName));
+        });
     }
 
     /**
@@ -75,6 +93,24 @@ public class ModuleHealthMonitor {
     }
 
     /**
+     * Get total state transition count for a module.
+     */
+    public int getStateChangeCount(String moduleName) {
+        return stateChangeCounts.getOrDefault(moduleName, 0);
+    }
+
+    /**
+     * Get aggregated statistics for a module.
+     */
+    public ModuleStats getStats(String moduleName) {
+        return new ModuleStats(
+                getModuleState(moduleName),
+                getErrorCount(moduleName),
+                getStateChangeCount(moduleName)
+        );
+    }
+
+    /**
      * Get an unmodifiable view of all module states.
      */
     public Map<String, ModuleState> getAllModuleStates() {
@@ -89,11 +125,21 @@ public class ModuleHealthMonitor {
     }
 
     /**
+     * Get an unmodifiable view of all module statistics.
+     */
+    public Map<String, ModuleStats> getAllStats() {
+        Map<String, ModuleStats> stats = new ConcurrentHashMap<>();
+        moduleStates.keySet().forEach(name -> stats.put(name, getStats(name)));
+        return Collections.unmodifiableMap(stats);
+    }
+
+    /**
      * Clear error and count for a module.
      */
     public void clearError(String moduleName) {
         moduleErrors.remove(moduleName);
         errorCounts.remove(moduleName);
+        listeners.forEach(l -> l.onStatsUpdate(moduleName, getStats(moduleName)));
     }
 
     /**
@@ -101,6 +147,8 @@ public class ModuleHealthMonitor {
      */
     public void addListener(HealthListener listener) {
         listeners.add(listener);
+        // Send initial stats for all modules
+        getAllStats().forEach((module, stats) -> listener.onStatsUpdate(module, stats));
     }
 
     /**
@@ -118,5 +166,40 @@ public class ModuleHealthMonitor {
         void onStateChange(String moduleName, ModuleState newState);
         /** Called when a module reports an error. */
         void onError(String moduleName, Throwable error);
+        /** Called when aggregated stats update. */
+        void onStatsUpdate(String moduleName, ModuleStats stats);
+    }
+
+    /**
+     * Aggregated statistics for a module.
+     */
+    public static class ModuleStats {
+        private final ModuleState currentState;
+        private final int errorCount;
+        private final int stateChangeCount;
+
+        public ModuleStats(ModuleState currentState, int errorCount, int stateChangeCount) {
+            this.currentState = currentState;
+            this.errorCount = errorCount;
+            this.stateChangeCount = stateChangeCount;
+        }
+
+        public ModuleState getCurrentState() {
+            return currentState;
+        }
+
+        public int getErrorCount() {
+            return errorCount;
+        }
+
+        public int getStateChangeCount() {
+            return stateChangeCount;
+        }
+
+        @Override
+        public String toString() {
+            return String.format("State=%s, Errors=%d, Transitions=%d",
+                    currentState, errorCount, stateChangeCount);
+        }
     }
 }

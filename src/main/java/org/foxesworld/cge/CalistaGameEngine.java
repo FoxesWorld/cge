@@ -80,4 +80,8 @@ public class CalistaGameEngine extends SimpleApplication {
     public TaskScheduler getTaskScheduler() {
         return taskScheduler;
     }
+
+    public ModuleManager getModuleManager() {
+        return moduleManager;
+    }
 }

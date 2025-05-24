@@ -11,6 +11,7 @@ import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.renderer.camera.CameraModule;
 import org.foxesworld.cge.renderer.lighting.LightingModule;
 import org.foxesworld.cge.renderer.postProcessing.PostProcessingModule;
+import org.foxesworld.cge.scene.SceneModule;
 
 import java.util.EnumSet;
 
@@ -70,7 +71,21 @@ public class RendererModule extends EngineModule<Void> {
     protected void initModule(CalistaGameEngine app) {
         logger.info("Initializing RendererModule and sub-modules...");
         subManager.initializeAll(app);
+        // Получаем SceneModule
+        SceneModule sceneModule = app.getModuleManager().getModule(SceneModule.class);
+        if (sceneModule != null) {
+            sceneModule.onSceneReady(() -> {
+                logger.info("Scene loaded, updating renderer settings...");
+                updateRendererSettingsBasedOnScene();
+            });
+        }
         logger.info("RendererModule initialized.");
+    }
+
+    private void updateRendererSettingsBasedOnScene() {
+        // Здесь вызываем методы подсистем освещения, постобработки и т.п.
+        // Например:
+        logger.info("Updating lights on scene loaded!");
     }
 
     @Override

@@ -4,34 +4,32 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="283ff897-4432-4079-9530-7bc3ea1cccef" name="Changes" comment="">
-      <change afterPath="$PROJECT_DIR$/.gitignore" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/vcs.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/build.gradle" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/config/camera_config.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/config/lighting_config.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/config/postprocessing_config.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.jar" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gradle/wrapper/gradle-wrapper.properties" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gradlew" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gradlew.bat" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/logs/lastlog.log" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/settings.gradle" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/Main.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/EngineModule.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/ModuleManager.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/RendererConfig.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/RendererModule.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/camera/CameraConfig.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/camera/CameraModule.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/lighting/LightingConfig.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/lighting/LightingModule.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/postProcessing/PostProcessingConfig.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/postProcessing/PostProcessingModule.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/log4j2.xml" afterDir="false" />
+    <list default="true" id="283ff897-4432-4079-9530-7bc3ea1cccef" name="Changes" comment="Scene + Physics">
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/CGSChunkType.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/CGSFile.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/ChunkEntry.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/SceneChunk.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/parser/CGSFileParser.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/parser/ParsedCGSFile.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/writer/CGSWriter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/writer/SceneCgsCreatorFrame.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/streaming/IAssetStreamer.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/streaming/IStreamableAsset.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/streaming/IStreamingManager.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/streaming/StreamingManager.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/streaming/StreamingManagerImpl.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test.cgs" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/physics.json" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/scene" beforeDir="false" afterPath="$PROJECT_DIR$/config/scene" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logs/lastlog.log" beforeDir="false" afterPath="$PROJECT_DIR$/logs/lastlog.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/CalistaGameEngine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/CalistaGameEngine.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/module/ModuleHealthMonitor.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/module/ModuleHealthMonitor.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/module/ModuleManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/module/ModuleManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/physics/PhysicsModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/physics/PhysicsModule.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/RendererModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/RendererModule.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/lighting/LightingModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/lighting/LightingModule.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/scene/SceneModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/scene/SceneModule.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -64,10 +62,12 @@
   <component name="PropertiesComponent"><![CDATA[{
   "keyToString": {
     "ASKED_ADD_EXTERNAL_FILES": "true",
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "RunOnceActivity.OpenProjectViewOnStart": "true",
     "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "WebServerToolWindowFactoryState": "false",
-    "last_opened_file_path": "C:/Users/Calista/Documents/GitHub/CGE/src/main/resources",
+    "last_opened_file_path": "C:/Users/Calista/Documents/GitHub/CGE/src/main/resources/Interface/Icons",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -77,12 +77,20 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\Interface\Icons" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources" />
     </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources" />
+      <recent name="C:\Users\Calista\Documents\GitHub\CGE" />
+    </key>
+    <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
+      <recent name="org.foxesworld.cge.core" />
+    </key>
   </component>
-  <component name="RunManager">
-    <configuration name="Main" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="org.foxesworld.cge.Main" />
+  <component name="RunManager" selected="Application.CalistaGameEngine">
+    <configuration name="CalistaGameEngine" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="org.foxesworld.cge.CalistaGameEngine" />
       <module name="CGE.main" />
       <extension name="coverage">
         <pattern>
@@ -94,9 +102,37 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="ModuleHealthDashboard" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="org.foxesworld.cge.core.module.ui.ModuleHealthDashboard" />
+      <module name="CGE.main" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="org.foxesworld.cge.core.module.ui.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
+    <configuration name="SceneCgsCreatorFrame" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="org.foxesworld.cge.core.cgs.writer.SceneCgsCreatorFrame" />
+      <module name="CGE.main" />
+      <extension name="coverage">
+        <pattern>
+          <option name="PATTERN" value="org.foxesworld.cge.core.cgs.writer.*" />
+          <option name="ENABLED" value="true" />
+        </pattern>
+      </extension>
+      <method v="2">
+        <option name="Make" enabled="true" />
+      </method>
+    </configuration>
     <recent_temporary>
       <list>
-        <item itemvalue="Application.Main" />
+        <item itemvalue="Application.ModuleHealthDashboard" />
+        <item itemvalue="Application.SceneCgsCreatorFrame" />
+        <item itemvalue="Application.CalistaGameEngine" />
       </list>
     </recent_temporary>
   </component>
@@ -108,8 +144,25 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1748064857058</updated>
-      <workItem from="1748064857995" duration="3274000" />
+      <workItem from="1748064857995" duration="21255000" />
     </task>
+    <task id="LOCAL-00001" summary="initial">
+      <option name="closed" value="true" />
+      <created>1748068309555</created>
+      <option name="number" value="00001" />
+      <option name="presentableId" value="LOCAL-00001" />
+      <option name="project" value="LOCAL" />
+      <updated>1748068309555</updated>
+    </task>
+    <task id="LOCAL-00002" summary="Scene + Physics">
+      <option name="closed" value="true" />
+      <created>1748081129761</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1748081129761</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -117,5 +170,8 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
+    <MESSAGE value="initial" />
+    <MESSAGE value="Scene + Physics" />
+    <option name="LAST_COMMIT_MESSAGE" value="Scene + Physics" />
   </component>
 </project>

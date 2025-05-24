@@ -23,7 +23,7 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
     private BulletAppState bulletAppState;
 
     public PhysicsModule(CalistaGameEngine calistaGameEngine) {
-        super("physics.json", PhysicsConfig.class, calistaGameEngine);
+        super("physics", PhysicsConfig.class, calistaGameEngine);
         // subManager will be initialized in initModule when AppStateManager is available
         this.calistaGameEngine = calistaGameEngine;
         this.subManager = new ModuleManager(calistaGameEngine);
