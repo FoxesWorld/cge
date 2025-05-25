@@ -1,4 +1,4 @@
-package org.foxesworld.cge.streaming;
+package org.foxesworld.cge.core.streaming;
 
 public interface IStreamableAsset {
     void streamIn();   // Загружается в память

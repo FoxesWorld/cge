@@ -1,5 +1,5 @@
 package org.foxesworld.cge.core.cgs.parser.types;
-
+/*
 import com.jme3.asset.AssetManager;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
@@ -12,10 +12,7 @@ import org.foxesworld.cge.core.cgs.parser.ChunkParser;
 
 import java.nio.ByteBuffer;
 
-/**
- * Читает GEOMETRY-чанки: сначала число «примитивов», затем для каждого:
- * float sizeX, sizeY, sizeZ, и имя материала (length+UTF-8).
- */
+
 public class GeometryParser implements ChunkParser {
     @Override
     public Spatial parse(CalistaGameEngine assetManager, SceneChunk chunk) {
@@ -48,3 +45,4 @@ public class GeometryParser implements ChunkParser {
         return parent;
     }
 }
+ */

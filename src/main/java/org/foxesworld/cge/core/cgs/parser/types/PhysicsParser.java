@@ -1,5 +1,5 @@
 package org.foxesworld.cge.core.cgs.parser.types;
-
+/*
 import com.jme3.asset.AssetManager;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.scene.Node;
@@ -11,9 +11,7 @@ import org.foxesworld.cge.physics.PhysicsModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Парсер физических чанков сцены.
- */
+
 public class PhysicsParser implements ChunkParser {
 
     private static final Logger logger = LoggerFactory.getLogger(PhysicsParser.class);
@@ -37,3 +35,5 @@ public class PhysicsParser implements ChunkParser {
         return spatial;
     }
 }
+
+ */

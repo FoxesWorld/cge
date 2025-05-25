@@ -1,5 +1,7 @@
 package org.foxesworld.cge;
 
+import org.foxesworld.cge.core.io.ByteParser;
+
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.awt.image.IndexColorModel;
@@ -7,35 +9,15 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * Parses Microsoft ICO files and extracts contained images.
- * Supports both PNG and BMP-encoded entries with various color depths (8/24/32-bit).
- */
-public class ICOParser {
+public class ICOParser extends ByteParser<List<BufferedImage>> {
 
-    /**
-     * Reads and parses an ICO file from the given input stream.
-     *
-     * @param inputStream input stream containing the .ico file
-     * @return list of extracted {@link BufferedImage} objects
-     * @throws IOException if the ICO file is malformed or an image fails to decode
-     */
-    public static List<BufferedImage> read(InputStream inputStream) throws IOException {
-        if (inputStream == null) {
-            throw new IllegalArgumentException("InputStream cannot be null");
-        }
+    public ICOParser(){
 
-        // Read entire stream into byte array
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        byte[] buffer = new byte[8192];
-        int bytesRead;
-        while ((bytesRead = inputStream.read(buffer)) != -1) {
-            baos.write(buffer, 0, bytesRead);
-        }
-        byte[] data = baos.toByteArray();
-
-        if (data.length < 6) {
-            throw new IOException("Invalid ICO file: too short");
+    }
+    @Override
+    protected List<BufferedImage> parseBytes(byte[] data) throws IOException {
+        if (data == null || data.length < 6) {
+            throw new IOException("Invalid ICO data: too short or null");
         }
 
         try (DataInputStream dis = new DataInputStream(new ByteArrayInputStream(data))) {
@@ -44,7 +26,7 @@ public class ICOParser {
             int count = readLEShort(dis);
 
             if (reserved != 0 || (type != 1 && type != 2) || count <= 0) {
-                throw new IOException("Invalid ICO file: incorrect header");
+                throw new IOException("Invalid ICO header");
             }
 
             List<IconDirEntry> entries = new ArrayList<>();
@@ -58,19 +40,26 @@ public class ICOParser {
                 int bytesInRes = readLEInt(dis);
                 int imageOffset = readLEInt(dis);
 
-                if (imageOffset + bytesInRes > data.length || bytesInRes <= 0) {
-                    throw new IOException("Invalid ICO entry: out of bounds or corrupted size");
-                }
-
-                entries.add(new IconDirEntry(width, height, colorCount, planes, bitCount, bytesInRes, imageOffset));
+                entries.add(new IconDirEntry(
+                        width == 0 ? 256 : width,
+                        height == 0 ? 256 : height,
+                        colorCount,
+                        planes,
+                        bitCount,
+                        bytesInRes,
+                        imageOffset
+                ));
             }
 
             List<BufferedImage> images = new ArrayList<>();
             for (IconDirEntry entry : entries) {
+                if (entry.imageOffset + entry.bytesInRes > data.length) {
+                    throw new IOException("Image entry out of bounds");
+                }
                 byte[] imageData = new byte[entry.bytesInRes];
                 System.arraycopy(data, entry.imageOffset, imageData, 0, entry.bytesInRes);
-                BufferedImage img;
 
+                BufferedImage img;
                 if (isPng(imageData)) {
                     img = ImageIO.read(new ByteArrayInputStream(imageData));
                 } else {
@@ -80,7 +69,7 @@ public class ICOParser {
                 if (img != null) {
                     images.add(img);
                 } else {
-                    throw new IOException("Unsupported image format or decoding failed at offset " + entry.imageOffset);
+                    throw new IOException("Unsupported image format or decoding failed");
                 }
             }
 
@@ -88,9 +77,6 @@ public class ICOParser {
         }
     }
 
-    /**
-     * Checks if the given byte array starts with a PNG header.
-     */
     private static boolean isPng(byte[] data) {
         return data.length >= 8 &&
                 (data[0] & 0xFF) == 0x89 &&
@@ -103,15 +89,12 @@ public class ICOParser {
                 data[7] == 0x0A;
     }
 
-    /**
-     * Reads a BMP-formatted image from ICO data.
-     * Supports 8-bit indexed, 24-bit and 32-bit images.
-     */
     private static BufferedImage readBmpFromIco(byte[] data) throws IOException {
         try (DataInputStream dis = new DataInputStream(new ByteArrayInputStream(data))) {
             int headerSize = readLEInt(dis);
             int width = readLEInt(dis);
-            int height = readLEInt(dis) / 2; // includes AND mask
+            int height = readLEInt(dis) / 2; // height includes AND mask
+
             int planes = readLEShort(dis);
             int bitCount = readLEShort(dis);
 
@@ -120,7 +103,7 @@ public class ICOParser {
             if (bitCount == 8) {
                 int compression = readLEInt(dis);
                 int imageSize = readLEInt(dis);
-                dis.skipBytes(16); // skip rest of BITMAPINFOHEADER
+                dis.skipBytes(16);
 
                 int[] palette = new int[256];
                 for (int i = 0; i < 256; i++) {
@@ -173,18 +156,12 @@ public class ICOParser {
         }
     }
 
-    /**
-     * Reads a 2-byte little-endian short from the stream.
-     */
     private static int readLEShort(DataInputStream dis) throws IOException {
         int b1 = dis.readUnsignedByte();
         int b2 = dis.readUnsignedByte();
         return (b2 << 8) | b1;
     }
 
-    /**
-     * Reads a 4-byte little-endian int from the stream.
-     */
     private static int readLEInt(DataInputStream dis) throws IOException {
         int b1 = dis.readUnsignedByte();
         int b2 = dis.readUnsignedByte();
@@ -193,15 +170,12 @@ public class ICOParser {
         return (b4 << 24) | (b3 << 16) | (b2 << 8) | b1;
     }
 
-    /**
-     * Internal representation of a directory entry in an ICO file.
-     */
     private static class IconDirEntry {
         final int width, height, colorCount, planes, bitCount, bytesInRes, imageOffset;
 
         IconDirEntry(int width, int height, int colorCount, int planes, int bitCount, int bytesInRes, int imageOffset) {
-            this.width = (width == 0 ? 256 : width);   // 0 means 256 in ICO format
-            this.height = (height == 0 ? 256 : height);
+            this.width = width;
+            this.height = height;
             this.colorCount = colorCount;
             this.planes = planes;
             this.bitCount = bitCount;
@@ -210,25 +184,21 @@ public class ICOParser {
         }
     }
 
-    /**
-     * Возвращает наилучшую иконку из списка, основываясь на максимальном размере (площадь) и глубине цвета.
-     *
-     * @param icons список иконок, загруженных из ICO-файла
-     * @return самая большая и наиболее качественная иконка
-     * @throws IOException если список пуст
-     */
-    public static BufferedImage getBestIcon(List<BufferedImage> icons) throws IOException {
-        return icons.stream()
-                .sorted((a, b) -> {
-                    int sizeA = a.getWidth() * a.getHeight();
-                    int sizeB = b.getWidth() * b.getHeight();
-                    if (sizeA != sizeB) return Integer.compare(sizeB, sizeA); // по убыванию площади
-                    int bitsA = a.getColorModel().getPixelSize();
-                    int bitsB = b.getColorModel().getPixelSize();
-                    return Integer.compare(bitsB, bitsA); // по убыванию битности
-                })
-                .findFirst()
-                .orElseThrow(() -> new IOException("No icons found in ICO file"));
+    public BufferedImage getBestIcon(List<BufferedImage> icons) {
+        if (icons == null || icons.isEmpty()) return null;
+
+        // Например, выбираем иконку с максимальной площадью
+        BufferedImage best = icons.get(0);
+        int bestSize = best.getWidth() * best.getHeight();
+
+        for (BufferedImage icon : icons) {
+            int size = icon.getWidth() * icon.getHeight();
+            if (size > bestSize) {
+                best = icon;
+                bestSize = size;
+            }
+        }
+        return best;
     }
 
 }

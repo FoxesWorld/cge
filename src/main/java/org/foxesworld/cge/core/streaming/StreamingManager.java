@@ -1,4 +1,4 @@
-package org.foxesworld.cge.streaming;
+package org.foxesworld.cge.core.streaming;
 
 import java.util.Map;
 import java.util.Objects;

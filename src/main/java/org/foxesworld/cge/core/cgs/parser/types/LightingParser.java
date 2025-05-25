@@ -15,26 +15,19 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.HexFormat;
+import java.util.Map;
 
-public class LightingParser implements ChunkParser {
+public class LightingParser extends ChunkParser {
 
     private static final Logger logger = LoggerFactory.getLogger(LightingParser.class);
     private static final HexFormat HEX = HexFormat.of();
 
     private enum LightType {
-        POINT, DIRECTIONAL, SPOT, SKY;
-
-        public static LightType fromString(String type) {
-            try {
-                return LightType.valueOf(type.toUpperCase());
-            } catch (IllegalArgumentException e) {
-                throw new IllegalArgumentException("Unknown light type: " + type);
-            }
-        }
+        POINT, DIRECTIONAL, SPOT, SKY
     }
 
     @Override
-    public Spatial parse(CalistaGameEngine engine, SceneChunk chunk) {
+    public Spatial parse(CalistaGameEngine engine, SceneChunk chunk, Map<String, String> args) {
         ByteBuffer buf = chunk.getData().order(ByteOrder.BIG_ENDIAN);
         buf.rewind();
 
@@ -57,10 +50,11 @@ public class LightingParser implements ChunkParser {
             }
 
             int posBefore = buf.position();
-            String typeString = readLightType(buf);
+            String typeString = readLightType(buf).toUpperCase();
 
             try {
-                LightType type = LightType.fromString(typeString);
+                System.out.println(typeString);
+                LightType type = LightType.valueOf(typeString);
                 switch (type) {
                     case POINT -> parsePoint(chunk.getId(), buf, lightNode);
                     case DIRECTIONAL -> parseDirectional(chunk.getId(), buf, lightNode);
@@ -87,22 +81,28 @@ public class LightingParser implements ChunkParser {
      */
     private String readLightType(ByteBuffer buf) {
         StringBuilder sb = new StringBuilder();
+        int startPos = buf.position();
+        logger.debug("Starting to read light type at buffer position {}", startPos);
+
         while (buf.remaining() > 0) {
             buf.mark();
             byte b = buf.get();
-            // Accept letters only
             if ((b >= 'A' && b <= 'Z') || (b >= 'a' && b <= 'z')) {
                 sb.append((char) b);
             } else {
-                // Non-letter: rewind one byte for subsequent parsing
                 buf.reset();
+                logger.debug("Stopped reading light type at non-letter byte: 0x{} (char='{}'), pos={}",
+                        Integer.toHexString(b & 0xFF), (char) b, buf.position());
                 break;
             }
         }
+
         String s = sb.toString();
-        logger.debug("Read light type string: {}", s);
+        logger.debug("Read light type string: '{}' (length: {}) at startPos={}, endPos={}, remaining={}",
+                s, s.length(), startPos, buf.position(), buf.remaining());
         return s;
     }
+
 
     private void parsePoint(int cid, ByteBuffer buf, Node parent) {
         int required = (3 + 4 + 1) * Float.BYTES;

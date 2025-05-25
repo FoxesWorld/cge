@@ -13,11 +13,12 @@ import org.foxesworld.cge.core.module.EngineModule;
 import org.foxesworld.cge.core.module.ModuleHealthMonitor;
 import org.foxesworld.cge.core.module.ModuleState;
 import org.foxesworld.cge.renderer.lighting.LightingModule;
-import org.foxesworld.cge.streaming.StreamingManager;
+import org.foxesworld.cge.core.streaming.StreamingManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -45,93 +46,116 @@ public class SceneModule extends EngineModule<SceneConfig> {
 
     @Override
     protected void initModule(CalistaGameEngine app) throws Exception {
-        // если нужно сбрасывать коллбэки при каждой инициализации:
-        // onSceneReadyCallbacks.clear();
-
         logger.info("SceneModule: initializing...");
         SceneConfig cfg = getConfig();
         if (cfg == null || cfg.getScenePath() == null) {
             throw new IllegalStateException("SceneConfig or scenePath is null");
         }
 
-        File file = new File(cfg.getScenePath());
-        if (!file.exists()) {
-            throw new IllegalStateException("CGS file not found: " + cfg.getScenePath());
-        }
+        // 1) Стримим CGS-файл как байты
+        app.getByteStreamer().streamAsync(cfg.getScenePath(),
+                bytes -> {
+                    try {
+                        this.sceneFile = new CGSFileReader(new File(cfg.getScenePath()));
+                        this.cgsMetadata = sceneFile.getMetadata();
+                        this.entries = new ArrayList<>(sceneFile.getChunkEntries());
 
-        // 1) Загружаем метаданные сцены
-        sceneFile = new CGSFileReader(file);
-        cgsMetadata = sceneFile.getMetadata();
+                        logger.info("Loaded CGS file ― magic={}, sceneName={}, version={}, tableOffset={}, chunkCount={}",
+                                cgsMetadata.getMagic(),
+                                cgsMetadata.getSceneName(),
+                                cgsMetadata.getVersion(),
+                                cgsMetadata.getTableOffset(),
+                                cgsMetadata.getChunkCount()
+                        );
 
-        logger.info("Loaded CGS file ― magic={}, sceneName={}, version={}, tableOffset={}, chunkCount={}",
-                cgsMetadata.getMagic(),
-                cgsMetadata.getSceneName(),
-                cgsMetadata.getVersion(),
-                cgsMetadata.getTableOffset(),
-                cgsMetadata.getChunkCount()
+                        setupStreamingForChunks();
+
+                    } catch (Exception e) {
+                        logger.error("Failed to parse CGS bytes", e);
+                        ModuleHealthMonitor.getInstance().reportState(getName(), ModuleState.SHUTTING_DOWN);
+                    }
+                },
+                error -> {
+                    logger.error("Failed to stream CGS file: {}", error.getMessage(), error);
+                    ModuleHealthMonitor.getInstance().reportState(getName(), ModuleState.SHUTTING_DOWN);
+                }
         );
-        entries = new ArrayList<>(sceneFile.getChunkEntries());
+    }
 
-        // 2) Создаём универсальный StreamingManager для Integer->SceneChunk
-        streamingManager = new StreamingManager<>(
-                key -> sceneFile.readChunk(key),
-                true,
-                2
-        );
-
-        sceneRoot = new Node(cgsMetadata.getSceneName());
+    private void setupStreamingForChunks() {
+        this.streamingManager = new StreamingManager<>(sceneFile::readChunk, true, 2);
+        this.sceneRoot = new Node(cgsMetadata.getSceneName());
         chunksRemaining.set(entries.size());
+
         logger.info("SceneModule: {} chunks to stream", entries.size());
 
-        // 3) Подготовка коллбэка разбора чанка
-        LightingModule lighting = app.getModuleManager().getModule(LightingModule.class);
+        // Функция для обработки загруженных чанков
         Consumer<SceneChunk> onChunk = chunk -> {
+            // Парсим чанк в Spatial
             Spatial spat = parseChunk(app, chunk);
+
+            // Добавляем в sceneRoot
             app.enqueue(() -> {
                 sceneRoot.attachChild(spat);
-                lighting.addLight(spat, 20, 10);
+
+                // Если все чанки загружены, прикрепляем sceneRoot к главному RootNode
                 if (chunksRemaining.decrementAndGet() == 0) {
                     attachSceneRoot();
                 }
                 return null;
             });
         };
+
+        // Функция обработки ошибки при загрузке чанка
         Consumer<Throwable> onError = err -> {
             logger.error("Failed to stream chunk: {}", err.getMessage(), err);
+
+            // Даже если произошла ошибка, продолжаем процесс
             if (chunksRemaining.decrementAndGet() == 0) {
                 attachSceneRoot();
             }
         };
 
-        // 4) Запускаем асинхронный стриминг
+        // Стримим каждый чанк
         for (ChunkEntry e : entries) {
-            // безопасность на случай, если кто-то вызвал cleanup раньше
             if (streamingManager != null) {
                 streamingManager.streamAsync(e.id(), onChunk, onError);
             }
         }
     }
-
-    private Spatial parseChunk(CalistaGameEngine app, SceneChunk chunk) {
-        logger.info("Chunk {} data - {}",chunk.getType(), chunk.getData());
-        return switch (chunk.getEntry().type()) {
-            case GEOMETRY  -> new GeometryParser().parse(app, chunk);
-            case TERRAIN   -> new TerrainParser().parse(app, chunk);
-            case LIGHTING  -> new LightingParser().parse(app, chunk);
-            case PHYSICS   -> new PhysicsParser().parse(app, chunk);
-            case MATERIALS -> new Node("MaterialsChunk-" + chunk.getId());
-            default        -> new Node("CustomChunk-" + chunk.getId());
-        };
-    }
-
     private void attachSceneRoot() {
+        // Добавляем sceneRoot в главный RootNode
         app.getRootNode().attachChild(sceneRoot);
         logger.info("All chunks streamed — sceneRoot attached.");
+
+        // Уведомляем систему, что сцена готова
         ModuleHealthMonitor.getInstance().reportState(getName(), ModuleState.RUNNING);
+
+        // Запускаем все отложенные callback-методы
         onSceneReadyCallbacks.forEach(cb -> {
             try { cb.run(); }
             catch (Exception ex) { logger.warn("onSceneReady failed", ex); }
         });
+    }
+
+
+
+    private Spatial parseChunk(CalistaGameEngine app, SceneChunk chunk) {
+        logger.info("Chunk {} data - {}",chunk.getType(), chunk.getData());
+
+        ChunkFieldTypeConfigLoader configLoader;
+        try {
+            configLoader = new ChunkFieldTypeConfigLoader(getClass().getClassLoader().getResourceAsStream("chunkArguments.json"));
+        } catch (IOException e) {
+            logger.error("Failed to load chunk field config", e);
+            return new Node("CustomChunk-" + chunk.getId());
+        }
+        Map<String, String> fieldTypes = configLoader.getFieldTypesForChunkType(chunk.getEntry().type().toString());
+        return switch (chunk.getEntry().type()) {
+            case TERRAIN   -> new TerrainParser().parse(app, chunk, fieldTypes);
+            case LIGHTING  -> new LightingParser().parse(app, chunk, fieldTypes);
+            default        -> new Node("CustomChunk-" + chunk.getId());
+        };
     }
 
     @Override

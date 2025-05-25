@@ -29,17 +29,19 @@ public class SceneCgsCreatorFrame extends JFrame {
 
         try (InputStream icoStream = SceneCgsCreatorFrame.class.getClassLoader().getResourceAsStream("theme/icon/favicon.ico")) {
             if (icoStream != null) {
-                List<BufferedImage> iconsList = ICOParser.read(icoStream);
-                BufferedImage bestIcon = ICOParser.getBestIcon(iconsList);
+                ICOParser parser = new ICOParser();
+                List<BufferedImage> iconsList = parser.parse(icoStream);  // <- вызов parse(InputStream)
+                BufferedImage bestIcon = parser.getBestIcon(iconsList);
                 if (bestIcon != null) {
                     setIconImages(List.of(bestIcon));
                 }
             } else {
                 System.err.println("ICO icon resource not found");
             }
-        } catch (IOException ex) {
-            ex.printStackTrace();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
+
         // ------------------------------
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(800, 600);

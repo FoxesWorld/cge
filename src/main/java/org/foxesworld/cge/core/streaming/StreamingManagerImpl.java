@@ -1,4 +1,4 @@
-package org.foxesworld.cge.streaming;
+package org.foxesworld.cge.core.streaming;
 
 import com.jme3.app.Application;
 import org.slf4j.Logger;

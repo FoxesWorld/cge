@@ -11,12 +11,9 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * CGS file writer using the abstract base for consistent formatting.
- */
 public class CGSFileWriter extends AbstractCGSFile {
     private static final Logger logger = LogManager.getLogger(CGSFileWriter.class);
-    private final  File file;
+    private final File file;
     private String sceneName = "";
     private final List<ChunkEntry> chunkEntries = new ArrayList<>();
     private final List<byte[]> chunkData = new ArrayList<>();
@@ -51,6 +48,10 @@ public class CGSFileWriter extends AbstractCGSFile {
             ChunkEntry e = chunkEntries.get(i);
             byte[] data = chunkData.get(i);
             long offset = raf.getFilePointer();
+
+            // Логируем байты перед записью
+            logByteData(data, e.id());
+
             raf.write(data);
             chunkEntries.set(i, new ChunkEntry(e.id(), offset, data.length, e.type()));
             logger.debug("Wrote chunk id={} at offset={}, len={}", e.id(), offset, data.length);
@@ -71,6 +72,16 @@ public class CGSFileWriter extends AbstractCGSFile {
         // Update header
         updateHeaderTableOffset(headerTableOffsetPos, tableOffset);
         logger.info("Finished CGS write, tableOffset={}", tableOffset);
+    }
+
+    private void logByteData(byte[] data, int chunkId) {
+        // Логируем данные чанка в виде шестнадцатеричных значений
+        StringBuilder hexData = new StringBuilder();
+        for (byte b : data) {
+            hexData.append(String.format("%02X ", b));
+        }
+
+        logger.debug("Writing chunk id={} with data: {}", chunkId, hexData.toString().trim());
     }
 
     public File getFile() {

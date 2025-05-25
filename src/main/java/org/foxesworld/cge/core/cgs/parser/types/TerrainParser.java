@@ -11,15 +11,13 @@ import org.foxesworld.cge.core.cgs.parser.ChunkParser;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.FloatBuffer;
-import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 
-/**
- * Читает TERRAIN-чанки: целочисленная ширина/высота, затем width*height float-значений высот.
- */
-public class TerrainParser implements ChunkParser {
+public class TerrainParser extends ChunkParser {
+
     @Override
-    public Spatial parse(CalistaGameEngine calistaGameEngine, SceneChunk chunk) {
+    public Spatial parse(CalistaGameEngine calistaGameEngine, SceneChunk chunk, Map<String, String> params) {
         ByteBuffer buf = chunk.getData();
         buf.rewind();
 
@@ -28,7 +26,7 @@ public class TerrainParser implements ChunkParser {
         Node terrainNode = new Node("TerrainChunk-" + chunk.getId());
         int expected = width * height;
 
-// Проверка безопасности
+        // Проверка безопасности
         if (buf.remaining() < expected * Float.BYTES) {
             try {
                 throw new IOException("Not enough data in terrain chunk: need " + (expected * 4) + " bytes, found " + buf.remaining());
@@ -37,17 +35,20 @@ public class TerrainParser implements ChunkParser {
             }
         }
 
-// Чтение данных вручную
+        // Чтение данных вручную
         float[] heights = new float[expected];
         for (int i = 0; i < expected; i++) {
             heights[i] = buf.getFloat();
         }
 
+        // Извлекаем параметры из params
+        int[] heightMap = extractHeightMap(params);
+        int detailLevel = extractDetailLevel(params);
 
-        // Ресайзим
-       ResizedHeightmap resized = resizeHeightmapToPowerOfTwoPlusOne(heights, width, height);
+        // Используем аргументы для высот и уровня детализации
+        ResizedHeightmap resized = resizeHeightmapToPowerOfTwoPlusOne(heights, width, height, heightMap, detailLevel);
 
-    // Создаём TerrainQuad
+        // Создаем TerrainQuad
         TerrainQuad quad = new TerrainQuad(
                 "terrain-" + chunk.getId(),
                 resized.size - 1, // patchSize
@@ -66,16 +67,35 @@ public class TerrainParser implements ChunkParser {
         return terrainNode;
     }
 
-    /**
-     * Приводит массив высот к размеру (2^n + 1) x (2^n + 1),
-     * дополняя недостающие значения нулями.
-     *
-     * @param original исходный heightmap размером width x height
-     * @param width ширина исходного heightmap
-     * @param height высота исходного heightmap
-     * @return новый массив высот правильного размера
-     */
-    public static ResizedHeightmap resizeHeightmapToPowerOfTwoPlusOne(float[] original, int width, int height) {
+    // Извлекаем heightMap из параметров
+    private int[] extractHeightMap(Map<String, String> params) {
+        if (params.containsKey("heightMap")) {
+            String heightMapStr = params.get("heightMap");
+            return convertToIntArray(heightMapStr);
+        }
+        return new int[0]; // Если не найдено, возвращаем пустой массив
+    }
+
+    // Извлекаем detailLevel из параметров
+    private int extractDetailLevel(Map<String, String> params) {
+        if (params.containsKey("detailLevel")) {
+            return Integer.parseInt(params.get("detailLevel"));
+        }
+        return 1; // Значение по умолчанию
+    }
+
+    // Преобразуем строку в массив целых чисел
+    private int[] convertToIntArray(String str) {
+        String[] split = str.split(",");
+        int[] result = new int[split.length];
+        for (int i = 0; i < split.length; i++) {
+            result[i] = Integer.parseInt(split[i].trim());
+        }
+        return result;
+    }
+
+    public static ResizedHeightmap resizeHeightmapToPowerOfTwoPlusOne(
+            float[] original, int width, int height, int[] heightMap, int detailLevel) {
         if (original == null || original.length != width * height) {
             throw new IllegalArgumentException("Invalid heightmap size");
         }
@@ -91,9 +111,9 @@ public class TerrainParser implements ChunkParser {
         for (int y = 0; y < targetSize; y++) {
             for (int x = 0; x < targetSize; x++) {
                 if (x < width && y < height) {
-                    resized[y * targetSize + x] = original[y * width + x];
+                    resized[y * targetSize + x] = original[y * width + x] * detailLevel;  // Применение уровня детализации
                 } else {
-                    resized[y * targetSize + x] = 0f; // Заполняем недостающие значения
+                    resized[y * targetSize + x] = heightMap[y * targetSize + x];  // Заполнение дополнительными значениями
                 }
             }
         }
@@ -111,7 +131,4 @@ public class TerrainParser implements ChunkParser {
             this.size = size;
         }
     }
-
-
-
 }

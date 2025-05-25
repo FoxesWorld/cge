@@ -1,26 +1,28 @@
 package org.foxesworld.cge;
 
-import com.formdev.flatlaf.FlatLaf;
-import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import com.jme3.app.SimpleApplication;
 import com.jme3.input.KeyInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
+import com.jme3.material.Material;
+import com.jme3.scene.Geometry;
+import com.jme3.scene.shape.Box;
 import com.jme3.system.AppSettings;
 import org.foxesworld.cge.core.ConfigService;
 import org.foxesworld.cge.core.TaskScheduler;
+import org.foxesworld.cge.core.io.GenericByteParser;
 import org.foxesworld.cge.core.module.EngineModule;
 import org.foxesworld.cge.core.module.ModuleManager;
+import org.foxesworld.cge.core.streaming.StreamingManager;
+import org.foxesworld.cge.core.streaming.StreamingParserLoader;
 import org.foxesworld.cge.physics.PhysicsModule;
 import org.foxesworld.cge.renderer.RendererModule;
 import org.foxesworld.cge.scene.SceneModule;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
-import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.LogManager;
@@ -29,6 +31,7 @@ import static org.foxesworld.cge.tools.SceneCreator.SceneCgsCreatorFrame.setupTh
 
 public class CalistaGameEngine extends SimpleApplication {
 
+    private StreamingManager<String, Byte[]> byteStreamer;
     private ModuleManager moduleManager;
     private final ConfigService configService;
     private final TaskScheduler taskScheduler;
@@ -38,7 +41,7 @@ public class CalistaGameEngine extends SimpleApplication {
         CalistaGameEngine app = new CalistaGameEngine();
         setupTheme("theme/calista.properties");
         // Настройка окна (Calista Style)
-        AppSettings settings = new AppSettings(true);
+        AppSettings settings = new AppSettings(false);
         settings.setTitle("Calista Game Engine");
         settings.setSettingsDialogImage("/theme/logo.png");
         settings.setResolution(1280, 720); // Примерное разрешение
@@ -49,8 +52,9 @@ public class CalistaGameEngine extends SimpleApplication {
         settings.setResizable(true);
         try (InputStream icoStream = CalistaGameEngine.class.getClassLoader().getResourceAsStream("theme/icon/favicon.ico")) {
 
-            List<BufferedImage> iconsList = ICOParser.read(icoStream);
-            BufferedImage bestIcon = ICOParser.getBestIcon(iconsList);
+            ICOParser icoParser = new ICOParser();
+            List<BufferedImage> iconsList = icoParser.parse(icoStream);
+            BufferedImage bestIcon = icoParser.getBestIcon(iconsList);
 
             int width = bestIcon.getWidth();
             int height = bestIcon.getHeight();
@@ -77,6 +81,23 @@ public class CalistaGameEngine extends SimpleApplication {
         SLF4JBridgeHandler.install();
         this.configService = new ConfigService();
         this.taskScheduler = new TaskScheduler();
+        GenericByteParser<Byte[]> parser = new GenericByteParser<>(bytes -> {
+            Byte[] boxed = new Byte[bytes.length];
+            for (int i = 0; i < bytes.length; i++) {
+                boxed[i] = bytes[i];
+            }
+            return boxed;
+        });
+
+        // ✅ Обёртка для StreamingManager
+        StreamingParserLoader<Byte[]> loader = new StreamingParserLoader<>(parser);
+
+        // ✅ Стриминг с кэшем
+        this.byteStreamer = new StreamingManager<>(
+                loader::load,
+                true,
+                4
+        );
     }
 
     @Override
@@ -91,6 +112,13 @@ public class CalistaGameEngine extends SimpleApplication {
         // Настройка маппинга для клавиши F5
         inputManager.addMapping("ReloadConfig", new KeyTrigger(KeyInput.KEY_F5));
         inputManager.addListener(actionListener, "ReloadConfig");
+
+        Box box = new Box(1f, 1f, 1f);
+        Geometry geom = new Geometry("TestBox", box);
+        Material mat = new Material(this.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
+        geom.setMaterial(mat);
+        getRootNode().attachChild(geom);
+
     }
 
     private final ActionListener actionListener = new ActionListener() {
@@ -114,5 +142,9 @@ public class CalistaGameEngine extends SimpleApplication {
 
     public ModuleManager getModuleManager() {
         return moduleManager;
+    }
+
+    public StreamingManager<String, Byte[]> getByteStreamer() {
+        return byteStreamer;
     }
 }

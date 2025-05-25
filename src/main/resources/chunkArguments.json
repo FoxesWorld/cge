@@ -1,0 +1,11 @@
+{
+  "TERRAIN": {
+    "heightMap": "String",
+    "detailLevel": "Integer"
+  },
+  "LIGHTING": {
+    "intensity": "Integer",
+    "color": "String",
+    "castShadows": "Boolean"
+  }
+}
