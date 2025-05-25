@@ -4,32 +4,14 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="283ff897-4432-4079-9530-7bc3ea1cccef" name="Changes" comment="CGS">
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/file/AbstractCGSFile.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/file/CGSHeader.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/parser/CGSFileReader.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/writer/CGSFileWriter.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/FieldUtils.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/FieldValidator.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/theme/calista.properties" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/.idea/gradle.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/gradle.xml" afterDir="false" />
+    <list default="true" id="283ff897-4432-4079-9530-7bc3ea1cccef" name="Changes" comment="CGS Abstract">
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ICOParser.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/theme/icon/favicon.ico" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/theme/icon/icon.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/theme/logo.png" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/build.gradle" beforeDir="false" afterPath="$PROJECT_DIR$/build.gradle" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/CalistaGameEngine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/CalistaGameEngine.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/CGSFile.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/CGSMetadata.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/file/CGSMetadata.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/ChunkType.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/ChunkType.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/parser/ChunkParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/parser/ChunkParser.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/parser/ParsedCGSFile.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/parser/types/LightingParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/parser/types/LightingParser.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/parser/types/PhysicsParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/parser/types/PhysicsParser.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/writer/CGSWriter.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/scene/SceneModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/scene/SceneModule.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/AttributeFieldFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/AttributeFieldFactory.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/SceneCreator/ChunkControlsPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/SceneCreator/ChunkControlsPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/SceneCreator/ChunkListPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/SceneCreator/ChunkListPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/SceneCreator/SceneCgsCreatorFrame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/SceneCreator/SceneCgsCreatorFrame.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/testgrid_4_0_-3.j3o" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/theme/calista.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/theme/calista.properties" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -79,7 +61,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "WebServerToolWindowFactoryState": "false",
-    "last_opened_file_path": "C:/Users/Calista/Documents/GitHub/CGE",
+    "last_opened_file_path": "C:/Users/Calista/Documents/GitHub/CGE/src/main/resources/theme/icon",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -89,10 +71,12 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\theme\icon" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\Interface\Icons" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\theme\icon" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\theme" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE" />
@@ -102,7 +86,7 @@
       <recent name="org.foxesworld.cge.core" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.SceneCgsCreatorFrame">
+  <component name="RunManager" selected="Application.CalistaGameEngine">
     <configuration name="CalistaGameEngine" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="org.foxesworld.cge.CalistaGameEngine" />
       <module name="CGE.main" />
@@ -159,7 +143,7 @@
       <option name="presentableId" value="Default" />
       <updated>1748064857058</updated>
       <workItem from="1748064857995" duration="35348000" />
-      <workItem from="1748145756964" duration="13233000" />
+      <workItem from="1748145756964" duration="17169000" />
     </task>
     <task id="LOCAL-00001" summary="initial">
       <option name="closed" value="true" />
@@ -185,7 +169,15 @@
       <option name="project" value="LOCAL" />
       <updated>1748087219836</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="CGS Abstract">
+      <option name="closed" value="true" />
+      <created>1748159570408</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1748159570408</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -196,6 +188,7 @@
     <MESSAGE value="initial" />
     <MESSAGE value="Scene + Physics" />
     <MESSAGE value="CGS" />
-    <option name="LAST_COMMIT_MESSAGE" value="CGS" />
+    <MESSAGE value="CGS Abstract" />
+    <option name="LAST_COMMIT_MESSAGE" value="CGS Abstract" />
   </component>
 </project>

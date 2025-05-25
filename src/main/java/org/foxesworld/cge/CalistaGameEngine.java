@@ -16,6 +16,12 @@ import org.foxesworld.cge.renderer.RendererModule;
 import org.foxesworld.cge.scene.SceneModule;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.logging.LogManager;
 
@@ -34,14 +40,33 @@ public class CalistaGameEngine extends SimpleApplication {
         // Настройка окна (Calista Style)
         AppSettings settings = new AppSettings(true);
         settings.setTitle("Calista Game Engine");
+        settings.setSettingsDialogImage("/theme/logo.png");
         settings.setResolution(1280, 720); // Примерное разрешение
         settings.setSamples(4); // Сглаживание
         settings.setVSync(true);
         settings.setFrameRate(165);
         settings.setFullscreen(false);
         settings.setResizable(true);
+        try (InputStream icoStream = CalistaGameEngine.class.getClassLoader().getResourceAsStream("theme/icon/favicon.ico")) {
+
+            List<BufferedImage> iconsList = ICOParser.read(icoStream);
+            BufferedImage bestIcon = ICOParser.getBestIcon(iconsList);
+
+            int width = bestIcon.getWidth();
+            int height = bestIcon.getHeight();
+            int pixelSize = bestIcon.getColorModel().getPixelSize();
+            int numBands = bestIcon.getRaster().getNumBands();
+            int imageType = bestIcon.getType();
+            System.out.printf("Selected Icon: %dx%d px, %d bit, %d bands, type=%d%n", width, height, pixelSize, numBands, imageType);
+            settings.setIcons(new BufferedImage[]{bestIcon});
+
+        } catch (IOException e) {
+            e.printStackTrace();
+            System.err.println("Failed to load .ico icon file.");
+        }
+
         app.setSettings(settings);
-        app.setShowSettings(false);
+        //app.setShowSettings(false);
         app.start();
     }
 
