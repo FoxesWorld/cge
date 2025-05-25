@@ -3,15 +3,19 @@ package org.foxesworld.cge.tools.SceneCreator;
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatPropertiesLaf;
+import org.foxesworld.cge.ICOParser;
 import org.foxesworld.cge.core.cgs.writer.CGSFileWriter;
+
 
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 public class SceneCgsCreatorFrame extends JFrame {
     private CGSFileWriter writer;
@@ -22,6 +26,21 @@ public class SceneCgsCreatorFrame extends JFrame {
 
     public SceneCgsCreatorFrame() {
         super("CGS Scene Creator");
+
+        try (InputStream icoStream = SceneCgsCreatorFrame.class.getClassLoader().getResourceAsStream("theme/icon/favicon.ico")) {
+            if (icoStream != null) {
+                List<BufferedImage> iconsList = ICOParser.read(icoStream);
+                BufferedImage bestIcon = ICOParser.getBestIcon(iconsList);
+                if (bestIcon != null) {
+                    setIconImages(List.of(bestIcon));
+                }
+            } else {
+                System.err.println("ICO icon resource not found");
+            }
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+        // ------------------------------
         setDefaultCloseOperation(EXIT_ON_CLOSE);
         setSize(800, 600);
         setLocationRelativeTo(null);

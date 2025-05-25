@@ -4,14 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="283ff897-4432-4079-9530-7bc3ea1cccef" name="Changes" comment="CGS Abstract">
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ICOParser.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/theme/icon/favicon.ico" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/theme/icon/icon.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/theme/logo.png" afterDir="false" />
+    <list default="true" id="283ff897-4432-4079-9530-7bc3ea1cccef" name="Changes" comment="ICOParser">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/CalistaGameEngine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/CalistaGameEngine.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/theme/calista.properties" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/theme/calista.properties" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/SceneCreator/SceneCgsCreatorFrame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/SceneCreator/SceneCgsCreatorFrame.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -86,7 +81,7 @@
       <recent name="org.foxesworld.cge.core" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.CalistaGameEngine">
+  <component name="RunManager" selected="Application.SceneCgsCreatorFrame">
     <configuration name="CalistaGameEngine" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="org.foxesworld.cge.CalistaGameEngine" />
       <module name="CGE.main" />
@@ -143,7 +138,7 @@
       <option name="presentableId" value="Default" />
       <updated>1748064857058</updated>
       <workItem from="1748064857995" duration="35348000" />
-      <workItem from="1748145756964" duration="17169000" />
+      <workItem from="1748145756964" duration="17473000" />
     </task>
     <task id="LOCAL-00001" summary="initial">
       <option name="closed" value="true" />
@@ -177,7 +172,15 @@
       <option name="project" value="LOCAL" />
       <updated>1748159570408</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="ICOParser">
+      <option name="closed" value="true" />
+      <created>1748163564765</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1748163564765</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -189,6 +192,7 @@
     <MESSAGE value="Scene + Physics" />
     <MESSAGE value="CGS" />
     <MESSAGE value="CGS Abstract" />
-    <option name="LAST_COMMIT_MESSAGE" value="CGS Abstract" />
+    <MESSAGE value="ICOParser" />
+    <option name="LAST_COMMIT_MESSAGE" value="ICOParser" />
   </component>
 </project>
