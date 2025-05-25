@@ -156,18 +156,32 @@ public class LightingParser extends ChunkParser {
     }
 
     private void parseSky(int cid, ByteBuffer buf, Node parent) {
-        int required = Float.BYTES * 4;
+        // Проверим, что данных достаточно для 4 float'ов (цвет) + 1 int (интенсивность) + 1 bool (castShadows)
+        int required = Float.BYTES * 4 + Integer.BYTES + Byte.BYTES;
         if (buf.remaining() < required) {
-            logger.warn("[{}] Not enough data for SKY (color), remaining={}, hex={}",
+            logger.warn("[{}] Not enough data for SKY (color + intensity + castShadows), remaining={}, hex={}",
                     cid, buf.remaining(), dumpBufferHex(buf));
             buf.position(buf.limit());
             return;
         }
+
+        // Читаем цвет
         ColorRGBA col = readColor(buf);
-        AmbientLight l = new AmbientLight(col.mult(col.a));
+
+        // Читаем интенсивность (int)
+        int intensity = buf.getInt();
+
+        // Читаем флаг castShadows (boolean)
+        boolean castShadows = buf.get() == 1; // 1 для true, 0 для false
+
+        // Используем интенсивность и castShadows для настройки света
+        AmbientLight l = new AmbientLight(col.mult(col.a).mult(intensity));  // Применяем интенсивность к цвету
+        l.setEnabled(castShadows);
         parent.addLight(l);
-        logger.debug("[{}] SKY color={}", cid, col);
+
+        logger.debug("[{}] SKY color={} intensity={} castShadows={}", cid, col, intensity, castShadows);
     }
+
 
     private ColorRGBA readColor(ByteBuffer buf) {
         return new ColorRGBA(buf.getFloat(), buf.getFloat(), buf.getFloat(), buf.getFloat());
