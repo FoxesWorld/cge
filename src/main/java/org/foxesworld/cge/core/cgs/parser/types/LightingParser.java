@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.HexFormat;
 
@@ -23,7 +24,6 @@ public class LightingParser implements ChunkParser {
     private enum LightType {
         POINT, DIRECTIONAL, SPOT, SKY;
 
-        // Метод для получения LightType по строковому значению
         public static LightType fromString(String type) {
             try {
                 return LightType.valueOf(type.toUpperCase());
@@ -35,7 +35,7 @@ public class LightingParser implements ChunkParser {
 
     @Override
     public Spatial parse(CalistaGameEngine engine, SceneChunk chunk) {
-        ByteBuffer buf = chunk.getData();
+        ByteBuffer buf = chunk.getData().order(ByteOrder.BIG_ENDIAN);
         buf.rewind();
 
         logger.debug("Chunk {} raw size = {} bytes", chunk.getId(), buf.remaining());
@@ -51,16 +51,16 @@ public class LightingParser implements ChunkParser {
         Node lightNode = new Node("LightingChunk-" + chunk.getId());
 
         for (int i = 0; i < count; i++) {
-            if (buf.remaining() < 1) {
-                logger.warn("[{}] Unexpected end before type byte at light {}", chunk.getId(), i);
+            if (buf.remaining() < 3) {
+                logger.warn("[{}] Unexpected end before light type at light {}", chunk.getId(), i);
                 break;
             }
 
             int posBefore = buf.position();
-            String typeString = readLightType(buf);  // Читаем строку типа света
+            String typeString = readLightType(buf);
 
             try {
-                LightType type = LightType.fromString(typeString);  // Преобразуем строку в LightType
+                LightType type = LightType.fromString(typeString);
                 switch (type) {
                     case POINT -> parsePoint(chunk.getId(), buf, lightNode);
                     case DIRECTIONAL -> parseDirectional(chunk.getId(), buf, lightNode);
@@ -78,24 +78,30 @@ public class LightingParser implements ChunkParser {
         return lightNode;
     }
 
-    // Метод для извлечения строки типа света из буфера
+    /**
+     * Reads a fixed 3-byte ASCII tag (e.g., "Sky").
+     */
+    /**
+     * Reads a variable-length ASCII light type (e.g., POINT, DIRECTIONAL, SPOT, SKY).
+     * Stops at the first non-letter byte.
+     */
     private String readLightType(ByteBuffer buf) {
-        // Допустим, строка будет длиной не более 4 символов для типа
-        int maxLength = 4;  // Максимальная длина строки типа света (например, "Sky")
-
-        if (buf.remaining() < maxLength) {
-            logger.warn("Not enough data to read light type, remaining={}", buf.remaining());
-            return "";  // Возвращаем пустую строку, если данных недостаточно
+        StringBuilder sb = new StringBuilder();
+        while (buf.remaining() > 0) {
+            buf.mark();
+            byte b = buf.get();
+            // Accept letters only
+            if ((b >= 'A' && b <= 'Z') || (b >= 'a' && b <= 'z')) {
+                sb.append((char) b);
+            } else {
+                // Non-letter: rewind one byte for subsequent parsing
+                buf.reset();
+                break;
+            }
         }
-
-        byte[] stringBytes = new byte[maxLength];
-        buf.get(stringBytes);  // Читаем байты
-
-        // Преобразуем байты в строку и обрезаем лишние символы
-        String typeString = new String(stringBytes, StandardCharsets.UTF_8).trim();
-
-        logger.debug("Read light type string: {}", typeString);
-        return typeString;
+        String s = sb.toString();
+        logger.debug("Read light type string: {}", s);
+        return s;
     }
 
     private void parsePoint(int cid, ByteBuffer buf, Node parent) {
@@ -106,14 +112,11 @@ public class LightingParser implements ChunkParser {
             buf.position(buf.limit());
             return;
         }
-
         Vector3f pos = new Vector3f(buf.getFloat(), buf.getFloat(), buf.getFloat());
         ColorRGBA col = readColor(buf);
         float radius = buf.getFloat();
-
         PointLight l = new PointLight(pos, col.mult(col.a), radius);
         parent.addLight(l);
-
         logger.debug("[{}] POINT pos={} radius={} color={}", cid, pos, radius, col);
     }
 
@@ -125,13 +128,10 @@ public class LightingParser implements ChunkParser {
             buf.position(buf.limit());
             return;
         }
-
         Vector3f dir = new Vector3f(buf.getFloat(), buf.getFloat(), buf.getFloat()).normalizeLocal();
         ColorRGBA col = readColor(buf);
-
         DirectionalLight l = new DirectionalLight(dir, col.mult(col.a));
         parent.addLight(l);
-
         logger.debug("[{}] DIRECTIONAL dir={} color={}", cid, dir, col);
     }
 
@@ -143,34 +143,29 @@ public class LightingParser implements ChunkParser {
             buf.position(buf.limit());
             return;
         }
-
         Vector3f pos = new Vector3f(buf.getFloat(), buf.getFloat(), buf.getFloat());
         ColorRGBA col = readColor(buf);
         float radius = buf.getFloat();
-
         SpotLight l = new SpotLight();
         l.setPosition(pos);
         l.setDirection(new Vector3f(0, -1, 0));
         l.setSpotRange(radius);
         l.setColor(col.mult(col.a));
         parent.addLight(l);
-
         logger.debug("[{}] SPOT pos={} range={} color={}", cid, pos, radius, col);
     }
 
     private void parseSky(int cid, ByteBuffer buf, Node parent) {
-        int required = 4 * Float.BYTES;
+        int required = Float.BYTES * 4;
         if (buf.remaining() < required) {
             logger.warn("[{}] Not enough data for SKY (color), remaining={}, hex={}",
                     cid, buf.remaining(), dumpBufferHex(buf));
             buf.position(buf.limit());
             return;
         }
-
         ColorRGBA col = readColor(buf);
         AmbientLight l = new AmbientLight(col.mult(col.a));
         parent.addLight(l);
-
         logger.debug("[{}] SKY color={}", cid, col);
     }
 
@@ -180,7 +175,7 @@ public class LightingParser implements ChunkParser {
 
     private String dumpBufferHex(ByteBuffer buf) {
         byte[] bytes = new byte[buf.remaining()];
-        buf.slice().get(bytes); // не меняет позицию оригинального буфера
+        buf.slice().get(bytes);
         return HEX.formatHex(bytes);
     }
 }

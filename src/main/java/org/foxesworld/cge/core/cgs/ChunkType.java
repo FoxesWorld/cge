@@ -45,6 +45,8 @@ public enum ChunkType {
             case LIGHTING -> {
                 map.put("lightType", "enum:Directional|Point|Spot|Sky");
                 map.put("intensity", "float");
+                // RGBA color components (red, green, blue, alpha)
+                map.put("color", "float4");
                 map.put("castsShadow", "bool");
             }
             case MATERIALS -> {

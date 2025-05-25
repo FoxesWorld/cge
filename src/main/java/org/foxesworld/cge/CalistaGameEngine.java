@@ -1,5 +1,7 @@
 package org.foxesworld.cge;
 
+import com.formdev.flatlaf.FlatLaf;
+import com.formdev.flatlaf.themes.FlatMacDarkLaf;
 import com.jme3.app.SimpleApplication;
 import com.jme3.input.KeyInput;
 import com.jme3.input.controls.ActionListener;
@@ -17,6 +19,8 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 import java.util.Map;
 import java.util.logging.LogManager;
 
+import static org.foxesworld.cge.tools.SceneCreator.SceneCgsCreatorFrame.setupTheme;
+
 public class CalistaGameEngine extends SimpleApplication {
 
     private ModuleManager moduleManager;
@@ -26,7 +30,7 @@ public class CalistaGameEngine extends SimpleApplication {
 
     public static void main(String[] args) {
         CalistaGameEngine app = new CalistaGameEngine();
-
+        setupTheme("theme/calista.properties");
         // Настройка окна (Calista Style)
         AppSettings settings = new AppSettings(true);
         settings.setTitle("Calista Game Engine");

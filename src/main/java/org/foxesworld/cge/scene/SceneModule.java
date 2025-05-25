@@ -4,10 +4,10 @@ import com.jme3.app.Application;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import org.foxesworld.cge.CalistaGameEngine;
-import org.foxesworld.cge.core.cgs.CGSMetadata;
+import org.foxesworld.cge.core.cgs.file.CGSMetadata;
 import org.foxesworld.cge.core.cgs.SceneChunk;
 import org.foxesworld.cge.core.cgs.ChunkEntry;
-import org.foxesworld.cge.core.cgs.parser.ParsedCGSFile;
+import org.foxesworld.cge.core.cgs.parser.CGSFileReader;
 import org.foxesworld.cge.core.cgs.parser.types.*;
 import org.foxesworld.cge.core.module.EngineModule;
 import org.foxesworld.cge.core.module.ModuleHealthMonitor;
@@ -27,7 +27,7 @@ public class SceneModule extends EngineModule<SceneConfig> {
 
     // scene-specific
     private CGSMetadata cgsMetadata;
-    private ParsedCGSFile sceneFile;
+    private CGSFileReader sceneFile;
     private List<ChunkEntry> entries;
 
     // generic streaming manager for chunks
@@ -60,26 +60,26 @@ public class SceneModule extends EngineModule<SceneConfig> {
         }
 
         // 1) Загружаем метаданные сцены
-        sceneFile = new ParsedCGSFile(file);
+        sceneFile = new CGSFileReader(file);
         cgsMetadata = sceneFile.getMetadata();
 
         logger.info("Loaded CGS file ― magic={}, sceneName={}, version={}, tableOffset={}, chunkCount={}",
-                cgsMetadata.magic(),
-                cgsMetadata.sceneName(),
-                cgsMetadata.version(),
-                cgsMetadata.tableOffset(),
-                cgsMetadata.chunkCount()
+                cgsMetadata.getMagic(),
+                cgsMetadata.getSceneName(),
+                cgsMetadata.getVersion(),
+                cgsMetadata.getTableOffset(),
+                cgsMetadata.getChunkCount()
         );
         entries = new ArrayList<>(sceneFile.getChunkEntries());
 
         // 2) Создаём универсальный StreamingManager для Integer->SceneChunk
         streamingManager = new StreamingManager<>(
-                key -> sceneFile.getChunk(key),
+                key -> sceneFile.readChunk(key),
                 true,
                 2
         );
 
-        sceneRoot = new Node(cgsMetadata.sceneName());
+        sceneRoot = new Node(cgsMetadata.getSceneName());
         chunksRemaining.set(entries.size());
         logger.info("SceneModule: {} chunks to stream", entries.size());
 

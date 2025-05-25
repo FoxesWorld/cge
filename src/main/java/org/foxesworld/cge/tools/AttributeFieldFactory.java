@@ -1,20 +1,106 @@
 package org.foxesworld.cge.tools;
 
 import javax.swing.*;
-import java.util.*;
+import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.function.Function;
 
 public class AttributeFieldFactory {
+    private static final Map<String, Function<String, JComponent>> FIELD_CREATORS = new HashMap<>();
+    private static final Dimension DEFAULT_SIZE = new Dimension(40, 20);
+    private static final int DEFAULT_COLUMNS = 10;
+
+    static {
+        // Инициализация фабричных методов
+        FIELD_CREATORS.put("enum", AttributeFieldFactory::createEnumField);
+        FIELD_CREATORS.put("bool", s -> new JCheckBox());
+        FIELD_CREATORS.put("int", s -> createNumberField(s, Integer::parseInt));
+        FIELD_CREATORS.put("float", s -> createNumberField(s, Float::parseFloat));
+        FIELD_CREATORS.put("string", s -> new JTextField(DEFAULT_COLUMNS));
+        FIELD_CREATORS.put("vec3", s -> createVectorField(3));
+        FIELD_CREATORS.put("vec4", s -> createColorPanel(Color.WHITE, true));
+        FIELD_CREATORS.put("color", s -> createColorPanel(Color.WHITE, false));
+        FIELD_CREATORS.put("float4", s -> createColorPanel(Color.WHITE, false));
+    }
 
     public static JComponent createField(String type) {
-        if (type.startsWith("enum:")) {
-            String[] options = type.substring(5).split("\\|");
-            return new JComboBox<>(options);
+        String typeKey = type.contains(":") ? type.split(":")[0] : type;
+        return FIELD_CREATORS.getOrDefault(typeKey.toLowerCase(),
+                        t -> new JLabel("Unknown type: " + t))
+                .apply(type);
+    }
+
+    private static JComboBox<String> createEnumField(String type) {
+        String[] options = type.contains(":") ?
+                type.split(":")[1].split("\\|") : new String[0];
+        return new JComboBox<>(options);
+    }
+
+    private static JFormattedTextField createNumberField(String type, Function<String, Number> parser) {
+        JFormattedTextField field = new JFormattedTextField(parser);
+        field.setColumns(DEFAULT_COLUMNS);
+        field.setValue(0);
+        return field;
+    }
+
+    private static JPanel createVectorField(int components) {
+        JPanel panel = new JPanel(new GridLayout(1, components));
+        for (int i = 0; i < components; i++) {
+            panel.add(new JTextField(DEFAULT_COLUMNS));
         }
-        return switch (type) {
-            case "bool" -> new JCheckBox();
-            case "float", "int", "string" -> new JTextField(10);
-            case "vec3", "vec4" -> new JTextField("0.0,0.0,0.0"); // можно улучшить
-            default -> new JLabel("Unknown type: " + type);
-        };
+        return panel;
+    }
+
+    private static JPanel createColorPanel(Color initialColor, boolean withAlpha) {
+        ColorPanel colorPanel = new ColorPanel(initialColor, withAlpha);
+        colorPanel.setPreferredSize(DEFAULT_SIZE);
+        colorPanel.addMouseListener(new ColorPickerListener(colorPanel, withAlpha));
+        return colorPanel;
+    }
+
+    // Вложенный класс для цветовых панелей
+    private static class ColorPanel extends JPanel {
+        private boolean withAlpha;
+
+        ColorPanel(Color color, boolean withAlpha) {
+            this.withAlpha = withAlpha;
+            setBackground(color);
+            setBorder(BorderFactory.createLineBorder(Color.BLACK));
+        }
+
+        Color getColorWithAlpha() {
+            Color c = getBackground();
+            return withAlpha ? c : new Color(c.getRGB(), false);
+        }
+    }
+
+    // Обработчик выбора цвета
+    private static class ColorPickerListener extends MouseAdapter {
+        private final ColorPanel colorPanel;
+        private final boolean withAlpha;
+
+        ColorPickerListener(ColorPanel panel, boolean withAlpha) {
+            this.colorPanel = panel;
+            this.withAlpha = withAlpha;
+        }
+
+        @Override
+        public void mouseClicked(MouseEvent e) {
+            Color chosenColor = JColorChooser.showDialog(
+                    colorPanel,
+                    "Choose Color",
+                    colorPanel.getBackground()
+            );
+
+            if (chosenColor != null) {
+                colorPanel.setBackground(withAlpha ?
+                        chosenColor :
+                        new Color(chosenColor.getRGB(), false));
+                colorPanel.repaint();
+            }
+        }
     }
 }

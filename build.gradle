@@ -30,6 +30,12 @@ dependencies {
 
     implementation 'com.github.stephengold:Minie:7.6.0'
     implementation fileTree(dir: 'libs', include: ['*.jar'])
+
+    //UI
+    implementation 'com.formdev:flatlaf:3.4.1'
+
+    // Дополнительные темы (опционально)
+    implementation 'com.formdev:flatlaf-extras:3.4.1'
 }
 
 application {
