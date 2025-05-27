@@ -4,7 +4,11 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.input.KeyInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
+import com.jme3.light.AmbientLight;
+import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
+import com.jme3.math.ColorRGBA;
+import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.shape.Box;
 import com.jme3.system.AppSettings;
@@ -46,8 +50,8 @@ public class CalistaGameEngine extends SimpleApplication {
         settings.setSettingsDialogImage("/theme/logo.png");
         settings.setResolution(1280, 720); // Примерное разрешение
         settings.setSamples(4); // Сглаживание
-        settings.setVSync(true);
-        settings.setFrameRate(165);
+        settings.setVSync(false);
+        settings.setFrameRate(-1);
         settings.setFullscreen(false);
         settings.setResizable(true);
         try (InputStream icoStream = CalistaGameEngine.class.getClassLoader().getResourceAsStream("theme/icon/favicon.ico")) {
@@ -105,7 +109,7 @@ public class CalistaGameEngine extends SimpleApplication {
         // Инициализация менеджера модулей
         moduleManager = new ModuleManager(this);
         moduleManager.register(new RendererModule(this), 10);
-        moduleManager.register(new PhysicsModule(this), 20);
+        //moduleManager.register(new PhysicsModule(this), 20);
         moduleManager.register(new SceneModule(this), 10);
         moduleManager.initializeAll(this);
 
@@ -113,13 +117,18 @@ public class CalistaGameEngine extends SimpleApplication {
         inputManager.addMapping("ReloadConfig", new KeyTrigger(KeyInput.KEY_F5));
         inputManager.addListener(actionListener, "ReloadConfig");
 
+        // ——— Добавляем геометрию для теста ———
         Box box = new Box(1f, 1f, 1f);
         Geometry geom = new Geometry("TestBox", box);
-        Material mat = new Material(this.getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
-        geom.setMaterial(mat);
-        getRootNode().attachChild(geom);
-
+        Material litMat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
+        litMat.setBoolean("UseMaterialColors", true);
+        litMat.setColor("Diffuse", ColorRGBA.Blue);
+        litMat.setColor("Specular", ColorRGBA.White);
+        litMat.setFloat("Shininess", 64f);
+        geom.setMaterial(litMat);
+        rootNode.attachChild(geom);
     }
+
 
     private final ActionListener actionListener = new ActionListener() {
         @Override

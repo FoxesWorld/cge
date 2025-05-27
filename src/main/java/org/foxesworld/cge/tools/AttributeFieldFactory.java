@@ -21,20 +21,98 @@ public class AttributeFieldFactory {
     static {
         // Инициализация фабричных методов
         FIELD_CREATORS.put("enum", AttributeFieldFactory::createEnumField);
-        FIELD_CREATORS.put("bool", s -> new JCheckBox());
-        FIELD_CREATORS.put("int", s -> createNumberField(s, Integer::parseInt));
-        FIELD_CREATORS.put("float", s -> createNumberField(s, Float::parseFloat));
-        FIELD_CREATORS.put("string", s -> new JTextField(DEFAULT_COLUMNS));
-        FIELD_CREATORS.put("vec3", s -> createVectorField(3));
-        FIELD_CREATORS.put("vec4", s -> createColorPanel(Color.WHITE, true));
-        FIELD_CREATORS.put("color", s -> createColorPanel(Color.WHITE, false));
-        FIELD_CREATORS.put("float4", s -> createColorPanel(Color.WHITE, false));
+        FIELD_CREATORS.put("BOOLEAN", s -> new JCheckBox());
+        FIELD_CREATORS.put("INT", s -> createNumberField(s, Integer::parseInt));
+        FIELD_CREATORS.put("FLOAT", s -> createNumberField(s, Float::parseFloat));
+        FIELD_CREATORS.put("STRING", s -> new JTextField(DEFAULT_COLUMNS));
+        FIELD_CREATORS.put("VECTOR3F", s -> createVectorField(3));
+        FIELD_CREATORS.put("VEC4", s -> createColorPanel(Color.WHITE, true));
+        FIELD_CREATORS.put("COLOR", s -> createColorPanel(Color.WHITE, false));
+        FIELD_CREATORS.put("FLOAT4", s -> createColorPanel(Color.WHITE, false));
     }
+
+    public static Object getValue(JComponent field, String type) {
+        logger.info("Getting value of {} type", type);
+        String typeKey = type.contains(":") ? type.split(":")[0].toUpperCase() : type.toUpperCase();
+
+        switch (typeKey) {
+            case "BOOLEAN" -> {
+                return ((JCheckBox) field).isSelected();
+            }
+            case "INT" -> {
+                return ((JFormattedTextField) field).getValue();
+            }
+            case "FLOAT" -> {
+                return ((JFormattedTextField) field).getValue();
+            }
+            case "STRING" -> {
+                return ((JTextField) field).getText();
+            }
+            case "VECTOR3F", "FLOAT3" -> {
+                return extractFloatStringFromPanel(field, 3);
+            }
+            case "VEC4", "FLOAT4" -> {
+                return extractFloatStringFromPanel(field, 4);
+            }
+            case "COLOR" -> {
+                return ((ColorPanel) field).getColorAsCommaString(); // возвращаем java.awt.Color
+            }
+            case "ENUM" -> {
+                return ((JComboBox<?>) field).getSelectedItem();
+            }
+            default -> {
+                logger.warn("Unknown or unsupported type in getValue: {}", type);
+                return "undefined";
+            }
+        }
+    }
+
+    /**
+     * Извлекает из панели векторных спиннеров массив значений и возвращает их
+     * в виде строки с разделителем запятая.
+     *
+     * @param panel        контейнер, в котором для каждого компонента вектора есть вложенный JPanel с JSpinner
+     * @param expectedSize ожидаемое количество элементов в векторе
+     * @return строка вида "x1,x2, ..., xn"
+     */
+    private static String extractFloatStringFromPanel(JComponent panel, int expectedSize) {
+        Component[] components = panel.getComponents();
+        StringBuilder sb = new StringBuilder();
+        int count = 0;
+
+        for (Component comp : components) {
+            if (comp instanceof JPanel vecPanel && count < expectedSize) {
+                // Предполагаем, что спиннер — второй компонент внутри vecPanel
+                Component spinnerComp = vecPanel.getComponentCount() > 1 ? vecPanel.getComponent(1) : null;
+                if (spinnerComp instanceof JSpinner spinner) {
+                    Object val = spinner.getValue();
+                    float f = (val instanceof Number) ? ((Number) val).floatValue() : 0f;
+                    if (count > 0) {
+                        sb.append(',');
+                    }
+                    sb.append(f);
+                    count++;
+                }
+            }
+        }
+
+        // Если не набралось нужного числа, дополняем нулями
+        while (count < expectedSize) {
+            sb.append(',').append(0f);
+            count++;
+        }
+
+        return sb.toString();
+    }
+
+
+
+
 
     public static JComponent createField(String type) {
         String typeKey = type.contains(":") ? type.split(":")[0] : type;
         logger.debug("Creating field for type: {}", typeKey);  // Логируем создание поля
-        return FIELD_CREATORS.getOrDefault(typeKey.toLowerCase(),
+        return FIELD_CREATORS.getOrDefault(typeKey.toUpperCase(),
                         t -> new JLabel("Unknown type: " + t))
                 .apply(type);
     }
@@ -58,13 +136,41 @@ public class AttributeFieldFactory {
     }
 
     private static JPanel createVectorField(int components) {
-        logger.debug("Creating vector field with {} components", components);  // Логируем создание векторного поля
-        JPanel panel = new JPanel(new GridLayout(1, components));
+        logger.debug("Creating styled vector field with {} components", components);
+        JPanel panel = new JPanel();
+        panel.setLayout(new FlowLayout(FlowLayout.LEFT, 5, 0));
+
+        String[] labels = {"X", "Y", "Z", "W"};
+        SpinnerNumberModel[] models = new SpinnerNumberModel[components];
+
         for (int i = 0; i < components; i++) {
-            panel.add(new JTextField(DEFAULT_COLUMNS));
+            models[i] = new SpinnerNumberModel(0.0f, -Float.MAX_VALUE, Float.MAX_VALUE, 0.1f);
+            JSpinner spinner = new JSpinner(models[i]);
+            spinner.setPreferredSize(new Dimension(60, 24));
+            spinner.setFont(new Font("Monospaced", Font.PLAIN, 12));
+            JComponent editor = spinner.getEditor();
+            if (editor instanceof JSpinner.DefaultEditor defEditor) {
+                defEditor.getTextField().setHorizontalAlignment(JTextField.RIGHT);
+            }
+
+            JPanel componentPanel = new JPanel();
+            componentPanel.setLayout(new BorderLayout(3, 0));
+            if (i < labels.length) {
+                JLabel label = new JLabel(labels[i]);
+                label.setFont(new Font("SansSerif", Font.BOLD, 11));
+                label.setPreferredSize(new Dimension(15, 24));
+                componentPanel.add(label, BorderLayout.WEST);
+            }
+            componentPanel.add(spinner, BorderLayout.CENTER);
+
+            panel.add(componentPanel);
         }
+
+        panel.setBorder(BorderFactory.createEmptyBorder(2, 2, 2, 2));
         return panel;
     }
+
+
 
     private static JPanel createColorPanel(Color initialColor, boolean withAlpha) {
         logger.debug("Creating color panel with initial color: {} and alpha: {}", initialColor, withAlpha);  // Логируем создание цветовой панели
@@ -74,20 +180,56 @@ public class AttributeFieldFactory {
         return colorPanel;
     }
 
-    private static class ColorPanel extends JPanel {
-        private boolean withAlpha;
+    public static class ColorPanel extends JPanel {
+        private final boolean withAlpha;
 
-        ColorPanel(Color color, boolean withAlpha) {
+        public ColorPanel(Color color, boolean withAlpha) {
             this.withAlpha = withAlpha;
             setBackground(color);
             setBorder(BorderFactory.createLineBorder(Color.BLACK));
         }
 
-        Color getColorWithAlpha() {
+        /** Возвращает текущий цвет (без учёта/с учётом альфа) */
+        public Color getColorWithAlpha() {
             Color c = getBackground();
-            return withAlpha ? c : new Color(c.getRGB(), false);
+            return withAlpha ? c : new Color(c.getRed(), c.getGreen(), c.getBlue());
+        }
+
+        /** Старый метод, при необходимости оставляем */
+        public float[] getColorAsFloatArray() {
+            Color c = getColorWithAlpha();
+            float r = c.getRed() / 255f;
+            float g = c.getGreen() / 255f;
+            float b = c.getBlue() / 255f;
+
+            if (withAlpha) {
+                float a = c.getAlpha() / 255f;
+                return new float[]{r, g, b, a};
+            } else {
+                return new float[]{r, g, b};
+            }
+        }
+
+        /**
+         * Новый метод: возвращает строку "R,G,B" или "R,G,B,A"
+         */
+        public String getColorAsCommaString() {
+            Color c = getColorWithAlpha();
+            StringBuilder sb = new StringBuilder()
+                    .append(c.getRed())
+                    .append(',')
+                    .append(c.getGreen())
+                    .append(',')
+                    .append(c.getBlue());
+
+            if (withAlpha) {
+                sb.append(',').append(c.getAlpha());
+            }
+
+            return sb.toString();
         }
     }
+
 
     private static class ColorPickerListener extends MouseAdapter {
         private final ColorPanel colorPanel;

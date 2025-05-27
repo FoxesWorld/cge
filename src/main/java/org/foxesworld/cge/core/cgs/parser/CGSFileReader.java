@@ -7,9 +7,11 @@ import org.foxesworld.cge.core.cgs.file.CGSMetadata;
 import org.foxesworld.cge.core.cgs.ChunkType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
+import java.nio.file.Files;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -30,6 +32,14 @@ public class CGSFileReader extends CGSFile {
         logger.info("================ CGS FILE READ START ================");
         logger.info("Opening file: {}", file.getAbsolutePath());
 
+        // === DEBUG: Выводим всё содержимое файла в HEX ===
+        try {
+            byte[] allBytes = Files.readAllBytes(file.toPath());
+            logger.debug("Full file HEX dump ({} bytes):\n{}", allBytes.length, HEX.formatHex(allBytes));
+        } catch (IOException e) {
+            logger.warn("Failed to dump full file hex: {}", e.getMessage());
+        }
+
         // Delegate header parsing
         var header = readHeader();
         this.metadata = new CGSMetadata(header.getMagic(), header.getSceneName(), header.getVersion(), header.getTableOffset(), -1);
@@ -49,8 +59,9 @@ public class CGSFileReader extends CGSFile {
             ChunkType type = ChunkType.values()[raf.readInt()];
             ChunkEntry entry = new ChunkEntry(id, offset, length, type);
             chunkTable.put(id, entry);
-            logger.debug(" Entry[{}]: {}", i, entry);
+            logger.debug("  - Entry[{}]: {}", i, entry);
         }
+
         logger.info("================= CGS FILE READ END =================");
     }
 
@@ -80,7 +91,6 @@ public class CGSFileReader extends CGSFile {
         logger.debug("Chunk {} raw data (hex): {}", id, HEX.formatHex(data));
         logger.info("Chunk id={} Read: {} bytes", id, data.length);
 
-        // Ensure consistent LITTLE_ENDIAN ordering
         ByteBuffer buf = ByteBuffer.wrap(data).order(BYTE_ORDER);
         return new SceneChunk(entry, buf);
     }

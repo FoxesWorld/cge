@@ -3,31 +3,33 @@ package org.foxesworld.cge.tools.SceneCreator;
 import javax.swing.*;
 import java.awt.*;
 
-public class ChunkViewport extends JPanel {
-    private String info = "No Chunk Selected";
+public class ChunkViewport extends JScrollPane {
+    private final JTextArea textArea;
 
     public ChunkViewport() {
-        setBackground(Color.DARK_GRAY);
+        textArea = new JTextArea("No Chunk Selected");
+        textArea.setEditable(false);
+        textArea.setLineWrap(true);
+        textArea.setWrapStyleWord(true);
+        textArea.setBackground(Color.DARK_GRAY);
+        textArea.setForeground(Color.WHITE);
+        textArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 12));
+        setViewportView(textArea);
+        // Убираем рамку у текстового поля, оставляем только рамку скроллпэна
+        textArea.setBorder(null);
     }
 
+    /**
+     * Показывает описание чанка.
+     * @param description multiline-текст, который автоматически перенесётся и прокрутится
+     */
     public void showChunk(String description) {
-        this.info = description;
-        repaint();
+        textArea.setText(description);
+        // возвращаем видимую область в начало
+        textArea.setCaretPosition(0);
     }
 
     public void clear() {
-        this.info = "No Chunk Selected";
-        repaint();
-    }
-
-    @Override
-    protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        g.setColor(Color.WHITE);
-        int x = 10, y = 20;
-        for (String line : info.split("\\n")) {
-            g.drawString(line, x, y);
-            y += 15;
-        }
+        showChunk("No Chunk Selected");
     }
 }

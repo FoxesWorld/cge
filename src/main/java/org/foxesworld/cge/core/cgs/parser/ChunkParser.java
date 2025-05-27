@@ -4,11 +4,12 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.scene.Spatial;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.cgs.SceneChunk;
+import org.foxesworld.cge.core.cgs.ChunkFieldTypeConfigLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
-import java.util.HashMap;
+import java.nio.charset.StandardCharsets;
 import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.Map;
@@ -19,6 +20,7 @@ import java.util.function.Function;
  * и автоматически читать значения из {@link ByteBuffer} в порядке определения.
  */
 public abstract class ChunkParser {
+    private static final HexFormat HEX = HexFormat.of();
     private static final Logger logger = LoggerFactory.getLogger(ChunkParser.class);
 
     /**
@@ -26,6 +28,7 @@ public abstract class ChunkParser {
      * Тип должен соответствовать ключу в {@link #TYPE_READERS}.
      */
     private Map<String, String> fieldDefinitions = new LinkedHashMap<>();
+    protected Map<String, Map<String, String>> fieldTypes;
 
     /**
      * Результат чтения полей: имя поля → прочитанное значение.
@@ -35,12 +38,32 @@ public abstract class ChunkParser {
     /**
      * Статические функции для чтения значений из ByteBuffer по типу.
      */
-    protected final Map<String, Function<ByteBuffer, Object>> TYPE_READERS = Map.of(
-            "Float",   buf -> buf.getFloat(),
-            "Integer", buf -> buf.getInt(),
-            "Boolean", buf -> buf.get() == 1,
-            "Color",   buf -> new ColorRGBA(buf.getFloat(), buf.getFloat(), buf.getFloat(), buf.getFloat())
-    );
+    protected final Map<String, Function<ByteBuffer, Object>> TYPE_READERS = new LinkedHashMap<>() {{
+        put("Float",    buf -> buf.getFloat());
+        put("Integer",  buf -> buf.getInt());
+        put("Boolean",  buf -> buf.get() == 1);
+        put("Vector3f", buf -> new com.jme3.math.Vector3f(
+                buf.getFloat(),
+                buf.getFloat(),
+                buf.getFloat()
+        ));
+        put("Color",    buf -> {
+            // если цвет записан как 4 байта R,G,B,A
+            int r = buf.get() & 0xFF;
+            int g = buf.get() & 0xFF;
+            int b = buf.get() & 0xFF;
+            int a = buf.get() & 0xFF;
+            return new ColorRGBA(r/255f, g/255f, b/255f, a/255f);
+        });
+        put("String",   buf -> {
+            // читаем короткую UTF-строку: сначала длину, потом байты
+            int len = buf.getShort() & 0xFFFF;
+            byte[] bytes = new byte[len];
+            buf.get(bytes);
+            return new String(bytes, StandardCharsets.UTF_8);
+        });
+    }};
+
 
     /**
      * Читает все заранее определённые поля из буфера в {@link #fieldValues}.
@@ -50,8 +73,7 @@ public abstract class ChunkParser {
      */
     protected void readFields(ByteBuffer buf) {
         fieldValues.clear();
-        logger.debug("Reading fields from buffer ({} bytes): {}",
-                buf.remaining(), dumpBufferHex(buf));
+        logger.debug("Reading fields from buffer ({} bytes): {}", buf.remaining(), dumpBufferHex(buf));
 
         for (var entry : fieldDefinitions.entrySet()) {
             String name = entry.getKey();
@@ -64,6 +86,7 @@ public abstract class ChunkParser {
         logger.debug("Completed reading fields: {}", fieldValues);
     }
 
+    protected abstract String getType(ByteBuffer buf);
     /**
      * Основной метод парсинга чанка.
      * Рекомендуется при реализации:
@@ -76,10 +99,10 @@ public abstract class ChunkParser {
      *
      * @param engine движок CGE
      * @param chunk  данные чанка
-     * @param params дополнительные параметры
+     * @param typeConfigLoader дополнительные параметры
      * @return результирующий {@link Spatial}
      */
-    public abstract Spatial parse(CalistaGameEngine engine, SceneChunk chunk, Map<String, String> params);
+    public abstract Spatial parse(CalistaGameEngine engine, SceneChunk chunk, ChunkFieldTypeConfigLoader typeConfigLoader);
 
     /**
      * Возвращает карту определений полей (для наследников).
@@ -99,9 +122,36 @@ public abstract class ChunkParser {
         this.fieldDefinitions = fieldDefinitions;
     }
 
-    private String dumpBufferHex(ByteBuffer buf) {
+    protected String dumpBufferHex(ByteBuffer buf) {
         byte[] bytes = new byte[buf.remaining()];
         buf.slice().get(bytes);
-        return HexFormat.of().formatHex(bytes);
+        return HEX.formatHex(bytes);
     }
+
+    protected String readUTF(ByteBuffer buf) {
+        int startPos = buf.position();
+
+        if (buf.remaining() < 2) {
+            logger.warn("readUTF: Not enough bytes to read length (pos={}, remaining={})", startPos, buf.remaining());
+            return "";
+        }
+
+        int len = buf.getShort() & 0xFFFF;
+
+        if (buf.remaining() < len) {
+            logger.warn("readUTF: Not enough data to read string of length {} (pos={}, remaining={}, hex={})",
+                    len, startPos, buf.remaining(), dumpBufferHex(buf));
+            return "";
+        }
+
+        byte[] bytes = new byte[len];
+        buf.get(bytes);
+
+        String result = new String(bytes, StandardCharsets.UTF_8);
+        logger.debug("readUTF: Read string='{}' (length={}, pos={}, newPos={})",
+                result, len, startPos, buf.position());
+
+        return result;
+    }
+
 }

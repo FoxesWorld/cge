@@ -8,71 +8,78 @@ import com.jme3.scene.Spatial;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.cgs.SceneChunk;
 import org.foxesworld.cge.core.cgs.parser.ChunkParser;
+import org.foxesworld.cge.core.cgs.ChunkFieldTypeConfigLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.util.HexFormat;
-import java.util.Map;
 
 public class LightingParser extends ChunkParser {
 
     private static final Logger logger = LoggerFactory.getLogger(LightingParser.class);
-    private static final HexFormat HEX = HexFormat.of();
 
     private enum LightType {
         POINT, DIRECTIONAL, SPOT, SKY
     }
 
     @Override
-    public Spatial parse(CalistaGameEngine engine, SceneChunk chunk, Map<String, String> args) {
-        logger.debug("Parsing LightingChunk {} with args: {}", chunk.getId(), args);
-        setFieldDefinitions(args);
+    public Spatial parse(CalistaGameEngine engine, SceneChunk chunk, ChunkFieldTypeConfigLoader typeConfigLoader) {
+        fieldTypes = typeConfigLoader.getSubTypesForChunkType("LIGHTING");
+        logger.debug("Parsing LightingChunk {}", chunk.getId());
         ByteBuffer buf = chunk.getData().order(ByteOrder.BIG_ENDIAN);
         buf.rewind();
 
         logger.debug("Chunk {} raw size = {} bytes", chunk.getId(), buf.remaining());
 
-        if (buf.remaining() < Integer.BYTES) {
-            logger.warn("[{}] Not enough data for light count", chunk.getId());
-            return new Node("LightingChunk-" + chunk.getId());
-        }
+        Spatial lightNode = new Node("LightingChunk-" + chunk.getId());
+        int index = 0;
 
-        int count = buf.getInt();
-        logger.debug("Parsing LightingChunk {}: {} lights", chunk.getId(), count);
+        while (buf.remaining() > 0) {
+            int posBefore = buf.position();
 
-        Node lightNode = new Node("LightingChunk-" + chunk.getId());
-
-        for (int i = 0; i < count; i++) {
-            if (buf.remaining() < 3) {
-                logger.warn("[{}] Unexpected end before light type at light {}", chunk.getId(), i);
+            if (buf.remaining() < 2) {
+                logger.warn("[{}] Not enough data to read type string length at light {}", chunk.getId(), index);
                 break;
             }
 
-            int posBefore = buf.position();
-            String typeString = readLightType(buf).toUpperCase();
+            String typeString = readUTF(buf).toUpperCase();
+            if (typeString.isEmpty()) {
+                logger.warn("[{}] Empty or invalid light type at index {}, pos={}, remaining={}, hex={}",
+                        chunk.getId(), index, posBefore, buf.remaining(), dumpBufferHex(buf));
+                break;
+            }
 
             try {
                 LightType type = LightType.valueOf(typeString);
-                switch (type) {
-                    case POINT -> parsePoint(chunk.getId(), buf, lightNode);
-                    case DIRECTIONAL -> parseDirectional(chunk.getId(), buf, lightNode);
-                    case SPOT -> parseSpot(chunk.getId(), buf, lightNode);
-                    case SKY -> parseSky(chunk.getId(), buf, lightNode);
-                }
+                Light light = switch (type) {
+                    case POINT -> parsePoint(chunk.getId(), buf);
+                    case DIRECTIONAL -> parseDirectional(chunk.getId(), buf);
+                    case SPOT -> parseSpot(chunk.getId(), buf);
+                    case SKY -> parseSky(chunk.getId(), buf);
+                };
+                /* Свет освещает только объекты которые находятся в го пространстве,
+                * Иначе мы его не увидим
+                * */
+                engine.getRootNode().addLight(light);
+                //logger.debug("Added light '{}' to rootNode", light.getName());
+                lightNode.addLight(light);
+                lightNode.setName(light.getName()+"-node");
+                index++;
             } catch (IllegalArgumentException ex) {
-                logger.warn("[{}] Unknown light type string={} at index {}, pos={}, remaining={}, hex={} ",
-                        chunk.getId(), typeString, i, posBefore, buf.remaining(), dumpBufferHex(buf));
+                logger.warn("[{}] Unknown light type string='{}' at index {}, pos={}, remaining={}, hex={}",
+                        chunk.getId(), typeString, index, posBefore, buf.remaining(), dumpBufferHex(buf));
                 break;
             }
         }
 
-        logger.info("Finished LightingChunk {}", chunk.getId());
+        logger.info("Finished LightingChunk {}, lights parsed: {}", chunk.getId(), index);
         return lightNode;
     }
 
-    private String readLightType(ByteBuffer buf) {
+
+    @Override
+    protected String getType(ByteBuffer buf) {
         StringBuilder sb = new StringBuilder();
         int startPos = buf.position();
         logger.debug("Starting to read light type at buffer position {}", startPos);
@@ -96,83 +103,89 @@ public class LightingParser extends ChunkParser {
         return s;
     }
 
-    private void parsePoint(int cid, ByteBuffer buf, Node parent) {
-        int required = (3 + 4 + 1) * Float.BYTES;
-        if (buf.remaining() < required) {
-            logger.warn("[{}] Not enough data for POINT (pos+color+radius), remaining={}, hex={}",
-                    cid, buf.remaining(), dumpBufferHex(buf));
+    private PointLight parsePoint(int cid, ByteBuffer buf) {
+        setFieldDefinitions(fieldTypes.get("POINT"));
+        final int REQUIRED_BYTES = 9 * Float.BYTES; // = 24
+        if (buf.remaining() < REQUIRED_BYTES) {
+            logger.warn("[{}] Not enough data for POINT (pos+intensity+color+radius), remaining={}, hex={}", cid, buf.remaining(), dumpBufferHex(buf));
             buf.position(buf.limit());
-            return;
+            return new PointLight();
         }
-        Vector3f pos = new Vector3f(buf.getFloat(), buf.getFloat(), buf.getFloat());
-        ColorRGBA col = readColor(buf);
-        float radius = buf.getFloat();
-        PointLight l = new PointLight(pos, col.mult(col.a), radius);
-        parent.addLight(l);
+
+        // 1) Позиция
+        readFields(buf);
+        Vector3f pos = (Vector3f) getFieldValues().get("pos");
+        ColorRGBA col = (ColorRGBA) getFieldValues().get("color");
+        float radius = Float.parseFloat(String.valueOf(getFieldValues().get("radius")));
+
+        PointLight light = new PointLight(pos, col.mult(col.a), radius);
+        light.setName("pointLight-"+cid);
+        //light.setIntensity(intensity);
         logger.debug("[{}] POINT pos={} radius={} color={}", cid, pos, radius, col);
+        return light;
     }
 
-    private void parseDirectional(int cid, ByteBuffer buf, Node parent) {
+
+    private DirectionalLight parseDirectional(int cid, ByteBuffer buf) {
+        setFieldDefinitions(fieldTypes.get("DIRECTIONAL"));
         int required = (3 + 4) * Float.BYTES;
         if (buf.remaining() < required) {
             logger.warn("[{}] Not enough data for DIRECTIONAL (dir+color), remaining={}, hex={}",
                     cid, buf.remaining(), dumpBufferHex(buf));
             buf.position(buf.limit());
-            return;
+            return new DirectionalLight();
         }
-        Vector3f dir = new Vector3f(buf.getFloat(), buf.getFloat(), buf.getFloat()).normalizeLocal();
-        ColorRGBA col = readColor(buf);
+        readFields(buf);
+        Vector3f dir = ((Vector3f) getFieldValues().get("dir")).normalizeLocal();
+        float intensity =  Float.parseFloat(String.valueOf(getFieldValues().get("intensity")));
+        ColorRGBA col = ((ColorRGBA) getFieldValues().get("color")).clone().multLocal(intensity);
         DirectionalLight l = new DirectionalLight(dir, col.mult(col.a));
-        parent.addLight(l);
-        logger.debug("[{}] DIRECTIONAL dir={} color={}", cid, dir, col);
+        l.setName("directionalLight-"+cid);
+        logger.debug("[{}] DIRECTIONAL dir={} color={} intensity={}", cid, dir, col, intensity);
+        return l;
     }
 
-    private void parseSpot(int cid, ByteBuffer buf, Node parent) {
-        int required = (3 + 4 + 1) * Float.BYTES;
-        if (buf.remaining() < required) {
-            logger.warn("[{}] Not enough data for SPOT (pos+color+radius), remaining={}, hex={}",
-                    cid, buf.remaining(), dumpBufferHex(buf));
-            buf.position(buf.limit());
-            return;
-        }
-        Vector3f pos = new Vector3f(buf.getFloat(), buf.getFloat(), buf.getFloat());
-        ColorRGBA col = readColor(buf);
-        float radius = buf.getFloat();
+    private SpotLight parseSpot(int cid, ByteBuffer buf) {
+        setFieldDefinitions(fieldTypes.get("SPOT"));
+        readFields(buf);
+
+        Vector3f pos = (Vector3f) getFieldValues().get("pos");
+        Vector3f dir = (Vector3f) getFieldValues().get("dir");
+        ColorRGBA col = (ColorRGBA) getFieldValues().get("color");
+        float radius = Float.parseFloat(String.valueOf(getFieldValues().get("radius")));
+
         SpotLight l = new SpotLight();
         l.setPosition(pos);
-        l.setDirection(new Vector3f(0, -1, 0));
+        l.setName("spotLight-"+cid);
+        l.setDirection(dir.normalize());
         l.setSpotRange(radius);
         l.setColor(col.mult(col.a));
-        parent.addLight(l);
-        logger.debug("[{}] SPOT pos={} range={} color={}", cid, pos, radius, col);
+        logger.debug("[{}] SPOT pos={} dir={} range={} color={}", cid, pos, dir, radius, col);
+        return l;
     }
 
-    private void parseSky(int cid, ByteBuffer buf, Node parent) {
-        int required = Float.BYTES * 4 + Integer.BYTES + Byte.BYTES;
+
+    private AmbientLight parseSky(int cid, ByteBuffer buf) {
+        setFieldDefinitions(fieldTypes.get("SKY"));
+        int required = Float.BYTES * 5 + Byte.BYTES; // 4 цвета + 1 интенсивность
         if (buf.remaining() < required) {
             logger.warn("[{}] Not enough data for SKY (color + intensity + castShadows), remaining={}, hex={}",
                     cid, buf.remaining(), dumpBufferHex(buf));
             buf.position(buf.limit());
-            return;
+            return new AmbientLight();
         }
         readFields(buf);
-        System.out.println(getFieldValues());
         ColorRGBA col = (ColorRGBA) getFieldValues().get("color");
         float intensity =  Float.parseFloat(String.valueOf(getFieldValues().get("intensity")));
         boolean castShadows = (Boolean)    getFieldValues().get("castShadows");
         AmbientLight l = new AmbientLight(col.mult(col.a).mult(intensity));
+        l.setName("ambientLight-"+cid);
         l.setEnabled(castShadows);
-        parent.addLight(l);
         logger.debug("[{}] SKY color={} intensity={} castShadows={}", cid, col, intensity, castShadows);
+        return l;
     }
 
     private ColorRGBA readColor(ByteBuffer buf) {
         return new ColorRGBA(buf.getFloat(), buf.getFloat(), buf.getFloat(), buf.getFloat());
-    }
-
-    private String dumpBufferHex(ByteBuffer buf) {
-        byte[] bytes = new byte[buf.remaining()];
-        buf.slice().get(bytes);
-        return HEX.formatHex(bytes);
     }
 }

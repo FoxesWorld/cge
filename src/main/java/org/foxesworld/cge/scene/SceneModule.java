@@ -1,9 +1,14 @@
 package org.foxesworld.cge.scene;
 
 import com.jme3.app.Application;
+import com.jme3.material.Material;
+import com.jme3.math.ColorRGBA;
+import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.shape.Box;
 import org.foxesworld.cge.CalistaGameEngine;
+import org.foxesworld.cge.core.cgs.ChunkFieldTypeConfigLoader;
 import org.foxesworld.cge.core.cgs.file.CGSMetadata;
 import org.foxesworld.cge.core.cgs.SceneChunk;
 import org.foxesworld.cge.core.cgs.ChunkEntry;
@@ -12,13 +17,13 @@ import org.foxesworld.cge.core.cgs.parser.types.*;
 import org.foxesworld.cge.core.module.EngineModule;
 import org.foxesworld.cge.core.module.ModuleHealthMonitor;
 import org.foxesworld.cge.core.module.ModuleState;
-import org.foxesworld.cge.renderer.lighting.LightingModule;
 import org.foxesworld.cge.core.streaming.StreamingManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -36,6 +41,7 @@ public class SceneModule extends EngineModule<SceneConfig> {
 
     private Node sceneRoot;
     private CalistaGameEngine app;
+    private ChunkFieldTypeConfigLoader configLoader;
     private final AtomicInteger chunksRemaining = new AtomicInteger(0);
     private final List<Runnable> onSceneReadyCallbacks = new ArrayList<>();
 
@@ -47,6 +53,12 @@ public class SceneModule extends EngineModule<SceneConfig> {
     @Override
     protected void initModule(CalistaGameEngine app) throws Exception {
         logger.info("SceneModule: initializing...");
+
+        try {
+            configLoader = new ChunkFieldTypeConfigLoader(getClass().getClassLoader().getResourceAsStream("chunkArguments.json"));
+        } catch (IOException e) {
+            logger.error("Failed to load chunk field config", e);
+        }
         SceneConfig cfg = getConfig();
         if (cfg == null || cfg.getScenePath() == null) {
             throw new IllegalStateException("SceneConfig or scenePath is null");
@@ -59,15 +71,6 @@ public class SceneModule extends EngineModule<SceneConfig> {
                         this.sceneFile = new CGSFileReader(new File(cfg.getScenePath()));
                         this.cgsMetadata = sceneFile.getMetadata();
                         this.entries = new ArrayList<>(sceneFile.getChunkEntries());
-
-                        logger.info("Loaded CGS file ― magic={}, sceneName={}, version={}, tableOffset={}, chunkCount={}",
-                                cgsMetadata.getMagic(),
-                                cgsMetadata.getSceneName(),
-                                cgsMetadata.getVersion(),
-                                cgsMetadata.getTableOffset(),
-                                cgsMetadata.getChunkCount()
-                        );
-
                         setupStreamingForChunks();
 
                     } catch (Exception e) {
@@ -86,9 +89,7 @@ public class SceneModule extends EngineModule<SceneConfig> {
         this.streamingManager = new StreamingManager<>(sceneFile::readChunk, true, 2);
         this.sceneRoot = new Node(cgsMetadata.getSceneName());
         chunksRemaining.set(entries.size());
-
         logger.info("SceneModule: {} chunks to stream", entries.size());
-
         // Функция для обработки загруженных чанков
         Consumer<SceneChunk> onChunk = chunk -> {
             // Парсим чанк в Spatial
@@ -96,8 +97,7 @@ public class SceneModule extends EngineModule<SceneConfig> {
 
             // Добавляем в sceneRoot
             app.enqueue(() -> {
-                sceneRoot.attachChild(spat);
-
+                app.getRootNode().attachChild(spat);
                 // Если все чанки загружены, прикрепляем sceneRoot к главному RootNode
                 if (chunksRemaining.decrementAndGet() == 0) {
                     attachSceneRoot();
@@ -126,7 +126,10 @@ public class SceneModule extends EngineModule<SceneConfig> {
     private void attachSceneRoot() {
         // Добавляем sceneRoot в главный RootNode
         app.getRootNode().attachChild(sceneRoot);
-        logger.info("All chunks streamed — sceneRoot attached.");
+        logger.info("All chunks streamed sceneRoot attached.");
+        for (Spatial child: app.getRootNode().getChildren()){
+            System.out.println(child.getName());
+        }
 
         // Уведомляем систему, что сцена готова
         ModuleHealthMonitor.getInstance().reportState(getName(), ModuleState.RUNNING);
@@ -138,22 +141,11 @@ public class SceneModule extends EngineModule<SceneConfig> {
         });
     }
 
-
-
     private Spatial parseChunk(CalistaGameEngine app, SceneChunk chunk) {
-        logger.info("Chunk {} data - {}",chunk.getType(), chunk.getData());
-
-        ChunkFieldTypeConfigLoader configLoader;
-        try {
-            configLoader = new ChunkFieldTypeConfigLoader(getClass().getClassLoader().getResourceAsStream("chunkArguments.json"));
-        } catch (IOException e) {
-            logger.error("Failed to load chunk field config", e);
-            return new Node("CustomChunk-" + chunk.getId());
-        }
-        Map<String, String> fieldTypes = configLoader.getFieldTypesForChunkType(chunk.getEntry().type().toString());
+        logger.info("Chunk {} data - {}",chunk.getEntry().type(), dumpBufferHex(chunk.getData()));
         return switch (chunk.getEntry().type()) {
-            case TERRAIN   -> new TerrainParser().parse(app, chunk, fieldTypes);
-            case LIGHTING  -> new LightingParser().parse(app, chunk, fieldTypes);
+            case TERRAIN   -> new TerrainParser().parse(app, chunk, configLoader);
+            case LIGHTING  -> new LightingParser().parse(app, chunk, configLoader);
             default        -> new Node("CustomChunk-" + chunk.getId());
         };
     }
@@ -206,4 +198,14 @@ public class SceneModule extends EngineModule<SceneConfig> {
 
     @Override protected void onEnable() {}
     @Override protected void onDisable() {}
+
+    protected String dumpBufferHex(ByteBuffer buf) {
+        byte[] bytes = new byte[buf.remaining()];
+        buf.slice().get(bytes);
+        return HexFormat.of().formatHex(bytes);
+    }
+
+    public ChunkFieldTypeConfigLoader getConfigLoader() {
+        return configLoader;
+    }
 }

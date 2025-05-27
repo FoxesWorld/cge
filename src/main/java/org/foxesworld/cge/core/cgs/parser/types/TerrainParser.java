@@ -1,6 +1,5 @@
 package org.foxesworld.cge.core.cgs.parser.types;
 
-import com.jme3.asset.AssetManager;
 import com.jme3.material.Material;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
@@ -8,16 +7,22 @@ import com.jme3.terrain.geomipmap.TerrainQuad;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.cgs.SceneChunk;
 import org.foxesworld.cge.core.cgs.parser.ChunkParser;
+import org.foxesworld.cge.core.cgs.ChunkFieldTypeConfigLoader;
 
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.util.List;
 import java.util.Map;
 
 public class TerrainParser extends ChunkParser {
 
     @Override
-    public Spatial parse(CalistaGameEngine calistaGameEngine, SceneChunk chunk, Map<String, String> params) {
+    protected String getType(ByteBuffer buf) {
+        return null;
+    }
+
+    @Override
+    public Spatial parse(CalistaGameEngine calistaGameEngine, SceneChunk chunk, ChunkFieldTypeConfigLoader typeConfigLoader) {
+        fieldTypes = typeConfigLoader.getSubTypesForChunkType("TERRAIN");
         ByteBuffer buf = chunk.getData();
         buf.rewind();
 
@@ -42,8 +47,8 @@ public class TerrainParser extends ChunkParser {
         }
 
         // Извлекаем параметры из params
-        int[] heightMap = extractHeightMap(params);
-        int detailLevel = extractDetailLevel(params);
+        int[] heightMap = extractHeightMap(typeConfigLoader.getFieldTypesForChunkSubType("TERRAIN", "FLAT"));
+        int detailLevel = extractDetailLevel(typeConfigLoader.getFieldTypesForChunkSubType("TERRAIN", "FLAT"));
 
         // Используем аргументы для высот и уровня детализации
         ResizedHeightmap resized = resizeHeightmapToPowerOfTwoPlusOne(heights, width, height, heightMap, detailLevel);

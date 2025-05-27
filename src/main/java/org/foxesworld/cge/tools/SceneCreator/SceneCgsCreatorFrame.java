@@ -6,11 +6,8 @@ import com.formdev.flatlaf.FlatPropertiesLaf;
 import org.foxesworld.cge.ICOParser;
 import org.foxesworld.cge.core.cgs.writer.CGSFileWriter;
 
-
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -22,7 +19,7 @@ public class SceneCgsCreatorFrame extends JFrame {
     private ChunkListPanel listPanel;
     private ChunkControlsPanel controlsPanel;
     private final ChunkViewport viewport = new ChunkViewport();
-    private final JTextField sceneNameField = new JTextField(20);
+    public static final JTextField sceneNameField = new JTextField(20);
 
     public SceneCgsCreatorFrame() {
         super("CGS Scene Creator");
@@ -58,6 +55,15 @@ public class SceneCgsCreatorFrame extends JFrame {
 
         // Инициализация панелей
         listPanel = new ChunkListPanel();
+        listPanel.addChunkSelectionListener(idx -> {
+            if (idx < 0) viewport.clear();
+            else {
+                // получаем spec или данные через writer и передаем в viewport...
+                String desc = writer.getChunkSpec(idx);
+                viewport.showChunk(desc != null ? desc : "No details");
+            }
+        });
+
         controlsPanel = new ChunkControlsPanel(listPanel);
         listPanel.setWriter(writer);
         controlsPanel.setWriter(writer);
@@ -80,30 +86,6 @@ public class SceneCgsCreatorFrame extends JFrame {
         add(splitPane, BorderLayout.CENTER);
 
         add(controlsPanel, BorderLayout.SOUTH);
-        // Сохранять сцену: теперь просто пишет в ранее выбранный файл
-        controlsPanel.setSaveAction(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                String sceneName = sceneNameField.getText().trim();
-                if (sceneName.isEmpty()) {
-                    JOptionPane.showMessageDialog(SceneCgsCreatorFrame.this,
-                            "Please enter a scene name", "Error", JOptionPane.ERROR_MESSAGE);
-                    return;
-                }
-                writer.setSceneName(sceneName);
-                try {
-                    writer.writeToFile();
-                    JOptionPane.showMessageDialog(SceneCgsCreatorFrame.this,
-                            "Scene '" + sceneName + "' saved to " + file.getName(),
-                            "Success", JOptionPane.INFORMATION_MESSAGE);
-                } catch (IOException ex) {
-                    JOptionPane.showMessageDialog(SceneCgsCreatorFrame.this,
-                            "Error saving file: " + ex.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
-                    ex.printStackTrace();
-                }
-            }
-        });
-
         setVisible(true);
     }
 
@@ -148,4 +130,5 @@ public class SceneCgsCreatorFrame extends JFrame {
         }
 
     }
+
 }
