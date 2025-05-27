@@ -1,80 +1,107 @@
 package org.foxesworld.cge.core.cgs.parser;
 
+import com.jme3.math.ColorRGBA;
 import com.jme3.scene.Spatial;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.cgs.SceneChunk;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.Map;
+import java.nio.ByteBuffer;
 import java.util.HashMap;
+import java.util.HexFormat;
+import java.util.LinkedHashMap;
+import java.util.Map;
 import java.util.function.Function;
 
+/**
+ * Базовый парсер чанка. Позволяет задавать описание полей чанка
+ * и автоматически читать значения из {@link ByteBuffer} в порядке определения.
+ */
 public abstract class ChunkParser {
-
-    // Абстрактный метод, который должны реализовать все парсеры
-    public abstract Spatial parse(CalistaGameEngine calistaGameEngine, SceneChunk chunk, Map<String, String> params);
+    private static final Logger logger = LoggerFactory.getLogger(ChunkParser.class);
 
     /**
-     * Универсальный метод для парсинга аргумента с проверкой его типа.
+     * Описание аргументов чанка: имя поля → тип для чтения.
+     * Тип должен соответствовать ключу в {@link #TYPE_READERS}.
+     */
+    private Map<String, String> fieldDefinitions = new LinkedHashMap<>();
+
+    /**
+     * Результат чтения полей: имя поля → прочитанное значение.
+     */
+    private final LinkedHashMap<String, Object> fieldValues = new LinkedHashMap<>();
+
+    /**
+     * Статические функции для чтения значений из ByteBuffer по типу.
+     */
+    protected final Map<String, Function<ByteBuffer, Object>> TYPE_READERS = Map.of(
+            "Float",   buf -> buf.getFloat(),
+            "Integer", buf -> buf.getInt(),
+            "Boolean", buf -> buf.get() == 1,
+            "Color",   buf -> new ColorRGBA(buf.getFloat(), buf.getFloat(), buf.getFloat(), buf.getFloat())
+    );
+
+    /**
+     * Читает все заранее определённые поля из буфера в {@link #fieldValues}.
+     * Буфер должен быть подготовлен (позиция, порядок байт).
      *
-     * @param name    имя параметра
-     * @param params  карта параметров
-     * @param <T>     ожидаемый тип
-     * @return значение аргумента, приведенное к типу T
+     * @param buf источник данных
      */
-    protected <T> T parseArg(String name, Map<String, String> params) {
-        String value = params.get(name);
-        if (value == null) {
-            throw new IllegalArgumentException("Argument '" + name + "' is missing in parameters.");
+    protected void readFields(ByteBuffer buf) {
+        fieldValues.clear();
+        logger.debug("Reading fields from buffer ({} bytes): {}",
+                buf.remaining(), dumpBufferHex(buf));
+
+        for (var entry : fieldDefinitions.entrySet()) {
+            String name = entry.getKey();
+            String type = entry.getValue();
+            Object value = TYPE_READERS.get(type).apply(buf);
+            fieldValues.put(name, value);
+            logger.debug("Field '{}' = {} ({})", name, value, type);
         }
 
-        // Карта типов с функциями для их обработки
-        Map<String, Function<String, Object>> typeParsers = createTypeParsers();
-
-        // Определяем тип аргумента, передаем его в соответствующий парсер
-        return (T) typeParsers.entrySet()
-                .stream()
-                .filter(entry -> entry.getKey().equalsIgnoreCase(name) || isCompatibleType(entry.getKey(), name))
-                .map(entry -> entry.getValue().apply(name))
-                .findFirst()
-                .orElse(name); // Если не нашли тип, возвращаем строку как есть
+        logger.debug("Completed reading fields: {}", fieldValues);
     }
 
     /**
-     * Функция для создания мапы с парсерами для разных типов.
-     * @return мапа с парсерами
+     * Основной метод парсинга чанка.
+     * Рекомендуется при реализации:
+     * <ol>
+     *   <li>Установить порядок байт: {@code chunk.getData().order(...)}.</li>
+     *   <li>Прочитать счётчик или заголовок, если есть.</li>
+     *   <li>Для каждого элемента вызвать {@link #readFields(ByteBuffer)}.</li>
+     *   <li>Построить и вернуть объект {@link Spatial}.</li>
+     * </ol>
+     *
+     * @param engine движок CGE
+     * @param chunk  данные чанка
+     * @param params дополнительные параметры
+     * @return результирующий {@link Spatial}
      */
-    private Map<String, Function<String, Object>> createTypeParsers() {
-        Map<String, Function<String, Object>> parsers = new HashMap<>();
+    public abstract Spatial parse(CalistaGameEngine engine, SceneChunk chunk, Map<String, String> params);
 
-        parsers.put("Boolean", value -> Boolean.valueOf(value));
-        parsers.put("Integer", value -> Integer.valueOf(value));
-
-        // Можно добавить дополнительные парсеры для других типов, например:
-        parsers.put("Float", value -> Float.valueOf(value));
-        parsers.put("Double", value -> Double.valueOf(value));
-
-        // Для строк оставляем их как есть
-        parsers.put("String", value -> value);
-
-        return parsers;
+    /**
+     * Возвращает карту определений полей (для наследников).
+     */
+    protected Map<String, String> getFieldDefinitions() {
+        return fieldDefinitions;
     }
 
     /**
-     * Проверка совместимости типов, если парсер не может точно определить тип.
-     * Например, строка может быть целым числом или булевым значением.
+     * Возвращает карту значений полей после чтения.
      */
-    private boolean isCompatibleType(String key, String value) {
-        if ("Boolean".equalsIgnoreCase(key)) {
-            return value.equalsIgnoreCase("true") || value.equalsIgnoreCase("false");
-        }
-        if ("Integer".equalsIgnoreCase(key)) {
-            try {
-                Integer.parseInt(value);
-                return true;
-            } catch (NumberFormatException e) {
-                return false;
-            }
-        }
-        return false;
+    protected Map<String, Object> getFieldValues() {
+        return fieldValues;
+    }
+
+    public void setFieldDefinitions(Map<String, String> fieldDefinitions) {
+        this.fieldDefinitions = fieldDefinitions;
+    }
+
+    private String dumpBufferHex(ByteBuffer buf) {
+        byte[] bytes = new byte[buf.remaining()];
+        buf.slice().get(bytes);
+        return HexFormat.of().formatHex(bytes);
     }
 }

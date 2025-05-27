@@ -13,7 +13,6 @@ import org.slf4j.LoggerFactory;
 
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.charset.StandardCharsets;
 import java.util.HexFormat;
 import java.util.Map;
 
@@ -28,6 +27,8 @@ public class LightingParser extends ChunkParser {
 
     @Override
     public Spatial parse(CalistaGameEngine engine, SceneChunk chunk, Map<String, String> args) {
+        logger.debug("Parsing LightingChunk {} with args: {}", chunk.getId(), args);
+        setFieldDefinitions(args);
         ByteBuffer buf = chunk.getData().order(ByteOrder.BIG_ENDIAN);
         buf.rewind();
 
@@ -53,7 +54,6 @@ public class LightingParser extends ChunkParser {
             String typeString = readLightType(buf).toUpperCase();
 
             try {
-                System.out.println(typeString);
                 LightType type = LightType.valueOf(typeString);
                 switch (type) {
                     case POINT -> parsePoint(chunk.getId(), buf, lightNode);
@@ -72,13 +72,6 @@ public class LightingParser extends ChunkParser {
         return lightNode;
     }
 
-    /**
-     * Reads a fixed 3-byte ASCII tag (e.g., "Sky").
-     */
-    /**
-     * Reads a variable-length ASCII light type (e.g., POINT, DIRECTIONAL, SPOT, SKY).
-     * Stops at the first non-letter byte.
-     */
     private String readLightType(ByteBuffer buf) {
         StringBuilder sb = new StringBuilder();
         int startPos = buf.position();
@@ -102,7 +95,6 @@ public class LightingParser extends ChunkParser {
                 s, s.length(), startPos, buf.position(), buf.remaining());
         return s;
     }
-
 
     private void parsePoint(int cid, ByteBuffer buf, Node parent) {
         int required = (3 + 4 + 1) * Float.BYTES;
@@ -156,7 +148,6 @@ public class LightingParser extends ChunkParser {
     }
 
     private void parseSky(int cid, ByteBuffer buf, Node parent) {
-        // Проверим, что данных достаточно для 4 float'ов (цвет) + 1 int (интенсивность) + 1 bool (castShadows)
         int required = Float.BYTES * 4 + Integer.BYTES + Byte.BYTES;
         if (buf.remaining() < required) {
             logger.warn("[{}] Not enough data for SKY (color + intensity + castShadows), remaining={}, hex={}",
@@ -164,24 +155,16 @@ public class LightingParser extends ChunkParser {
             buf.position(buf.limit());
             return;
         }
-
-        // Читаем цвет
-        ColorRGBA col = readColor(buf);
-
-        // Читаем интенсивность (int)
-        int intensity = buf.getInt();
-
-        // Читаем флаг castShadows (boolean)
-        boolean castShadows = buf.get() == 1; // 1 для true, 0 для false
-
-        // Используем интенсивность и castShadows для настройки света
-        AmbientLight l = new AmbientLight(col.mult(col.a).mult(intensity));  // Применяем интенсивность к цвету
+        readFields(buf);
+        System.out.println(getFieldValues());
+        ColorRGBA col = (ColorRGBA) getFieldValues().get("color");
+        float intensity =  Float.parseFloat(String.valueOf(getFieldValues().get("intensity")));
+        boolean castShadows = (Boolean)    getFieldValues().get("castShadows");
+        AmbientLight l = new AmbientLight(col.mult(col.a).mult(intensity));
         l.setEnabled(castShadows);
         parent.addLight(l);
-
         logger.debug("[{}] SKY color={} intensity={} castShadows={}", cid, col, intensity, castShadows);
     }
-
 
     private ColorRGBA readColor(ByteBuffer buf) {
         return new ColorRGBA(buf.getFloat(), buf.getFloat(), buf.getFloat(), buf.getFloat());

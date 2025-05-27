@@ -4,8 +4,8 @@
     "detailLevel": "Integer"
   },
   "LIGHTING": {
-    "intensity": "Integer",
-    "color": "String",
+    "intensity": "Float",
+    "color": "Color",
     "castShadows": "Boolean"
   }
 }

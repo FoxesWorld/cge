@@ -1,6 +1,6 @@
 package org.foxesworld.cge.core.cgs.writer;
 
-import org.foxesworld.cge.core.cgs.file.AbstractCGSFile;
+import org.foxesworld.cge.core.cgs.file.CGSFile;
 import org.foxesworld.cge.core.cgs.ChunkEntry;
 import org.foxesworld.cge.core.cgs.ChunkType;
 import org.apache.logging.log4j.LogManager;
@@ -11,7 +11,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
-public class CGSFileWriter extends AbstractCGSFile {
+public class CGSFileWriter extends CGSFile {
     private static final Logger logger = LogManager.getLogger(CGSFileWriter.class);
     private final File file;
     private String sceneName = "";
@@ -70,7 +70,7 @@ public class CGSFileWriter extends AbstractCGSFile {
         }
 
         // Update header
-        updateHeaderTableOffset(headerTableOffsetPos, tableOffset);
+        updateHeaderOffset(headerTableOffsetPos, tableOffset);
         logger.info("Finished CGS write, tableOffset={}", tableOffset);
     }
 

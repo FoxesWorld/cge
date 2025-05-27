@@ -1,18 +1,15 @@
 package org.foxesworld.cge.core.cgs.parser;
 
-import org.foxesworld.cge.core.cgs.file.AbstractCGSFile;
+import org.foxesworld.cge.core.cgs.file.CGSFile;
 import org.foxesworld.cge.core.cgs.ChunkEntry;
 import org.foxesworld.cge.core.cgs.SceneChunk;
 import org.foxesworld.cge.core.cgs.file.CGSMetadata;
 import org.foxesworld.cge.core.cgs.ChunkType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
-import java.nio.charset.StandardCharsets;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -22,7 +19,7 @@ import java.util.HexFormat;
 /**
  * CGS file reader using the abstract base for consistent formatting.
  */
-public class CGSFileReader extends AbstractCGSFile {
+public class CGSFileReader extends CGSFile {
     private static final Logger logger = LogManager.getLogger(CGSFileReader.class);
     private static final HexFormat HEX = HexFormat.of();
     private final Map<Integer, ChunkEntry> chunkTable = new HashMap<>();
@@ -33,44 +30,26 @@ public class CGSFileReader extends AbstractCGSFile {
         logger.info("================ CGS FILE READ START ================");
         logger.info("Opening file: {}", file.getAbsolutePath());
 
-        // --- Parse header manually to capture magic, version, sceneName, tableOffset
-        raf.seek(0);
-        byte[] magicBytes = new byte[4];
-        raf.readFully(magicBytes);
-        String magic = new String(magicBytes, StandardCharsets.US_ASCII);
-        int version = raf.readInt();
-        int nameLen = raf.readInt();
-        byte[] nameBytes = new byte[nameLen];
-        raf.readFully(nameBytes);
-        String sceneName = new String(nameBytes, StandardCharsets.UTF_8);
-        long tableOffset = raf.readLong();
+        // Delegate header parsing
+        var header = readHeader();
+        this.metadata = new CGSMetadata(header.getMagic(), header.getSceneName(), header.getVersion(), header.getTableOffset(), -1);
+        logger.info("Header Parsed: Magic='{}', Version={}, SceneName='{}', TableOffset={}",
+                metadata.getMagic(), metadata.getVersion(), metadata.getSceneName(), metadata.getTableOffset());
 
-        metadata = new CGSMetadata(magic, sceneName, version, tableOffset, -1);
-        logger.info("Header Parsed:");
-        logger.info("  Magic        : '{}'", metadata.getMagic());
-        logger.info("  Version      : {}", metadata.getVersion());
-        logger.info("  Scene Name   : '{}'", metadata.getSceneName());
-        logger.info("  Table Offset : {}", metadata.getTableOffset());
-
-        // Read chunk count
-        raf.seek(tableOffset);
+        // Read chunk table
+        raf.seek(header.getTableOffset());
         int chunkCount = raf.readInt();
         metadata.setChunkCount(chunkCount);
-        logger.info("Chunk Table:");
-        logger.info("Chunk Count  : {}", metadata.getChunkCount());
+        logger.info("Chunk Table: Count={}", metadata.getChunkCount());
 
-        // Read chunk entries
         for (int i = 0; i < chunkCount; i++) {
             int id = raf.readInt();
             long offset = raf.readLong();
             int length = raf.readInt();
-            int typeOrd = raf.readInt();
-            ChunkType type = ChunkType.values()[typeOrd];
+            ChunkType type = ChunkType.values()[raf.readInt()];
             ChunkEntry entry = new ChunkEntry(id, offset, length, type);
             chunkTable.put(id, entry);
-
-            logger.debug("  Entry[{}]: id={}, offset={}, length={}, type={} ",
-                    i, id, offset, length, type);
+            logger.debug(" Entry[{}]: {}", i, entry);
         }
         logger.info("================= CGS FILE READ END =================");
     }
@@ -93,20 +72,19 @@ public class CGSFileReader extends AbstractCGSFile {
             logger.error("Chunk id not found: {}", id);
             throw new IllegalArgumentException("Chunk id not found: " + id);
         }
-        logger.debug("Seeking to offset {} (length {})", entry.offset(), entry.length());
-        byte[] data = new byte[entry.length()];
         raf.seek(entry.offset());
+        byte[] data = new byte[entry.length()];
         raf.readFully(data);
 
-        String hex = HEX.formatHex(data);
-        logger.debug("Chunk {} raw data (hex): {}", id, hex);
+        // Log raw hex data
+        logger.debug("Chunk {} raw data (hex): {}", id, HEX.formatHex(data));
         logger.info("Chunk id={} Read: {} bytes", id, data.length);
 
-        // --- Вот здесь поменяли little на big ---
-        ByteBuffer buf = ByteBuffer.wrap(data).order(ByteOrder.BIG_ENDIAN);
-
+        // Ensure consistent LITTLE_ENDIAN ordering
+        ByteBuffer buf = ByteBuffer.wrap(data).order(BYTE_ORDER);
         return new SceneChunk(entry, buf);
     }
+
     @Override
     public void close() throws IOException {
         logger.info("Closing CGS file: {}", getFile().getAbsolutePath());
