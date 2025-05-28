@@ -1,4 +1,4 @@
-package org.foxesworld.cge.tools;
+package org.foxesworld.cge.tools.utils;
 
 import javax.swing.*;
 import java.awt.*;

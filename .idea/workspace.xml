@@ -162,11 +162,11 @@
       </method>
     </configuration>
     <configuration name="SceneCgsCreatorFrame" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="org.foxesworld.cge.tools.SceneCreator.SceneCgsCreatorFrame" />
+      <option name="MAIN_CLASS_NAME" value="org.foxesworld.cge.tools.SceneCGSCreator.SceneCgsCreatorFrame" />
       <module name="CGE.main" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="org.foxesworld.cge.tools.*" />
+          <option name="PATTERN" value="org.foxesworld.cge.tools.utils.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
