@@ -1,6 +1,26 @@
-[09:37:02.261][DEBUG][CGTEXFileWriter] Queued texture: 1024x1536, format=1, size=786432
-[09:37:02.264][DEBUG][CGTEXFileWriter] Queued texture: 1024x1536, format=1, size=786432
-[09:37:02.264][INFO][CGTEXFileWriter] Writing CGTEX: C:\Users\Calista\Desktop\gg.cgtex
-[09:37:02.265][DEBUG][CGTEXFileWriter] Texture [0]: 1024x1536, format=1, length=786432 bytes
-[09:37:02.265][DEBUG][CGTEXFileWriter] Texture [1]: 1024x1536, format=1, length=786432 bytes
-[09:37:02.266][INFO][CGTEXFileWriter] CGTEX written successfully, dataOffset=20, textures=2
+[09:39:05.323][INFO][ChunkFieldTypeConfigLoader] Loaded 5 chunk subtypes
+[09:39:05.341][DEBUG][AttributeFieldFactory] Creating field for type: Int
+[09:39:05.342][DEBUG][AttributeFieldFactory] Creating number field of type: Int
+[09:39:05.358][DEBUG][AttributeFieldFactory] Creating field for type: Int
+[09:39:05.358][DEBUG][AttributeFieldFactory] Creating number field of type: Int
+[09:39:05.360][DEBUG][AttributeFieldFactory] Creating field for type: Vector3f
+[09:39:05.360][DEBUG][AttributeFieldFactory] Creating styled vector field with 3 components
+[09:39:05.384][DEBUG][AttributeFieldFactory] Creating field for type: String
+[09:39:05.386][DEBUG][AttributeFieldFactory] Creating field for type: Integer
+[09:39:08.777][DEBUG][AttributeFieldFactory] Creating field for type: Vector3f
+[09:39:08.777][DEBUG][AttributeFieldFactory] Creating styled vector field with 3 components
+[09:39:08.783][DEBUG][AttributeFieldFactory] Creating field for type: Color
+[09:39:08.790][DEBUG][AttributeFieldFactory] Creating color panel with initial color: java.awt.Color[r=255,g=255,b=255] and alpha: false
+[09:39:08.791][DEBUG][AttributeFieldFactory] Creating field for type: Float
+[09:39:08.792][DEBUG][AttributeFieldFactory] Creating number field of type: Float
+[09:39:08.793][DEBUG][AttributeFieldFactory] Creating field for type: Boolean
+[09:39:11.450][DEBUG][AttributeFieldFactory] Creating field for type: Vector3f
+[09:39:11.450][DEBUG][AttributeFieldFactory] Creating styled vector field with 3 components
+[09:39:11.461][DEBUG][AttributeFieldFactory] Creating field for type: Color
+[09:39:11.462][DEBUG][AttributeFieldFactory] Creating color panel with initial color: java.awt.Color[r=255,g=255,b=255] and alpha: false
+[09:39:11.462][DEBUG][AttributeFieldFactory] Creating field for type: Float
+[09:39:11.462][DEBUG][AttributeFieldFactory] Creating number field of type: Float
+[09:39:11.465][DEBUG][AttributeFieldFactory] Creating field for type: Float
+[09:39:11.465][DEBUG][AttributeFieldFactory] Creating number field of type: Float
+[09:39:11.466][DEBUG][AttributeFieldFactory] Creating field for type: Vector3f
+[09:39:11.467][DEBUG][AttributeFieldFactory] Creating styled vector field with 3 components

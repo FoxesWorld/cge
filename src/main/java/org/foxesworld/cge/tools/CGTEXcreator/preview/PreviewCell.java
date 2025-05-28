@@ -1,6 +1,6 @@
 package org.foxesworld.cge.tools.CGTEXcreator.preview;
 
-import org.foxesworld.cge.tools.CGTEXcreator.TextureInfo;
+import org.foxesworld.cge.tools.CGTEXcreator.info.TextureInfo;
 
 import javax.swing.*;
 import java.awt.*;

@@ -4,6 +4,7 @@ import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLaf;
 import org.foxesworld.cge.ICOParser;
 import org.foxesworld.cge.core.file.cgtex.writer.CGTEXFileWriter;
+import org.foxesworld.cge.tools.CGTEXcreator.info.TextureInfo;
 import org.foxesworld.cge.tools.CGTEXcreator.preview.DDSParser;
 import org.foxesworld.cge.tools.CGTEXcreator.preview.PreviewCell;
 

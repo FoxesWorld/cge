@@ -1,4 +1,4 @@
-package org.foxesworld.cge.tools.SceneCreator;
+package org.foxesworld.cge.tools.SceneCGSCreator.util;
 
 import javax.swing.*;
 import java.awt.*;

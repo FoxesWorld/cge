@@ -29,7 +29,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.logging.LogManager;
 
-import static org.foxesworld.cge.tools.SceneCreator.SceneCgsCreatorFrame.setupTheme;
+import static org.foxesworld.cge.tools.SceneCGSCreator.SceneCgsCreatorFrame.setupTheme;
 
 public class CalistaGameEngine extends SimpleApplication {
 

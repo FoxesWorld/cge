@@ -1,4 +1,4 @@
-package org.foxesworld.cge.tools.SceneCreator;
+package org.foxesworld.cge.tools.SceneCGSCreator.util;
 
 import org.foxesworld.cge.core.file.cgs.ChunkType;
 import org.foxesworld.cge.core.file.cgs.writer.CGSFileWriter;

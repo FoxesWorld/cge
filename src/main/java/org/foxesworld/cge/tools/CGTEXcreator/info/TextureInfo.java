@@ -1,4 +1,4 @@
-package org.foxesworld.cge.tools.CGTEXcreator;
+package org.foxesworld.cge.tools.CGTEXcreator.info;
 
 import org.foxesworld.cge.tools.CGTEXcreator.preview.DDSDecoder;
 
