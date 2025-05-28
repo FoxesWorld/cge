@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 
 /**
  * Base file handler: manages opening/closing RandomAccessFile and provides
@@ -30,6 +31,14 @@ public abstract class AbstractFile implements AutoCloseable {
             throw new IllegalStateException("Cannot open file: " + f.getAbsolutePath(), e);
         }
     }
+
+    protected void writeVariableLengthString(String value) throws IOException {
+        byte[] valueBytes = value.getBytes(StandardCharsets.UTF_8);
+        int length = valueBytes.length;
+        raf.writeInt(length);
+        raf.write(valueBytes);
+    }
+
 
     protected void seek(long position) throws IOException {
         raf.seek(position);

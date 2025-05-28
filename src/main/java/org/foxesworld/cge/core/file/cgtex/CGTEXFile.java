@@ -52,7 +52,7 @@ public class CGTEXFile extends AbstractFile {
         // Используем собственный File, но открываем новый writer
         try (CGTEXFileWriter writer = new CGTEXFileWriter(getFile())) {
             for (TextureData td : textures) {
-                writer.addTexture(td.width, td.height, td.format, td.compressedData);
+                //writer.addTexture(td.width, td.height, td.format, td.compressedData);
             }
             writer.writeToFile();
         }

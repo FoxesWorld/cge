@@ -8,8 +8,8 @@ import org.foxesworld.cge.core.file.cgtex.TextureEntry;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.nio.file.Files;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.HexFormat;
@@ -32,7 +32,7 @@ public class CGTEXFileReader extends CGTEXFile {
         // DEBUG: Вывод полного дампа файла в HEX
         try {
             byte[] allBytes = Files.readAllBytes(file.toPath());
-            logger.debug("Full file HEX dump ({} bytes):\n{}", allBytes.length, HEX.formatHex(allBytes));
+            logger.debug("Full file size ({} bytes)", allBytes.length);
         } catch (IOException e) {
             logger.warn("Failed to dump full file hex: {}", e.getMessage());
         }
@@ -46,17 +46,37 @@ public class CGTEXFileReader extends CGTEXFile {
         for (int i = 0; i < metadata.getTextureCount(); i++) {
             int width = raf.readUnsignedShort();
             int height = raf.readUnsignedShort();
+
+            // Чтение длины имени текстуры (4 байта)
+            int nameLength = raf.readInt();
+            byte[] nameBytes = new byte[nameLength];
+
+            // Чтение имени текстуры
+            raf.readFully(nameBytes);
+            String name = new String(nameBytes, StandardCharsets.UTF_8);
+
+            // Проверяем на пустое имя
+            if (name.isEmpty()) {
+                logger.warn("Empty texture name found at index {}", i);
+                name = "UnnamedTexture_" + i; // Назначаем имя по умолчанию
+            }
+
             byte format = raf.readByte();
             int dataLength = raf.readInt();
             byte[] data = new byte[dataLength];
+
+            // Проверка на отрицательную длину данных
+            if (dataLength < 0) {
+                throw new IOException("Invalid data length for texture: " + dataLength);
+            }
+
             raf.readFully(data);
 
-            TextureEntry entry = new TextureEntry(width, height, format, data);
+            TextureEntry entry = new TextureEntry(width, height, name, format, data);
             textures.add(entry);
 
-            logger.debug("Texture[{}]: {}", i, entry);
+            logger.debug("Texture[{}]: name={} size={} format={}", i, entry.getName(), entry.getWidth()+'x'+entry.getHeight(), entry.getFormat());
         }
-
         logger.info("================= CGTEX FILE READ END =================");
     }
 

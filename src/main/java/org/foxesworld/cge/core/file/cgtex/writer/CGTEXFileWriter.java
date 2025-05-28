@@ -3,9 +3,11 @@ package org.foxesworld.cge.core.file.cgtex.writer;
 import org.foxesworld.cge.core.file.cgtex.CGTEXFile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.foxesworld.cge.core.file.cgtex.TextureEntry;
 
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,13 +19,8 @@ public class CGTEXFileWriter extends CGTEXFile {
     private final File file;
     private final List<TextureEntry> textures = new ArrayList<>();
 
-    public record TextureEntry(int width, int height, byte format, byte[] data) {
-        public TextureEntry {
-            if (data == null || data.length == 0) {
-                throw new IllegalArgumentException("Texture data cannot be null or empty");
-            }
-        }
-    }
+    private static final String MAGIC = "CGTX"; // Магическая строка для CGTEX
+    private static final int VERSION = 1;      // Версия формата
 
     public CGTEXFileWriter(File file) {
         super(file, "rw");
@@ -34,10 +31,10 @@ public class CGTEXFileWriter extends CGTEXFile {
      * Add a texture to be written into the CGTEX file.
      * @return index of the newly added texture
      */
-    public int addTexture(int width, int height, byte format, byte[] data) {
-        var entry = new TextureEntry(width, height, format, data);
+    public int addTexture(int width, int height, String name, byte format, byte[] data) {
+        var entry = new TextureEntry(width, height, name, format, data);
         textures.add(entry);
-        logger.debug("Queued texture: {}x{}, format={}, size={}", width, height, format, data.length);
+        logger.debug("Queued texture: {}x{}, format={}, size={}, name={}", width, height, format, data.length, name);
         return textures.size() - 1;
     }
 
@@ -60,7 +57,7 @@ public class CGTEXFileWriter extends CGTEXFile {
 
         // Reserve 8 bytes for dataOffset
         long dataOffsetPos = raf.getFilePointer();
-        raf.writeLong(0L);
+        raf.writeLong(0L);  // Placeholder for data offset
 
         long dataOffset = raf.getFilePointer();
 
@@ -68,11 +65,15 @@ public class CGTEXFileWriter extends CGTEXFile {
         for (int i = 0; i < textures.size(); i++) {
             var tex = textures.get(i);
             logTextureInfo(i, tex);
-            raf.writeShort(tex.width());
-            raf.writeShort(tex.height());
-            raf.writeByte(tex.format());
-            raf.writeInt(tex.data().length);
-            raf.write(tex.data());
+            raf.writeShort(tex.getWidth());
+            raf.writeShort(tex.getHeight());
+
+            // Запись имени текстуры с динамической длиной
+            writeVariableLengthString(tex.getName());
+
+            raf.writeByte(tex.getFormat());
+            raf.writeInt(tex.getCompressedData().length);
+            raf.write(tex.getCompressedData());
         }
 
         // Patch in the actual data offset
@@ -83,8 +84,8 @@ public class CGTEXFileWriter extends CGTEXFile {
     }
 
     private void logTextureInfo(int index, TextureEntry tex) {
-        logger.debug("Texture [{}]: {}x{}, format={}, length={} bytes",
-                index, tex.width(), tex.height(), tex.format(), tex.data().length);
+        logger.debug("Texture [{}]: {}x{}, format={}, length={} bytes, name={}",
+                index, tex.getWidth(), tex.getHeight(), tex.getFormat(), tex.getCompressedData().length, tex.getName());
     }
 
     public File getFile() {

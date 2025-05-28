@@ -1,14 +1,16 @@
 package org.foxesworld.cge.core.file.cgtex;
 
 public class TextureEntry {
-    public final int width;
-    public final int height;
-    public final byte format;
-    public final byte[] compressedData;
+    private final int width;
+    private final int height;
+    private final String name;
+    private final byte format;
+    private final byte[] compressedData;
 
-    public TextureEntry(int width, int height, byte format, byte[] compressedData) {
+    public TextureEntry(int width, int height, String name, byte format, byte[] compressedData) {
         this.width = width;
         this.height = height;
+        this.name = name;
         this.format = format;
         this.compressedData = compressedData;
     }
@@ -37,5 +39,9 @@ public class TextureEntry {
 
     public byte[] getCompressedData() {
         return compressedData;
+    }
+
+    public String getName() {
+        return name;
     }
 }
