@@ -1,10 +1,10 @@
-package org.foxesworld.cge.core.cgs.parser;
+package org.foxesworld.cge.core.file.cgs.parser;
 
-import org.foxesworld.cge.core.cgs.file.CGSFile;
-import org.foxesworld.cge.core.cgs.ChunkEntry;
-import org.foxesworld.cge.core.cgs.SceneChunk;
-import org.foxesworld.cge.core.cgs.file.CGSMetadata;
-import org.foxesworld.cge.core.cgs.ChunkType;
+import org.foxesworld.cge.core.file.cgs.CGSFile;
+import org.foxesworld.cge.core.file.cgs.ChunkEntry;
+import org.foxesworld.cge.core.file.cgs.SceneChunk;
+import org.foxesworld.cge.core.file.cgs.CGSMetadata;
+import org.foxesworld.cge.core.file.cgs.ChunkType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

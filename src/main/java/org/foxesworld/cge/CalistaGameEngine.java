@@ -4,13 +4,11 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.input.KeyInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
-import com.jme3.light.AmbientLight;
-import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
-import com.jme3.math.ColorRGBA;
+import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
-import com.jme3.scene.shape.Box;
+import com.jme3.scene.shape.Quad;
 import com.jme3.system.AppSettings;
 import org.foxesworld.cge.core.ConfigService;
 import org.foxesworld.cge.core.TaskScheduler;
@@ -19,9 +17,9 @@ import org.foxesworld.cge.core.module.EngineModule;
 import org.foxesworld.cge.core.module.ModuleManager;
 import org.foxesworld.cge.core.streaming.StreamingManager;
 import org.foxesworld.cge.core.streaming.StreamingParserLoader;
-import org.foxesworld.cge.physics.PhysicsModule;
 import org.foxesworld.cge.renderer.RendererModule;
 import org.foxesworld.cge.scene.SceneModule;
+import org.foxesworld.cge.tmp.MaterialFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.awt.image.BufferedImage;
@@ -54,7 +52,7 @@ public class CalistaGameEngine extends SimpleApplication {
         settings.setFrameRate(-1);
         settings.setFullscreen(false);
         settings.setResizable(true);
-        try (InputStream icoStream = CalistaGameEngine.class.getClassLoader().getResourceAsStream("theme/icon/favicon.ico")) {
+        try (InputStream icoStream = CalistaGameEngine.class.getClassLoader().getResourceAsStream("theme/icon/engineLogo.ico")) {
 
             ICOParser icoParser = new ICOParser();
             List<BufferedImage> iconsList = icoParser.parse(icoStream);
@@ -109,7 +107,6 @@ public class CalistaGameEngine extends SimpleApplication {
         // Инициализация менеджера модулей
         moduleManager = new ModuleManager(this);
         moduleManager.register(new RendererModule(this), 10);
-        //moduleManager.register(new PhysicsModule(this), 20);
         moduleManager.register(new SceneModule(this), 10);
         moduleManager.initializeAll(this);
 
@@ -117,16 +114,30 @@ public class CalistaGameEngine extends SimpleApplication {
         inputManager.addMapping("ReloadConfig", new KeyTrigger(KeyInput.KEY_F5));
         inputManager.addListener(actionListener, "ReloadConfig");
 
-        // ——— Добавляем геометрию для теста ———
-        Box box = new Box(1f, 1f, 1f);
-        Geometry geom = new Geometry("TestBox", box);
-        Material litMat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
-        litMat.setBoolean("UseMaterialColors", true);
-        litMat.setColor("Diffuse", ColorRGBA.Blue);
-        litMat.setColor("Specular", ColorRGBA.White);
-        litMat.setFloat("Shininess", 64f);
-        geom.setMaterial(litMat);
-        rootNode.attachChild(geom);
+        // ——— Геометрия для теста ———
+        float width = 10f;
+        float height = 10f;
+        Quad quad = new Quad(width, height);
+        Geometry terrain = new Geometry("TerrainPlane", quad);
+        terrain.setLocalTranslation(-width / 2f, 0, height / 2f);
+        terrain.rotate(-FastMath.HALF_PI, 0, 0);
+
+        // ——— Материал с текстурой ———
+        MaterialFactory factory = new MaterialFactory(assetManager);
+        Material myMaterial = factory.createLightingMaterial(
+                "Textures/calista_grid_test.png",
+                ""
+        );
+
+        terrain.setMaterial(myMaterial.clone());
+        rootNode.attachChild(terrain);
+
+        // ——— Камера сверху ———
+        float camHeight = 10f;
+        float camX = 0f;
+        float camZ = 0f;
+        cam.setLocation(new Vector3f(camX, camHeight, camZ));
+        cam.lookAt(new Vector3f(camX, 0f, camZ), Vector3f.UNIT_Y);
     }
 
 

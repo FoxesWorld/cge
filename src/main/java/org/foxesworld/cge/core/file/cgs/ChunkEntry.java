@@ -1,4 +1,4 @@
-package org.foxesworld.cge.core.cgs;
+package org.foxesworld.cge.core.file.cgs;
 
 import java.util.Objects;
 

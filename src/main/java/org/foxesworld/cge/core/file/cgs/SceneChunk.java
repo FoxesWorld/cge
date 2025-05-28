@@ -1,4 +1,4 @@
-package org.foxesworld.cge.core.cgs;
+package org.foxesworld.cge.core.file.cgs;
 
 import java.nio.ByteBuffer;
 
@@ -16,7 +16,7 @@ public class SceneChunk {
     }
 
     public ByteBuffer getData() {
-        return data.duplicate().order(data.order()); // безопасное повторное чтение
+        return data.duplicate().order(data.order());
     }
 
     public void cleanup() {
@@ -24,7 +24,7 @@ public class SceneChunk {
     }
 
     public int getType() {
-        return entry.type().ordinal(); // или вернуть ChunkType напрямую
+        return entry.type().ordinal();
     }
 
     public int getId() {

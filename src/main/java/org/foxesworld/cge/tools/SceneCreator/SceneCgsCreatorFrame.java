@@ -4,7 +4,7 @@ import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatPropertiesLaf;
 import org.foxesworld.cge.ICOParser;
-import org.foxesworld.cge.core.cgs.writer.CGSFileWriter;
+import org.foxesworld.cge.core.file.cgs.writer.CGSFileWriter;
 
 import javax.swing.*;
 import java.awt.*;
@@ -24,7 +24,7 @@ public class SceneCgsCreatorFrame extends JFrame {
     public SceneCgsCreatorFrame() {
         super("CGS Scene Creator");
 
-        try (InputStream icoStream = SceneCgsCreatorFrame.class.getClassLoader().getResourceAsStream("theme/icon/favicon.ico")) {
+        try (InputStream icoStream = SceneCgsCreatorFrame.class.getClassLoader().getResourceAsStream("theme/icon/engineLogo.ico")) {
             if (icoStream != null) {
                 ICOParser parser = new ICOParser();
                 List<BufferedImage> iconsList = parser.parse(icoStream);  // <- вызов parse(InputStream)

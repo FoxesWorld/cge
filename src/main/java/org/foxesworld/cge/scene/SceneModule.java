@@ -1,19 +1,16 @@
 package org.foxesworld.cge.scene;
 
 import com.jme3.app.Application;
-import com.jme3.material.Material;
-import com.jme3.math.ColorRGBA;
-import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import com.jme3.scene.shape.Box;
 import org.foxesworld.cge.CalistaGameEngine;
-import org.foxesworld.cge.core.cgs.ChunkFieldTypeConfigLoader;
-import org.foxesworld.cge.core.cgs.file.CGSMetadata;
-import org.foxesworld.cge.core.cgs.SceneChunk;
-import org.foxesworld.cge.core.cgs.ChunkEntry;
-import org.foxesworld.cge.core.cgs.parser.CGSFileReader;
-import org.foxesworld.cge.core.cgs.parser.types.*;
+import org.foxesworld.cge.core.file.cgs.ChunkFieldTypeConfigLoader;
+import org.foxesworld.cge.core.file.cgs.CGSMetadata;
+import org.foxesworld.cge.core.file.cgs.SceneChunk;
+import org.foxesworld.cge.core.file.cgs.ChunkEntry;
+import org.foxesworld.cge.core.file.cgs.parser.CGSFileReader;
+import org.foxesworld.cge.core.file.cgs.parser.types.LightingParser;
+import org.foxesworld.cge.core.file.cgs.parser.types.TerrainParser;
 import org.foxesworld.cge.core.module.EngineModule;
 import org.foxesworld.cge.core.module.ModuleHealthMonitor;
 import org.foxesworld.cge.core.module.ModuleState;

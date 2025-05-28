@@ -1,57 +1,6 @@
-[20:45:06.992][DEBUG][RendererModule] RendererModule constructor: configFile='null', configClass=Void
-[20:45:06.995][DEBUG][RendererModule] No config to register for module RendererModule
-[20:45:06.996][DEBUG][CameraModule] CameraModule constructor: configFile='camera_config', configClass=CameraConfig
-[20:45:06.996][DEBUG][CameraModule] Registered config 'camera_config' for module CameraModule
-[20:45:06.997][DEBUG][LightingModule] LightingModule constructor: configFile='lighting_config', configClass=LightingConfig
-[20:45:06.997][DEBUG][LightingModule] Registered config 'lighting_config' for module LightingModule
-[20:45:06.999][DEBUG][PostProcessingModule] PostProcessingModule constructor: configFile='postprocessing_config', configClass=PostProcessingConfig
-[20:45:06.999][DEBUG][PostProcessingModule] Registered config 'postprocessing_config' for module PostProcessingModule
-[20:45:07.000][DEBUG][SceneModule] SceneModule constructor: configFile='scene', configClass=SceneConfig
-[20:45:07.000][DEBUG][SceneModule] Registered config 'scene' for module SceneModule
-[20:45:07.000][INFO][ModuleManager] Attached manual module SceneModule
-[20:45:07.031][INFO][SceneModule] SceneModule initialize() start
-[20:45:07.031][DEBUG][SceneModule] SceneModule: UNLOADED -> LOADING_CONFIG
-[20:45:07.033][DEBUG][ModuleHealthMonitor] Module 'SceneModule' state <none> -> LOADING_CONFIG (transitions=1)
-[20:45:07.041][DEBUG][SceneModule] SceneModule loading config from 'scene'
-[20:45:07.052][DEBUG][SceneModule] SceneModule: LOADING_CONFIG -> INITIALIZING
-[20:45:07.052][DEBUG][ModuleHealthMonitor] Module 'SceneModule' state LOADING_CONFIG -> INITIALIZING (transitions=2)
-[20:45:07.052][DEBUG][SceneModule] SceneModule calling initModule
-[20:45:07.053][INFO][SceneModule] SceneModule: initializing...
-[20:45:07.063][INFO][ChunkFieldTypeConfigLoader] Loaded 5 chunk subtypes
-[20:45:07.065][DEBUG][SceneModule] SceneModule: INITIALIZING -> RUNNING
-[20:45:07.066][DEBUG][ModuleHealthMonitor] Module 'SceneModule' state INITIALIZING -> RUNNING (transitions=3)
-[20:45:07.066][INFO][SceneModule] SceneModule initialized and running
-[20:45:07.068][INFO][CGSFileReader] ================ CGS FILE READ START ================
-[20:45:07.068][INFO][CGSFileReader] Opening file: C:\Users\Calista\Documents\GitHub\CGE\tg.cgs
-[20:45:07.069][DEBUG][CGSFileReader] Full file HEX dump (92 bytes):
-4347533000000001000000036767680000000000000044000b444952454354494f4e414c000000000000000000000000ffcc00ff3f800000bf800000c0000000c0400000000000010c239a9c00000000000000170000002d00000003
-[20:45:07.070][INFO][CGSFileReader] Header Parsed: Magic='CGS0', Version=1, SceneName='ggh', TableOffset=68
-[20:45:07.070][INFO][CGSFileReader] Chunk Table: Count=1
-[20:45:07.085][DEBUG][CGSFileReader]   - Entry[0]: ChunkEntry[id=203659932, offset=23, length=45, type=LIGHTING]
-[20:45:07.085][INFO][CGSFileReader] ================= CGS FILE READ END =================
-[20:45:07.087][INFO][SceneModule] SceneModule: 1 chunks to stream
-[20:45:07.088][INFO][CGSFileReader] -- Reading Chunk id=203659932 --
-[20:45:07.089][DEBUG][CGSFileReader] Chunk 203659932 raw data (hex): 000b444952454354494f4e414c000000000000000000000000ffcc00ff3f800000bf800000c0000000c0400000
-[20:45:07.089][INFO][CGSFileReader] Chunk id=203659932 Read: 45 bytes
-[20:45:07.090][INFO][SceneModule] Chunk LIGHTING data - 000b444952454354494f4e414c000000000000000000000000ffcc00ff3f800000bf800000c0000000c0400000
-[20:45:07.097][DEBUG][LightingParser] Parsing LightingChunk 203659932
-[20:45:07.097][DEBUG][LightingParser] Chunk 203659932 raw size = 45 bytes
-[20:45:07.098][DEBUG][ChunkParser] readUTF: Read string='DIRECTIONAL' (length=11, pos=0, newPos=13)
-[20:45:07.099][DEBUG][ChunkParser] Reading fields from buffer (32 bytes): 000000000000000000000000ffcc00ff3f800000bf800000c0000000c0400000
-[20:45:07.099][DEBUG][ChunkParser] Field 'pos' = (0.0, 0.0, 0.0) (Vector3f)
-[20:45:07.100][DEBUG][ChunkParser] Field 'color' = Color[1.0, 0.8, 0.0, 1.0] (Color)
-[20:45:07.100][DEBUG][ChunkParser] Field 'intensity' = 1.0 (Float)
-[20:45:07.100][DEBUG][ChunkParser] Field 'dir' = (-1.0, -2.0, -3.0) (Vector3f)
-[20:45:07.101][DEBUG][ChunkParser] Completed reading fields: {pos=(0.0, 0.0, 0.0), color=Color[1.0, 0.8, 0.0, 1.0], intensity=1.0, dir=(-1.0, -2.0, -3.0)}
-[20:45:07.101][DEBUG][LightingParser] [203659932] DIRECTIONAL dir=(-0.26726124, -0.5345225, -0.8017837) color=Color[1.0, 0.8, 0.0, 1.0] intensity=1.0
-[20:45:07.102][INFO][LightingParser] Finished LightingChunk 203659932, lights parsed: 1
-[20:45:07.111][INFO][SceneModule] All chunks streamed sceneRoot attached.
-[20:45:07.111][DEBUG][ModuleHealthMonitor] Module 'SceneModule' state RUNNING -> RUNNING (transitions=4)
-[20:46:00.036][INFO][SceneModule] SceneModule cleanup() start, current state=RUNNING
-[20:46:00.037][DEBUG][SceneModule] SceneModule: RUNNING -> SHUTTING_DOWN
-[20:46:00.037][DEBUG][ModuleHealthMonitor] Module 'SceneModule' state RUNNING -> SHUTTING_DOWN (transitions=5)
-[20:46:00.037][INFO][SceneModule] SceneModule: cleaning up...
-[20:46:00.038][INFO][CGSFileReader] Closing CGS file: C:\Users\Calista\Documents\GitHub\CGE\tg.cgs
-[20:46:00.038][DEBUG][SceneModule] SceneModule: SHUTTING_DOWN -> CLEANED_UP
-[20:46:00.038][DEBUG][ModuleHealthMonitor] Module 'SceneModule' state SHUTTING_DOWN -> CLEANED_UP (transitions=6)
-[20:46:00.038][INFO][SceneModule] SceneModule cleaned up successfully
+[09:37:02.261][DEBUG][CGTEXFileWriter] Queued texture: 1024x1536, format=1, size=786432
+[09:37:02.264][DEBUG][CGTEXFileWriter] Queued texture: 1024x1536, format=1, size=786432
+[09:37:02.264][INFO][CGTEXFileWriter] Writing CGTEX: C:\Users\Calista\Desktop\gg.cgtex
+[09:37:02.265][DEBUG][CGTEXFileWriter] Texture [0]: 1024x1536, format=1, length=786432 bytes
+[09:37:02.265][DEBUG][CGTEXFileWriter] Texture [1]: 1024x1536, format=1, length=786432 bytes
+[09:37:02.266][INFO][CGTEXFileWriter] CGTEX written successfully, dataOffset=20, textures=2

@@ -1,8 +1,5 @@
-package org.foxesworld.cge.core.cgs.file;
+package org.foxesworld.cge.core.file.cgs;
 
-/**
- * Метаданные CGS-файла.
- */
 public class CGSMetadata {
     private final String magic;
     private final String sceneName;

@@ -1,8 +1,8 @@
 package org.foxesworld.cge.tools.SceneCreator;
 
-import org.foxesworld.cge.core.cgs.ChunkType;
-import org.foxesworld.cge.core.cgs.writer.CGSFileWriter;
-import org.foxesworld.cge.core.cgs.ChunkFieldTypeConfigLoader;
+import org.foxesworld.cge.core.file.cgs.ChunkType;
+import org.foxesworld.cge.core.file.cgs.writer.CGSFileWriter;
+import org.foxesworld.cge.core.file.cgs.ChunkFieldTypeConfigLoader;
 import org.foxesworld.cge.tools.AttributeFieldFactory;
 
 import javax.swing.*;
@@ -11,7 +11,6 @@ import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Упрощенная панель управления чанками без хардкода.

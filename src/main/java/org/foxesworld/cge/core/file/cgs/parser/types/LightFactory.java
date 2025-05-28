@@ -1,4 +1,4 @@
-package org.foxesworld.cge.core.cgs.parser.types;
+package org.foxesworld.cge.core.file.cgs.parser.types;
 
 import com.jme3.light.Light;
 

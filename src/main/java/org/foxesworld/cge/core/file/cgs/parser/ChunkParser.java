@@ -1,10 +1,10 @@
-package org.foxesworld.cge.core.cgs.parser;
+package org.foxesworld.cge.core.file.cgs.parser;
 
 import com.jme3.math.ColorRGBA;
 import com.jme3.scene.Spatial;
 import org.foxesworld.cge.CalistaGameEngine;
-import org.foxesworld.cge.core.cgs.SceneChunk;
-import org.foxesworld.cge.core.cgs.ChunkFieldTypeConfigLoader;
+import org.foxesworld.cge.core.file.cgs.SceneChunk;
+import org.foxesworld.cge.core.file.cgs.ChunkFieldTypeConfigLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

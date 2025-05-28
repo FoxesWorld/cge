@@ -1,4 +1,4 @@
-package org.foxesworld.cge.core.cgs;
+package org.foxesworld.cge.core.file.cgs;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;

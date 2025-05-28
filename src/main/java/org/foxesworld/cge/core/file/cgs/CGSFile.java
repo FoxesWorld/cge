@@ -1,4 +1,6 @@
-package org.foxesworld.cge.core.cgs.file;
+package org.foxesworld.cge.core.file.cgs;
+
+import org.foxesworld.cge.core.file.AbstractFile;
 
 import java.io.File;
 import java.io.IOException;

@@ -1,7 +1,7 @@
 package org.foxesworld.cge.tools.SceneCreator;
 
-import org.foxesworld.cge.core.cgs.ChunkType;
-import org.foxesworld.cge.core.cgs.writer.CGSFileWriter;
+import org.foxesworld.cge.core.file.cgs.ChunkType;
+import org.foxesworld.cge.core.file.cgs.writer.CGSFileWriter;
 
 import javax.swing.*;
 import java.awt.*;

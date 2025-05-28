@@ -1,4 +1,4 @@
-package org.foxesworld.cge.core.cgs.file;
+package org.foxesworld.cge.core.file;
 
 import java.io.File;
 import java.io.FileNotFoundException;

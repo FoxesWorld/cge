@@ -1,8 +1,8 @@
-package org.foxesworld.cge.core.cgs.writer;
+package org.foxesworld.cge.core.file.cgs.writer;
 
-import org.foxesworld.cge.core.cgs.file.CGSFile;
-import org.foxesworld.cge.core.cgs.ChunkEntry;
-import org.foxesworld.cge.core.cgs.ChunkType;
+import org.foxesworld.cge.core.file.cgs.CGSFile;
+import org.foxesworld.cge.core.file.cgs.ChunkEntry;
+import org.foxesworld.cge.core.file.cgs.ChunkType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
