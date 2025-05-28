@@ -49,7 +49,7 @@ public class SceneModule extends EngineModule<SceneConfig> {
 
     @Override
     protected void initModule(CalistaGameEngine app) throws Exception {
-        logger.info("SceneModule: initializing...");
+        logger.debug("SceneModule: initializing...");
 
         try {
             configLoader = new ChunkFieldTypeConfigLoader(getClass().getClassLoader().getResourceAsStream("chunkArguments.json"));
@@ -86,7 +86,7 @@ public class SceneModule extends EngineModule<SceneConfig> {
         this.streamingManager = new StreamingManager<>(sceneFile::readChunk, true, 2);
         this.sceneRoot = new Node(cgsMetadata.getSceneName());
         chunksRemaining.set(entries.size());
-        logger.info("SceneModule: {} chunks to stream", entries.size());
+        logger.debug("SceneModule: {} chunks to stream", entries.size());
         // Функция для обработки загруженных чанков
         Consumer<SceneChunk> onChunk = chunk -> {
             // Парсим чанк в Spatial
@@ -124,9 +124,6 @@ public class SceneModule extends EngineModule<SceneConfig> {
         // Добавляем sceneRoot в главный RootNode
         app.getRootNode().attachChild(sceneRoot);
         logger.info("All chunks streamed sceneRoot attached.");
-        for (Spatial child: app.getRootNode().getChildren()){
-            System.out.println(child.getName());
-        }
 
         // Уведомляем систему, что сцена готова
         ModuleHealthMonitor.getInstance().reportState(getName(), ModuleState.RUNNING);
@@ -139,7 +136,7 @@ public class SceneModule extends EngineModule<SceneConfig> {
     }
 
     private Spatial parseChunk(CalistaGameEngine app, SceneChunk chunk) {
-        logger.info("Chunk {} data - {}",chunk.getEntry().type(), dumpBufferHex(chunk.getData()));
+        logger.debug("Chunk {} data - {}",chunk.getEntry().type(), dumpBufferHex(chunk.getData()));
         return switch (chunk.getEntry().type()) {
             case TERRAIN   -> new TerrainParser().parse(app, chunk, configLoader);
             case LIGHTING  -> new LightingParser().parse(app, chunk, configLoader);
@@ -154,7 +151,7 @@ public class SceneModule extends EngineModule<SceneConfig> {
 
     @Override
     protected void cleanupModule(Application app) throws Exception {
-        logger.info("SceneModule: cleaning up...");
+        logger.debug("SceneModule: cleaning up...");
         if (sceneRoot != null && sceneRoot.getParent() != null) {
             Node toDetach = sceneRoot;
             sceneRoot = null;
@@ -180,7 +177,7 @@ public class SceneModule extends EngineModule<SceneConfig> {
 
     @Override
     protected void onConfigReloaded() throws Exception {
-        logger.info("SceneModule: config reloaded, restarting...");
+        logger.debug("SceneModule: config reloaded, restarting...");
         cleanupModule(app);
         initModule(app);
     }

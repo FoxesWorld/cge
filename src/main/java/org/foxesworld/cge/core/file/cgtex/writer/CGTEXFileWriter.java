@@ -85,27 +85,6 @@ public class CGTEXFileWriter extends CGTEXFile {
 
         logger.info("CGTEX written successfully, dataOffset={}, textures={}", dataOffset, textures.size());
     }
-    private void writeTextureHeader(TextureEntry tex) throws IOException {
-        // Заголовок для каждой текстуры (например, DDS или CGTEX)
-        raf.writeInt(0x20534444);  // Magic number for DDS: "DDS " (для примера)
-        raf.writeInt(124);          // Заголовок DDS всегда имеет размер 124 байта
-
-        // Заполняем заголовок текстуры данными (например, для DXT)
-        raf.writeInt(0);  // dwSize (размер заголовка), обычно 124
-        raf.writeInt(0);  // dwFlags (флаги)
-        raf.writeInt(tex.getHeight()); // dwHeight
-        raf.writeInt(tex.getWidth());  // dwWidth
-        raf.writeInt(0);  // dwPitchOrLinearSize
-        raf.writeInt(0);  // dwDepth
-        raf.writeInt(0);  // dwMipMapCount
-        raf.writeInt(0);  // dwReserved1
-
-        // Заголовок для формата изображения (например, DXT1)
-        raf.writeInt(0);  // dwSurfaceFlags
-        raf.writeInt(0);  // dwCubemapFlags
-        raf.writeInt(0);  // dwAlphaBitDepth
-        raf.writeInt(0);  // dwReserved2
-    }
 
     private void logTextureMetadata(int index, TextureEntry tex) {
         // Логируем информацию о метаданных текстуры

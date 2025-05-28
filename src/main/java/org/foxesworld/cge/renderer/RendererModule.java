@@ -27,6 +27,7 @@ public class RendererModule extends EngineModule<Void> {
     public RendererModule(CalistaGameEngine app) {
         super(CONFIG_FILE, Void.class, app);
         subManager = new ModuleManager(app);
+        app.getTextureLoader().loadCgtex("test.cgtex");
         subManager.register(new CameraModule(app), 10);
         subManager.register(new LightingModule(app), 20);
         subManager.register(new PostProcessingModule(app), 30);

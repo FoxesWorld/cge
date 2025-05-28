@@ -19,10 +19,6 @@ public class SceneChunk {
         return data.duplicate().order(data.order());
     }
 
-    public void cleanup() {
-        // TODO: Detach from scenegraph, physics, etc.
-    }
-
     public int getType() {
         return entry.type().ordinal();
     }

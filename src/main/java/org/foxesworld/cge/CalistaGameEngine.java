@@ -1,10 +1,6 @@
 package org.foxesworld.cge;
 
 import com.jme3.app.SimpleApplication;
-import com.jme3.input.KeyInput;
-import com.jme3.input.controls.ActionListener;
-import com.jme3.input.controls.KeyTrigger;
-import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
@@ -13,34 +9,22 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.shape.Box;
 import com.jme3.scene.shape.Quad;
 import com.jme3.system.AppSettings;
-import com.jme3.texture.Image;
 import com.jme3.texture.Texture;
-import com.jme3.texture.Texture2D;
-import com.jme3.texture.plugins.DDSLoader;
 import org.foxesworld.cge.core.ConfigService;
 import org.foxesworld.cge.core.TaskScheduler;
-import org.foxesworld.cge.core.file.cgtex.TextureEntry;
-import org.foxesworld.cge.core.file.cgtex.reader.CGTEXFileReader;
 import org.foxesworld.cge.core.io.GenericByteParser;
-import org.foxesworld.cge.core.module.EngineModule;
 import org.foxesworld.cge.core.module.ModuleManager;
 import org.foxesworld.cge.core.streaming.StreamingManager;
 import org.foxesworld.cge.core.streaming.StreamingParserLoader;
 import org.foxesworld.cge.renderer.RendererModule;
 import org.foxesworld.cge.scene.SceneModule;
-import org.foxesworld.cge.tmp.MaterialFactory;
 import org.foxesworld.cge.tmp.TextureLoader;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.logging.LogManager;
 
@@ -69,19 +53,9 @@ public class CalistaGameEngine extends SimpleApplication {
         settings.setFullscreen(false);
         settings.setResizable(true);
         try (InputStream icoStream = CalistaGameEngine.class.getClassLoader().getResourceAsStream("theme/icon/engineLogo.ico")) {
-
             ICOParser icoParser = new ICOParser();
-            List<BufferedImage> iconsList = icoParser.parse(icoStream);
-            BufferedImage bestIcon = icoParser.getBestIcon(iconsList);
-
-            int width = bestIcon.getWidth();
-            int height = bestIcon.getHeight();
-            int pixelSize = bestIcon.getColorModel().getPixelSize();
-            int numBands = bestIcon.getRaster().getNumBands();
-            int imageType = bestIcon.getType();
-            System.out.printf("Selected Icon: %dx%d px, %d bit, %d bands, type=%d%n", width, height, pixelSize, numBands, imageType);
+            BufferedImage bestIcon = icoParser.getBestIcon(icoParser.parse(icoStream));
             settings.setIcons(new BufferedImage[]{bestIcon});
-
         } catch (IOException e) {
             e.printStackTrace();
             System.err.println("Failed to load .ico icon file.");
@@ -93,7 +67,7 @@ public class CalistaGameEngine extends SimpleApplication {
 
     public CalistaGameEngine(){
         System.setProperty("log.dir", System.getProperty("user.dir"));
-        System.setProperty("log.level", "DEBUG");
+        System.setProperty("log.level", "INFO");
         LogManager.getLogManager().reset();
         SLF4JBridgeHandler.install();
         this.configService = new ConfigService();
@@ -117,8 +91,6 @@ public class CalistaGameEngine extends SimpleApplication {
                 true,
                 4
         );
-
-        textureLoader.loadCgtex("test.cgtex");;
     }
 
     @Override
@@ -129,8 +101,12 @@ public class CalistaGameEngine extends SimpleApplication {
         moduleManager.initializeAll(this);
 
 
-        Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-        mat.setTexture("ColorMap", this.textureMap.get("calista_grid_test"));
+        Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
+        mat.setBoolean("UseMaterialColors", true);
+        mat.setColor("Diffuse", new ColorRGBA(0.2f, 0.6f, 0.3f, 0.1f));
+        mat.setTexture("DiffuseMap", textureMap.get("calista_grid_test"));
+        mat.setColor("Specular", ColorRGBA.White);
+        mat.setFloat("Shininess", 2f);
 
         // ——— Геометрия для теста ———
         float width = 10f;
@@ -141,6 +117,17 @@ public class CalistaGameEngine extends SimpleApplication {
         terrain.rotate(-FastMath.HALF_PI, 0, 0);
         terrain.setMaterial(mat);
         rootNode.attachChild(terrain);
+
+        Box b = new Box(1f, 1f, 1f);
+        Geometry geom = new Geometry("Cube", b);
+        Material mat2 = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
+        mat2.setColor("Diffuse", new ColorRGBA(0.2f, 0.6f, 0.3f, 0.1f));
+        mat2.setBoolean("UseMaterialColors", true);
+        mat2.setTexture("DiffuseMap", textureMap.get("box"));
+        mat2.setColor("Specular", ColorRGBA.White);
+        mat2.setFloat("Shininess", 20f);
+        geom.setMaterial(mat2);
+        rootNode.attachChild(geom);
 
         // ——— Камера сверху ———
         float camHeight = 10f;
@@ -168,5 +155,9 @@ public class CalistaGameEngine extends SimpleApplication {
 
     public void  addTexture(String name, Texture texture2D){
         this.textureMap.put(name, texture2D);
+    }
+
+    public TextureLoader getTextureLoader() {
+        return textureLoader;
     }
 }

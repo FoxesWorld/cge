@@ -26,8 +26,8 @@ public class CGTEXFileReader extends CGTEXFile {
 
     public CGTEXFileReader(File file) throws IOException {
         super(file, "r");
-        logger.info("================ CGTEX FILE READ START ================");
-        logger.info("Opening file: {}", file.getAbsolutePath());
+        logger.debug("================ CGTEX FILE READ START ================");
+        logger.debug("Opening file: {}", file.getAbsolutePath());
 
         // DEBUG: Вывод полного дампа файла в HEX
         try {
@@ -39,7 +39,7 @@ public class CGTEXFileReader extends CGTEXFile {
 
         // Читаем заголовок
         this.metadata = readHeader();
-        logger.info("Header Parsed: {}", metadata);
+        logger.debug("Header Parsed: {}", metadata);
 
         // Читаем текстуры
         raf.seek(metadata.getDataOffset());
@@ -75,10 +75,10 @@ public class CGTEXFileReader extends CGTEXFile {
             TextureEntry entry = new TextureEntry(width, height, name, format, data);
             textures.add(entry);
 
-            logger.debug("Texture[{}]: name= {} size={} format={}", i, entry.getName(), entry.getWidth()+'x'+entry.getHeight(), entry.getFormat());
+            logger.debug("Texture[{}]: name={} size={} format={}", i, entry.getName(), entry.getWidth()+'x'+entry.getHeight(), entry.getFormat());
         }
 
-        logger.info("================= CGTEX FILE READ END =================");
+        logger.debug("================= CGTEX FILE READ END =================");
     }
 
     private CGTEXMetadata readHeader() throws IOException {

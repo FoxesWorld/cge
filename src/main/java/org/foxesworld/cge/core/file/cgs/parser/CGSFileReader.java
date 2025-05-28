@@ -29,8 +29,8 @@ public class CGSFileReader extends CGSFile {
 
     public CGSFileReader(File file) throws IOException {
         super(file, "r");
-        logger.info("================ CGS FILE READ START ================");
-        logger.info("Opening file: {}", file.getAbsolutePath());
+        logger.debug("================ CGS FILE READ START ================");
+        logger.debug("Opening file: {}", file.getAbsolutePath());
 
         // === DEBUG: Выводим всё содержимое файла в HEX ===
         try {
@@ -43,14 +43,14 @@ public class CGSFileReader extends CGSFile {
         // Delegate header parsing
         var header = readHeader();
         this.metadata = new CGSMetadata(header.getMagic(), header.getSceneName(), header.getVersion(), header.getTableOffset(), -1);
-        logger.info("Header Parsed: Magic='{}', Version={}, SceneName='{}', TableOffset={}",
+        logger.debug("Header Parsed: Magic='{}', Version={}, SceneName='{}', TableOffset={}",
                 metadata.getMagic(), metadata.getVersion(), metadata.getSceneName(), metadata.getTableOffset());
 
         // Read chunk table
         raf.seek(header.getTableOffset());
         int chunkCount = raf.readInt();
         metadata.setChunkCount(chunkCount);
-        logger.info("Chunk Table: Count={}", metadata.getChunkCount());
+        logger.debug("Chunk Table: Count={}", metadata.getChunkCount());
 
         for (int i = 0; i < chunkCount; i++) {
             int id = raf.readInt();
@@ -62,7 +62,7 @@ public class CGSFileReader extends CGSFile {
             logger.debug("  - Entry[{}]: {}", i, entry);
         }
 
-        logger.info("================= CGS FILE READ END =================");
+        logger.debug("================= CGS FILE READ END =================");
     }
 
     public CGSMetadata getMetadata() {
@@ -77,7 +77,7 @@ public class CGSFileReader extends CGSFile {
      * Reads raw data for chunk, logs hex, wraps in LITTLE_ENDIAN ByteBuffer.
      */
     public SceneChunk readChunk(int id) throws IOException {
-        logger.info("-- Reading Chunk id={} --", id);
+        logger.debug("-- Reading Chunk id={} --", id);
         ChunkEntry entry = chunkTable.get(id);
         if (entry == null) {
             logger.error("Chunk id not found: {}", id);
@@ -89,7 +89,7 @@ public class CGSFileReader extends CGSFile {
 
         // Log raw hex data
         logger.debug("Chunk {} raw data (hex): {}", id, HEX.formatHex(data));
-        logger.info("Chunk id={} Read: {} bytes", id, data.length);
+        logger.debug("Chunk id={} Read: {} bytes", id, data.length);
 
         ByteBuffer buf = ByteBuffer.wrap(data).order(BYTE_ORDER);
         return new SceneChunk(entry, buf);
@@ -97,7 +97,7 @@ public class CGSFileReader extends CGSFile {
 
     @Override
     public void close() throws IOException {
-        logger.info("Closing CGS file: {}", getFile().getAbsolutePath());
+        logger.debug("Closing CGS file: {}", getFile().getAbsolutePath());
         super.close();
     }
 }

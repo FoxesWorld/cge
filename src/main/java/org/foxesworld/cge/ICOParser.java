@@ -1,6 +1,8 @@
 package org.foxesworld.cge;
 
 import org.foxesworld.cge.core.io.ByteParser;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
@@ -11,6 +13,7 @@ import java.util.List;
 
 public class ICOParser extends ByteParser<List<BufferedImage>> {
 
+    private static final Logger logger = LoggerFactory.getLogger(ICOParser.class.getName());
     public ICOParser(){
 
     }
@@ -170,18 +173,7 @@ public class ICOParser extends ByteParser<List<BufferedImage>> {
         return (b4 << 24) | (b3 << 16) | (b2 << 8) | b1;
     }
 
-    private static class IconDirEntry {
-        final int width, height, colorCount, planes, bitCount, bytesInRes, imageOffset;
-
-        IconDirEntry(int width, int height, int colorCount, int planes, int bitCount, int bytesInRes, int imageOffset) {
-            this.width = width;
-            this.height = height;
-            this.colorCount = colorCount;
-            this.planes = planes;
-            this.bitCount = bitCount;
-            this.bytesInRes = bytesInRes;
-            this.imageOffset = imageOffset;
-        }
+    private record IconDirEntry(int width, int height, int colorCount, int planes, int bitCount, int bytesInRes, int imageOffset) {
     }
 
     public BufferedImage getBestIcon(List<BufferedImage> icons) {
