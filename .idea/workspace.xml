@@ -4,48 +4,31 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="283ff897-4432-4079-9530-7bc3ea1cccef" name="Changes" comment="WORKING11!!!!11">
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/CalistaSettingsDialog.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgtex/CGTEXFile.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgtex/CGTEXHeader.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgtex/CGTEXMetadata.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgtex/TextureEntry.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgtex/reader/CGTEXFileReader.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgtex/writer/CGTEXFileWriter.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/MaterialFactory.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/CGTEXcreator/CGTEXCreatorUI.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/CGTEXcreator/TextureInfo.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/CGTEXcreator/preview/DDSDecoder.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/CGTEXcreator/preview/DDSParser.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/CGTEXcreator/preview/PreviewCell.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/Textures/calista_grid_test.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/Textures/calista_grid_test_normal.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/theme/icon/textureEditor.ico" afterDir="false" />
+    <list default="true" id="283ff897-4432-4079-9530-7bc3ea1cccef" name="Changes" comment="CGTEX Fixes">
+      <change afterPath="$PROJECT_DIR$/config/camera_config" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/config/lighting_config" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/config/postprocessing_config" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/gg.cgtex" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hs_err_pid13404.log" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hs_err_pid13776.log" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hs_err_pid15084.log" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hs_err_pid16584.log" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hs_err_pid17992.log" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hs_err_pid18620.log" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hs_err_pid23272.log" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hs_err_pid25116.log" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hs_err_pid7488.log" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/TextureLoader.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/test.cgtex" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/logs/lastlog.log" beforeDir="false" afterPath="$PROJECT_DIR$/logs/lastlog.log" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/CalistaGameEngine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/CalistaGameEngine.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/ChunkEntry.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgs/ChunkEntry.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/ChunkFieldTypeConfigLoader.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgs/ChunkFieldTypeConfigLoader.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/ChunkType.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgs/ChunkType.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/SceneChunk.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgs/SceneChunk.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/file/AbstractFile.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/AbstractFile.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/file/CGSFile.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgs/CGSFile.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/file/CGSHeader.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgs/CGSHeader.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/file/CGSMetadata.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgs/CGSMetadata.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/parser/CGSFileReader.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgs/parser/CGSFileReader.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/parser/ChunkParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgs/parser/ChunkParser.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/parser/types/GeometryParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgs/parser/types/GeometryParser.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/parser/types/LightFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgs/parser/types/LightFactory.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/parser/types/LightingParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgs/parser/types/LightingParser.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/parser/types/PhysicsParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgs/parser/types/PhysicsParser.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/parser/types/TerrainParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgs/parser/types/TerrainParser.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/cgs/writer/CGSFileWriter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgs/writer/CGSFileWriter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/scene/SceneModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/scene/SceneModule.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/SceneCreator/ChunkControlsPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/SceneCreator/ChunkControlsPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/SceneCreator/ChunkListPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/SceneCreator/ChunkListPanel.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/SceneCreator/SceneCgsCreatorFrame.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/SceneCreator/SceneCgsCreatorFrame.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/theme/icon/favicon.ico" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/theme/icon/engineLogo.ico" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/theme/icon/icon.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgs/ChunkType.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgs/ChunkType.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgtex/reader/CGTEXFileReader.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgtex/reader/CGTEXFileReader.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgtex/writer/CGTEXFileWriter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgtex/writer/CGTEXFileWriter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/MaterialFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/MaterialFactory.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/CGTEXcreator/CGTEXCreatorUI.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/CGTEXcreator/CGTEXCreatorUI.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/CGTEXcreator/preview/PreviewCell.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/CGTEXcreator/preview/PreviewCell.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -60,9 +43,28 @@
   <component name="ExternalProjectsManager">
     <system id="GRADLE">
       <state>
+        <task path="$PROJECT_DIR$">
+          <activation />
+        </task>
         <projects_view>
           <tree_state>
-            <expand />
+            <expand>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="CGE" type="f1a62948:ProjectNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="CGE" type="f1a62948:ProjectNode" />
+                <item name="Tasks" type="e4a08cd1:TasksNode" />
+              </path>
+              <path>
+                <item name="" type="6a2764b6:ExternalProjectsStructure$RootNode" />
+                <item name="CGE" type="f1a62948:ProjectNode" />
+                <item name="Tasks" type="e4a08cd1:TasksNode" />
+                <item name="build" type="c8890929:TasksNode$1" />
+              </path>
+            </expand>
             <select />
           </tree_state>
         </projects_view>
@@ -87,41 +89,42 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
-    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/Calista/Documents/GitHub/CGE/src/main/resources/theme/icon&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_ADD_EXTERNAL_FILES": "true",
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "last_opened_file_path": "C:/Users/Calista/Documents/GitHub/CGE/src/main/java/org/foxesworld/cge/core/file/cgtex/writer",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\java\org\foxesworld\cge\core\file\cgtex\writer" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\theme\icon" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\Interface\Icons" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Calista\Documents\GitHub\CGE" />
+      <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\Textures\icons" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\Textures" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\theme\icon" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\theme" />
-      <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources" />
-      <recent name="C:\Users\Calista\Documents\GitHub\CGE" />
     </key>
     <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
       <recent name="org.foxesworld.cge.tools" />
       <recent name="org.foxesworld.cge.core" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.CGTEXCreatorUI">
+  <component name="RunManager" selected="Application.CalistaGameEngine">
     <configuration name="CGTEXCreatorUI" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="org.foxesworld.cge.tools.CGTEXcreator.CGTEXCreatorUI" />
       <module name="CGE.main" />
@@ -174,8 +177,31 @@
         <option name="Make" enabled="true" />
       </method>
     </configuration>
+    <configuration name="CGE [clean]" type="GradleRunConfiguration" factoryName="Gradle" temporary="true">
+      <ExternalSystemSettings>
+        <option name="executionName" />
+        <option name="externalProjectPath" value="$PROJECT_DIR$" />
+        <option name="externalSystemIdString" value="GRADLE" />
+        <option name="scriptParameters" />
+        <option name="taskDescriptions">
+          <list />
+        </option>
+        <option name="taskNames">
+          <list>
+            <option value="clean" />
+          </list>
+        </option>
+        <option name="vmOptions" />
+      </ExternalSystemSettings>
+      <ExternalSystemDebugServerProcess>true</ExternalSystemDebugServerProcess>
+      <ExternalSystemReattachDebugProcess>true</ExternalSystemReattachDebugProcess>
+      <DebugAllEnabled>false</DebugAllEnabled>
+      <ForceTestExec>false</ForceTestExec>
+      <method v="2" />
+    </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Gradle.CGE [clean]" />
         <item itemvalue="Application.CGTEXCreatorUI" />
         <item itemvalue="Application.SceneCgsCreatorFrame" />
         <item itemvalue="Application.ModuleHealthDashboard" />
@@ -193,7 +219,7 @@
       <updated>1748064857058</updated>
       <workItem from="1748064857995" duration="35348000" />
       <workItem from="1748145756964" duration="30552000" />
-      <workItem from="1748316663182" duration="42384000" />
+      <workItem from="1748316663182" duration="71153000" />
     </task>
     <task id="LOCAL-00001" summary="initial">
       <option name="closed" value="true" />
@@ -259,7 +285,39 @@
       <option name="project" value="LOCAL" />
       <updated>1748367988395</updated>
     </task>
-    <option name="localTasksCounter" value="9" />
+    <task id="LOCAL-00009" summary="CGTEX + CGTEX creator tool">
+      <option name="closed" value="true" />
+      <created>1748414283179</created>
+      <option name="number" value="00009" />
+      <option name="presentableId" value="LOCAL-00009" />
+      <option name="project" value="LOCAL" />
+      <updated>1748414283179</updated>
+    </task>
+    <task id="LOCAL-00010" summary="CGTEX + CGS refactor">
+      <option name="closed" value="true" />
+      <created>1748414426728</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1748414426728</updated>
+    </task>
+    <task id="LOCAL-00011" summary="Clean">
+      <option name="closed" value="true" />
+      <created>1748414494668</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1748414494668</updated>
+    </task>
+    <task id="LOCAL-00012" summary="CGTEX Fixes">
+      <option name="closed" value="true" />
+      <created>1748429585458</created>
+      <option name="number" value="00012" />
+      <option name="presentableId" value="LOCAL-00012" />
+      <option name="project" value="LOCAL" />
+      <updated>1748429585458</updated>
+    </task>
+    <option name="localTasksCounter" value="13" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -275,17 +333,10 @@
     <MESSAGE value="ICOParser fix" />
     <MESSAGE value="ChunkArgs WIP" />
     <MESSAGE value="WORKING11!!!!11" />
-    <option name="LAST_COMMIT_MESSAGE" value="WORKING11!!!!11" />
-  </component>
-  <component name="XDebuggerManager">
-    <breakpoint-manager>
-      <breakpoints>
-        <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/SceneCreator/ChunkControlsPanel.java</url>
-          <line>148</line>
-          <option name="timeStamp" value="29" />
-        </line-breakpoint>
-      </breakpoints>
-    </breakpoint-manager>
+    <MESSAGE value="CGTEX + CGTEX creator tool" />
+    <MESSAGE value="CGTEX + CGS refactor" />
+    <MESSAGE value="Clean" />
+    <MESSAGE value="CGTEX Fixes" />
+    <option name="LAST_COMMIT_MESSAGE" value="CGTEX Fixes" />
   </component>
 </project>

@@ -4,6 +4,7 @@ import org.foxesworld.cge.core.file.cgtex.CGTEXFile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.core.file.cgtex.TextureEntry;
+import org.foxesworld.cge.tools.CGTEXcreator.info.TextureInfo;
 
 import java.io.File;
 import java.io.IOException;
@@ -31,10 +32,10 @@ public class CGTEXFileWriter extends CGTEXFile {
      * Add a texture to be written into the CGTEX file.
      * @return index of the newly added texture
      */
-    public int addTexture(int width, int height, String name, byte format, byte[] data) {
-        var entry = new TextureEntry(width, height, name, format, data);
+    public int addTexture(TextureInfo ti) {
+        var entry = new TextureEntry(ti.getWidth(), ti.getHeight(), ti.getName(), ti.getFormatCode(), ti.getData());
         textures.add(entry);
-        logger.debug("Queued texture: {}x{}, format={}, size={}, name={}", width, height, format, data.length, name);
+        logger.debug("Queued texture: {}x{}, format={}, size={}, name={}", ti.getWidth(), ti.getHeight(), ti.getFormatCode(), ti.getData().length, ti.getName());
         return textures.size() - 1;
     }
 
@@ -46,46 +47,73 @@ public class CGTEXFileWriter extends CGTEXFile {
             throw new IllegalStateException("No textures to write");
         }
 
-        raf.setLength(0);
+        raf.setLength(0);  // Очищаем файл перед записью
         logger.info("Writing CGTEX: {}", file.getAbsolutePath());
 
-        // Write header
+        // Запись заголовка
         raf.seek(0);
-        raf.writeBytes(MAGIC);           // 4-byte magic
-        raf.writeInt(VERSION);           // 4-byte version
-        raf.writeInt(textures.size());   // 4-byte texture count
+        raf.writeBytes(MAGIC);           // 4 байта для MAGIC
+        raf.writeInt(VERSION);           // 4 байта для версии
+        raf.writeInt(textures.size());   // 4 байта для количества текстур
 
-        // Reserve 8 bytes for dataOffset
+        // Резервируем 8 байтов для dataOffset
         long dataOffsetPos = raf.getFilePointer();
-        raf.writeLong(0L);  // Placeholder for data offset
+        raf.writeLong(0L);  // Записываем 0 как placeholder для dataOffset
 
         long dataOffset = raf.getFilePointer();
 
-        // Write textures
+        // Запись текстур
         for (int i = 0; i < textures.size(); i++) {
             var tex = textures.get(i);
-            logTextureInfo(i, tex);
+            logTextureMetadata(i, tex);
+
+            // Запись данных текстуры
             raf.writeShort(tex.getWidth());
             raf.writeShort(tex.getHeight());
 
             // Запись имени текстуры с динамической длиной
             writeVariableLengthString(tex.getName());
 
-            raf.writeByte(tex.getFormat());
-            raf.writeInt(tex.getCompressedData().length);
-            raf.write(tex.getCompressedData());
+            raf.writeByte(tex.getFormat());  // Формат текстуры
+            raf.writeInt(tex.getCompressedData().length);  // Длина сжатиых данных
+            raf.write(tex.getCompressedData());  // Сами данные текстуры
         }
 
-        // Patch in the actual data offset
+        // Вставляем фактическое значение dataOffset
         raf.seek(dataOffsetPos);
         raf.writeLong(dataOffset);
 
         logger.info("CGTEX written successfully, dataOffset={}, textures={}", dataOffset, textures.size());
     }
+    private void writeTextureHeader(TextureEntry tex) throws IOException {
+        // Заголовок для каждой текстуры (например, DDS или CGTEX)
+        raf.writeInt(0x20534444);  // Magic number for DDS: "DDS " (для примера)
+        raf.writeInt(124);          // Заголовок DDS всегда имеет размер 124 байта
 
-    private void logTextureInfo(int index, TextureEntry tex) {
-        logger.debug("Texture [{}]: {}x{}, format={}, length={} bytes, name={}",
-                index, tex.getWidth(), tex.getHeight(), tex.getFormat(), tex.getCompressedData().length, tex.getName());
+        // Заполняем заголовок текстуры данными (например, для DXT)
+        raf.writeInt(0);  // dwSize (размер заголовка), обычно 124
+        raf.writeInt(0);  // dwFlags (флаги)
+        raf.writeInt(tex.getHeight()); // dwHeight
+        raf.writeInt(tex.getWidth());  // dwWidth
+        raf.writeInt(0);  // dwPitchOrLinearSize
+        raf.writeInt(0);  // dwDepth
+        raf.writeInt(0);  // dwMipMapCount
+        raf.writeInt(0);  // dwReserved1
+
+        // Заголовок для формата изображения (например, DXT1)
+        raf.writeInt(0);  // dwSurfaceFlags
+        raf.writeInt(0);  // dwCubemapFlags
+        raf.writeInt(0);  // dwAlphaBitDepth
+        raf.writeInt(0);  // dwReserved2
+    }
+
+    private void logTextureMetadata(int index, TextureEntry tex) {
+        // Логируем информацию о метаданных текстуры
+        logger.info("Texture [{}] Metadata:", index);
+        logger.info("  Name: {}", tex.getName());
+        logger.info("  Dimensions: {}x{}", tex.getWidth(), tex.getHeight());
+        logger.info("  Format: {}", tex.getFormat());
+        logger.info("  Data Length: {} bytes", tex.getCompressedData().length);
     }
 
     public File getFile() {

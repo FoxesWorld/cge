@@ -14,10 +14,8 @@ public class MaterialFactory {
         this.assetManager = assetManager;
     }
 
-    public Material createLightingMaterial(String diffuseMapPath, String normalMapPath) {
-        // Загрузка текстуры диффузной карты
-        TextureKey diffuseKey = new TextureKey(diffuseMapPath, false);
-        Texture diffuseMap = assetManager.loadTexture(diffuseKey);
+    public Material createLightingMaterial(Texture diffuseMap, Texture normalMap) {
+
         diffuseMap.setWrap(Texture.WrapMode.Repeat);
 
         // Создание материала с Lighting.j3md
@@ -29,9 +27,7 @@ public class MaterialFactory {
         mat.setFloat("Shininess", 2f);
 
         // Если задана карта нормалей — загрузить и применить
-        if (normalMapPath != null && !normalMapPath.isEmpty()) {
-            TextureKey normalKey = new TextureKey(normalMapPath, false);
-            Texture normalMap = assetManager.loadTexture(normalKey);
+        if (normalMap != null) {
             normalMap.setWrap(Texture.WrapMode.Repeat);
             mat.setTexture("NormalMap", normalMap);
         }

@@ -65,10 +65,10 @@ public class PreviewCell extends JPanel {
         sizeLabel.setForeground(INFO_TEXT_COLOR);
         infoPanel.add(sizeLabel);
 
-        JLabel fileSizeLabel = new JLabel(String.format("File Size: %.2f MB", ti.getFile().length() / 1024.0 / 1024.0));
-        fileSizeLabel.setFont(new Font("Arial", Font.PLAIN, 12));
-        fileSizeLabel.setForeground(INFO_TEXT_COLOR);
-        infoPanel.add(fileSizeLabel);
+        //JLabel fileSizeLabel = new JLabel(String.format("File Size: %.2f MB", ti.getFile().length() / 1024.0 / 1024.0));
+        //fileSizeLabel.setFont(new Font("Arial", Font.PLAIN, 12));
+        //fileSizeLabel.setForeground(INFO_TEXT_COLOR);
+        //infoPanel.add(fileSizeLabel);
 
         return infoPanel;
     }

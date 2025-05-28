@@ -4,14 +4,23 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.input.KeyInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.KeyTrigger;
+import com.jme3.light.DirectionalLight;
 import com.jme3.material.Material;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
+import com.jme3.scene.shape.Box;
 import com.jme3.scene.shape.Quad;
 import com.jme3.system.AppSettings;
+import com.jme3.texture.Image;
+import com.jme3.texture.Texture;
+import com.jme3.texture.Texture2D;
+import com.jme3.texture.plugins.DDSLoader;
 import org.foxesworld.cge.core.ConfigService;
 import org.foxesworld.cge.core.TaskScheduler;
+import org.foxesworld.cge.core.file.cgtex.TextureEntry;
+import org.foxesworld.cge.core.file.cgtex.reader.CGTEXFileReader;
 import org.foxesworld.cge.core.io.GenericByteParser;
 import org.foxesworld.cge.core.module.EngineModule;
 import org.foxesworld.cge.core.module.ModuleManager;
@@ -20,11 +29,17 @@ import org.foxesworld.cge.core.streaming.StreamingParserLoader;
 import org.foxesworld.cge.renderer.RendererModule;
 import org.foxesworld.cge.scene.SceneModule;
 import org.foxesworld.cge.tmp.MaterialFactory;
+import org.foxesworld.cge.tmp.TextureLoader;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.LogManager;
@@ -32,11 +47,12 @@ import java.util.logging.LogManager;
 import static org.foxesworld.cge.tools.SceneCGSCreator.SceneCgsCreatorFrame.setupTheme;
 
 public class CalistaGameEngine extends SimpleApplication {
-
+    private final Map<String, Texture> textureMap = new HashMap<>();
     private StreamingManager<String, Byte[]> byteStreamer;
     private ModuleManager moduleManager;
     private final ConfigService configService;
     private final TaskScheduler taskScheduler;
+    private TextureLoader textureLoader;
 
 
     public static void main(String[] args) {
@@ -72,7 +88,6 @@ public class CalistaGameEngine extends SimpleApplication {
         }
 
         app.setSettings(settings);
-        //app.setShowSettings(false);
         app.start();
     }
 
@@ -83,6 +98,8 @@ public class CalistaGameEngine extends SimpleApplication {
         SLF4JBridgeHandler.install();
         this.configService = new ConfigService();
         this.taskScheduler = new TaskScheduler();
+        textureLoader = new TextureLoader(this);
+
         GenericByteParser<Byte[]> parser = new GenericByteParser<>(bytes -> {
             Byte[] boxed = new Byte[bytes.length];
             for (int i = 0; i < bytes.length; i++) {
@@ -100,19 +117,20 @@ public class CalistaGameEngine extends SimpleApplication {
                 true,
                 4
         );
+
+        textureLoader.loadCgtex("test.cgtex");;
     }
 
     @Override
     public void simpleInitApp() {
-        // Инициализация менеджера модулей
         moduleManager = new ModuleManager(this);
         moduleManager.register(new RendererModule(this), 10);
         moduleManager.register(new SceneModule(this), 10);
         moduleManager.initializeAll(this);
 
-        // Настройка маппинга для клавиши F5
-        inputManager.addMapping("ReloadConfig", new KeyTrigger(KeyInput.KEY_F5));
-        inputManager.addListener(actionListener, "ReloadConfig");
+
+        Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        mat.setTexture("ColorMap", this.textureMap.get("calista_grid_test"));
 
         // ——— Геометрия для теста ———
         float width = 10f;
@@ -121,15 +139,7 @@ public class CalistaGameEngine extends SimpleApplication {
         Geometry terrain = new Geometry("TerrainPlane", quad);
         terrain.setLocalTranslation(-width / 2f, 0, height / 2f);
         terrain.rotate(-FastMath.HALF_PI, 0, 0);
-
-        // ——— Материал с текстурой ———
-        MaterialFactory factory = new MaterialFactory(assetManager);
-        Material myMaterial = factory.createLightingMaterial(
-                "Textures/calista_grid_test.png",
-                ""
-        );
-
-        terrain.setMaterial(myMaterial.clone());
+        terrain.setMaterial(mat);
         rootNode.attachChild(terrain);
 
         // ——— Камера сверху ———
@@ -139,18 +149,6 @@ public class CalistaGameEngine extends SimpleApplication {
         cam.setLocation(new Vector3f(camX, camHeight, camZ));
         cam.lookAt(new Vector3f(camX, 0f, camZ), Vector3f.UNIT_Y);
     }
-
-
-    private final ActionListener actionListener = new ActionListener() {
-        @Override
-        public void onAction(String name, boolean isPressed, float tpf) {
-            if ("ReloadConfig".equals(name) && isPressed) {
-                for (Map.Entry<String, EngineModule<?>> module : moduleManager.getInstances().entrySet()) {
-                    module.getValue().reloadConfig();
-                }
-            }
-        }
-    };
 
     public ConfigService getConfigService() {
         return configService;
@@ -166,5 +164,9 @@ public class CalistaGameEngine extends SimpleApplication {
 
     public StreamingManager<String, Byte[]> getByteStreamer() {
         return byteStreamer;
+    }
+
+    public void  addTexture(String name, Texture texture2D){
+        this.textureMap.put(name, texture2D);
     }
 }

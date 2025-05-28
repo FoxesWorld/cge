@@ -238,7 +238,7 @@ public class CGTEXCreatorUI extends JFrame {
 
         try (CGTEXFileWriter w = new CGTEXFileWriter(out)) {
             for (TextureInfo ti : textures) {
-                w.addTexture(ti.getWidth(), ti.getHeight(), ti.getName(), ti.getFormatCode(), ti.getData());
+                w.addTexture(ti);
             }
             w.writeToFile();
             JOptionPane.showMessageDialog(this, "Saved: " + out, "OK", JOptionPane.INFORMATION_MESSAGE);

@@ -32,7 +32,7 @@ public class CGTEXFileReader extends CGTEXFile {
         // DEBUG: Вывод полного дампа файла в HEX
         try {
             byte[] allBytes = Files.readAllBytes(file.toPath());
-            logger.debug("Full file size ({} bytes)", allBytes.length);
+            logger.debug("Full file HEX dump ({} bytes)", allBytes.length);
         } catch (IOException e) {
             logger.warn("Failed to dump full file hex: {}", e.getMessage());
         }
@@ -75,8 +75,9 @@ public class CGTEXFileReader extends CGTEXFile {
             TextureEntry entry = new TextureEntry(width, height, name, format, data);
             textures.add(entry);
 
-            logger.debug("Texture[{}]: name={} size={} format={}", i, entry.getName(), entry.getWidth()+'x'+entry.getHeight(), entry.getFormat());
+            logger.debug("Texture[{}]: name= {} size={} format={}", i, entry.getName(), entry.getWidth()+'x'+entry.getHeight(), entry.getFormat());
         }
+
         logger.info("================= CGTEX FILE READ END =================");
     }
 
