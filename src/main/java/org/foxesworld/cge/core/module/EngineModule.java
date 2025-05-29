@@ -9,11 +9,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Abstract base class for engine modules with async config, state-machine,
  * job-based update scheduling and centralized ConfigService.
- * Enhanced with detailed logging and NPE safeguards.
+ * Enhanced with detailed logging, NPE safeguards, and callback for completion.
  * @param <T> configuration type
  */
 public abstract class EngineModule<T> extends BaseAppState {
@@ -26,6 +27,12 @@ public abstract class EngineModule<T> extends BaseAppState {
     private final String configFile;
     private ModuleState state = ModuleState.UNLOADED;
     private Future<?> initFuture;
+
+    // Runnable to notify when all modules are loaded
+    private Runnable onAllModulesLoadedRunnable;
+
+    // Atomic counter to track loading completion across modules
+    private static final AtomicInteger modulesLoadingCount = new AtomicInteger(0);
 
     public EngineModule(String configFile, Class<T> configClass, CalistaGameEngine calistaGameEngine) {
         this.gameEngine = calistaGameEngine;
@@ -53,6 +60,8 @@ public abstract class EngineModule<T> extends BaseAppState {
         logger.info("{} initialize() start", getName());
         transitionTo(ModuleState.LOADING_CONFIG);
 
+        modulesLoadingCount.incrementAndGet(); // Increment the counter when a module starts loading
+
         initFuture = taskScheduler.submit(() -> {
             try {
                 if (configFile != null) {
@@ -64,11 +73,18 @@ public abstract class EngineModule<T> extends BaseAppState {
                 initModule(gameEngine);
                 transitionTo(ModuleState.RUNNING);
                 logger.info("{} initialized and running", getName());
+
+                // Decrement the counter and check if all modules are loaded
+                if (modulesLoadingCount.decrementAndGet() == 0) {
+                    // All modules are loaded, execute the callback
+                    if (onAllModulesLoadedRunnable != null) {
+                        onAllModulesLoadedRunnable.run();
+                    }
+                }
             } catch (Throwable t) {
                 handleFailure(t, "initialize");
             }
         });
-        logger.info("Module initialized with config {}",config);
     }
 
     @Override
@@ -156,4 +172,11 @@ public abstract class EngineModule<T> extends BaseAppState {
     public ModuleState getState() { return state; }
     public ConfigService getConfigService() { return configService; }
     public TaskScheduler getTaskScheduler() { return taskScheduler; }
+
+    /**
+     * Sets the Runnable to be executed when all modules are loaded.
+     */
+    public void setOnAllModulesLoadedRunnable(Runnable runnable) {
+        this.onAllModulesLoadedRunnable = runnable;
+    }
 }

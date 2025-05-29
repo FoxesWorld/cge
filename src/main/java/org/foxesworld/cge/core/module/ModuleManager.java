@@ -31,14 +31,25 @@ public class ModuleManager {
     // Auto-loaded instances and descriptors
     private final Map<String, EngineModule<?>> instances = new ConcurrentHashMap<>();
 
+    // ExecutorService with a fixed pool size based on the system
     private final ExecutorService initExecutor;
+
     private final Path modulesDir = Paths.get("modules");
 
     public ModuleManager(CalistaGameEngine calistaGameEngine) {
         this.stateManager = calistaGameEngine.getStateManager();
         this.configService = calistaGameEngine.getConfigService();
         this.taskScheduler = calistaGameEngine.getTaskScheduler();
-        this.initExecutor = Executors.newFixedThreadPool(Runtime.getRuntime().availableProcessors());
+        this.initExecutor = Executors.newFixedThreadPool(
+                Runtime.getRuntime().availableProcessors(),
+                new ThreadFactory() {
+                    @Override
+                    public Thread newThread(Runnable r) {
+                        Thread thread = new Thread(r);
+                        thread.setDaemon(true); // Set threads to daemon for high-load environments
+                        return thread;
+                    }
+                });
     }
 
     /**
@@ -63,8 +74,13 @@ public class ModuleManager {
      * Automatic loading: read module descriptors, resolve dependencies, register,
      * and initialize modules (manual + auto) asynchronously.
      */
-    public void loadAll(Application app) throws IOException {
-        List<ModuleDescriptor> descriptors = readManifests(modulesDir);
+    public void loadAll(Application app, Runnable onComplete) {
+        List<ModuleDescriptor> descriptors = null;
+        try {
+            descriptors = readManifests(modulesDir);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
         List<ModuleDescriptor> sorted = topologicalSort(descriptors);
 
         // Instantiate and register all auto modules
@@ -82,10 +98,36 @@ public class ModuleManager {
             }
         }
 
-        // Initialize all modules
+        // Initialize all modules asynchronously
+        List<CompletableFuture<Void>> futures = new ArrayList<>();
         for (EngineModule<?> module : manual.values()) {
-            initExecutor.submit(() -> asyncAttach(module, app));
+            futures.add(CompletableFuture.runAsync(() -> asyncAttach(module, app), initExecutor));
         }
+
+        // Wait for all initialization tasks to complete and then trigger callback
+        CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
+                .thenRun(() -> {
+                    //onComplete.run();  // Run the provided callback
+                    onModulesLoaded(onComplete);  // Trigger custom method when all modules are loaded
+                })
+                .exceptionally(ex -> {
+                    logger.error("Error during module initialization", ex);
+                    return null;
+                });
+    }
+
+    /**
+     * A new method to set a custom callback that will be invoked when all modules are loaded.
+     */
+    public void onModulesLoaded(Runnable runnable) {
+        CompletableFuture.runAsync(() -> {
+            try {
+                runnable.run();  // Run the provided callback
+                logger.info("Custom onModulesLoaded callback executed.");
+            } catch (Exception e) {
+                logger.error("Error during onModulesLoaded callback execution", e);
+            }
+        }, initExecutor);
     }
 
     private void asyncAttach(EngineModule<?> module, Application app) {
@@ -174,7 +216,7 @@ public class ModuleManager {
             initExecutor.shutdownNow();
             Thread.currentThread().interrupt();
         }
-        manual.values().forEach(m -> stateManager.detach(m));
+        manual.values().forEach(stateManager::detach);
         logger.info("ModuleManager shutdown complete");
     }
 
@@ -205,5 +247,4 @@ public class ModuleManager {
         logger.warn("Module {} not found", moduleClass.getSimpleName());
         return null;
     }
-
 }

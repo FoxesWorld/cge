@@ -1,52 +1,58 @@
-[10:44:28.143][INFO][TextureLoader] Starting to load CGTEX file: test.cgtex
-[10:44:28.433][INFO][AbstractFile] Closing test.cgtex
-[10:44:28.434][INFO][ModuleManager] Adding module CameraModule
-[10:44:28.437][INFO][PostProcessingModule] PostProcessingModule initialize() start
-[10:44:28.442][INFO][PostProcessingModule] Module initialized with config null
-[10:44:28.442][INFO][ModuleManager] Adding module PostProcessingModule
-[10:44:28.442][INFO][ModuleManager] Adding module RendererModule
-[10:44:28.444][INFO][ModuleManager] Adding module SceneModule
-[10:44:28.444][INFO][ModuleManager] Attached manual module SceneModule
-[10:44:28.445][INFO][ModuleManager] Attached manual module RendererModule
-[10:44:28.463][INFO][PostProcessingModule] PostProcessingModule initialized and running
-[10:44:28.482][INFO][SceneModule] SceneModule initialize() start
-[10:44:28.483][INFO][SceneModule] Module initialized with config null
-[10:44:28.483][INFO][RendererModule] RendererModule initialize() start
-[10:44:28.484][INFO][RendererModule] Module initialized with config null
-[10:44:28.484][INFO][RendererModule] Renderer initialized:
-[10:44:28.484][INFO][RendererModule] Capabilities:
-[10:44:28.485][INFO][RendererModule]  - Shader Language Support: true
-[10:44:28.486][INFO][RendererModule]  - FrameBuffer Support:     true
-[10:44:28.486][INFO][RendererModule]  - Geometry Shader:          false
-[10:44:28.486][INFO][RendererModule]  - Texture Array:            true
-[10:44:28.493][INFO][RendererModule] Initializing RendererModule and sub-modules...
-[10:44:28.494][INFO][ModuleManager] Attached manual module CameraModule
-[10:44:28.494][INFO][ModuleManager] Attached manual module PostProcessingModule
-[10:44:28.495][INFO][ModuleManager] Searching for module: SceneModule
-[10:44:28.496][INFO][ChunkFieldTypeConfigLoader] Loaded 5 chunk subtypes
-[10:44:28.495][INFO][ModuleManager] Found module in manual: SceneModule
-[10:44:28.498][INFO][SceneModule] SceneModule initialized and running
-[10:44:28.500][INFO][RendererModule] RendererModule initialized.
-[10:44:28.501][INFO][RendererModule] RendererModule initialized and running
-[10:44:28.572][INFO][LightingParser] Finished LightingChunk 101189232, lights parsed: 1
-[10:44:28.572][INFO][LightingParser] Finished LightingChunk 1802940, lights parsed: 1
-[10:44:28.691][INFO][SceneModule] All chunks streamed sceneRoot attached.
-[10:44:28.692][INFO][RendererModule] Scene loaded, updating renderer settings...
-[10:44:28.692][INFO][RendererModule] Updating lights on scene loaded!
-[10:44:28.693][INFO][CameraModule] CameraModule initialize() start
-[10:44:28.694][INFO][CameraModule] CameraModule initialized and running
-[10:44:28.694][INFO][CameraModule] Module initialized with config org.foxesworld.cge.renderer.camera.CameraConfig@2de2eb5f
-[10:44:28.695][INFO][PostProcessingModule] PostProcessingModule initialize() start
-[10:44:28.695][INFO][PostProcessingModule] PostProcessingModule initialized and running
-[10:44:28.698][INFO][PostProcessingModule] Module initialized with config org.foxesworld.cge.renderer.postProcessing.PostProcessingConfig@7ba90401
-[10:45:36.649][INFO][SceneModule] SceneModule cleanup() start, current state=RUNNING
-[10:45:36.650][INFO][AbstractFile] Closing tg.cgs
-[10:45:36.650][INFO][SceneModule] SceneModule cleaned up successfully
-[10:45:36.651][INFO][RendererModule] RendererModule cleanup() start, current state=RUNNING
-[10:45:36.651][INFO][RendererModule] Cleaning up RendererModule and sub-modules...
-[10:45:36.651][INFO][RendererModule] RendererModule cleaned up.
-[10:45:36.651][INFO][RendererModule] RendererModule cleaned up successfully
-[10:45:36.651][INFO][CameraModule] CameraModule cleanup() start, current state=RUNNING
-[10:45:36.651][INFO][CameraModule] CameraModule cleaned up successfully
-[10:45:36.652][INFO][PostProcessingModule] PostProcessingModule cleanup() start, current state=RUNNING
-[10:45:36.652][INFO][PostProcessingModule] PostProcessingModule cleaned up successfully
+[13:57:35.909][INFO][AbstractFile] Closing test.cgtex
+[13:57:35.913][INFO][ModuleManager] Adding module CameraModule
+[13:57:35.917][INFO][PostProcessingModule] PostProcessingModule initialize() start
+[13:57:35.922][INFO][ModuleManager] Adding module PostProcessingModule
+[13:57:35.924][INFO][ModuleManager] Adding module LightingModule
+[13:57:35.924][INFO][ModuleManager] Adding module RendererModule
+[13:57:35.925][INFO][ModuleManager] Adding module SceneModule
+[13:57:35.926][INFO][ModuleManager] Attached manual module SceneModule
+[13:57:35.926][INFO][ModuleManager] Attached manual module RendererModule
+[13:57:35.927][WARN][ModuleManager] Modules directory 'modules' not found
+[13:57:35.933][INFO][ModuleManager] Attached module SceneModule
+[13:57:35.934][INFO][ModuleManager] Attached module RendererModule
+[13:57:35.943][INFO][PostProcessingModule] PostProcessingModule initialized and running
+[13:57:35.938][INFO][ModuleManager] Searching for module: SceneModule
+[13:57:35.944][INFO][ModuleManager] Found module in manual: SceneModule
+[13:57:35.959][INFO][ModuleManager] Custom onModulesLoaded callback executed.
+[13:57:35.971][INFO][SceneModule] SceneModule initialize() start
+[13:57:35.974][INFO][RendererModule] RendererModule initialize() start
+[13:57:35.976][INFO][RendererModule] Renderer initialized:
+[13:57:35.977][INFO][RendererModule] Capabilities:
+[13:57:35.977][INFO][RendererModule]  - Shader Language Support: true
+[13:57:35.978][INFO][RendererModule]  - FrameBuffer Support:     true
+[13:57:35.978][INFO][RendererModule]  - Geometry Shader:          false
+[13:57:35.984][INFO][ChunkFieldTypeConfigLoader] Loaded 5 chunk subtypes
+[13:57:35.979][INFO][RendererModule] Initializing RendererModule and sub-modules...
+[13:57:35.984][INFO][RendererModule] RendererModule initialized.
+[13:57:35.985][INFO][RendererModule] RendererModule initialized and running
+[13:57:35.986][INFO][SceneModule] SceneModule initialized and running
+[13:57:35.987][INFO][ModuleManager] Attached manual module CameraModule
+[13:57:35.987][INFO][ModuleManager] Attached manual module LightingModule
+[13:57:35.988][INFO][ModuleManager] Attached manual module PostProcessingModule
+[13:57:35.988][INFO][ModuleManager] Searching for module: SceneModule
+[13:57:35.988][INFO][ModuleManager] Found module in manual: SceneModule
+[13:57:35.989][INFO][RendererModule]  - Texture Array:            true
+[13:57:36.033][INFO][LightingParser] Finished LightingChunk 1802940, lights parsed: 1
+[13:57:36.034][INFO][LightingParser] Finished LightingChunk 101189232, lights parsed: 1
+[13:57:36.129][INFO][SceneModule] All chunks streamed sceneRoot attached.
+[13:57:36.130][INFO][RendererModule] Scene loaded, updating renderer settings...
+[13:57:36.131][INFO][RendererModule] Updating lights on scene loaded!
+[13:57:36.131][INFO][CameraModule] CameraModule initialize() start
+[13:57:36.133][INFO][CameraModule] CameraModule initialized and running
+[13:57:36.134][INFO][LightingModule] LightingModule initialize() start
+[13:57:36.136][INFO][LightingModule] LightingModule initialized and running
+[13:57:36.137][INFO][PostProcessingModule] PostProcessingModule initialize() start
+[13:57:36.141][INFO][PostProcessingModule] PostProcessingModule initialized and running
+[13:57:37.687][INFO][SceneModule] SceneModule cleanup() start, current state=RUNNING
+[13:57:37.688][INFO][AbstractFile] Closing tg.cgs
+[13:57:37.688][INFO][SceneModule] SceneModule cleaned up successfully
+[13:57:37.688][INFO][RendererModule] RendererModule cleanup() start, current state=RUNNING
+[13:57:37.688][INFO][RendererModule] Cleaning up RendererModule and sub-modules...
+[13:57:37.688][INFO][RendererModule] RendererModule cleaned up.
+[13:57:37.689][INFO][RendererModule] RendererModule cleaned up successfully
+[13:57:37.689][INFO][CameraModule] CameraModule cleanup() start, current state=RUNNING
+[13:57:37.689][INFO][CameraModule] CameraModule cleaned up successfully
+[13:57:37.689][INFO][LightingModule] LightingModule cleanup() start, current state=RUNNING
+[13:57:37.689][INFO][LightingModule] LightingModule cleaned up successfully
+[13:57:37.689][INFO][PostProcessingModule] PostProcessingModule cleanup() start, current state=RUNNING
+[13:57:37.690][INFO][PostProcessingModule] PostProcessingModule cleaned up successfully

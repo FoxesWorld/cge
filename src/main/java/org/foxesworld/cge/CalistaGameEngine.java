@@ -40,6 +40,7 @@ public class CalistaGameEngine extends SimpleApplication {
     private final ConfigService configService;
     private final TaskScheduler taskScheduler;
     private final TextureLoader textureLoader;
+    private SceneModule scene;
 
 
     public static void main(String[] args) {
@@ -89,7 +90,7 @@ public class CalistaGameEngine extends SimpleApplication {
         this.byteStreamer = new StreamingManager<>(
                 loader::load,
                 true,
-                4
+                0
         );
     }
 
@@ -100,45 +101,48 @@ public class CalistaGameEngine extends SimpleApplication {
         //moduleManager.register(new PhysicsModule(this), 35);
         moduleManager.register(new SceneModule(this), 10);
         moduleManager.initializeAll(this);
+        moduleManager.loadAll(this, () -> {
 
-        for(Map.Entry<String, EngineModule<?>> entry:this.moduleManager.getInstances().entrySet()){
-            System.out.println(entry.getKey());
-        }
-        Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
-        mat.setBoolean("UseMaterialColors", true);
-        mat.setColor("Diffuse", new ColorRGBA(0.2f, 0.6f, 0.3f, 0.1f));
-        mat.setTexture("DiffuseMap", textureMap.get("calista_grid_test"));
-        mat.setColor("Specular", ColorRGBA.White);
-        mat.setFloat("Shininess", 2f);
+            scene = moduleManager.getModule(SceneModule.class);
+            Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
+            mat.setBoolean("UseMaterialColors", true);
+            mat.setColor("Diffuse", new ColorRGBA(0.2f, 0.6f, 0.3f, 0.1f));
+            mat.setTexture("DiffuseMap", textureMap.get("calista_grid_test"));
+            mat.setColor("Specular", ColorRGBA.White);
+            mat.setFloat("Shininess", 2f);
 
-        // ——— Геометрия для теста ———
-        float width = 10f;
-        float height = 10f;
-        Quad quad = new Quad(width, height);
-        Geometry terrain = new Geometry("TerrainPlane", quad);
-        terrain.setLocalTranslation(-width / 2f, 0, height / 2f);
-        terrain.rotate(-FastMath.HALF_PI, 0, 0);
-        terrain.setMaterial(mat);
-        rootNode.attachChild(terrain);
+            // ——— Геометрия для теста ———
+            float width = 10f;
+            float height = 10f;
+            Quad quad = new Quad(width, height);
+            Geometry terrain = new Geometry("TerrainPlane", quad);
+            terrain.setLocalTranslation(-width / 2f, 0, height / 2f);
+            terrain.rotate(-FastMath.HALF_PI, 0, 0);
+            terrain.setMaterial(mat);
+            enqueue(() -> {
+                getRootNode().attachChild(terrain);
+            });
 
+            // ——— Камера сверху ———
+            float camHeight = 10f;
+            float camX = 0f;
+            float camZ = 0f;
+            cam.setLocation(new Vector3f(camX, camHeight, camZ));
+            cam.lookAt(new Vector3f(camX, 0f, camZ), Vector3f.UNIT_Y);
 
-        // ——— Камера сверху ———
-        float camHeight = 10f;
-        float camX = 0f;
-        float camZ = 0f;
-        cam.setLocation(new Vector3f(camX, camHeight, camZ));
-        cam.lookAt(new Vector3f(camX, 0f, camZ), Vector3f.UNIT_Y);
-
-        Box b = new Box(1f, 1f, 1f);
-        Geometry geom = new Geometry("Cube", b);
-        Material mat2 = new Material(getAssetManager(), "Common/MatDefs/Light/Lighting.j3md");
-        mat2.setColor("Diffuse", new ColorRGBA(0.2f, 0.6f, 0.3f, 0.1f));
-        mat2.setBoolean("UseMaterialColors", true);
-        mat2.setTexture("DiffuseMap", getTextureMap().get("box"));
-        mat2.setColor("Specular", ColorRGBA.White);
-        mat2.setFloat("Shininess", 20f);
-        geom.setMaterial(mat2);
-        getRootNode().attachChild(geom);
+            Box b = new Box(1f, 1f, 1f);
+            Geometry geom = new Geometry("Cube", b);
+            Material mat2 = new Material(getAssetManager(), "Common/MatDefs/Light/Lighting.j3md");
+            mat2.setColor("Diffuse", new ColorRGBA(0.2f, 0.6f, 0.3f, 0.1f));
+            mat2.setBoolean("UseMaterialColors", true);
+            mat2.setTexture("DiffuseMap", getTextureMap().get("box"));
+            mat2.setColor("Specular", ColorRGBA.White);
+            mat2.setFloat("Shininess", 20f);
+            geom.setMaterial(mat2);
+            enqueue(() -> {
+               getRootNode().attachChild(geom);
+            });
+        });
     }
 
     public ConfigService getConfigService() {
@@ -168,4 +172,10 @@ public class CalistaGameEngine extends SimpleApplication {
     public TextureLoader getTextureLoader() {
         return textureLoader;
     }
+
+    public SceneModule getScene() {
+        return scene;
+    }
+
+
 }

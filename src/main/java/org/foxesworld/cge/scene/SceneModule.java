@@ -29,10 +29,7 @@ public class SceneModule extends EngineModule<SceneConfig> {
     private CGSMetadata cgsMetadata;
     private CGSFile sceneFile;
     private List<ChunkEntry> entries;
-
-    // generic streaming manager for chunks
     private StreamingManager<Integer, SceneChunk> streamingManager;
-
     private Node sceneRoot;
     private CalistaGameEngine app;
     private ChunkFieldTypeConfigLoader configLoader;
@@ -58,7 +55,6 @@ public class SceneModule extends EngineModule<SceneConfig> {
             throw new IllegalStateException("SceneConfig or scenePath is null");
         }
 
-        // 1) Стримим CGS-файл как байты
         app.getByteStreamer().streamAsync(cfg.getScenePath(),
                 bytes -> {
                     try {
@@ -204,9 +200,5 @@ public class SceneModule extends EngineModule<SceneConfig> {
         byte[] bytes = new byte[buf.remaining()];
         buf.slice().get(bytes);
         return HexFormat.of().formatHex(bytes);
-    }
-
-    public ChunkFieldTypeConfigLoader getConfigLoader() {
-        return configLoader;
     }
 }

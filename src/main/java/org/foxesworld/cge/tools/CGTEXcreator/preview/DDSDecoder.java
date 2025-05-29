@@ -48,7 +48,7 @@ public final class DDSDecoder {
     }
 
     // Декодирует DXT1 данные
-    private static void decodeDXT1(int w, int h, byte[] src, BufferedImage img) {
+    public static void decodeDXT1(int w, int h, byte[] src, BufferedImage img) {
         ByteBuffer buf = ByteBuffer.wrap(src).order(ByteOrder.LITTLE_ENDIAN);
         int blocksWide = (w + 3) / 4;
         int blocksHigh = (h + 3) / 4;
@@ -81,6 +81,50 @@ public final class DDSDecoder {
                 }
             }
         }
+    }
+
+    public static ByteBuffer decodeDXT1(int w, int h, byte[] src) {
+        ByteBuffer buf = ByteBuffer.wrap(src).order(ByteOrder.LITTLE_ENDIAN);
+        int blocksWide = (w + 3) / 4;
+        int blocksHigh = (h + 3) / 4;
+
+        // Создаем ByteBuffer для хранения итоговых данных
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(w * h * 4); // 4 байта на пиксель (RGBA)
+
+        for (int by = 0; by < blocksHigh; by++) {
+            for (int bx = 0; bx < blocksWide; bx++) {
+                int c0 = buf.getShort() & 0xFFFF;
+                int c1 = buf.getShort() & 0xFFFF;
+                int[] colors = new int[4];
+                colors[0] = rgb565(c0);
+                colors[1] = rgb565(c1);
+
+                // Интерполируем для цвета 2 и 3
+                if (c0 > c1) {
+                    colors[2] = interp(colors[0], colors[1], 2, 1);
+                    colors[3] = interp(colors[0], colors[1], 1, 2);
+                } else {
+                    colors[2] = interp(colors[0], colors[1], 1, 1);
+                    colors[3] = 0x00000000; // полностью прозрачный (альфа 0)
+                }
+
+                int bits = buf.getInt();
+                for (int row = 0; row < 4; row++) {
+                    for (int col = 0; col < 4; col++) {
+                        int idx = bits & 0x3;
+                        bits >>>= 2;
+                        int x = bx * 4 + col;
+                        int y = by * 4 + row;
+                        if (x < w && y < h) {
+                            byteBuffer.putInt(colors[idx]); // Записываем цвет в ByteBuffer
+                        }
+                    }
+                }
+            }
+        }
+
+        byteBuffer.flip(); // Подготавливаем ByteBuffer для чтения
+        return byteBuffer;
     }
 
     // Декодирует DXT3 данные (с альфа-каналом)

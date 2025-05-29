@@ -11,10 +11,8 @@ import org.foxesworld.cge.core.file.cgtex.TextureEntry;
 import org.foxesworld.cge.tools.CGTEXcreator.preview.DDSDecoder;
 
 import java.awt.image.BufferedImage;
-import java.io.ByteArrayInputStream;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.nio.ByteBuffer;
 
 public class TextureLoader {
@@ -28,7 +26,7 @@ public class TextureLoader {
 
     public void loadCgtex(String path) {
         CGTEXFile cgtexFile;
-        logger.info("Starting to load CGTEX file: " + path);
+        logger.debug("Starting to load CGTEX file: " + path);
         cgtexFile = new CGTEXFile(new File(path), "r");
 
         for (TextureEntry textureEntry : cgtexFile.readFile().getTextures()) {
