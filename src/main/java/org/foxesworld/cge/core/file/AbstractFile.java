@@ -1,5 +1,9 @@
 package org.foxesworld.cge.core.file;
 
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
+import org.foxesworld.cge.tmp.TextureLoader;
+
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -12,9 +16,10 @@ import java.nio.charset.StandardCharsets;
  * common utility methods for reading/writing bytes, strings and primitive types.
  */
 public abstract class AbstractFile implements AutoCloseable {
+    private static final Logger logger = LogManager.getLogger(AbstractFile.class);
     protected final RandomAccessFile raf;
-    protected String MAGIC;
-    protected int VERSION;
+    private String MAGIC;
+    private int VERSION;
     protected int MAX_NAME_LENGTH;
     protected ByteOrder BYTE_ORDER;
     private final File file;
@@ -32,7 +37,7 @@ public abstract class AbstractFile implements AutoCloseable {
         }
     }
 
-    protected void writeVariableLengthString(String value) throws IOException {
+    public void writeVariableLengthString(String value) throws IOException {
         byte[] valueBytes = value.getBytes(StandardCharsets.UTF_8);
         int length = valueBytes.length;
         raf.writeInt(length);
@@ -90,8 +95,33 @@ public abstract class AbstractFile implements AutoCloseable {
         return file;
     }
 
+    public RandomAccessFile getRaf() {
+        return raf;
+    }
+
     @Override
     public void close() throws IOException {
-        raf.close();
+        try {
+            raf.close();
+            logger.info("Closing {}", this.file);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void setMAGIC(String MAGIC) {
+        this.MAGIC = MAGIC;
+    }
+
+    public void setVERSION(int VERSION) {
+        this.VERSION = VERSION;
+    }
+
+    public String getMAGIC() {
+        return MAGIC;
+    }
+
+    public int getVERSION() {
+        return VERSION;
     }
 }

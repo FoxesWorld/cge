@@ -1,26 +1,34 @@
 package org.foxesworld.cge.core.file.cgtex;
 
 import org.foxesworld.cge.core.file.AbstractFile;
+import org.foxesworld.cge.core.file.cgtex.reader.CGTEXFileReader;
+import org.foxesworld.cge.core.file.cgtex.writer.CGTEXFileWriter;
 
 import java.io.File;
+import java.io.IOException;
+import java.util.List;
 
-/**
- * CGTEXFile — контейнер для хранения нескольких DXT-текстур в одном файле .cgtex.
- * Наследует AbstractFile, но фактически делегирует работу по чтению/записи
- * в CGTEXFileReader/CGTEXFileWriter.
- */
 public class CGTEXFile extends AbstractFile {
 
-    /**
-     * Plain-Data container для одной текстуры.
-     */
-    protected final String MAGIC = "CGTX";
-    protected final int VERSION = 1;
-
-    /**
-     * Открывает .cgtex файл в заданном режиме ("r" или "rw").
-     */
     public CGTEXFile(File file, String mode) {
         super(file, mode);
+        this.setMAGIC("CGTX");
+        this.setVERSION(1);
+    }
+    public CGTEXFileReader readFile() {
+        try {
+            return new CGTEXFileReader(this);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    public void writeFile(List<TextureEntry> textureEntryList){
+        CGTEXFileWriter writer = new CGTEXFileWriter(this);
+        try {
+            writer.writeToFile(textureEntryList);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 }

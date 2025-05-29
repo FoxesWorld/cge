@@ -1,12 +1,9 @@
 package org.foxesworld.cge.tools.CGTEXcreator;
 
 import com.formdev.flatlaf.FlatDarkLaf;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.ICOParser;
+import org.foxesworld.cge.core.file.cgtex.CGTEXFile;
 import org.foxesworld.cge.core.file.cgtex.TextureEntry;
-import org.foxesworld.cge.core.file.cgtex.reader.CGTEXFileReader;
-import org.foxesworld.cge.core.file.cgtex.writer.CGTEXFileWriter;
 import org.foxesworld.cge.tools.CGTEXcreator.info.TextureInfo;
 import org.foxesworld.cge.tools.CGTEXcreator.preview.DDSParser;
 import org.foxesworld.cge.tools.CGTEXcreator.preview.PreviewCell;
@@ -157,8 +154,8 @@ public class CGTEXCreatorUI extends JFrame {
         if (c.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) return;
 
         File inFile = c.getSelectedFile();
-        try (CGTEXFileReader reader = new CGTEXFileReader(inFile)) {
-            List<TextureEntry> loadedTextureEntries = reader.getTextures();
+        try (CGTEXFile reader = new CGTEXFile(inFile, "r")) {
+            List<TextureEntry> loadedTextureEntries = reader.readFile().getTextures();
 
             List<TextureInfo> loadedTextures = new ArrayList<>();
             for (TextureEntry entry : loadedTextureEntries) {
@@ -235,18 +232,13 @@ public class CGTEXCreatorUI extends JFrame {
 
         File out = c.getSelectedFile();
         if (!out.getName().endsWith(".cgtex")) out = new File(out.getParent(), out.getName() + ".cgtex");
-
-        try (CGTEXFileWriter w = new CGTEXFileWriter(out)) {
+        CGTEXFile w = new CGTEXFile(out, "rw");
+        List<TextureEntry> textureEntryList = new ArrayList<>();
             for (TextureInfo ti : textures) {
-                w.addTexture(ti);
+                textureEntryList.add(new TextureEntry(ti.getWidth(), ti.getHeight(), ti.getName(), ti.getFormatCode(), ti.getData()));
             }
-            w.writeToFile();
+            w.writeFile(textureEntryList);
             JOptionPane.showMessageDialog(this, "Saved: " + out, "OK", JOptionPane.INFORMATION_MESSAGE);
-        } catch (IOException ex) {
-            ex.printStackTrace();
-            JOptionPane.showMessageDialog(this, "Cannot save:\n" + ex.getMessage(),
-                    "Error", JOptionPane.ERROR_MESSAGE);
-        }
     }
 
     public static void main(String[] args) {

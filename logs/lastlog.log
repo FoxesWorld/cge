@@ -1,9 +1,11 @@
-[22:02:40.042][INFO][TextureLoader] Starting to load CGTEX file: test.cgtex
-[22:02:40.304][INFO][ModuleManager] Attached manual module SceneModule
-[22:02:40.345][INFO][SceneModule] SceneModule initialize() start
-[22:02:40.371][INFO][ChunkFieldTypeConfigLoader] Loaded 5 chunk subtypes
-[22:02:40.374][INFO][SceneModule] SceneModule initialized and running
-[22:02:40.388][INFO][LightingParser] Finished LightingChunk 203659932, lights parsed: 1
-[22:02:40.429][INFO][SceneModule] All chunks streamed sceneRoot attached.
-[22:02:42.288][INFO][SceneModule] SceneModule cleanup() start, current state=RUNNING
-[22:02:42.289][INFO][SceneModule] SceneModule cleaned up successfully
+[07:33:13.674][INFO][TextureLoader] Starting to load CGTEX file: test.cgtex
+[07:33:13.928][INFO][AbstractFile] Closing test.cgtex
+[07:33:13.935][INFO][ModuleManager] Attached manual module SceneModule
+[07:33:13.965][INFO][SceneModule] SceneModule initialize() start
+[07:33:13.998][INFO][ChunkFieldTypeConfigLoader] Loaded 5 chunk subtypes
+[07:33:14.000][INFO][SceneModule] SceneModule initialized and running
+[07:33:14.014][INFO][LightingParser] Finished LightingChunk 203659932, lights parsed: 1
+[07:33:14.070][INFO][SceneModule] All chunks streamed sceneRoot attached.
+[07:33:15.069][INFO][SceneModule] SceneModule cleanup() start, current state=RUNNING
+[07:33:15.070][INFO][AbstractFile] Closing tg.cgs
+[07:33:15.071][INFO][SceneModule] SceneModule cleaned up successfully

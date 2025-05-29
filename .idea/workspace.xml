@@ -4,31 +4,16 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="283ff897-4432-4079-9530-7bc3ea1cccef" name="Changes" comment="CGTEX Fixes">
-      <change afterPath="$PROJECT_DIR$/config/camera_config" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/config/lighting_config" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/config/postprocessing_config" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/gg.cgtex" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hs_err_pid13404.log" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hs_err_pid13776.log" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hs_err_pid15084.log" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hs_err_pid16584.log" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hs_err_pid17992.log" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hs_err_pid18620.log" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hs_err_pid23272.log" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hs_err_pid25116.log" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/hs_err_pid7488.log" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/TextureLoader.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/test.cgtex" afterDir="false" />
+    <list default="true" id="283ff897-4432-4079-9530-7bc3ea1cccef" name="Changes" comment="Log Fix">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/logs/lastlog.log" beforeDir="false" afterPath="$PROJECT_DIR$/logs/lastlog.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/CalistaGameEngine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/CalistaGameEngine.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgs/ChunkType.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgs/ChunkType.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/AbstractFile.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/AbstractFile.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgs/CGSFile.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgs/CGSFile.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgtex/CGTEXFile.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgtex/CGTEXFile.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgtex/reader/CGTEXFileReader.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgtex/reader/CGTEXFileReader.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgtex/writer/CGTEXFileWriter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgtex/writer/CGTEXFileWriter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/MaterialFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/MaterialFactory.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/TextureLoader.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/TextureLoader.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/CGTEXcreator/CGTEXCreatorUI.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/CGTEXcreator/CGTEXCreatorUI.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/CGTEXcreator/preview/PreviewCell.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/CGTEXcreator/preview/PreviewCell.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -219,7 +204,7 @@
       <updated>1748064857058</updated>
       <workItem from="1748064857995" duration="35348000" />
       <workItem from="1748145756964" duration="30552000" />
-      <workItem from="1748316663182" duration="71153000" />
+      <workItem from="1748316663182" duration="80428000" />
     </task>
     <task id="LOCAL-00001" summary="initial">
       <option name="closed" value="true" />
@@ -317,7 +302,23 @@
       <option name="project" value="LOCAL" />
       <updated>1748429585458</updated>
     </task>
-    <option name="localTasksCounter" value="13" />
+    <task id="LOCAL-00013" summary="IT WORKS!">
+      <option name="closed" value="true" />
+      <created>1748448476436</created>
+      <option name="number" value="00013" />
+      <option name="presentableId" value="LOCAL-00013" />
+      <option name="project" value="LOCAL" />
+      <updated>1748448476436</updated>
+    </task>
+    <task id="LOCAL-00014" summary="Log Fix">
+      <option name="closed" value="true" />
+      <created>1748459053050</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1748459053050</updated>
+    </task>
+    <option name="localTasksCounter" value="15" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -337,6 +338,8 @@
     <MESSAGE value="CGTEX + CGS refactor" />
     <MESSAGE value="Clean" />
     <MESSAGE value="CGTEX Fixes" />
-    <option name="LAST_COMMIT_MESSAGE" value="CGTEX Fixes" />
+    <MESSAGE value="IT WORKS!" />
+    <MESSAGE value="Log Fix" />
+    <option name="LAST_COMMIT_MESSAGE" value="Log Fix" />
   </component>
 </project>

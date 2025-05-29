@@ -6,8 +6,8 @@ import com.jme3.texture.image.ColorSpace;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.CalistaGameEngine;
+import org.foxesworld.cge.core.file.cgtex.CGTEXFile;
 import org.foxesworld.cge.core.file.cgtex.TextureEntry;
-import org.foxesworld.cge.core.file.cgtex.reader.CGTEXFileReader;
 import org.foxesworld.cge.tools.CGTEXcreator.preview.DDSDecoder;
 
 import java.awt.image.BufferedImage;
@@ -27,30 +27,29 @@ public class TextureLoader {
     }
 
     public void loadCgtex(String path) {
-        CGTEXFileReader cgtexFile;
-        try {
-            logger.info("Starting to load CGTEX file: " + path);
-            cgtexFile = new CGTEXFileReader(new File(path));
+        CGTEXFile cgtexFile;
+        logger.info("Starting to load CGTEX file: " + path);
+        cgtexFile = new CGTEXFile(new File(path), "r");
 
-            for (TextureEntry textureEntry : cgtexFile.getTextures()) {
-                String textureName = textureEntry.getName();
-                logger.debug("Loading texture: " + textureName);
+        for (TextureEntry textureEntry : cgtexFile.readFile().getTextures()) {
+            String textureName = textureEntry.getName();
+            logger.debug("Loading texture: " + textureName);
 
-                int format = textureEntry.getFormat();
-                logger.debug("Texture " + textureName + " format: " + getFormatDescription(format));
+            int format = textureEntry.getFormat();
+            logger.debug("Texture " + textureName + " format: " + getFormatDescription(format));
 
-                if (format == 1) {
-                    logger.debug("Texture " + textureName + " is in DXT1 format.");
-                    loadDXT1Texture(textureEntry);
-                } else {
-                    logger.warn("Texture " + textureName + " is not in DXT1 format, skipping.");
-                }
+            if (format == 1) {
+                logger.debug("Texture " + textureName + " is in DXT1 format.");
+                loadDXT1Texture(textureEntry);
+            } else {
+                logger.warn("Texture " + textureName + " is not in DXT1 format, skipping.");
             }
-
-            logger.debug("CGTEX file loaded successfully: " + path);
+        }
+        logger.debug("CGTEX file loaded successfully: " + path);
+        try {
+            cgtexFile.close();
         } catch (IOException e) {
-            logger.error("Error loading CGTEX file: " + path + ": " + e.getMessage());
-            throw new RuntimeException("Error loading CGTEX file: " + path, e);
+            throw new RuntimeException(e);
         }
     }
 
@@ -63,7 +62,6 @@ public class TextureLoader {
     }
 
     private void loadDXT1Texture(TextureEntry textureEntry) {
-        try (InputStream textureStream = new ByteArrayInputStream(textureEntry.getCompressedData())) {
             logger.debug("Decoding DXT1 texture: " + textureEntry.getName());
             BufferedImage image = flipImageHorizontally(DDSDecoder.decode(textureEntry.getWidth(), textureEntry.getHeight(), textureEntry.getFormat(), textureEntry.getCompressedData()));// decodeDXT1(textureStream, textureEntry);
 
@@ -73,9 +71,7 @@ public class TextureLoader {
             texture2D.setName(textureEntry.getName());
             this.calistaGameEngine.addTexture(textureEntry.getName(), texture2D);
             logger.debug("Successfully loaded DXT1 texture: " + textureEntry.getName());
-        } catch (IOException e) {
-            logger.error("Error loading DXT1 texture data for " + textureEntry.getName() + ": " + e.getMessage());
-        }
+
     }
 
     private BufferedImage flipImageHorizontally(BufferedImage image) {

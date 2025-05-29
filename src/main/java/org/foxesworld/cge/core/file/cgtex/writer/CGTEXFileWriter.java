@@ -8,6 +8,7 @@ import org.foxesworld.cge.tools.CGTEXcreator.info.TextureInfo;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,17 +16,21 @@ import java.util.List;
 /**
  * Writer for CGTEX files containing compressed textures (e.g., DXT).
  */
-public class CGTEXFileWriter extends CGTEXFile {
+public class CGTEXFileWriter {
     private static final Logger logger = LogManager.getLogger(CGTEXFileWriter.class);
     private final File file;
     private final List<TextureEntry> textures = new ArrayList<>();
 
-    private static final String MAGIC = "CGTX"; // Магическая строка для CGTEX
-    private static final int VERSION = 1;      // Версия формата
+    private final CGTEXFile cgtexFile;
+    private final RandomAccessFile raf;
+    //private static final String MAGIC = "CGTX"; // Магическая строка для CGTEX
+    //private static final int VERSION = 1;      // Версия формата
 
-    public CGTEXFileWriter(File file) {
-        super(file, "rw");
-        this.file = file;
+    public CGTEXFileWriter(CGTEXFile cgtexFile) {
+        //super(file, "rw");
+        this.cgtexFile = cgtexFile;
+        this.file = cgtexFile.getFile();
+        this.raf = cgtexFile.getRaf();
     }
 
     /**
@@ -42,7 +47,7 @@ public class CGTEXFileWriter extends CGTEXFile {
     /**
      * Write the CGTEX file with all added textures.
      */
-    public void writeToFile() throws IOException {
+    public void writeToFile(List<TextureEntry> textures) throws IOException {
         if (textures.isEmpty()) {
             throw new IllegalStateException("No textures to write");
         }
@@ -52,13 +57,13 @@ public class CGTEXFileWriter extends CGTEXFile {
 
         // Запись заголовка
         raf.seek(0);
-        raf.writeBytes(MAGIC);           // 4 байта для MAGIC
-        raf.writeInt(VERSION);           // 4 байта для версии
-        raf.writeInt(textures.size());   // 4 байта для количества текстур
+        raf.writeBytes(this.cgtexFile.getMAGIC());           // 4 байта для MAGIC
+        raf.writeInt(this.cgtexFile.getVERSION());           // 4 байта для версии
+        raf.writeInt(textures.size());                      // 4 байта для количества текстур
 
         // Резервируем 8 байтов для dataOffset
         long dataOffsetPos = raf.getFilePointer();
-        raf.writeLong(0L);  // Записываем 0 как placeholder для dataOffset
+        raf.writeLong(0L);                                 // Записываем 0 как placeholder для dataOffset
 
         long dataOffset = raf.getFilePointer();
 
@@ -72,7 +77,7 @@ public class CGTEXFileWriter extends CGTEXFile {
             raf.writeShort(tex.getHeight());
 
             // Запись имени текстуры с динамической длиной
-            writeVariableLengthString(tex.getName());
+            cgtexFile.writeVariableLengthString(tex.getName());
 
             raf.writeByte(tex.getFormat());  // Формат текстуры
             raf.writeInt(tex.getCompressedData().length);  // Длина сжатиых данных

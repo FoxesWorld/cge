@@ -1,47 +1,53 @@
 package org.foxesworld.cge.core.file.cgtex.reader;
 
-import org.foxesworld.cge.core.file.cgtex.CGTEXFile;
-import org.foxesworld.cge.core.file.cgtex.CGTEXMetadata;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.foxesworld.cge.core.file.cgtex.CGTEXFile;
+import org.foxesworld.cge.core.file.cgtex.CGTEXMetadata;
 import org.foxesworld.cge.core.file.cgtex.TextureEntry;
 
-import java.io.File;
 import java.io.IOException;
-import java.nio.file.Files;
+import java.io.RandomAccessFile;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.HexFormat;
 
 /**
- * CGTEX file reader — читает контейнер с DXT текстурами.
+ * Читает CGTEX файл, содержащий DXT текстуры.
  */
-public class CGTEXFileReader extends CGTEXFile {
+public class CGTEXFileReader {
     private static final Logger logger = LogManager.getLogger(CGTEXFileReader.class);
-    private static final HexFormat HEX = HexFormat.of();
-
+    private final CGTEXFile cgtexFile;
+    private final RandomAccessFile raf;
     private final CGTEXMetadata metadata;
     private final List<TextureEntry> textures = new ArrayList<>();
 
-    public CGTEXFileReader(File file) throws IOException {
-        super(file, "r");
+    /**
+     * Конструктор для чтения CGTEX файла.
+     * @param cgtexFile CGTEXFile, с которым будет работать этот класс.
+     * @throws IOException Если произошла ошибка при чтении.
+     */
+    public CGTEXFileReader(CGTEXFile cgtexFile) throws IOException {
+        this.cgtexFile = cgtexFile;
+        this.raf = cgtexFile.getRaf();  // Получаем RandomAccessFile из CGTEXFile
+
         logger.debug("================ CGTEX FILE READ START ================");
-        logger.debug("Opening file: {}", file.getAbsolutePath());
+        logger.debug("Opening file: {}", cgtexFile.getFile().getAbsolutePath());
 
         // DEBUG: Вывод полного дампа файла в HEX
         try {
-            byte[] allBytes = Files.readAllBytes(file.toPath());
+            byte[] allBytes = Files.readAllBytes(cgtexFile.getFile().toPath());
             logger.debug("Full file HEX dump ({} bytes)", allBytes.length);
         } catch (IOException e) {
             logger.warn("Failed to dump full file hex: {}", e.getMessage());
         }
 
-        // Читаем заголовок
+        // Чтение заголовка
         this.metadata = readHeader();
         logger.debug("Header Parsed: {}", metadata);
 
-        // Читаем текстуры
+        // Чтение текстур
         raf.seek(metadata.getDataOffset());
         for (int i = 0; i < metadata.getTextureCount(); i++) {
             int width = raf.readUnsignedShort();
@@ -55,7 +61,7 @@ public class CGTEXFileReader extends CGTEXFile {
             raf.readFully(nameBytes);
             String name = new String(nameBytes, StandardCharsets.UTF_8);
 
-            // Проверяем на пустое имя
+            // Проверка на пустое имя
             if (name.isEmpty()) {
                 logger.warn("Empty texture name found at index {}", i);
                 name = "UnnamedTexture_" + i; // Назначаем имя по умолчанию
@@ -75,19 +81,19 @@ public class CGTEXFileReader extends CGTEXFile {
             TextureEntry entry = new TextureEntry(width, height, name, format, data);
             textures.add(entry);
 
-            logger.debug("Texture[{}]: name={} size={} format={}", i, entry.getName(), entry.getWidth()+'x'+entry.getHeight(), entry.getFormat());
+            logger.debug("Texture[{}]: name={} size={}x{} format={}", i, entry.getName(), entry.getWidth()+'x'+entry.getHeight(), entry.getFormat());
         }
 
         logger.debug("================= CGTEX FILE READ END =================");
     }
 
     private CGTEXMetadata readHeader() throws IOException {
-        raf.seek(0);
+        raf.seek(0); // Перемещаем указатель в начало файла
         byte[] magicBytes = new byte[4];
         raf.readFully(magicBytes);
         String magic = new String(magicBytes);
 
-        if (!"CGTX".equals(magic)) {
+        if (!this.cgtexFile.getMAGIC().equals(magic)) {
             throw new IOException("Invalid CGTEX file magic: " + magic);
         }
 
@@ -105,11 +111,5 @@ public class CGTEXFileReader extends CGTEXFile {
 
     public List<TextureEntry> getTextures() {
         return List.copyOf(textures);
-    }
-
-    @Override
-    public void close() throws IOException {
-        logger.info("Closing CGTEX file: {}", getFile().getAbsolutePath());
-        super.close();
     }
 }

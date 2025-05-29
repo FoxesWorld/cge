@@ -11,13 +11,13 @@ import java.nio.ByteOrder;
  * AbstractFile utilities.
  */
 public class CGSFile extends AbstractFile {
-    public final String    MAGIC           = "CGS0";
-    public final int       VERSION         = 1;
     private final int      MAX_NAME_LENGTH = 4096;
     protected final ByteOrder BYTE_ORDER    = ByteOrder.LITTLE_ENDIAN;
 
     public CGSFile(File file, String mode) {
         super(file, mode);
+        setMAGIC("CGS0");
+        setVERSION(1);
     }
 
     /**
@@ -25,20 +25,20 @@ public class CGSFile extends AbstractFile {
      */
     public CGSHeader readHeader() throws IOException {
         seek(0);
-        byte[] magicBytes = readBytes(MAGIC.length());
+        byte[] magicBytes = readBytes(getMAGIC().length());
         String magic = new String(magicBytes, java.nio.charset.StandardCharsets.US_ASCII);
-        if (!MAGIC.equals(magic)) {
+        if (!getMAGIC().equals(magic)) {
             throw new IOException("Invalid CGS magic: " + magic);
         }
 
         int version = readInt();
-        if (version != VERSION) {
+        if (version != getVERSION()) {
             throw new IOException("Unsupported CGS version: " + version);
         }
 
         String sceneName = readString(MAX_NAME_LENGTH);
         long tableOffset = readLong();
-        return new CGSHeader(version, sceneName, MAGIC, tableOffset);
+        return new CGSHeader(version, sceneName, getMAGIC(), tableOffset);
     }
 
     /**
@@ -48,8 +48,8 @@ public class CGSFile extends AbstractFile {
         raf.setLength(0);
         seek(0);
 
-        writeBytes(MAGIC.getBytes(java.nio.charset.StandardCharsets.US_ASCII));
-        writeInt(VERSION);
+        writeBytes(getMAGIC().getBytes(java.nio.charset.StandardCharsets.US_ASCII));
+        writeInt(getVERSION());
         writeString(sceneName);
 
         long placeholder = raf.getFilePointer();
