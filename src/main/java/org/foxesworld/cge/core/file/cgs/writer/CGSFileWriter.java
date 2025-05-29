@@ -41,7 +41,6 @@ public class CGSFileWriter extends CGSFile {
         logger.debug("Adding chunk id={} type={} size={}", id, type, data.length);
         chunkEntries.add(new ChunkEntry(id, 0, data.length, type));
         chunkData.add(data);
-        // сохраняем копию атрибутов (или сам Map)
         chunkArgs.add(new LinkedHashMap<>(attributes));
     }
 
@@ -121,6 +120,27 @@ public class CGSFileWriter extends CGSFile {
         }
         updateHeaderOffset(headerTableOffsetPos, tableOffset);
         logger.info("Finished CGS write, tableOffset={}", tableOffset);
+    }
+
+    public long writeHeader(String sceneName) throws IOException {
+        raf.setLength(0);
+        seek(0);
+
+        writeBytes(getMAGIC().getBytes(java.nio.charset.StandardCharsets.US_ASCII));
+        writeInt(getVERSION());
+        writeString(sceneName);
+
+        long placeholder = raf.getFilePointer();
+        writeLong(0L);
+        return placeholder;
+    }
+
+    /**
+     * Updates the placeholder with the actual chunk table offset.
+     */
+    public void updateHeaderOffset(long placeholderPos, long offset) throws IOException {
+        seek(placeholderPos);
+        writeLong(offset);
     }
 
     private void logByteData(byte[] data, int chunkId) {

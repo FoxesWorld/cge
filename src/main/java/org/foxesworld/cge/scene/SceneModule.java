@@ -4,10 +4,7 @@ import com.jme3.app.Application;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import org.foxesworld.cge.CalistaGameEngine;
-import org.foxesworld.cge.core.file.cgs.ChunkFieldTypeConfigLoader;
-import org.foxesworld.cge.core.file.cgs.CGSMetadata;
-import org.foxesworld.cge.core.file.cgs.SceneChunk;
-import org.foxesworld.cge.core.file.cgs.ChunkEntry;
+import org.foxesworld.cge.core.file.cgs.*;
 import org.foxesworld.cge.core.file.cgs.parser.CGSFileReader;
 import org.foxesworld.cge.core.file.cgs.parser.types.LightingParser;
 import org.foxesworld.cge.core.file.cgs.parser.types.TerrainParser;
@@ -30,7 +27,7 @@ public class SceneModule extends EngineModule<SceneConfig> {
 
     // scene-specific
     private CGSMetadata cgsMetadata;
-    private CGSFileReader sceneFile;
+    private CGSFile sceneFile;
     private List<ChunkEntry> entries;
 
     // generic streaming manager for chunks
@@ -65,10 +62,11 @@ public class SceneModule extends EngineModule<SceneConfig> {
         app.getByteStreamer().streamAsync(cfg.getScenePath(),
                 bytes -> {
                     try {
-                        this.sceneFile = new CGSFileReader(new File(cfg.getScenePath()));
-                        this.cgsMetadata = sceneFile.getMetadata();
-                        this.entries = new ArrayList<>(sceneFile.getChunkEntries());
-                        setupStreamingForChunks();
+                        this.sceneFile = new CGSFile(new File(cfg.getScenePath()), "r");
+                        CGSFileReader reader = this.sceneFile.readFile();
+                        this.cgsMetadata = reader.getMetadata();
+                        this.entries = new ArrayList<>(reader.getChunkEntries());
+                        setupStreamingForChunks(reader);
 
                     } catch (Exception e) {
                         logger.error("Failed to parse CGS bytes", e);
@@ -82,8 +80,8 @@ public class SceneModule extends EngineModule<SceneConfig> {
         );
     }
 
-    private void setupStreamingForChunks() {
-        this.streamingManager = new StreamingManager<>(sceneFile::readChunk, true, 2);
+    private void setupStreamingForChunks(CGSFileReader reader) {
+        this.streamingManager = new StreamingManager<>(reader::readChunk, true, 2);
         this.sceneRoot = new Node(cgsMetadata.getSceneName());
         chunksRemaining.set(entries.size());
         logger.debug("SceneModule: {} chunks to stream", entries.size());

@@ -1,5 +1,7 @@
 package org.foxesworld.cge.core.file.cgs;
 
+import org.foxesworld.cge.core.file.cgs.parser.CGSFileReader;
+
 /**
  * Simple POJO for CGS header data.
  */
@@ -9,11 +11,11 @@ public class CGSHeader {
     final String magic;
     final long tableOffset;
 
-    CGSHeader(int version, String sceneName, String magic, long tableOffset) {
-        this.version = version;
-        this.sceneName = sceneName;
-        this.magic = magic;
-        this.tableOffset = tableOffset;
+    public CGSHeader(CGSFileReader cgsFileReader) {
+        this.version = cgsFileReader.getCgsFile().getVERSION();
+        this.sceneName = cgsFileReader.getSceneName();
+        this.magic = cgsFileReader.getCgsFile().getMAGIC();
+        this.tableOffset = cgsFileReader.getTableOffset();
     }
 
     public int getVersion() {

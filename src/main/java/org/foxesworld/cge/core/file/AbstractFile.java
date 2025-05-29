@@ -45,11 +45,11 @@ public abstract class AbstractFile implements AutoCloseable {
     }
 
 
-    protected void seek(long position) throws IOException {
+    public void seek(long position) throws IOException {
         raf.seek(position);
     }
 
-    protected byte[] readBytes(int length) throws IOException {
+    public byte[] readBytes(int length) throws IOException {
         byte[] data = new byte[length];
         raf.readFully(data);
         return data;
@@ -59,7 +59,7 @@ public abstract class AbstractFile implements AutoCloseable {
         raf.write(data);
     }
 
-    protected int readInt() throws IOException {
+    public int readInt() throws IOException {
         return raf.readInt();
     }
 
@@ -67,7 +67,7 @@ public abstract class AbstractFile implements AutoCloseable {
         raf.writeInt(value);
     }
 
-    protected long readLong() throws IOException {
+    public long readLong() throws IOException {
         return raf.readLong();
     }
 
@@ -75,7 +75,7 @@ public abstract class AbstractFile implements AutoCloseable {
         raf.writeLong(value);
     }
 
-    protected String readString(int maxLength) throws IOException {
+    public String readString(int maxLength) throws IOException {
         int len = raf.readInt();
         if (len < 0 || len > maxLength) {
             throw new IOException("Invalid string length: " + len);
