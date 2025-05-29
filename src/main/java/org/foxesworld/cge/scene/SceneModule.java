@@ -17,7 +17,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.ByteBuffer;
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
@@ -31,7 +30,7 @@ public class SceneModule extends EngineModule<SceneConfig> {
     private List<ChunkEntry> entries;
     private StreamingManager<Integer, SceneChunk> streamingManager;
     private Node sceneRoot;
-    private CalistaGameEngine app;
+    private final CalistaGameEngine app;
     private ChunkFieldTypeConfigLoader configLoader;
     private final AtomicInteger chunksRemaining = new AtomicInteger(0);
     private final List<Runnable> onSceneReadyCallbacks = new ArrayList<>();
@@ -194,11 +193,5 @@ public class SceneModule extends EngineModule<SceneConfig> {
 
     @Override
     protected void onDisable() {
-    }
-
-    protected String dumpBufferHex(ByteBuffer buf) {
-        byte[] bytes = new byte[buf.remaining()];
-        buf.slice().get(bytes);
-        return HexFormat.of().formatHex(bytes);
     }
 }

@@ -16,6 +16,7 @@ dependencies {
     implementation 'org.jmonkeyengine:jme3-desktop:3.8.1-stable'
     implementation 'org.jmonkeyengine:jme3-lwjgl3:3.8.1-stable'
     implementation 'org.jmonkeyengine:jme3-effects:3.8.1-stable'
+    implementation files("lib/SkyControl-1.1.0.jar")
     runtimeOnly("org.jmonkeyengine:jme3-awt-dialogs:3.8.1-stable")
 
     // GSON для загрузки конфигурации из JSON
@@ -26,7 +27,7 @@ dependencies {
     implementation 'org.apache.logging.log4j:log4j-core:2.20.0'
     implementation("org.slf4j:jul-to-slf4j:2.0.0")
 
-    implementation 'com.github.stephengold:Minie:9.0.0'
+    implementation 'com.github.stephengold:Minie:9.0.1'
     implementation fileTree(dir: 'libs', include: ['*.jar'])
 
     //UI

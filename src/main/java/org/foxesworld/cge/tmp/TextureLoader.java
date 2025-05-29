@@ -36,10 +36,17 @@ public class TextureLoader {
             int format = textureEntry.getFormat();
             logger.debug("Texture " + textureName + " format: " + getFormatDescription(format));
 
-            if (format == 1) {
-                logger.debug("Texture " + textureName + " is in DXT1 format.");
-                loadDXT1Texture(textureEntry);
-            } else {
+            switch (format) {
+                case 1: {
+                    logger.debug("Texture " + textureName + " is in DXT1 format.");
+                    loadDXT1Texture(textureEntry);
+                }
+
+                case 5: {
+                    logger.debug("Texture " + textureName + " is in DXT5 format.");
+                    loadDXT5Texture(textureEntry);
+                }
+                default:
                 logger.warn("Texture " + textureName + " is not in DXT1 format, skipping.");
             }
         }
@@ -62,6 +69,19 @@ public class TextureLoader {
     private void loadDXT1Texture(TextureEntry textureEntry) {
             logger.debug("Decoding DXT1 texture: " + textureEntry.getName());
             BufferedImage image = flipImageHorizontally(DDSDecoder.decode(textureEntry.getWidth(), textureEntry.getHeight(), textureEntry.getFormat(), textureEntry.getCompressedData()));// decodeDXT1(textureStream, textureEntry);
+
+            ByteBuffer byteBuffer = convertBufferedImageToByteBuffer(image);
+            Image textureImage = new Image(Image.Format.RGBA8, textureEntry.getWidth(), textureEntry.getHeight(), byteBuffer, ColorSpace.sRGB);
+            Texture2D texture2D = new Texture2D(textureImage);
+            texture2D.setName(textureEntry.getName());
+            this.calistaGameEngine.addTexture(textureEntry.getName(), texture2D);
+            logger.debug("Successfully loaded DXT1 texture: " + textureEntry.getName());
+
+    }
+    private void loadDXT5Texture(TextureEntry textureEntry) {
+            logger.debug("Decoding DXT5 texture: " + textureEntry.getName());
+            BufferedImage image = flipImageHorizontally(DDSDecoder.decode(textureEntry.getWidth(), textureEntry.getHeight(), textureEntry.getFormat(), textureEntry.getCompressedData()));// decodeDXT1(textureStream, textureEntry);
+
 
             ByteBuffer byteBuffer = convertBufferedImageToByteBuffer(image);
             Image textureImage = new Image(Image.Format.RGBA8, textureEntry.getWidth(), textureEntry.getHeight(), byteBuffer, ColorSpace.sRGB);

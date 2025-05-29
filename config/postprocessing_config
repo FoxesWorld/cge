@@ -1,7 +1,7 @@
 {
-  "enableBloom": true,
-  "enableLsf": true,
-  "enableDof": true,
+  "enableBloom": false,
+  "enableLsf": false,
+  "enableDof": false,
   "dofRange": 50,
   "dofFocus": 9,
   "lsfLightDir": [
@@ -10,6 +10,6 @@
     7.0
   ],
   "lsfDestiny": 5.0,
-  "bloomIntensity": 1.5,
-  "enableFXAA": true
+  "bloomIntensity": 1.0,
+  "enableFXAA": false
 }

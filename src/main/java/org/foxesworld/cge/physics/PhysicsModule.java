@@ -3,11 +3,13 @@ package org.foxesworld.cge.physics;
 import com.jme3.app.Application;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.PhysicsSpace;
+import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.bullet.debug.BulletDebugAppState;
 import com.jme3.bullet.debug.DebugConfiguration;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.scene.Geometry;
+import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -135,5 +137,21 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
 
     public ModuleManager getSubManager() {
         return subManager;
+    }
+
+    /**
+     * Оборачивает Spatial в RigidBodyControl и добавляет в физический мир.
+     * @param spat  любой узел или модель
+     * @param mass  масса тела (0 — статический, >0 — динамический)
+     */
+    public void addRigidBody(Spatial spat, float mass) {
+        if (bulletAppState == null) {
+            logger.warn("BulletAppState not initialized – cannot add physics body for {}", spat.getName());
+            return;
+        }
+        RigidBodyControl control = new RigidBodyControl(mass);
+        spat.addControl(control);
+        bulletAppState.getPhysicsSpace().add(control);
+        logger.debug("Added RigidBodyControl (mass={}) to {}", mass, spat.getName());
     }
 }

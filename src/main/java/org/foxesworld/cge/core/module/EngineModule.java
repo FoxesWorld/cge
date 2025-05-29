@@ -8,6 +8,8 @@ import org.foxesworld.cge.core.TaskScheduler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.nio.ByteBuffer;
+import java.util.HexFormat;
 import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -172,6 +174,11 @@ public abstract class EngineModule<T> extends BaseAppState {
     public ModuleState getState() { return state; }
     public ConfigService getConfigService() { return configService; }
     public TaskScheduler getTaskScheduler() { return taskScheduler; }
+    protected String dumpBufferHex(ByteBuffer buf) {
+        byte[] bytes = new byte[buf.remaining()];
+        buf.slice().get(bytes);
+        return HexFormat.of().formatHex(bytes);
+    }
 
     /**
      * Sets the Runnable to be executed when all modules are loaded.

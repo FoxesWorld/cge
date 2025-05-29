@@ -61,9 +61,7 @@ public class ModelLoader {
                 parentNode.attachChild(spatial);
                 logger.info("Model {} added to the scene.", modelPath);
             }
-        }, error -> {
-            logger.error("Error loading model {}: {}", modelPath, error.getMessage());
-        });
+        }, error -> logger.error("Error loading model {}: {}", modelPath, error.getMessage()));
     }
 
     // Метод для добавления моделей в корневой узел сцены

@@ -1,26 +1,37 @@
 package org.foxesworld.cge;
 
 import com.jme3.app.SimpleApplication;
+import com.jme3.bullet.collision.shapes.MeshCollisionShape;
+import com.jme3.bullet.control.RigidBodyControl;
+import com.jme3.light.AmbientLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
+import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
+import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Box;
 import com.jme3.scene.shape.Quad;
 import com.jme3.system.AppSettings;
 import com.jme3.texture.Texture;
+import com.jme3.texture.Texture2D;
+import com.jme3.util.SkyFactory;
 import org.foxesworld.cge.core.ConfigService;
 import org.foxesworld.cge.core.TaskScheduler;
 import org.foxesworld.cge.core.io.GenericByteParser;
-import org.foxesworld.cge.core.module.EngineModule;
 import org.foxesworld.cge.core.module.ModuleManager;
 import org.foxesworld.cge.core.streaming.StreamingManager;
 import org.foxesworld.cge.core.streaming.StreamingParserLoader;
+import org.foxesworld.cge.physics.PhysicsModule;
 import org.foxesworld.cge.renderer.RendererModule;
 import org.foxesworld.cge.scene.SceneModule;
+import org.foxesworld.cge.tmp.CubeDerp;
 import org.foxesworld.cge.tmp.TextureLoader;
 import org.slf4j.bridge.SLF4JBridgeHandler;
+import jme3utilities.sky.SkyControl;
+import jme3utilities.sky.StarsOption;
+import jme3utilities.sky.Updater;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -71,7 +82,7 @@ public class CalistaGameEngine extends SimpleApplication {
 
     public CalistaGameEngine(){
         System.setProperty("log.dir", System.getProperty("user.dir"));
-        System.setProperty("log.level", "INFO");
+        System.setProperty("log.level", "DEBUG");
         LogManager.getLogManager().reset();
         SLF4JBridgeHandler.install();
         this.configService = new ConfigService();
@@ -98,50 +109,68 @@ public class CalistaGameEngine extends SimpleApplication {
     public void simpleInitApp() {
         moduleManager = new ModuleManager(this);
         moduleManager.register(new RendererModule(this), 20);
-        //moduleManager.register(new PhysicsModule(this), 35);
+        moduleManager.register(new PhysicsModule(this), 35);
         moduleManager.register(new SceneModule(this), 10);
         moduleManager.initializeAll(this);
         moduleManager.loadAll(this, () -> {
 
+
+            enqueue(() -> {
+            Spatial sky = SkyFactory.createSky(assetManager,
+                    textureMap.get("cubemap_0"),
+                    SkyFactory.EnvMapType.CubeMap);
+            sky.setShadowMode(RenderQueue.ShadowMode.Off);
+            SkyControl skyControl = new SkyControl(assetManager, cam, .5f, StarsOption.TopDome, true);
+            rootNode.addControl(skyControl);
+            skyControl.setCloudiness(0.8f);
+            skyControl.setCloudsYOffset(0.4f);
+            skyControl.setTopVerticalAngle(1.78f);
+            skyControl.getSunAndStars().setHour(10);
+            Updater updater = skyControl.getUpdater();
+            updater.setAmbientLight(new AmbientLight(ColorRGBA.DarkGray));
+            //updater.setMainLight(sun);
+            //updater.addShadowRenderer(dlsr);
+            skyControl.setEnabled(true);
+        });
             scene = moduleManager.getModule(SceneModule.class);
-            Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
-            mat.setBoolean("UseMaterialColors", true);
-            mat.setColor("Diffuse", new ColorRGBA(0.2f, 0.6f, 0.3f, 0.1f));
-            mat.setTexture("DiffuseMap", textureMap.get("calista_grid_test"));
-            mat.setColor("Specular", ColorRGBA.White);
-            mat.setFloat("Shininess", 2f);
+            Material mat = new Material(assetManager, "Common/MatDefs/Light/PBRLighting.j3md");
+            mat.setTexture("BaseColorMap", textureMap.get("calista_grid_test"));
+            mat.setTexture("RoughnessMap", textureMap.get("calista_grid_test_normal"));
+            mat.setBoolean("BackfaceShadows", false);
+            mat.setFloat(        "EmissivePower",  3.0f);
+            mat.setFloat("EmissiveIntensity", 2.0f);
+            mat.setFloat("ParallaxHeight",  0.05f);
+            mat.setFloat("NormalType", -1.0f);
+            mat.setFloat("Glossiness",  1.0f);
 
             // ——— Геометрия для теста ———
-            float width = 10f;
-            float height = 10f;
+            float width = 100f, height = 100f;
             Quad quad = new Quad(width, height);
             Geometry terrain = new Geometry("TerrainPlane", quad);
-            terrain.setLocalTranslation(-width / 2f, 0, height / 2f);
+            terrain.setLocalTranslation(-width/2f, 0, height/2f);
             terrain.rotate(-FastMath.HALF_PI, 0, 0);
             terrain.setMaterial(mat);
+
             enqueue(() -> {
                 getRootNode().attachChild(terrain);
+                MeshCollisionShape shape = new MeshCollisionShape(quad);
+                RigidBodyControl rbc = new RigidBodyControl(shape, 0f);
+                terrain.addControl(rbc);
+                PhysicsModule phys = getModuleManager().getModule(PhysicsModule.class);
+                if (phys != null) {
+                    phys.getBulletAppState().getPhysicsSpace().add(rbc);
+                }
             });
 
             // ——— Камера сверху ———
-            float camHeight = 10f;
+            float camHeight = 5f;
             float camX = 0f;
             float camZ = 0f;
             cam.setLocation(new Vector3f(camX, camHeight, camZ));
             cam.lookAt(new Vector3f(camX, 0f, camZ), Vector3f.UNIT_Y);
 
-            Box b = new Box(1f, 1f, 1f);
-            Geometry geom = new Geometry("Cube", b);
-            Material mat2 = new Material(getAssetManager(), "Common/MatDefs/Light/Lighting.j3md");
-            mat2.setColor("Diffuse", new ColorRGBA(0.2f, 0.6f, 0.3f, 0.1f));
-            mat2.setBoolean("UseMaterialColors", true);
-            mat2.setTexture("DiffuseMap", getTextureMap().get("box"));
-            mat2.setColor("Specular", ColorRGBA.White);
-            mat2.setFloat("Shininess", 20f);
-            geom.setMaterial(mat2);
-            enqueue(() -> {
-               getRootNode().attachChild(geom);
-            });
+            CubeDerp cubeDerp = new CubeDerp(this);
+            cubeDerp.startParty();
         });
     }
 
