@@ -1,6 +1,7 @@
 package org.foxesworld.cge.core.module;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
 import com.jme3.app.Application;
 import com.jme3.app.state.AppStateManager;
 import org.foxesworld.cge.CalistaGameEngine;
@@ -43,8 +44,9 @@ public class ModuleManager {
     /**
      * Manual registration of a module with explicit priority.
      */
-    public void register(EngineModule<?> module, int priority) {
+    public synchronized void register(EngineModule<?> module, int priority) {
         manual.put(priority, module);
+        logger.info("Adding module {}", module.getClass().getSimpleName());
     }
 
     /**
@@ -76,7 +78,7 @@ public class ModuleManager {
                 register(module, desc.priority);
                 logger.info("Registered auto module {}", desc.name);
             } catch (Exception e) {
-                logger.error("Failed to instantiate module {}: {}", desc.name, e.getMessage(), e);
+                logger.error("Failed to instantiate module {} (class: {}): {}", desc.name, desc.className, e.getMessage(), e);
             }
         }
 
@@ -103,8 +105,12 @@ public class ModuleManager {
         List<ModuleDescriptor> list = new ArrayList<>();
         try (DirectoryStream<Path> stream = Files.newDirectoryStream(dir, "*.json")) {
             for (Path path : stream) {
-                ModuleDescriptor desc = new Gson().fromJson(Files.newBufferedReader(path), ModuleDescriptor.class);
-                list.add(desc);
+                try {
+                    ModuleDescriptor desc = new Gson().fromJson(Files.newBufferedReader(path), ModuleDescriptor.class);
+                    list.add(desc);
+                } catch (IOException | JsonSyntaxException e) {
+                    logger.error("Error reading module descriptor file '{}': {}", path, e.getMessage(), e);
+                }
             }
         }
         return list;
@@ -157,6 +163,17 @@ public class ModuleManager {
      */
     public void shutdown(Application app) {
         initExecutor.shutdown();
+        try {
+            if (!initExecutor.awaitTermination(60, TimeUnit.SECONDS)) {
+                initExecutor.shutdownNow();
+                if (!initExecutor.awaitTermination(60, TimeUnit.SECONDS)) {
+                    logger.error("ExecutorService did not terminate in time");
+                }
+            }
+        } catch (InterruptedException e) {
+            initExecutor.shutdownNow();
+            Thread.currentThread().interrupt();
+        }
         manual.values().forEach(m -> stateManager.detach(m));
         logger.info("ModuleManager shutdown complete");
     }
@@ -170,18 +187,22 @@ public class ModuleManager {
 
     @SuppressWarnings("unchecked")
     public <T extends EngineModule<?>> T getModule(Class<T> moduleClass) {
+        logger.info("Searching for module: {}", moduleClass.getSimpleName());
         // Поиск в manual
         for (EngineModule<?> module : manual.values()) {
             if (moduleClass.isInstance(module)) {
+                logger.info("Found module in manual: {}", module.getClass().getSimpleName());
                 return (T) module;
             }
         }
         // Поиск в instances (автомодулях)
         for (EngineModule<?> module : instances.values()) {
             if (moduleClass.isInstance(module)) {
+                logger.info("Found module in instances: {}", module.getClass().getSimpleName());
                 return (T) module;
             }
         }
+        logger.warn("Module {} not found", moduleClass.getSimpleName());
         return null;
     }
 

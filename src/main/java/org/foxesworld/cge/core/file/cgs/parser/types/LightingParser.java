@@ -61,8 +61,11 @@ public class LightingParser extends ChunkParser {
                 /* Свет освещает только объекты которые находятся в го пространстве,
                 * Иначе мы его не увидим
                 * */
-                engine.getRootNode().addLight(light);
-                //logger.debug("Added light '{}' to rootNode", light.getName());
+                // Добавляем свет в rootNode в главном потоке
+                engine.enqueue(() -> {
+                    engine.getRootNode().addLight(light);
+                    logger.debug("Added light '{}' to rootNode", light.getName());
+                });
                 lightNode.addLight(light);
                 lightNode.setName(light.getName()+"-node");
                 index++;

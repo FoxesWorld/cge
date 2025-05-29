@@ -13,6 +13,7 @@ import com.jme3.texture.Texture;
 import org.foxesworld.cge.core.ConfigService;
 import org.foxesworld.cge.core.TaskScheduler;
 import org.foxesworld.cge.core.io.GenericByteParser;
+import org.foxesworld.cge.core.module.EngineModule;
 import org.foxesworld.cge.core.module.ModuleManager;
 import org.foxesworld.cge.core.streaming.StreamingManager;
 import org.foxesworld.cge.core.streaming.StreamingParserLoader;
@@ -32,11 +33,13 @@ import static org.foxesworld.cge.tools.SceneCGSCreator.SceneCgsCreatorFrame.setu
 
 public class CalistaGameEngine extends SimpleApplication {
     private final Map<String, Texture> textureMap = new HashMap<>();
-    private StreamingManager<String, Byte[]> byteStreamer;
+
+    @Deprecated
+    private final StreamingManager<String, Byte[]> byteStreamer;
     private ModuleManager moduleManager;
     private final ConfigService configService;
     private final TaskScheduler taskScheduler;
-    private TextureLoader textureLoader;
+    private final TextureLoader textureLoader;
 
 
     public static void main(String[] args) {
@@ -82,10 +85,7 @@ public class CalistaGameEngine extends SimpleApplication {
             return boxed;
         });
 
-        // ✅ Обёртка для StreamingManager
         StreamingParserLoader<Byte[]> loader = new StreamingParserLoader<>(parser);
-
-        // ✅ Стриминг с кэшем
         this.byteStreamer = new StreamingManager<>(
                 loader::load,
                 true,
@@ -96,11 +96,14 @@ public class CalistaGameEngine extends SimpleApplication {
     @Override
     public void simpleInitApp() {
         moduleManager = new ModuleManager(this);
-        moduleManager.register(new RendererModule(this), 10);
+        moduleManager.register(new RendererModule(this), 20);
+        //moduleManager.register(new PhysicsModule(this), 35);
         moduleManager.register(new SceneModule(this), 10);
         moduleManager.initializeAll(this);
 
-
+        for(Map.Entry<String, EngineModule<?>> entry:this.moduleManager.getInstances().entrySet()){
+            System.out.println(entry.getKey());
+        }
         Material mat = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
         mat.setBoolean("UseMaterialColors", true);
         mat.setColor("Diffuse", new ColorRGBA(0.2f, 0.6f, 0.3f, 0.1f));
@@ -118,16 +121,6 @@ public class CalistaGameEngine extends SimpleApplication {
         terrain.setMaterial(mat);
         rootNode.attachChild(terrain);
 
-        Box b = new Box(1f, 1f, 1f);
-        Geometry geom = new Geometry("Cube", b);
-        Material mat2 = new Material(assetManager, "Common/MatDefs/Light/Lighting.j3md");
-        mat2.setColor("Diffuse", new ColorRGBA(0.2f, 0.6f, 0.3f, 0.1f));
-        mat2.setBoolean("UseMaterialColors", true);
-        mat2.setTexture("DiffuseMap", textureMap.get("box"));
-        mat2.setColor("Specular", ColorRGBA.White);
-        mat2.setFloat("Shininess", 20f);
-        geom.setMaterial(mat2);
-        rootNode.attachChild(geom);
 
         // ——— Камера сверху ———
         float camHeight = 10f;
@@ -135,6 +128,17 @@ public class CalistaGameEngine extends SimpleApplication {
         float camZ = 0f;
         cam.setLocation(new Vector3f(camX, camHeight, camZ));
         cam.lookAt(new Vector3f(camX, 0f, camZ), Vector3f.UNIT_Y);
+
+        Box b = new Box(1f, 1f, 1f);
+        Geometry geom = new Geometry("Cube", b);
+        Material mat2 = new Material(getAssetManager(), "Common/MatDefs/Light/Lighting.j3md");
+        mat2.setColor("Diffuse", new ColorRGBA(0.2f, 0.6f, 0.3f, 0.1f));
+        mat2.setBoolean("UseMaterialColors", true);
+        mat2.setTexture("DiffuseMap", getTextureMap().get("box"));
+        mat2.setColor("Specular", ColorRGBA.White);
+        mat2.setFloat("Shininess", 20f);
+        geom.setMaterial(mat2);
+        getRootNode().attachChild(geom);
     }
 
     public ConfigService getConfigService() {
@@ -155,6 +159,10 @@ public class CalistaGameEngine extends SimpleApplication {
 
     public void  addTexture(String name, Texture texture2D){
         this.textureMap.put(name, texture2D);
+    }
+
+    public Map<String, Texture> getTextureMap() {
+        return textureMap;
     }
 
     public TextureLoader getTextureLoader() {

@@ -2,6 +2,7 @@ package org.foxesworld.cge.core;
 
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 
 /**
  * A simple task scheduler for engine modules using a work-stealing pool.
@@ -25,6 +26,6 @@ public class TaskScheduler {
      */
     public void shutdown() throws InterruptedException {
         pool.shutdown();
-        pool.awaitTermination(10, java.util.concurrent.TimeUnit.SECONDS);
+        pool.awaitTermination(10, TimeUnit.MICROSECONDS);
     }
 }

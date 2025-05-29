@@ -68,6 +68,7 @@ public abstract class EngineModule<T> extends BaseAppState {
                 handleFailure(t, "initialize");
             }
         });
+        logger.info("Module initialized with config {}",config);
     }
 
     @Override

@@ -118,27 +118,31 @@ public class SceneModule extends EngineModule<SceneConfig> {
             }
         }
     }
+
     private void attachSceneRoot() {
-        // Добавляем sceneRoot в главный RootNode
-        app.getRootNode().attachChild(sceneRoot);
-        logger.info("All chunks streamed sceneRoot attached.");
-
-        // Уведомляем систему, что сцена готова
-        ModuleHealthMonitor.getInstance().reportState(getName(), ModuleState.RUNNING);
-
-        // Запускаем все отложенные callback-методы
-        onSceneReadyCallbacks.forEach(cb -> {
-            try { cb.run(); }
-            catch (Exception ex) { logger.warn("onSceneReady failed", ex); }
+        app.enqueue(() -> {
+            // Добавляем sceneRoot в главный RootNode
+            app.getRootNode().attachChild(sceneRoot);
+            logger.info("All chunks streamed sceneRoot attached.");
+            // Уведомляем систему, что сцена готова
+            ModuleHealthMonitor.getInstance().reportState(getName(), ModuleState.RUNNING);
+            // Запускаем все отложенные callback-методы
+            onSceneReadyCallbacks.forEach(cb -> {
+                try {
+                    cb.run();
+                } catch (Exception ex) {
+                    logger.warn("onSceneReady failed", ex);
+                }
+            });
         });
     }
 
     private Spatial parseChunk(CalistaGameEngine app, SceneChunk chunk) {
-        logger.debug("Chunk {} data - {}",chunk.getEntry().type(), dumpBufferHex(chunk.getData()));
+        logger.debug("Chunk {} data - {}", chunk.getEntry().type(), dumpBufferHex(chunk.getData()));
         return switch (chunk.getEntry().type()) {
-            case TERRAIN   -> new TerrainParser().parse(app, chunk, configLoader);
-            case LIGHTING  -> new LightingParser().parse(app, chunk, configLoader);
-            default        -> new Node("CustomChunk-" + chunk.getId());
+            case TERRAIN -> new TerrainParser().parse(app, chunk, configLoader);
+            case LIGHTING -> new LightingParser().parse(app, chunk, configLoader);
+            default -> new Node("CustomChunk-" + chunk.getId());
         };
     }
 
@@ -188,8 +192,13 @@ public class SceneModule extends EngineModule<SceneConfig> {
         return cgsMetadata;
     }
 
-    @Override protected void onEnable() {}
-    @Override protected void onDisable() {}
+    @Override
+    protected void onEnable() {
+    }
+
+    @Override
+    protected void onDisable() {
+    }
 
     protected String dumpBufferHex(ByteBuffer buf) {
         byte[] bytes = new byte[buf.remaining()];

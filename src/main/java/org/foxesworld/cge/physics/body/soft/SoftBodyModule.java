@@ -14,6 +14,7 @@ import org.foxesworld.cge.core.ConfigService;
 import org.foxesworld.cge.core.TaskScheduler;
 import org.foxesworld.cge.core.module.EngineModule;
 import org.foxesworld.cge.physics.PhysicsConfig;
+import org.foxesworld.cge.physics.PhysicsModule;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -29,9 +30,9 @@ public class SoftBodyModule extends EngineModule<PhysicsConfig> {
     private SoftPhysicsAppState physicsState;
     private PhysicsConfig defaultConfig;
 
-    public SoftBodyModule(CalistaGameEngine application) {
-        super("physics", PhysicsConfig.class, application);
-        initialize(application);
+    public SoftBodyModule(PhysicsModule physicsModule) {
+        super("physics", PhysicsConfig.class, physicsModule.getCalistaGameEngine());
+        initialize(physicsModule.getCalistaGameEngine());
     }
 
     @Override

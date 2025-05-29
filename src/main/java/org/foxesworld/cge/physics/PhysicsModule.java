@@ -3,6 +3,12 @@ package org.foxesworld.cge.physics;
 import com.jme3.app.Application;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.PhysicsSpace;
+import com.jme3.bullet.debug.BulletDebugAppState;
+import com.jme3.bullet.debug.DebugConfiguration;
+import com.jme3.material.Material;
+import com.jme3.math.ColorRGBA;
+import com.jme3.scene.Geometry;
+import com.jme3.scene.shape.Box;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.CalistaGameEngine;
@@ -13,29 +19,29 @@ import org.foxesworld.cge.physics.body.soft.SoftBodyModule;
 import org.foxesworld.cge.physics.collision.CollisionModule;
 
 /**
- * Main physics module aggregating collision, rigid and soft body sub-modules.
+ * Main physics module aggregating collision, rigid, and soft body sub-modules.
  */
 public class PhysicsModule extends EngineModule<PhysicsConfig> {
     private static final Logger logger = LogManager.getLogger(PhysicsModule.class);
-
-    private CalistaGameEngine calistaGameEngine;
+    protected final CalistaGameEngine calistaGameEngine;
     private final ModuleManager subManager;
-    private BulletAppState bulletAppState;
+    protected BulletAppState bulletAppState;
+    private BulletDebugAppState bulletDebugAppState;  // Для отображения отладки
 
     public PhysicsModule(CalistaGameEngine calistaGameEngine) {
         super("physics", PhysicsConfig.class, calistaGameEngine);
-        // subManager will be initialized in initModule when AppStateManager is available
         this.calistaGameEngine = calistaGameEngine;
         this.subManager = new ModuleManager(calistaGameEngine);
+        initialize(calistaGameEngine);
     }
 
     @Override
     protected void initModule(CalistaGameEngine app) throws Exception {
         logger.info("{}: initializing physics...");
 
-        // Attach BulletAppState
-        bulletAppState = new BulletAppState();
+        // Initialize BulletAppState and attach to the AppStateManager if not already present
         if (app.getStateManager().getState(BulletAppState.class) == null) {
+            bulletAppState = new BulletAppState();
             app.getStateManager().attach(bulletAppState);
             logger.debug("BulletAppState attached");
         } else {
@@ -43,18 +49,32 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
             logger.debug("BulletAppState already present");
         }
 
-        // Register sub-modules with real AppStateManager
-        //subManager.setAppStateManager(app.getStateManager());
-        subManager.register(new CollisionModule(this), 10);
-        subManager.register(new RigidBodyModule(app), 20);
-        subManager.register(new SoftBodyModule(app), 30);
-        // e.g. subManager.register(new JointModule(...), 40);
-
-        // Initialize all sub-modules
+        // Register and initialize sub-modules
+        registerSubModules(app);
         subManager.initializeAll(app);
         logger.info("{}: physics sub-modules initialized", getName());
 
         // Optionally adjust physics settings from config
+        applyConfigSettings();
+
+        // Enable debug if enabled in config
+        if (getConfig().debug) {
+            DebugConfiguration debugConfig = new DebugConfiguration();
+            debugConfig.setEnabled(true);
+            bulletDebugAppState = new BulletDebugAppState(debugConfig);
+            app.getStateManager().attach(bulletDebugAppState);
+            logger.info("BulletDebugAppState attached: Collision shapes and debug visuals will be shown.");
+        }
+    }
+
+    private void registerSubModules(CalistaGameEngine app) {
+        subManager.register(new RigidBodyModule(this), 20);
+        subManager.register(new CollisionModule(this), 10);
+        subManager.register(new SoftBodyModule(this), 30);
+        // Add any additional sub-modules here as needed
+    }
+
+    private void applyConfigSettings() {
         PhysicsConfig cfg = getConfig();
         PhysicsSpace space = bulletAppState.getPhysicsSpace();
         space.setGravity(cfg.gravity);
@@ -63,20 +83,25 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
 
     @Override
     protected void updateModule(float tpf) throws Exception {
-        // Physics steps are handled by BulletAppState automatically
+        // BulletAppState automatically handles the physics steps in the background
     }
 
     @Override
     protected void cleanupModule(Application app) throws Exception {
         logger.info("{}: cleaning up physics...");
 
-        // Detach sub-modules
+        // Shutdown all sub-modules
         subManager.shutdown(app);
 
-        // Detach BulletAppState
+        // Detach BulletAppState and BulletDebugAppState if they were attached
         if (bulletAppState != null) {
             app.getStateManager().detach(bulletAppState);
             logger.debug("BulletAppState detached");
+        }
+
+        if (bulletDebugAppState != null) {
+            app.getStateManager().detach(bulletDebugAppState);
+            logger.debug("BulletDebugAppState detached");
         }
     }
 
@@ -90,15 +115,14 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
         }
     }
 
-
     @Override
     protected void onEnable() {
-
+        // Optionally handle enable logic here
     }
 
     @Override
     protected void onDisable() {
-
+        // Optionally handle disable logic here
     }
 
     public BulletAppState getBulletAppState() {
@@ -107,5 +131,9 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
 
     public CalistaGameEngine getCalistaGameEngine() {
         return calistaGameEngine;
+    }
+
+    public ModuleManager getSubManager() {
+        return subManager;
     }
 }

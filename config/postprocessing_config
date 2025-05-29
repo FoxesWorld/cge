@@ -1,5 +1,15 @@
 {
   "enableBloom": true,
+  "enableLsf": true,
+  "enableDof": true,
+  "dofRange": 50,
+  "dofFocus": 9,
+  "lsfLightDir": [
+    10.0,
+    3.0,
+    7.0
+  ],
+  "lsfDestiny": 5.0,
   "bloomIntensity": 1.5,
   "enableFXAA": true
 }

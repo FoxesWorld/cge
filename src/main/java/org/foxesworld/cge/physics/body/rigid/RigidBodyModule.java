@@ -3,15 +3,18 @@ package org.foxesworld.cge.physics.body.rigid;
 import com.jme3.app.Application;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.control.RigidBodyControl;
+import com.jme3.material.Material;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
+import com.jme3.scene.Geometry;
 import com.jme3.scene.Spatial;
+import com.jme3.scene.shape.Box;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.CalistaGameEngine;
-import org.foxesworld.cge.core.ConfigService;
-import org.foxesworld.cge.core.TaskScheduler;
 import org.foxesworld.cge.core.module.EngineModule;
 import org.foxesworld.cge.physics.PhysicsConfig;
+import org.foxesworld.cge.physics.PhysicsModule;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
@@ -21,33 +24,25 @@ import java.util.concurrent.ConcurrentHashMap;
  * Reads default mass, friction, restitution, and damping from PhysicsConfig.
  */
 public class RigidBodyModule extends EngineModule<PhysicsConfig> {
-    private static final Logger LOGGER = LogManager.getLogger(RigidBodyModule.class);
-
+    private static final Logger logger = LogManager.getLogger(RigidBodyModule.class);
     private final Map<Spatial, RigidBodyControl> bodies = new ConcurrentHashMap<>();
-    private BulletAppState bulletState;
-    private PhysicsConfig config;
+    private final PhysicsModule physicsModule;
 
-    public RigidBodyModule(CalistaGameEngine application) {
-        super("physics", PhysicsConfig.class, application);
-        initialize(application);
+    public RigidBodyModule(PhysicsModule physicsModule) {
+        super("physics", PhysicsConfig.class, physicsModule.getCalistaGameEngine());
+        this.physicsModule = physicsModule;
+        initModule(physicsModule.getCalistaGameEngine());
     }
 
-    @Override
     protected void initModule(CalistaGameEngine app) {
-        // Load config
-       // config = loadConfig();
-        bulletState = app.getStateManager().getState(BulletAppState.class);
-        LOGGER.info("RigidBodyModule init: defaultMass={}, friction={}, restitution={}, linearDamp={}, angularDamp={}",
+        PhysicsConfig config = physicsModule.getConfig();
+        logger.info("RigidBodyModule init: defaultMass={}, friction={}, restitution={}, linearDamp={}, angularDamp={}",
                 config.rigidDefaultMass, config.rigidFriction, config.rigidRestitution,
                 config.rigidLinearDamping, config.rigidAngularDamping);
     }
 
-    @Override
-    protected void onEnable() {
-        // Module enabled
-    }
 
-    @Override
+
     protected void updateModule(float tpf) {
         // Sync physics transforms to spatials
         bodies.forEach((spatial, control) -> {
@@ -56,48 +51,70 @@ public class RigidBodyModule extends EngineModule<PhysicsConfig> {
         });
     }
 
-    @Override
     protected void onConfigReloaded() {
-        //config = loadConfig();
-        LOGGER.info("RigidBodyModule config reloaded: defaultMass={}...", config.rigidDefaultMass);
+        logger.info("RigidBodyModule config reloaded: defaultMass={}...", physicsModule.getConfig().rigidDefaultMass);
     }
 
-    @Override
     protected void cleanupModule(Application app) {
-        // Remove and clear all bodies
         bodies.values().forEach(ctrl -> {
             ctrl.getPhysicsSpace().remove(ctrl);
             ctrl.getSpatial().removeControl(ctrl);
         });
         bodies.clear();
-        LOGGER.info("RigidBodyModule cleaned up all bodies");
+        logger.info("RigidBodyModule cleaned up all bodies");
     }
 
-    @Override
     public void initialize(Application app) {
         // no operation: initModule handles setup
     }
 
     @Override
+    protected void onEnable() {
+    }
+
     public void onDisable() {
-        // Remove bodies on disable
-        cleanupModule(getApplication());
+        cleanupModule(physicsModule.getCalistaGameEngine());
     }
 
     /**
      * Adds a rigid-body to the physics space with given mass.
      */
     public void addRigidBody(Spatial spatial, float mass) {
-        float m = mass > 0f ? mass : config.rigidDefaultMass;
-        RigidBodyControl control = new RigidBodyControl(m);
-        // apply default material
+        PhysicsConfig config = physicsModule.getConfig();
+        if (mass <= 0f) {
+            logger.warn("Attempting to add a rigid body with non-positive mass: {}", mass);
+            mass = config.rigidDefaultMass;  // Use default mass if invalid value
+        }
+
+        RigidBodyControl control = new RigidBodyControl(mass);
+        // Apply default material
         control.setFriction(config.rigidFriction);
         control.setRestitution(config.rigidRestitution);
         control.setDamping(config.rigidLinearDamping, config.rigidAngularDamping);
         spatial.addControl(control);
-        bulletState.getPhysicsSpace().add(control);
+        physicsModule.getBulletAppState().getPhysicsSpace().add(control);
         bodies.put(spatial, control);
-        LOGGER.debug("Added rigid body '{}' with mass={} and friction={}", spatial.getName(), m, config.rigidFriction);
+        logger.debug("Added rigid body '{}' with mass={} and friction={}", spatial.getName(), mass, config.rigidFriction);
+    }
+
+    /**
+     * Adds an object to the scene with physics and collision setup.
+     * This method will automatically apply default physics settings and add the object to the scene.
+     */
+    public void addPhysicsObjectToScene(Spatial spatial, float mass) {
+        if (spatial != null) {
+            // Set up the rigid body and collision properties
+            addRigidBody(spatial, mass);
+
+            // Optionally, you can set the initial position, rotation, or other properties
+            spatial.setLocalTranslation(new Vector3f(0, 5, 0));  // Example position
+
+            // Register the object with the BulletAppState and add it to the rootNode if necessary
+            this.physicsModule.getCalistaGameEngine().getRootNode().attachChild(spatial);
+            logger.debug("Physics object '{}' added to the scene with mass {}", spatial.getName(), mass);
+        } else {
+            logger.warn("Failed to add physics object: spatial is null.");
+        }
     }
 
     /**
@@ -107,6 +124,9 @@ public class RigidBodyModule extends EngineModule<PhysicsConfig> {
         RigidBodyControl control = bodies.get(spatial);
         if (control != null) {
             control.applyCentralImpulse(impulse);
+            logger.debug("Applied central impulse to '{}': {}", spatial.getName(), impulse);
+        } else {
+            logger.warn("RigidBodyControl not found for '{}'", spatial.getName());
         }
     }
 
@@ -116,9 +136,11 @@ public class RigidBodyModule extends EngineModule<PhysicsConfig> {
     public void removeRigidBody(Spatial spatial) {
         RigidBodyControl control = bodies.remove(spatial);
         if (control != null) {
-            bulletState.getPhysicsSpace().remove(control);
+            physicsModule.getBulletAppState().getPhysicsSpace().remove(control);
             spatial.removeControl(control);
-            LOGGER.debug("Removed rigid body '{}'", spatial.getName());
+            logger.debug("Removed rigid body '{}'", spatial.getName());
+        } else {
+            logger.warn("Failed to remove rigid body: '{}' not found.", spatial.getName());
         }
     }
 
@@ -126,6 +148,7 @@ public class RigidBodyModule extends EngineModule<PhysicsConfig> {
      * Sets default mass for bodies added without explicit mass at runtime.
      */
     public void setDefaultMass(float mass) {
-        config.rigidDefaultMass = mass;
+        physicsModule.getConfig().rigidDefaultMass = mass;
+        logger.info("RigidBodyModule default mass set to {}", mass);
     }
 }

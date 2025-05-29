@@ -42,11 +42,11 @@ public class LightingModule extends EngineModule<LightingConfig> {
 
     @Override
     protected void initModule(CalistaGameEngine app) {
+        /*
         var root =  app.getRootNode();
         AmbientLight ambient = new AmbientLight();
         ambient.setColor(config.ambientColor);
         root.addLight(ambient);
-
         DirectionalLight sun = new DirectionalLight();
         sun.setDirection(new Vector3f(
                 config.sunDirection[0],
@@ -55,6 +55,7 @@ public class LightingModule extends EngineModule<LightingConfig> {
         ).normalizeLocal());
         sun.setColor(config.sunColor);
         root.addLight(sun);
+        */
     }
 
     @Override
