@@ -7,7 +7,6 @@ import org.foxesworld.cge.core.module.ModuleManager;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.renderer.camera.CameraModule;
-import org.foxesworld.cge.renderer.lighting.LightingModule;
 import org.foxesworld.cge.renderer.postProcessing.PostProcessingModule;
 import org.foxesworld.cge.scene.SceneModule;
 
@@ -17,14 +16,15 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Universal RendererModule: aggregates Camera, Lighting, and PostProcessing sub-modules.
  */
-public class RendererModule extends EngineModule<Void> {
+public class RendererModule extends EngineModule<RendererConfig> {
     private static final Logger logger = LogManager.getLogger(RendererModule.class);
-    private static final String CONFIG_FILE = null;
+    private static final String CONFIG_FILE = "render_config";
 
     private final ModuleManager subManager;
 
     public RendererModule(CalistaGameEngine app) {
-        super(CONFIG_FILE, Void.class, app);
+        super(CONFIG_FILE, RendererConfig.class, app);
+        initialize(app);
         subManager = new ModuleManager(app);
 
         // Пример загрузки текстуры (можно сделать асинхронно, если нужно)
@@ -32,12 +32,14 @@ public class RendererModule extends EngineModule<Void> {
 
         // Регистрируем подмодули в зависимостях
         subManager.register(new CameraModule(app), 10);
-        subManager.register(new PostProcessingModule(app), 30);
+        if(config.enablePostEffects) {
+            subManager.register(new PostProcessingModule(app), 30);
+        }
 
         // Регистрация LightingModule с условием (можно сделать на основе конфигурации или других факторов)
-        if (isLightingEnabled()) {
-            subManager.register(new LightingModule(app), 20);
-        }
+        //if (isLightingEnabled()) {
+            //subManager.register(new LightingModule(app), 20);
+        //}
     }
 
     @Override

@@ -1,6 +1,6 @@
 {
-  "enableBloom": false,
-  "enableLsf": false,
+  "enableBloom": true,
+  "enableLsf": true,
   "enableDof": false,
   "dofRange": 50,
   "dofFocus": 9,
@@ -9,7 +9,7 @@
     3.0,
     7.0
   ],
-  "lsfDestiny": 5.0,
-  "bloomIntensity": 1.0,
+  "lsfDestiny": 0.2,
+  "bloomIntensity": 0.5,
   "enableFXAA": false
 }

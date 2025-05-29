@@ -47,7 +47,7 @@ public class TextureLoader {
                     loadDXT5Texture(textureEntry);
                 }
                 default:
-                logger.warn("Texture " + textureName + " is not in DXT1 format, skipping.");
+                logger.warn("Texture " + textureName + " is an unsupported format {} skipping.", format);
             }
         }
         logger.debug("CGTEX file loaded successfully: " + path);

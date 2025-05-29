@@ -34,7 +34,7 @@ public class CubeDerp {
                 Material mat = new Material(calistaGameEngine.getAssetManager(), "Common/MatDefs/Light/Lighting.j3md");
 
                 mat.setTexture("DiffuseMap", calistaGameEngine.getTextureMap().get("box"));
-                mat.setTexture("NormalMap", calistaGameEngine.getTextureMap().get("box_normal"));
+                //mat.setTexture("NormalMap", calistaGameEngine.getTextureMap().get("box_normal"));
                 mat.setBoolean("UseMaterialColors", false);
                 mat.setFloat   ("Shininess", 4f);
                 cube.setMaterial(mat);
