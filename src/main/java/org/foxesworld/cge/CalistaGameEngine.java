@@ -7,6 +7,7 @@ import com.jme3.light.AmbientLight;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
+import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
@@ -113,19 +114,22 @@ public class CalistaGameEngine extends SimpleApplication {
 
             scene = moduleManager.getModule(SceneModule.class);
             Material mat = new Material(assetManager, "Common/MatDefs/Light/PBRLighting.j3md");
-            mat.setTexture("BaseColorMap", textureMap.get("calista_grid_test"));
-            mat.setTexture("RoughnessMap", textureMap.get("calista_grid_test_normal"));
+            mat.setTexture("BaseColorMap", textureMap.get("testgrid"));
+            //mat.setTexture("RoughnessMap", textureMap.get("calista_grid_test_normal"));
             mat.setBoolean("BackfaceShadows", false);
-            mat.setFloat(        "EmissivePower",  3.0f);
+            mat.setFloat("EmissivePower",  3.0f);
             mat.setFloat("EmissiveIntensity", 2.0f);
             mat.setFloat("ParallaxHeight",  0.05f);
             mat.setFloat("NormalType", -1.0f);
             mat.setFloat("Glossiness",  1.0f);
+            mat.getTextureParam("BaseColorMap").getTextureValue().setWrap(Texture.WrapMode.Repeat);
 
             // ——— Геометрия для теста ———
             float width = 100f, height = 100f;
             Quad quad = new Quad(width, height);
             Geometry terrain = new Geometry("TerrainPlane", quad);
+
+            terrain.getMesh().scaleTextureCoordinates(new Vector2f(64,64));
             terrain.setLocalTranslation(-width/2f, 0, height/2f);
             terrain.rotate(-FastMath.HALF_PI, 0, 0);
             terrain.setMaterial(mat);

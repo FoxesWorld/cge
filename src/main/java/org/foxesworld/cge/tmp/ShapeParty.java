@@ -2,9 +2,11 @@ package org.foxesworld.cge.tmp;
 
 import com.jme3.material.Material;
 import com.jme3.math.FastMath;
+import com.jme3.math.Vector2f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.shape.Box;
 import com.jme3.scene.shape.Sphere;
+import com.jme3.texture.Texture;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.physics.PhysicsModule;
 
@@ -84,10 +86,13 @@ public class ShapeParty {
                         calistaGameEngine.getAssetManager(),
                         "Common/MatDefs/Light/Lighting.j3md"
                 );
-                material.setTexture("DiffuseMap", calistaGameEngine.getTextureMap().get("box"));
+                material.setTexture("DiffuseMap", calistaGameEngine.getTexture("box"));
+                material.setTexture("NormalMap", calistaGameEngine.getTexture("box_normal"));
                 material.setBoolean("UseMaterialColors", false);
                 material.setFloat("Shininess", 4f);
+                material.getTextureParam("DiffuseMap").getTextureValue().setWrap(Texture.WrapMode.Repeat);
                 geometry.setMaterial(material);
+                geometry.getMesh().scaleTextureCoordinates(new Vector2f(2,2));
 
                 // Случайная позиция в области
                 float x = (random.nextFloat() * 2 - 1) * areaRadius;

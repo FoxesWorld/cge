@@ -11,6 +11,7 @@ import org.foxesworld.cge.renderer.postProcessing.PostProcessingModule;
 import org.foxesworld.cge.renderer.skyBox.SkyBox;
 import org.foxesworld.cge.scene.SceneModule;
 
+import java.io.IOException;
 import java.util.EnumSet;
 import java.util.concurrent.CompletableFuture;
 
@@ -28,7 +29,11 @@ public class RendererModule extends EngineModule<RendererConfig> {
         subManager = new ModuleManager(app);
 
         // Пример загрузки текстуры (можно сделать асинхронно, если нужно)
-        app.getTextureLoader().loadCgtex("data/testData.cgtex");
+        try {
+            app.getTextureLoader().loadCgtex("data/testData.cgtex");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
 
         // Регистрируем подмодули в зависимостях
         subManager.register(new CameraModule(app), 10);

@@ -23,7 +23,7 @@ import java.util.List;
 public class CGTEXCreatorUI extends JFrame {
     private final List<TextureInfo> textures = new ArrayList<>();
     private final DefaultListModel<TextureInfo> listModel = new DefaultListModel<>();
-    private final JList<TextureInfo> fileList = new JList<TextureInfo>(listModel);
+    private final JList<TextureInfo> fileList = new JList<>(listModel);
     private final JPanel previewPanel = new JPanel(new BorderLayout());
     private File selectedFile;
 
