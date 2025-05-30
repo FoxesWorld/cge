@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.renderer.camera.CameraModule;
 import org.foxesworld.cge.renderer.postProcessing.PostProcessingModule;
+import org.foxesworld.cge.renderer.skyBox.SkyBox;
 import org.foxesworld.cge.scene.SceneModule;
 
 import java.util.EnumSet;
@@ -24,7 +25,6 @@ public class RendererModule extends EngineModule<RendererConfig> {
 
     public RendererModule(CalistaGameEngine app) {
         super(CONFIG_FILE, RendererConfig.class, app);
-        initialize(app);
         subManager = new ModuleManager(app);
 
         // Пример загрузки текстуры (можно сделать асинхронно, если нужно)
@@ -32,7 +32,8 @@ public class RendererModule extends EngineModule<RendererConfig> {
 
         // Регистрируем подмодули в зависимостях
         subManager.register(new CameraModule(app), 10);
-        if(config.enablePostEffects) {
+        subManager.register(new SkyBox(this), 10);
+        if(getConfig().isEnablePostEffects()) {
             subManager.register(new PostProcessingModule(app), 30);
         }
 

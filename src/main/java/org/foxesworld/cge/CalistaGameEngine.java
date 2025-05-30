@@ -26,12 +26,9 @@ import org.foxesworld.cge.core.streaming.StreamingParserLoader;
 import org.foxesworld.cge.physics.PhysicsModule;
 import org.foxesworld.cge.renderer.RendererModule;
 import org.foxesworld.cge.scene.SceneModule;
-import org.foxesworld.cge.tmp.CubeDerp;
+import org.foxesworld.cge.tmp.ShapeParty;
 import org.foxesworld.cge.tmp.TextureLoader;
 import org.slf4j.bridge.SLF4JBridgeHandler;
-import jme3utilities.sky.SkyControl;
-import jme3utilities.sky.StarsOption;
-import jme3utilities.sky.Updater;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
@@ -57,7 +54,7 @@ public class CalistaGameEngine extends SimpleApplication {
     public static void main(String[] args) {
         CalistaGameEngine app = new CalistaGameEngine();
         setupTheme("theme/calista.properties");
-        // Настройка окна (Calista Style)
+
         AppSettings settings = new AppSettings(false);
         settings.setTitle("Calista Game Engine");
         settings.setSettingsDialogImage("/theme/logo.png");
@@ -114,24 +111,6 @@ public class CalistaGameEngine extends SimpleApplication {
         moduleManager.initializeAll(this);
         moduleManager.loadAll(this, () -> {
 
-
-            enqueue(() -> {
-            Spatial sky = SkyFactory.createSky(assetManager,
-                    textureMap.get("cubemap_0"),
-                    SkyFactory.EnvMapType.CubeMap);
-            sky.setShadowMode(RenderQueue.ShadowMode.Off);
-            SkyControl skyControl = new SkyControl(assetManager, cam, .5f, StarsOption.TopDome, true);
-            rootNode.addControl(skyControl);
-            skyControl.setCloudiness(0.8f);
-            skyControl.setCloudsYOffset(0.4f);
-            skyControl.setTopVerticalAngle(1.78f);
-            skyControl.getSunAndStars().setHour(10);
-            Updater updater = skyControl.getUpdater();
-            updater.setAmbientLight(new AmbientLight(ColorRGBA.DarkGray));
-            //updater.setMainLight(sun);
-            //updater.addShadowRenderer(dlsr);
-            skyControl.setEnabled(true);
-        });
             scene = moduleManager.getModule(SceneModule.class);
             Material mat = new Material(assetManager, "Common/MatDefs/Light/PBRLighting.j3md");
             mat.setTexture("BaseColorMap", textureMap.get("calista_grid_test"));
@@ -169,7 +148,7 @@ public class CalistaGameEngine extends SimpleApplication {
             cam.setLocation(new Vector3f(camX, camHeight, camZ));
             cam.lookAt(new Vector3f(camX, 0f, camZ), Vector3f.UNIT_Y);
 
-            CubeDerp cubeDerp = new CubeDerp(this);
+            ShapeParty cubeDerp = new ShapeParty(this);
             cubeDerp.startParty();
         });
     }
@@ -198,6 +177,16 @@ public class CalistaGameEngine extends SimpleApplication {
         return textureMap;
     }
 
+    public Texture getTexture(String name){
+        Texture texture = textureMap.get(name);
+        if(texture != null) {
+            return texture;
+        } else {
+            System.out.println("not found texture " + name);
+            return  new Texture2D();
+        }
+    }
+
     public TextureLoader getTextureLoader() {
         return textureLoader;
     }
@@ -206,5 +195,8 @@ public class CalistaGameEngine extends SimpleApplication {
         return scene;
     }
 
-
+    @Override
+    public void simpleUpdate(float tpf) {
+        this.moduleManager.update(tpf);
+    }
 }

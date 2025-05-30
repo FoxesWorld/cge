@@ -12,14 +12,18 @@ import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.BloomFilter;
 import com.jme3.post.filters.FXAAFilter;
 
+@SuppressWarnings("unused")
 public class PostProcessingModule extends EngineModule<PostProcessingConfig> {
+    private BloomFilter bloomFilter;
+    private LightScatteringFilter lsf;
+    private DepthOfFieldFilter dof;
+    private FXAAFilter fxaaFilter;
     private static final Logger log = LogManager.getLogger(PostProcessingModule.class);
     private static final String CONFIG_FILE = "postprocessing_config";
     private FilterPostProcessor fpp;
 
     public PostProcessingModule(CalistaGameEngine calistaGameEngine) {
         super(CONFIG_FILE, PostProcessingConfig.class, calistaGameEngine);
-        initialize(calistaGameEngine);
     }
 
     @Override
@@ -34,7 +38,7 @@ public class PostProcessingModule extends EngineModule<PostProcessingConfig> {
 
     @Override
     protected void onConfigReloaded() {
-        log.info("PostProcessingConfig reloaded: {}", config);
+        log.info("PostProcessingConfig reloaded: {}", getConfig());
     }
 
     @Override
@@ -42,24 +46,25 @@ public class PostProcessingModule extends EngineModule<PostProcessingConfig> {
         fpp = new FilterPostProcessor(app.getAssetManager());
         int numSamples = app.getContext().getSettings().getSamples();
         if (numSamples > 0) fpp.setNumSamples(numSamples);
-        if (config.enableBloom) {
-            BloomFilter bloom = new BloomFilter();
-            bloom.setBloomIntensity(config.bloomIntensity);
-            bloom.setExposurePower(60);
-            fpp.addFilter(bloom);
+        if (getConfig().isEnableBloom()) {
+            bloomFilter = new BloomFilter();
+            bloomFilter.setBloomIntensity(getConfig().getBloomIntensity());
+            bloomFilter.setExposurePower(getConfig().getBloomExposurePower());
+            fpp.addFilter(bloomFilter);
         }
-        if(config.enableLsf) {
-            LightScatteringFilter lsf = new LightScatteringFilter(new Vector3f(config.lsfLightDir[0], config.lsfLightDir[1], config.lsfLightDir[2]));
-            lsf.setLightDensity(config.lsfDestiny);
+        if(getConfig().isEnableLsf()) {
+            lsf = new LightScatteringFilter(new Vector3f(getConfig().getLsfLightDir()[0], getConfig().getLsfLightDir()[1], getConfig().getLsfLightDir()[2]));
+            lsf.setLightDensity(getConfig().getLsfDestiny());
             this.fpp.addFilter(lsf);
         }
-        if(config.enableDof) {
-            DepthOfFieldFilter dof = new DepthOfFieldFilter();
-            dof.setFocusDistance(config.dofFocus);
-            dof.setFocusRange(config.dofRange);
+        if(getConfig().isEnableDof()) {
+            dof = new DepthOfFieldFilter();
+            dof.setFocusDistance(getConfig().getDofFocus());
+            dof.setFocusRange(getConfig().getDofRange());
         }
-        if (config.enableFXAA) {
-            fpp.addFilter(new FXAAFilter());
+        if (getConfig().isEnableFXAA()) {
+            fxaaFilter = new FXAAFilter();
+            fpp.addFilter(fxaaFilter);
         }
 
         app.getViewPort().addProcessor(fpp);
@@ -67,7 +72,7 @@ public class PostProcessingModule extends EngineModule<PostProcessingConfig> {
 
     @Override
     protected void updateModule(float tpf) {
-        // можно динамически менять интенсивность
+
     }
 
     @Override
@@ -75,5 +80,25 @@ public class PostProcessingModule extends EngineModule<PostProcessingConfig> {
         if (fpp != null) {
             app.getViewPort().removeProcessor(fpp);
         }
+    }
+
+    public BloomFilter getBloomFilter() {
+        return bloomFilter;
+    }
+
+    public LightScatteringFilter getLsf() {
+        return lsf;
+    }
+
+    public DepthOfFieldFilter getDof() {
+        return dof;
+    }
+
+    public FXAAFilter getFxaaFilter() {
+        return fxaaFilter;
+    }
+
+    public FilterPostProcessor getFpp() {
+        return fpp;
     }
 }

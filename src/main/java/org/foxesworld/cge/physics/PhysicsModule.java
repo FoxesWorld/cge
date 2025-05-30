@@ -28,18 +28,17 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
     protected final CalistaGameEngine calistaGameEngine;
     private final ModuleManager subManager;
     protected BulletAppState bulletAppState;
-    private BulletDebugAppState bulletDebugAppState;  // Для отображения отладки
+    private BulletDebugAppState bulletDebugAppState;
 
     public PhysicsModule(CalistaGameEngine calistaGameEngine) {
         super("physics", PhysicsConfig.class, calistaGameEngine);
         this.calistaGameEngine = calistaGameEngine;
         this.subManager = new ModuleManager(calistaGameEngine);
-        initialize(calistaGameEngine);
     }
 
     @Override
     protected void initModule(CalistaGameEngine app) throws Exception {
-        logger.info("{}: initializing physics...");
+        logger.info("initializing physics...");
 
         // Initialize BulletAppState and attach to the AppStateManager if not already present
         if (app.getStateManager().getState(BulletAppState.class) == null) {

@@ -27,7 +27,7 @@ public class CameraModule extends EngineModule<CameraConfig> {
 
     @Override
     protected void onConfigReloaded() {
-        log.info("CameraConfig reloaded: {}", config);
+        log.info("CameraConfig reloaded: {}", getConfig());
     }
 
     @Override
@@ -47,12 +47,12 @@ public class CameraModule extends EngineModule<CameraConfig> {
 
     private void setupCamera(com.jme3.app.SimpleApplication app) {
         app.getCamera().setFrustumPerspective(
-                config.fov,
-                (float) config.resolutionWidth / config.resolutionHeight,
-                config.nearClip,
-                config.farClip
+                getConfig().fov,
+                (float) getConfig().resolutionWidth / getConfig().resolutionHeight,
+                getConfig().nearClip,
+                getConfig().farClip
         );
-        app.getFlyByCamera().setMoveSpeed(config.moveSpeed);
+        app.getFlyByCamera().setMoveSpeed(getConfig().moveSpeed);
         app.getFlyByCamera().setEnabled(true);
     }
 }

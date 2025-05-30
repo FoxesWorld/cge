@@ -4,16 +4,32 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="283ff897-4432-4079-9530-7bc3ea1cccef" name="Changes" comment="SkyBox implementation">
-      <change afterPath="$PROJECT_DIR$/data/testData.cgtex" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/data/testScene.cgs" afterDir="false" />
+    <list default="true" id="283ff897-4432-4079-9530-7bc3ea1cccef" name="Changes" comment="CGTEXCreator update">
+      <change afterPath="$PROJECT_DIR$/config/skybox" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/hs_err_pid9048.log" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/skyBox/SkyBoxConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/ShapeParty.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/config/scene" beforeDir="false" afterPath="$PROJECT_DIR$/config/scene" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/lighting_config" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/render_config" beforeDir="false" afterPath="$PROJECT_DIR$/config/render_config" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/logs/lastlog.log" beforeDir="false" afterPath="$PROJECT_DIR$/logs/lastlog.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/CalistaGameEngine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/CalistaGameEngine.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/module/EngineModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/module/EngineModule.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/module/ModuleManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/module/ModuleManager.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/physics/PhysicsModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/physics/PhysicsModule.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/physics/body/rigid/RigidBodyModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/physics/body/rigid/RigidBodyModule.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/physics/body/soft/SoftBodyModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/physics/body/soft/SoftBodyModule.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/physics/collision/CollisionModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/physics/collision/CollisionModule.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/RendererConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/RendererConfig.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/RendererModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/RendererModule.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/CGTEXcreator/CGTEXCreatorUI.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/CGTEXcreator/CGTEXCreatorUI.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/testData.cgtex" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/testScene.cgs" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/camera/CameraModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/camera/CameraModule.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/postProcessing/PostProcessingConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/postProcessing/PostProcessingConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/postProcessing/PostProcessingModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/postProcessing/PostProcessingModule.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/skyBox/SkyBox.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/skyBox/SkyBox.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/CubeDerp.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/Textures/calista_grid_test.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/Textures/calista_grid_test_normal.png" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/theme/logo.png" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/theme/logo.png" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -74,43 +90,43 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
-    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/Calista/Documents/GitHub/CGE/src/main/resources/Textures&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_ADD_EXTERNAL_FILES": "true",
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "last_opened_file_path": "C:/Users/Calista/Documents/GitHub/CGE/src/main/resources/theme",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\theme" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\Textures" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\java\org\foxesworld\cge\core\file\cgtex\writer" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\theme\icon" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\Interface\Icons" />
-      <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\theme" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\Textures\dynamic_sky" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\Textures\icons" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\Textures" />
-      <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\theme\icon" />
     </key>
     <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
       <recent name="org.foxesworld.cge.tools" />
       <recent name="org.foxesworld.cge.core" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.CGTEXCreatorUI">
+  <component name="RunManager" selected="Application.CalistaGameEngine">
     <configuration name="CGTEXCreatorUI" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
       <option name="MAIN_CLASS_NAME" value="org.foxesworld.cge.tools.CGTEXcreator.CGTEXCreatorUI" />
       <module name="CGE.main" />
@@ -207,7 +223,7 @@
       <workItem from="1748145756964" duration="30552000" />
       <workItem from="1748316663182" duration="96072000" />
       <workItem from="1748533541348" duration="11083000" />
-      <workItem from="1748577353047" duration="505000" />
+      <workItem from="1748577353047" duration="5733000" />
     </task>
     <task id="LOCAL-00001" summary="initial">
       <option name="closed" value="true" />
@@ -361,7 +377,15 @@
       <option name="project" value="LOCAL" />
       <updated>1748543650065</updated>
     </task>
-    <option name="localTasksCounter" value="20" />
+    <task id="LOCAL-00020" summary="CGTEXCreator update">
+      <option name="closed" value="true" />
+      <created>1748577878787</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1748577878787</updated>
+    </task>
+    <option name="localTasksCounter" value="21" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -387,7 +411,8 @@
     <MESSAGE value="CGS partly fix" />
     <MESSAGE value="PostRender" />
     <MESSAGE value="SkyBox implementation" />
-    <option name="LAST_COMMIT_MESSAGE" value="SkyBox implementation" />
+    <MESSAGE value="CGTEXCreator update" />
+    <option name="LAST_COMMIT_MESSAGE" value="CGTEXCreator update" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

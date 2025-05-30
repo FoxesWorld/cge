@@ -34,7 +34,6 @@ public class CollisionModule extends EngineModule<PhysicsConfig> implements Phys
     public CollisionModule(PhysicsModule physicsModule) {
         super("physics", PhysicsConfig.class, physicsModule.getCalistaGameEngine());
         this.physicsModule = physicsModule;
-        initialize(physicsModule.getCalistaGameEngine());
         bulletState = physicsModule.getBulletAppState();
     }
 

@@ -14,37 +14,39 @@ import java.util.concurrent.Future;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * Abstract base class for engine modules with async config, state-machine,
- * job-based update scheduling and centralized ConfigService.
- * Enhanced with detailed logging, NPE safeguards, and callback for completion.
- * @param <T> configuration type
+ * Abstract base class for engine modules providing asynchronous configuration loading,
+ * state management, scheduled updates, and centralized configuration service access.
+ * Enhanced with detailed logging and failure handling.
+ *
+ * @param <T> the type of the module-specific configuration object
  */
 public abstract class EngineModule<T> extends BaseAppState {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
     protected final CalistaGameEngine gameEngine;
     protected final ConfigService configService;
     protected final TaskScheduler taskScheduler;
-
-    protected volatile T config;
+    private volatile T config;
     private final String configFile;
     private ModuleState state = ModuleState.UNLOADED;
     private Future<?> initFuture;
-
-    // Runnable to notify when all modules are loaded
     private Runnable onAllModulesLoadedRunnable;
-
-    // Atomic counter to track loading completion across modules
     private static final AtomicInteger modulesLoadingCount = new AtomicInteger(0);
 
+    /**
+     * Constructs an EngineModule instance, registers its configuration if provided,
+     * and initializes core dependencies.
+     *
+     * @param configFile       the path or identifier of this module's configuration file
+     * @param configClass      the class object of the configuration type
+     * @param calistaGameEngine the central game engine instance
+     */
     public EngineModule(String configFile, Class<T> configClass, CalistaGameEngine calistaGameEngine) {
         this.gameEngine = calistaGameEngine;
         this.configService = calistaGameEngine.getConfigService();
         this.taskScheduler = calistaGameEngine.getTaskScheduler();
         this.configFile = configFile;
-
-        logger.debug("{} constructor: configFile='{}', configClass={}", getName(), configFile, configClass != null ? configClass.getSimpleName() : "null");
-
-        // Only register non-null config
+        logger.debug("{} constructor: configFile='{}', configClass={} ", getName(), configFile, configClass != null ? configClass.getSimpleName() : "null");
+        initialize(calistaGameEngine);
         if (configFile != null && configClass != null) {
             try {
                 this.configService.registerConfig(configFile, configClass);
@@ -52,18 +54,20 @@ public abstract class EngineModule<T> extends BaseAppState {
             } catch (Exception e) {
                 logger.error("Failed to register config '{}' for {}: {}", configFile, getName(), e.getMessage(), e);
             }
-        } else {
-            logger.debug("No config to register for module {}", getName());
         }
     }
 
+    /**
+     * Initializes the module by loading configuration, invoking module-specific
+     * initialization logic, and scheduling the "all modules loaded" callback when done.
+     *
+     * @param app the application context provided by JME
+     */
     @Override
     protected void initialize(Application app) {
         logger.info("{} initialize() start", getName());
         transitionTo(ModuleState.LOADING_CONFIG);
-
-        modulesLoadingCount.incrementAndGet(); // Increment the counter when a module starts loading
-
+        modulesLoadingCount.incrementAndGet();
         initFuture = taskScheduler.submit(() -> {
             try {
                 if (configFile != null) {
@@ -75,13 +79,8 @@ public abstract class EngineModule<T> extends BaseAppState {
                 initModule(gameEngine);
                 transitionTo(ModuleState.RUNNING);
                 logger.info("{} initialized and running", getName());
-
-                // Decrement the counter and check if all modules are loaded
-                if (modulesLoadingCount.decrementAndGet() == 0) {
-                    // All modules are loaded, execute the callback
-                    if (onAllModulesLoadedRunnable != null) {
-                        onAllModulesLoadedRunnable.run();
-                    }
+                if (modulesLoadingCount.decrementAndGet() == 0 && onAllModulesLoadedRunnable != null) {
+                    onAllModulesLoadedRunnable.run();
                 }
             } catch (Throwable t) {
                 handleFailure(t, "initialize");
@@ -89,10 +88,15 @@ public abstract class EngineModule<T> extends BaseAppState {
         });
     }
 
+    /**
+     * Schedules the per-frame update logic of this module if running.
+     *
+     * @param tpf time per frame in seconds
+     */
     @Override
     public void update(float tpf) {
         if (state != ModuleState.RUNNING) {
-            logger.trace("{} update skipped: current state={} (expected RUNNING)", getName(), state);
+            logger.trace("{} update skipped: state={} (expected RUNNING)", getName(), state);
             return;
         }
         taskScheduler.submit(() -> {
@@ -104,6 +108,11 @@ public abstract class EngineModule<T> extends BaseAppState {
         });
     }
 
+    /**
+     * Performs cleanup and shutdown of the module, cancelling initialization if pending.
+     *
+     * @param app the application context provided by JME
+     */
     @Override
     protected void cleanup(Application app) {
         logger.info("{} cleanup() start, current state={}", getName(), state);
@@ -122,7 +131,7 @@ public abstract class EngineModule<T> extends BaseAppState {
     }
 
     /**
-     * Hot-reload configuration and notify.
+     * Reloads the module's configuration asynchronously and triggers the reload callback.
      */
     public void reloadConfig() {
         logger.info("{} reloadConfig() called", getName());
@@ -142,46 +151,125 @@ public abstract class EngineModule<T> extends BaseAppState {
         });
     }
 
+    /**
+     * Transitions the module to a new state and reports health.
+     *
+     * @param newState the target module state
+     */
     private void transitionTo(ModuleState newState) {
         logger.debug("{}: {} -> {}", getName(), state, newState);
         state = newState;
         ModuleHealthMonitor.getInstance().reportState(getName(), state);
     }
 
+    /**
+     * Handles any failures during module phases by logging and pausing the module.
+     *
+     * @param t     the throwable that occurred
+     * @param phase the phase during which the error happened
+     */
     private void handleFailure(Throwable t, String phase) {
         logger.error("Module {} failed during {}: {}", getName(), phase, t.getMessage(), t);
         transitionTo(ModuleState.PAUSED);
         ModuleHealthMonitor.getInstance().reportError(getName(), t);
     }
 
+    /**
+     * Returns the current configuration object.
+     *
+     * @return the module configuration of type T
+     */
     public T getConfig() {
         return config;
     }
 
+    /**
+     * Returns the simple class name of this module.
+     *
+     * @return the module's name
+     */
     protected String getName() {
         return getClass().getSimpleName();
     }
 
-    /** Called after config hot-reload. */
+    /**
+     * Callback invoked after a successful configuration reload.
+     *
+     * @throws Exception if reload handling fails
+     */
     protected abstract void onConfigReloaded() throws Exception;
-    /** One-time init logic after config loaded. */
+
+    /**
+     * One-time initialization logic executed after configuration loading.
+     *
+     * @param app the central game engine instance
+     * @throws Exception if initialization fails
+     */
     protected abstract void initModule(CalistaGameEngine app) throws Exception;
-    /** Per-frame update logic */
+
+    /**
+     * Per-frame update logic executed when the module is running.
+     *
+     * @param tpf time per frame in seconds
+     * @throws Exception if update logic fails
+     */
     protected abstract void updateModule(float tpf) throws Exception;
-    /** Shutdown/cleanup logic */
+
+    /**
+     * Shutdown and cleanup logic executed during application teardown.
+     *
+     * @param app the application context provided by JME
+     * @throws Exception if cleanup fails
+     */
     protected abstract void cleanupModule(Application app) throws Exception;
 
-    public ModuleState getState() { return state; }
-    public ConfigService getConfigService() { return configService; }
-    public TaskScheduler getTaskScheduler() { return taskScheduler; }
+    /**
+     * Returns the current lifecycle state of the module.
+     *
+     * @return the module's state
+     */
+    public ModuleState getState() {
+        return state;
+    }
+
+    /**
+     * Provides access to the shared configuration service.
+     *
+     * @return the ConfigService instance
+     */
+    public ConfigService getConfigService() {
+        return configService;
+    }
+
+    /**
+     * Provides access to the shared task scheduler.
+     *
+     * @return the TaskScheduler instance
+     */
+    public TaskScheduler getTaskScheduler() {
+        return taskScheduler;
+    }
+
+    /**
+     * Dumps the remaining bytes of a ByteBuffer as a hexadecimal string.
+     *
+     * @param buf the ByteBuffer to dump
+     * @return hex-formatted string of remaining bytes
+     */
     protected String dumpBufferHex(ByteBuffer buf) {
         byte[] bytes = new byte[buf.remaining()];
         buf.slice().get(bytes);
         return HexFormat.of().formatHex(bytes);
     }
 
+    public CalistaGameEngine getGameEngine() {
+        return gameEngine;
+    }
+
     /**
-     * Sets the Runnable to be executed when all modules are loaded.
+     * Sets a runnable to be invoked when all engine modules have completed initialization.
+     *
+     * @param runnable callback to execute upon all modules loaded
      */
     public void setOnAllModulesLoadedRunnable(Runnable runnable) {
         this.onAllModulesLoadedRunnable = runnable;

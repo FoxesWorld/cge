@@ -31,7 +31,6 @@ public class RigidBodyModule extends EngineModule<PhysicsConfig> {
     public RigidBodyModule(PhysicsModule physicsModule) {
         super("physics", PhysicsConfig.class, physicsModule.getCalistaGameEngine());
         this.physicsModule = physicsModule;
-        initModule(physicsModule.getCalistaGameEngine());
     }
 
     protected void initModule(CalistaGameEngine app) {

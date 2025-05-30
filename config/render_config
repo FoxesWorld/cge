@@ -1,5 +1,4 @@
 {
-  "fov": 60.0,
   "resolutionWidth": 1280,
   "resolutionHeight": 720,
   "nearClip": 0.1,

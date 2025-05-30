@@ -1,0 +1,7 @@
+{
+  "skyBoxTexture": "cubemap_1",
+  "shadowMode": "CastAndReceive",
+  "starsOption": "TopDome",
+  "cloudFlattering": 0.8,
+  "bottomDome": true
+}

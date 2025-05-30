@@ -17,43 +17,58 @@ import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 /**
- * Enhanced ModuleManager supporting manual and automatic registration,
- * async init, dependency resolution, and hot-swap.
+ * The {@code ModuleManager} class is responsible for managing engine modules.
+ * It supports the following features:
+ * <ul>
+ *   <li>Manual and automatic registration of modules</li>
+ *   <li>Asynchronous initialization</li>
+ *   <li>Dependency resolution</li>
+ *   <li>Hot-reloading</li>
+ * </ul>
+ *
+ * <p>Usage:</p>
+ * <pre>
+ * ModuleManager manager = new ModuleManager(engine);
+ * manager.loadAll(app, () -&gt; {
+ *     // all modules loaded callback
+ * });
+ * </pre>
  */
 public class ModuleManager {
     private static final Logger logger = LoggerFactory.getLogger(ModuleManager.class);
+
     private final AppStateManager stateManager;
     private final ConfigService configService;
     private final TaskScheduler taskScheduler;
 
-    // Manual registry
     private final TreeMap<Integer, EngineModule<?>> manual = new TreeMap<>();
-    // Auto-loaded instances and descriptors
     private final Map<String, EngineModule<?>> instances = new ConcurrentHashMap<>();
-
-    // ExecutorService with a fixed pool size based on the system
     private final ExecutorService initExecutor;
-
     private final Path modulesDir = Paths.get("modules");
 
+    /**
+     * Constructs a new {@code ModuleManager} for the specified game engine.
+     *
+     * @param calistaGameEngine the game engine instance
+     */
     public ModuleManager(CalistaGameEngine calistaGameEngine) {
         this.stateManager = calistaGameEngine.getStateManager();
         this.configService = calistaGameEngine.getConfigService();
         this.taskScheduler = calistaGameEngine.getTaskScheduler();
         this.initExecutor = Executors.newFixedThreadPool(
                 Runtime.getRuntime().availableProcessors(),
-                new ThreadFactory() {
-                    @Override
-                    public Thread newThread(Runnable r) {
-                        Thread thread = new Thread(r);
-                        thread.setDaemon(true); // Set threads to daemon for high-load environments
-                        return thread;
-                    }
+                r -> {
+                    Thread thread = new Thread(r);
+                    thread.setDaemon(true);
+                    return thread;
                 });
     }
 
     /**
-     * Manual registration of a module with explicit priority.
+     * Registers a module manually with a given priority.
+     *
+     * @param module   the module to register
+     * @param priority the module's priority (lower values are higher priority)
      */
     public synchronized void register(EngineModule<?> module, int priority) {
         manual.put(priority, module);
@@ -61,7 +76,9 @@ public class ModuleManager {
     }
 
     /**
-     * Synchronous initialization of all manually registered modules.
+     * Synchronously initializes all manually registered modules by attaching them to the state manager.
+     *
+     * @param app the application context
      */
     public void initializeAll(Application app) {
         manual.values().forEach(m -> {
@@ -71,11 +88,14 @@ public class ModuleManager {
     }
 
     /**
-     * Automatic loading: read module descriptors, resolve dependencies, register,
-     * and initialize modules (manual + auto) asynchronously.
+     * Loads all modules by reading their manifests, resolving dependencies,
+     * and registering them. Asynchronously attaches modules and invokes a completion callback.
+     *
+     * @param app        the application context
+     * @param onComplete a callback to execute when all modules have been loaded
      */
     public void loadAll(Application app, Runnable onComplete) {
-        List<ModuleDescriptor> descriptors = null;
+        List<ModuleDescriptor> descriptors;
         try {
             descriptors = readManifests(modulesDir);
         } catch (IOException e) {
@@ -83,7 +103,6 @@ public class ModuleManager {
         }
         List<ModuleDescriptor> sorted = topologicalSort(descriptors);
 
-        // Instantiate and register all auto modules
         for (ModuleDescriptor desc : sorted) {
             try {
                 @SuppressWarnings("unchecked")
@@ -98,18 +117,13 @@ public class ModuleManager {
             }
         }
 
-        // Initialize all modules asynchronously
         List<CompletableFuture<Void>> futures = new ArrayList<>();
         for (EngineModule<?> module : manual.values()) {
             futures.add(CompletableFuture.runAsync(() -> asyncAttach(module, app), initExecutor));
         }
 
-        // Wait for all initialization tasks to complete and then trigger callback
         CompletableFuture.allOf(futures.toArray(new CompletableFuture[0]))
-                .thenRun(() -> {
-                    //onComplete.run();  // Run the provided callback
-                    onModulesLoaded(onComplete);  // Trigger custom method when all modules are loaded
-                })
+                .thenRun(() -> onModulesLoaded(onComplete))
                 .exceptionally(ex -> {
                     logger.error("Error during module initialization", ex);
                     return null;
@@ -117,12 +131,14 @@ public class ModuleManager {
     }
 
     /**
-     * A new method to set a custom callback that will be invoked when all modules are loaded.
+     * Invokes the specified callback when all modules have been loaded.
+     *
+     * @param runnable the callback to execute
      */
     public void onModulesLoaded(Runnable runnable) {
         CompletableFuture.runAsync(() -> {
             try {
-                runnable.run();  // Run the provided callback
+                runnable.run();
                 logger.info("Custom onModulesLoaded callback executed.");
             } catch (Exception e) {
                 logger.error("Error during onModulesLoaded callback execution", e);
@@ -130,6 +146,12 @@ public class ModuleManager {
         }, initExecutor);
     }
 
+    /**
+     * Attaches a module asynchronously to the application's state manager.
+     *
+     * @param module the module to attach
+     * @param app    the application context
+     */
     private void asyncAttach(EngineModule<?> module, Application app) {
         try {
             stateManager.attach(module);
@@ -139,6 +161,13 @@ public class ModuleManager {
         }
     }
 
+    /**
+     * Reads module descriptors (manifest files) from the specified directory.
+     *
+     * @param dir the directory to scan for JSON module descriptor files
+     * @return a list of module descriptors
+     * @throws IOException if an I/O error occurs
+     */
     private List<ModuleDescriptor> readManifests(Path dir) throws IOException {
         if (!Files.exists(dir)) {
             logger.warn("Modules directory '{}' not found", dir);
@@ -158,6 +187,12 @@ public class ModuleManager {
         return list;
     }
 
+    /**
+     * Sorts the given module descriptors topologically to resolve dependencies.
+     *
+     * @param descriptors the list of module descriptors to sort
+     * @return a sorted list of module descriptors
+     */
     private List<ModuleDescriptor> topologicalSort(List<ModuleDescriptor> descriptors) {
         Map<String, ModuleDescriptor> map = descriptors.stream()
                 .collect(Collectors.toMap(d -> d.name, d -> d));
@@ -171,6 +206,9 @@ public class ModuleManager {
         return sorted;
     }
 
+    /**
+     * Depth-first traversal to sort dependencies.
+     */
     private void dfs(ModuleDescriptor d,
                      Map<String, ModuleDescriptor> map,
                      Set<String> visited,
@@ -188,7 +226,9 @@ public class ModuleManager {
     }
 
     /**
-     * Hot-reload a module by name (if reloadable).
+     * Hot-reloads a module by name if it is enabled.
+     *
+     * @param name the name of the module to reload
      */
     public void reload(String name) {
         EngineModule<?> module = instances.get(name);
@@ -201,7 +241,9 @@ public class ModuleManager {
     }
 
     /**
-     * Shutdown: detach all and stop executor.
+     * Shuts down the module manager by terminating the executor service and detaching modules.
+     *
+     * @param app the application context
      */
     public void shutdown(Application app) {
         initExecutor.shutdown();
@@ -221,23 +263,30 @@ public class ModuleManager {
     }
 
     /**
-     * @return all loaded module instances by name.
+     * Retrieves all loaded module instances as an unmodifiable map.
+     *
+     * @return an unmodifiable map of module names to their instances
      */
     public Map<String, EngineModule<?>> getInstances() {
         return Collections.unmodifiableMap(instances);
     }
 
+    /**
+     * Searches for a module by its class.
+     *
+     * @param moduleClass the class of the module to search for
+     * @param <T>         the type of the module
+     * @return the found module or {@code null} if not found
+     */
     @SuppressWarnings("unchecked")
     public <T extends EngineModule<?>> T getModule(Class<T> moduleClass) {
         logger.info("Searching for module: {}", moduleClass.getSimpleName());
-        // Поиск в manual
         for (EngineModule<?> module : manual.values()) {
             if (moduleClass.isInstance(module)) {
                 logger.info("Found module in manual: {}", module.getClass().getSimpleName());
                 return (T) module;
             }
         }
-        // Поиск в instances (автомодулях)
         for (EngineModule<?> module : instances.values()) {
             if (moduleClass.isInstance(module)) {
                 logger.info("Found module in instances: {}", module.getClass().getSimpleName());
@@ -246,5 +295,14 @@ public class ModuleManager {
         }
         logger.warn("Module {} not found", moduleClass.getSimpleName());
         return null;
+    }
+
+    /**
+     * Updates the module manager
+     *
+     * @param tpf time per frame
+     */
+    public void update(float tpf) {
+        // For @Overriding
     }
 }

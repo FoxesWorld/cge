@@ -32,12 +32,12 @@ public class SoftBodyModule extends EngineModule<PhysicsConfig> {
 
     public SoftBodyModule(PhysicsModule physicsModule) {
         super("physics", PhysicsConfig.class, physicsModule.getCalistaGameEngine());
-        initialize(physicsModule.getCalistaGameEngine());
+        //initialize(physicsModule.getCalistaGameEngine());
     }
 
     @Override
     protected void initModule(CalistaGameEngine app) {
-        defaultConfig = this.config;
+        defaultConfig = getConfig();
         physicsState = app.getStateManager().getState(SoftPhysicsAppState.class);
         LOGGER.info("Initialized SoftBodyModule: mass={}, stiffness={}, damping={}, pressure={}, iterations={}",
                 defaultConfig.softDefaultMass,
