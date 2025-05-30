@@ -4,32 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="283ff897-4432-4079-9530-7bc3ea1cccef" name="Changes" comment="Texture tests">
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/module/ModuleConfig.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/CameraEffectsControl.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/FirstPersonCameraControl.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/MovementControl.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/Player.java" afterDir="false" />
+    <list default="true" id="283ff897-4432-4079-9530-7bc3ea1cccef" name="Changes" comment="Test Player">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/logs/lastlog.log" beforeDir="false" afterPath="$PROJECT_DIR$/logs/lastlog.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/CalistaGameEngine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/CalistaGameEngine.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/ConfigService.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/ConfigService.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/FileReader.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/FileReader.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgs/CGSFile.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgs/CGSFile.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgtex/CGTEXFile.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgtex/CGTEXFile.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgtex/CGTEXHeader.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgtex/CGTEXMetadata.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgtex/CGTEXMetadata.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgtex/writer/CGTEXFileWriter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgtex/writer/CGTEXFileWriter.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/ydr/YDRFile.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/ydr/YDRFile.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/module/EngineModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/module/EngineModule.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/physics/PhysicsConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/physics/PhysicsConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/RendererConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/RendererConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/camera/CameraConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/camera/CameraConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/postProcessing/PostProcessingConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/postProcessing/PostProcessingConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/skyBox/SkyBoxConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/skyBox/SkyBoxConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/scene/SceneConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/scene/SceneConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/ShapeParty.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/ShapeParty.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/SceneCGSCreator/util/ChunkControlsPanel.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/SceneCGSCreator/util/ChunkControlsPanel.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/CameraEffectsControl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/CameraEffectsControl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/FirstPersonCameraControl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/FirstPersonCameraControl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/MovementControl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/MovementControl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/Player.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/Player.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -223,7 +204,7 @@
       <workItem from="1748145756964" duration="30552000" />
       <workItem from="1748316663182" duration="96072000" />
       <workItem from="1748533541348" duration="11083000" />
-      <workItem from="1748577353047" duration="20047000" />
+      <workItem from="1748577353047" duration="22207000" />
     </task>
     <task id="LOCAL-00001" summary="initial">
       <option name="closed" value="true" />
@@ -409,7 +390,15 @@
       <option name="project" value="LOCAL" />
       <updated>1748590351324</updated>
     </task>
-    <option name="localTasksCounter" value="24" />
+    <task id="LOCAL-00024" summary="Test Player">
+      <option name="closed" value="true" />
+      <created>1748606887947</created>
+      <option name="number" value="00024" />
+      <option name="presentableId" value="LOCAL-00024" />
+      <option name="project" value="LOCAL" />
+      <updated>1748606887947</updated>
+    </task>
+    <option name="localTasksCounter" value="25" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -439,7 +428,8 @@
     <MESSAGE value="Config Updates" />
     <MESSAGE value="CGTEX updates" />
     <MESSAGE value="Texture tests" />
-    <option name="LAST_COMMIT_MESSAGE" value="Texture tests" />
+    <MESSAGE value="Test Player" />
+    <option name="LAST_COMMIT_MESSAGE" value="Test Player" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

@@ -16,8 +16,9 @@ public class FirstPersonCameraControl extends AbstractControl {
     private final Camera cam;
     private final Node camNode;
 
-    public FirstPersonCameraControl(Camera cam, InputManager input, Node player, float headHeight) {
-        this.cam = cam;
+    public FirstPersonCameraControl(Player player, float headHeight) {
+        this.cam = player.getCam();
+        InputManager input = player.getInput();
         camNode = new Node("CamNode");
         camNode.setLocalTranslation(0, headHeight, 0);
         camNode.addControl(new com.jme3.scene.control.CameraControl(
@@ -54,6 +55,9 @@ public class FirstPersonCameraControl extends AbstractControl {
         cam.setLocation(camNode.getWorldTranslation());
     }
 
-    @Override public void controlRender(com.jme3.renderer.RenderManager rm,
-                                        com.jme3.renderer.ViewPort vp) {}
+    @Override public void controlRender(com.jme3.renderer.RenderManager rm, com.jme3.renderer.ViewPort vp) {}
+
+    public Node getCamNode() {
+        return camNode;
+    }
 }

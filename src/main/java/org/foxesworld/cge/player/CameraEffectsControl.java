@@ -7,9 +7,6 @@ import com.jme3.renderer.Camera;
 import com.jme3.scene.control.AbstractControl;
 import com.jme3.scene.Node;
 
-/**
- * Эффекты камеры: усиленный bobbing при ходьбе, яркий прыжок и мощный bounce при приземлении.
- */
 public class CameraEffectsControl extends AbstractControl {
 
     private final Camera cam;
@@ -20,50 +17,38 @@ public class CameraEffectsControl extends AbstractControl {
     private float walkTime = 0;
     private final float bobFrequency;
     private final Vector3f bobAmplitude; // x: sway, y: bob, z: base height
-    private final float bobTilt;         // угол наклона корпуса
+    private final float bobTilt;         // угол наклона корпуса в радианах
 
-    // прыжок
-    private float jumpOffset = 0;
-    private float jumpVelocity = 0;
-    private final float jumpSpringK;     // жесткая пружина прыжка
-    private final float jumpDamping;
-
-    // приземление
+    // landing spring
     private float landOffset = 0;
     private float landVelocity = 0;
-    private final float landSpringK;     // жесткая пружина приземления
-    private final float landDamping;
+    private final float springK;   // жёсткость пружины
+    private final float damping;   // демпфирование
+    public CameraEffectsControl(Player player) {
+        this.cam            = player.getCam();
+        this.camNode        = player.getCamNode();
+        this.moveCtrl       = player.getMovementControl();
+        this.bobFrequency   = 1.8f;
+        this.bobTilt      = FastMath.DEG_TO_RAD * 3f;
+        this.bobAmplitude = new Vector3f(
+                player.getShape().getRadius() * 0.1f,    // боковое колебание
+                player.getShape().getHeight() * 0.03f,   // вертикальное колебание
+                1.6f         // базовая высота камеры
+        );
+        this.springK        = 50f;
+        this.damping        = 8f;
 
-    public CameraEffectsControl(Camera cam, Node camNode,
-                                MovementControl moveCtrl,
-                                float bobFrequency,
-                                Vector3f bobAmplitude,
-                                float bobTilt,
-                                float jumpSpringK,
-                                float jumpDamping,
-                                float landSpringK,
-                                float landDamping) {
-        this.cam            = cam;
-        this.camNode        = camNode;
-        this.moveCtrl       = moveCtrl;
-        this.bobFrequency   = bobFrequency;
-        this.bobAmplitude   = bobAmplitude;
-        this.bobTilt        = bobTilt;
-        this.jumpSpringK    = jumpSpringK;
-        this.jumpDamping    = jumpDamping;
-        this.landSpringK    = landSpringK;
-        this.landDamping    = landDamping;
     }
 
-    /** Вызывать при старте прыжка */
     public void notifyJumpStart() {
-        jumpOffset = 0;
-        jumpVelocity = 5f; // мощный стартовый импульс вверх
+        // обнуляем приземление, камера подпрыгнет заново
+        landOffset = 0;
+        landVelocity = 0;
     }
 
-    /** Вызывать при приземлении */
     public void notifyLanding(float peakHeight) {
-        landVelocity = peakHeight * 8f; // усиливаем приземление
+        // начальная скорость пружины пропорциональна высоте
+        landVelocity = peakHeight * 2f;
     }
 
     @Override
@@ -74,37 +59,31 @@ public class CameraEffectsControl extends AbstractControl {
         // 1) bobbing при ходьбе
         if (moveCtrl.isMoving()) {
             walkTime += tpf * bobFrequency;
-            float sin = FastMath.sin(walkTime * FastMath.TWO_PI);
-            float cos = FastMath.cos(walkTime * FastMath.TWO_PI);
-            offset.y += sin * bobAmplitude.y;
-            offset.x += cos * bobAmplitude.x;
-            camNode.setLocalRotation(
-                    new Quaternion().fromAngles(sin * bobTilt, 0f, cos * bobTilt * 0.5f)
-            );
+            float bobSin = FastMath.sin(walkTime * FastMath.TWO_PI);
+            float bobCos = FastMath.cos(walkTime * FastMath.TWO_PI);
+            // вертикальный bob
+            offset.y += bobSin * bobAmplitude.y;
+            // горизонтальный sway
+            offset.x += bobCos * bobAmplitude.x;
+            // наклон вперёд-назад
+            float tilt = bobSin * bobTilt;
+            camNode.setLocalRotation(new Quaternion().fromAngles(tilt, 0, 0));
         } else {
-            camNode.setLocalRotation(new Quaternion());
+            // сброс наклона
+            camNode.setLocalRotation(new Quaternion().fromAngles(0, 0, 0));
         }
 
-        // 2) импульс прыжка
-        if (jumpVelocity != 0 || jumpOffset != 0) {
-            // spring physics
-            float f = -jumpSpringK * jumpOffset;
-            jumpVelocity += f * tpf;
-            jumpVelocity *= FastMath.clamp(1 - jumpDamping * tpf, 0, 1);
-            jumpOffset += jumpVelocity * tpf;
-            offset.y += jumpOffset; // подъем камеры
-        }
-
-        // 3) bounce приземления
-        if (landVelocity != 0 || landOffset != 0) {
-            float f = -landSpringK * landOffset;
-            landVelocity += f * tpf;
-            landVelocity *= FastMath.clamp(1 - landDamping * tpf, 0, 1);
+        // 2) spring-landing: имитируем пружину
+        if (FastMath.abs(landOffset) > 0.001f || FastMath.abs(landVelocity) > 0.001f) {
+            // F = -k*x, a = F, verlet:
+            float force = -springK * landOffset;
+            landVelocity += force * tpf;
+            landVelocity *= FastMath.clamp(1 - damping * tpf, 0, 1);
             landOffset += landVelocity * tpf;
-            offset.y -= landOffset; // опускание камеры
+            offset.y -= landOffset;
         }
 
-        // финальный сдвиг
+        // 3) применяем итог
         camNode.setLocalTranslation(base.add(offset));
         cam.setLocation(camNode.getWorldTranslation());
     }

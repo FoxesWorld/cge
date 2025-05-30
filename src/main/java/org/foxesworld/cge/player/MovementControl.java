@@ -38,10 +38,10 @@ public class MovementControl extends AbstractControl implements ActionListener {
     private float   lastY    = 0;
     private float   jumpPeak = 0;
 
-    public MovementControl(CharacterControl character, InputManager input, Camera cam) {
-        this.character = character;
-        this.input     = input;
-        this.cam       = cam;
+    public MovementControl(Player player) {
+        this.character = player.getCharacter();
+        this.input     = player.getInput();
+        this.cam       = player.getCam();
         initMappings();
     }
 
