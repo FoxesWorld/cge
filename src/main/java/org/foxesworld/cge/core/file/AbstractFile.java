@@ -20,14 +20,17 @@ public abstract class AbstractFile implements AutoCloseable {
     protected final RandomAccessFile raf;
     private String MAGIC;
     private int VERSION;
-    protected int MAX_NAME_LENGTH;
-    protected ByteOrder BYTE_ORDER;
+    private int MAX_NAME_LENGTH = 4096;
+    private ByteOrder BYTE_ORDER    = ByteOrder.LITTLE_ENDIAN;
     private final File file;
 
     protected AbstractFile(File file, String mode) {
         this.file = file;
         this.raf  = openRandomAccess(file, mode);
     }
+
+    protected abstract FileReader readFile();
+    //protected abstract FileWriter writeFile();
 
     private RandomAccessFile openRandomAccess(File f, String mode) {
         try {
@@ -117,11 +120,27 @@ public abstract class AbstractFile implements AutoCloseable {
         this.VERSION = VERSION;
     }
 
+    public void setMAX_NAME_LENGTH(int MAX_NAME_LENGTH) {
+        this.MAX_NAME_LENGTH = MAX_NAME_LENGTH;
+    }
+
+    public void setBYTE_ORDER(ByteOrder BYTE_ORDER) {
+        this.BYTE_ORDER = BYTE_ORDER;
+    }
+
     public String getMAGIC() {
         return MAGIC;
     }
 
     public int getVERSION() {
         return VERSION;
+    }
+
+    public int getMAX_NAME_LENGTH() {
+        return MAX_NAME_LENGTH;
+    }
+
+    public ByteOrder getBYTE_ORDER() {
+        return BYTE_ORDER;
     }
 }

@@ -57,7 +57,7 @@ public class CalistaGameEngine extends SimpleApplication {
 
         AppSettings settings = new AppSettings(false);
         settings.setTitle("Calista Game Engine");
-        settings.setSettingsDialogImage("/theme/logo.png");
+        settings.setSettingsDialogImage("/theme/logo2.png");
         settings.setResolution(1280, 720); // Примерное разрешение
         settings.setSamples(4); // Сглаживание
         settings.setVSync(false);

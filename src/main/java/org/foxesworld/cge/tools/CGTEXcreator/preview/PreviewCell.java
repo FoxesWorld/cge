@@ -18,12 +18,8 @@ public class PreviewCell extends JPanel {
         setPreferredSize(new Dimension(PANEL_WIDTH, PANEL_HEIGHT));
         setBackground(BACKGROUND_COLOR);
         setBorder(BorderFactory.createLineBorder(BORDER_COLOR, 2, true));
-
         JLabel previewLabel = createPreviewLabel(ti);
-        JPanel infoPanel = createInfoPanel(ti);
-
         add(previewLabel, BorderLayout.CENTER);
-        add(infoPanel, BorderLayout.SOUTH);
 
         // Добавляем плавный эффект при наведении мыши
         addMouseListener(new java.awt.event.MouseAdapter() {

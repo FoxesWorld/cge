@@ -15,6 +15,7 @@ public class CGTEXFile extends AbstractFile {
         this.setMAGIC("CGTX");
         this.setVERSION(1);
     }
+    @Override
     public CGTEXFileReader readFile() {
         try {
             return new CGTEXFileReader(this);

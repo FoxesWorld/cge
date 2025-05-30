@@ -1,6 +1,7 @@
 package org.foxesworld.cge.core.file.cgs;
 
 import org.foxesworld.cge.core.file.AbstractFile;
+import org.foxesworld.cge.core.file.FileWriter;
 import org.foxesworld.cge.core.file.cgs.parser.CGSFileReader;
 import org.foxesworld.cge.core.file.cgs.writer.CGSFileWriter;
 
@@ -13,13 +14,13 @@ import java.nio.ByteOrder;
  * AbstractFile utilities.
  */
 public class CGSFile extends AbstractFile {
-    private final int MAX_NAME_LENGTH = 4096;
-    protected final ByteOrder BYTE_ORDER    = ByteOrder.LITTLE_ENDIAN;
 
     public CGSFile(File file, String mode) {
         super(file, mode);
         setMAGIC("CGS0");
         setVERSION(1);
+        setMAX_NAME_LENGTH(4096);
+        setBYTE_ORDER(ByteOrder.LITTLE_ENDIAN);
     }
 
     /**
@@ -33,16 +34,7 @@ public class CGSFile extends AbstractFile {
             throw new RuntimeException(e);
         }
     }
-
-    public void writeFile(){
-
-    }
-
-    public int getMAX_NAME_LENGTH() {
-        return MAX_NAME_LENGTH;
-    }
-
-    public ByteOrder getBYTE_ORDER() {
-        return BYTE_ORDER;
+    public FileWriter writeFile(){
+        return null;
     }
 }

@@ -12,9 +12,9 @@ public class CGSHeader {
     final long tableOffset;
 
     public CGSHeader(CGSFileReader cgsFileReader) {
-        this.version = cgsFileReader.getCgsFile().getVERSION();
+        this.version = cgsFileReader.getThisFile().getVERSION();
         this.sceneName = cgsFileReader.getSceneName();
-        this.magic = cgsFileReader.getCgsFile().getMAGIC();
+        this.magic = cgsFileReader.getThisFile().getMAGIC();
         this.tableOffset = cgsFileReader.getTableOffset();
     }
 

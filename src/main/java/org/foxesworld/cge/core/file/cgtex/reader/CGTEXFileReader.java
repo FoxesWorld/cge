@@ -2,6 +2,7 @@ package org.foxesworld.cge.core.file.cgtex.reader;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.foxesworld.cge.core.file.FileReader;
 import org.foxesworld.cge.core.file.cgtex.CGTEXFile;
 import org.foxesworld.cge.core.file.cgtex.CGTEXMetadata;
 import org.foxesworld.cge.core.file.cgtex.TextureEntry;
@@ -16,10 +17,9 @@ import java.util.List;
 /**
  * Читает CGTEX файл, содержащий DXT текстуры.
  */
-public class CGTEXFileReader {
+public class CGTEXFileReader extends FileReader {
     private static final Logger logger = LogManager.getLogger(CGTEXFileReader.class);
-    private final CGTEXFile cgtexFile;
-    private final RandomAccessFile raf;
+    //private final CGTEXFile cgtexFile;
     private final CGTEXMetadata metadata;
     private final List<TextureEntry> textures = new ArrayList<>();
 
@@ -29,9 +29,7 @@ public class CGTEXFileReader {
      * @throws IOException Если произошла ошибка при чтении.
      */
     public CGTEXFileReader(CGTEXFile cgtexFile) throws IOException {
-        this.cgtexFile = cgtexFile;
-        this.raf = cgtexFile.getRaf();  // Получаем RandomAccessFile из CGTEXFile
-
+        super(cgtexFile);
         logger.debug("================ CGTEX FILE READ START ================");
         logger.debug("Opening file: {}", cgtexFile.getFile().getAbsolutePath());
 
@@ -93,7 +91,7 @@ public class CGTEXFileReader {
         raf.readFully(magicBytes);
         String magic = new String(magicBytes);
 
-        if (!this.cgtexFile.getMAGIC().equals(magic)) {
+        if (!this.getThisFile().getMAGIC().equals(magic)) {
             throw new IOException("Invalid CGTEX file magic: " + magic);
         }
 

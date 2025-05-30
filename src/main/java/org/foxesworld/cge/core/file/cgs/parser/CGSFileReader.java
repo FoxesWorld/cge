@@ -1,5 +1,6 @@
 package org.foxesworld.cge.core.file.cgs.parser;
 
+import org.foxesworld.cge.core.file.FileReader;
 import org.foxesworld.cge.core.file.cgs.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -19,19 +20,15 @@ import java.util.HexFormat;
 /**
  * CGS file reader using the abstract base for consistent formatting.
  */
-public class CGSFileReader {
+public class CGSFileReader extends FileReader {
     private static final Logger logger = LogManager.getLogger(CGSFileReader.class);
-    private final CGSFile cgsFile;
-    protected final RandomAccessFile raf;
     private static final HexFormat HEX = HexFormat.of();
     private final Map<Integer, ChunkEntry> chunkTable = new HashMap<>();
     private final CGSMetadata metadata;
     String sceneName;
     long tableOffset;
     public CGSFileReader(CGSFile cgsFile) throws IOException {
-        //super(cgsFile.getFile(), "r");
-        this.cgsFile = cgsFile;
-        this.raf = cgsFile.getRaf();
+        super(cgsFile);
         logger.debug("================ CGS FILE READ START ================");
         logger.debug("Opening file: {}", cgsFile.getFile().getAbsolutePath());
 
@@ -69,20 +66,20 @@ public class CGSFileReader {
     }
 
     public CGSHeader readHeader() throws IOException {
-        this.cgsFile.seek(0);
-        byte[] magicBytes = this.cgsFile.readBytes(this.cgsFile.getMAGIC().length());
+        this.getThisFile().seek(0);
+        byte[] magicBytes = this.getThisFile().readBytes(this.getThisFile().getMAGIC().length());
         String magic = new String(magicBytes, StandardCharsets.US_ASCII);
-        if (!this.cgsFile.getMAGIC().equals(magic)) {
+        if (!this.getThisFile().getMAGIC().equals(magic)) {
             throw new IOException("Invalid CGS magic: " + magic);
         }
 
-        int version = this.cgsFile.readInt();
-        if (version != this.cgsFile.getVERSION()) {
+        int version = this.getThisFile().readInt();
+        if (version != this.getThisFile().getVERSION()) {
             throw new IOException("Unsupported CGS version: " + version);
         }
 
-        sceneName = this.cgsFile.readString(this.cgsFile.getMAX_NAME_LENGTH());
-        tableOffset = this.cgsFile.readLong();
+        sceneName = this.getThisFile().readString(this.getThisFile().getMAX_NAME_LENGTH());
+        tableOffset = this.getThisFile().readLong();
         return new CGSHeader(this);
     }
 
@@ -112,7 +109,7 @@ public class CGSFileReader {
         logger.debug("Chunk {} raw data (hex): {}", id, HEX.formatHex(data));
         logger.debug("Chunk id={} Read: {} bytes", id, data.length);
 
-        ByteBuffer buf = ByteBuffer.wrap(data).order(this.cgsFile.getBYTE_ORDER());
+        ByteBuffer buf = ByteBuffer.wrap(data).order(this.getThisFile().getBYTE_ORDER());
         return new SceneChunk(entry, buf);
     }
 
@@ -122,9 +119,5 @@ public class CGSFileReader {
 
     public long getTableOffset() {
         return tableOffset;
-    }
-
-    public CGSFile getCgsFile() {
-        return cgsFile;
     }
 }

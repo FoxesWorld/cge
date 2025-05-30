@@ -1,5 +1,6 @@
 package org.foxesworld.cge.core.file.cgtex.writer;
 
+import org.foxesworld.cge.core.file.FileWriter;
 import org.foxesworld.cge.core.file.cgtex.CGTEXFile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -9,14 +10,13 @@ import org.foxesworld.cge.tools.CGTEXcreator.info.TextureInfo;
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
-import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.List;
 
 /**
  * Writer for CGTEX files containing compressed textures (e.g., DXT).
  */
-public class CGTEXFileWriter {
+public class CGTEXFileWriter extends FileWriter {
     private static final Logger logger = LogManager.getLogger(CGTEXFileWriter.class);
     private final File file;
     private final List<TextureEntry> textures = new ArrayList<>();
@@ -36,13 +36,13 @@ public class CGTEXFileWriter {
     /**
      * Add a texture to be written into the CGTEX file.
      * @return index of the newly added texture
-     */
+
     public int addTexture(TextureInfo ti) {
         var entry = new TextureEntry(ti.getWidth(), ti.getHeight(), ti.getName(), ti.getFormatCode(), ti.getData());
         textures.add(entry);
         logger.debug("Queued texture: {}x{}, format={}, size={}, name={}", ti.getWidth(), ti.getHeight(), ti.getFormatCode(), ti.getData().length, ti.getName());
         return textures.size() - 1;
-    }
+    }*/
 
     /**
      * Write the CGTEX file with all added textures.

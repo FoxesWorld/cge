@@ -7,6 +7,7 @@ import org.foxesworld.cge.core.file.cgtex.TextureEntry;
 import org.foxesworld.cge.tools.CGTEXcreator.info.TextureInfo;
 import org.foxesworld.cge.tools.CGTEXcreator.preview.DDSParser;
 import org.foxesworld.cge.tools.CGTEXcreator.preview.PreviewCell;
+import org.foxesworld.cge.tools.CGTEXcreator.preview.TextureCellRenderer;
 
 import javax.swing.*;
 import javax.swing.border.TitledBorder;
@@ -19,12 +20,10 @@ import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
-
 public class CGTEXCreatorUI extends JFrame {
     private final List<TextureInfo> textures = new ArrayList<>();
-    private final DefaultListModel<String> listModel = new DefaultListModel<>();
-    private final JList<String> fileList = new JList<>(listModel);
+    private final DefaultListModel<TextureInfo> listModel = new DefaultListModel<>();
+    private final JList<TextureInfo> fileList = new JList<TextureInfo>(listModel);
     private final JPanel previewPanel = new JPanel(new BorderLayout());
     private File selectedFile;
 
@@ -56,12 +55,13 @@ public class CGTEXCreatorUI extends JFrame {
     private void initUI() {
         // --- File list panel ---
         fileList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        fileList.setCellRenderer(new TextureCellRenderer());
         JScrollPane listScroll = new JScrollPane(fileList);
         listScroll.setBorder(new TitledBorder("DDS Files"));
 
         fileList.addListSelectionListener(e -> {
             if (!e.getValueIsAdjusting()) {
-                String selectedFile = fileList.getSelectedValue();
+                TextureInfo selectedFile = fileList.getSelectedValue();
                 if (selectedFile != null) {
                     updatePreview(selectedFile);
                 }
@@ -108,10 +108,10 @@ public class CGTEXCreatorUI extends JFrame {
         initializeFileList(new ArrayList<>());
     }
 
-    private void initializeFileList(List<String> fileNames) {
+    private void initializeFileList(List<TextureInfo> fileNames) {
         listModel.clear();
-        for (String fileName : fileNames) {
-            listModel.addElement(fileName);
+        for (TextureInfo info : fileNames) {
+            listModel.addElement(info);
         }
     }
 
@@ -125,21 +125,14 @@ public class CGTEXCreatorUI extends JFrame {
         return button;
     }
 
-    private void updatePreview(String selectedTextureName) {
+    private void updatePreview(TextureInfo textureInfo) {
         previewPanel.removeAll();
         try {
-            // Находим объект TextureInfo по имени
-            TextureInfo textureInfo = textures.stream()
-                    .filter(ti -> ti.getName().equals(selectedTextureName))
-                    .findFirst()
-                    .orElse(null);
-
             if (textureInfo != null) {
-                // Создаем и добавляем PreviewCell для отображения текстуры
                 PreviewCell previewCell = new PreviewCell(textureInfo);
                 previewPanel.add(previewCell, BorderLayout.CENTER);
             } else {
-                JOptionPane.showMessageDialog(this, "Texture not found: " + selectedTextureName, "Error", JOptionPane.ERROR_MESSAGE);
+                JOptionPane.showMessageDialog(this, "Texture not found: " + textureInfo.getName(), "Error", JOptionPane.ERROR_MESSAGE);
             }
         } catch (Exception e) {
             JOptionPane.showMessageDialog(this, "Cannot display preview: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
@@ -167,12 +160,7 @@ public class CGTEXCreatorUI extends JFrame {
             // Очистить список текстур перед добавлением новых
             textures.clear();
             textures.addAll(loadedTextures);
-
-            // Обновляем список JList, добавляем только имена текстур
-            List<String> textureNames = loadedTextures.stream()
-                    .map(TextureInfo::getName)
-                    .collect(Collectors.toList());
-            initializeFileList(textureNames);
+            initializeFileList(loadedTextures);
 
             JOptionPane.showMessageDialog(this, "Loaded CGTEX: " + selectedFile.getName(), "Success", JOptionPane.INFORMATION_MESSAGE);
         } catch (IOException e) {
@@ -206,7 +194,7 @@ public class CGTEXCreatorUI extends JFrame {
                 textures.add(ti);
 
                 // Добавляем отображение в JList (используем имя текстуры как строку)
-                listModel.addElement(ti.getName());
+                listModel.addElement(ti);
 
             } catch (IOException ex) {
                 JOptionPane.showMessageDialog(this, "Cannot parse DDS: " + f.getName() + "\n" + ex.getMessage(),
@@ -216,9 +204,9 @@ public class CGTEXCreatorUI extends JFrame {
     }
 
     private void onRemove() {
-        for (String fileName : fileList.getSelectedValuesList()) {
-            textures.removeIf(ti -> ti.getName().equals(fileName));
-            listModel.removeElement(fileName);
+        for (TextureInfo textureInfo : fileList.getSelectedValuesList()) {
+            textures.removeIf(ti -> ti.getName().equals(textureInfo.getName()));
+            listModel.removeElement(textureInfo);
         }
     }
 
