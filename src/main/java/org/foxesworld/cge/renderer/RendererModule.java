@@ -28,7 +28,7 @@ public class RendererModule extends EngineModule<RendererConfig> {
         subManager = new ModuleManager(app);
 
         // Пример загрузки текстуры (можно сделать асинхронно, если нужно)
-        app.getTextureLoader().loadCgtex("testData.cgtex");
+        app.getTextureLoader().loadCgtex("data/testData.cgtex");
 
         // Регистрируем подмодули в зависимостях
         subManager.register(new CameraModule(app), 10);

@@ -26,6 +26,7 @@ public class CGTEXCreatorUI extends JFrame {
     private final DefaultListModel<String> listModel = new DefaultListModel<>();
     private final JList<String> fileList = new JList<>(listModel);
     private final JPanel previewPanel = new JPanel(new BorderLayout());
+    private File selectedFile;
 
     public CGTEXCreatorUI() {
         super("CGTEX Creator");
@@ -153,8 +154,8 @@ public class CGTEXCreatorUI extends JFrame {
         c.setFileFilter(new FileNameExtensionFilter("CGTEX", "cgtex"));
         if (c.showOpenDialog(this) != JFileChooser.APPROVE_OPTION) return;
 
-        File inFile = c.getSelectedFile();
-        try (CGTEXFile reader = new CGTEXFile(inFile, "r")) {
+        selectedFile = c.getSelectedFile();
+        try (CGTEXFile reader = new CGTEXFile(selectedFile, "r")) {
             List<TextureEntry> loadedTextureEntries = reader.readFile().getTextures();
 
             List<TextureInfo> loadedTextures = new ArrayList<>();
@@ -173,7 +174,7 @@ public class CGTEXCreatorUI extends JFrame {
                     .collect(Collectors.toList());
             initializeFileList(textureNames);
 
-            JOptionPane.showMessageDialog(this, "Loaded CGTEX: " + inFile.getName(), "Success", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Loaded CGTEX: " + selectedFile.getName(), "Success", JOptionPane.INFORMATION_MESSAGE);
         } catch (IOException e) {
             JOptionPane.showMessageDialog(this, "Cannot read CGTEX: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
             e.printStackTrace();
@@ -226,19 +227,24 @@ public class CGTEXCreatorUI extends JFrame {
             JOptionPane.showMessageDialog(this, "No textures", "Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        JFileChooser c = new JFileChooser();
-        c.setFileFilter(new FileNameExtensionFilter("CGTEX", "cgtex"));
-        if (c.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
-
-        File out = c.getSelectedFile();
-        if (!out.getName().endsWith(".cgtex")) out = new File(out.getParent(), out.getName() + ".cgtex");
-        CGTEXFile w = new CGTEXFile(out, "rw");
+        if(this.selectedFile == null) {
+            JFileChooser c = new JFileChooser();
+            c.setFileFilter(new FileNameExtensionFilter("CGTEX", "cgtex"));
+            if (c.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) return;
+            selectedFile = c.getSelectedFile();
+        }
+        if (!selectedFile.getName().endsWith(".cgtex")) selectedFile = new File(selectedFile.getParent(), selectedFile.getName() + ".cgtex");
+        CGTEXFile w = new CGTEXFile(selectedFile, "rw");
         List<TextureEntry> textureEntryList = new ArrayList<>();
             for (TextureInfo ti : textures) {
                 textureEntryList.add(new TextureEntry(ti.getWidth(), ti.getHeight(), ti.getName(), ti.getFormatCode(), ti.getData()));
             }
             w.writeFile(textureEntryList);
-            JOptionPane.showMessageDialog(this, "Saved: " + out, "OK", JOptionPane.INFORMATION_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Saved: " + selectedFile, "OK", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    public File getSelectedFile() {
+        return selectedFile;
     }
 
     public static void main(String[] args) {
