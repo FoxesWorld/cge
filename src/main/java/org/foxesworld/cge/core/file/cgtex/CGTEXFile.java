@@ -26,8 +26,11 @@ public class CGTEXFile extends AbstractFile {
 
     public void writeFile(List<TextureEntry> textureEntryList){
         CGTEXFileWriter writer = new CGTEXFileWriter(this);
+        for (TextureEntry entry: textureEntryList) {
+            writer.addTexture(entry);
+        }
         try {
-            writer.writeToFile(textureEntryList);
+            writer.writeFile();
         } catch (IOException e) {
             throw new RuntimeException(e);
         }

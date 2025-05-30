@@ -9,7 +9,7 @@ public class YDRFile extends AbstractFile {
     //TODO
     protected YDRFile(File file, String mode) {
         super(file, mode);
-        this.setMAGIC("CGTX");
+        this.setMAGIC("YDR");
         this.setVERSION(1);
     }
 

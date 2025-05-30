@@ -5,7 +5,6 @@ import org.foxesworld.cge.core.file.cgtex.CGTEXFile;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.core.file.cgtex.TextureEntry;
-import org.foxesworld.cge.tools.CGTEXcreator.info.TextureInfo;
 
 import java.io.File;
 import java.io.IOException;
@@ -20,34 +19,23 @@ public class CGTEXFileWriter extends FileWriter {
     private static final Logger logger = LogManager.getLogger(CGTEXFileWriter.class);
     private final File file;
     private final List<TextureEntry> textures = new ArrayList<>();
-
     private final CGTEXFile cgtexFile;
     private final RandomAccessFile raf;
-    //private static final String MAGIC = "CGTX"; // Магическая строка для CGTEX
-    //private static final int VERSION = 1;      // Версия формата
 
     public CGTEXFileWriter(CGTEXFile cgtexFile) {
-        //super(file, "rw");
         this.cgtexFile = cgtexFile;
         this.file = cgtexFile.getFile();
         this.raf = cgtexFile.getRaf();
     }
 
-    /**
-     * Add a texture to be written into the CGTEX file.
-     * @return index of the newly added texture
-
-    public int addTexture(TextureInfo ti) {
-        var entry = new TextureEntry(ti.getWidth(), ti.getHeight(), ti.getName(), ti.getFormatCode(), ti.getData());
-        textures.add(entry);
-        logger.debug("Queued texture: {}x{}, format={}, size={}, name={}", ti.getWidth(), ti.getHeight(), ti.getFormatCode(), ti.getData().length, ti.getName());
-        return textures.size() - 1;
-    }*/
+    public void addTexture(TextureEntry textureEntry){
+        this.textures.add(textureEntry);
+    }
 
     /**
      * Write the CGTEX file with all added textures.
      */
-    public void writeToFile(List<TextureEntry> textures) throws IOException {
+    public void writeFile() throws IOException {
         if (textures.isEmpty()) {
             throw new IllegalStateException("No textures to write");
         }
@@ -63,7 +51,7 @@ public class CGTEXFileWriter extends FileWriter {
 
         // Резервируем 8 байтов для dataOffset
         long dataOffsetPos = raf.getFilePointer();
-        raf.writeLong(0L);                                 // Записываем 0 как placeholder для dataOffset
+        raf.writeLong(0L);                               // Записываем 0 как placeholder для dataOffset
 
         long dataOffset = raf.getFilePointer();
 
@@ -92,7 +80,6 @@ public class CGTEXFileWriter extends FileWriter {
     }
 
     private void logTextureMetadata(int index, TextureEntry tex) {
-        // Логируем информацию о метаданных текстуры
         logger.info("Texture [{}] Metadata:", index);
         logger.info("  Name: {}", tex.getName());
         logger.info("  Dimensions: {}x{}", tex.getWidth(), tex.getHeight());
@@ -102,13 +89,5 @@ public class CGTEXFileWriter extends FileWriter {
 
     public File getFile() {
         return file;
-    }
-
-    public int getTextureCount() {
-        return textures.size();
-    }
-
-    public TextureEntry getTexture(int index) {
-        return (index >= 0 && index < textures.size()) ? textures.get(index) : null;
     }
 }

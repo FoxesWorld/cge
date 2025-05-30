@@ -2,11 +2,12 @@ package org.foxesworld.cge.scene;
 
 import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
+import org.foxesworld.cge.core.module.ModuleConfig;
 
 /**
  * Configuration for SceneModule loaded from scene.json.
  */
-public class SceneConfig {
+public class SceneConfig extends ModuleConfig {
     private String scenePath = "test.cgs";
     private Vector3f translation = new Vector3f(0, 0, 0);
     private Quaternion rotation = new Quaternion();

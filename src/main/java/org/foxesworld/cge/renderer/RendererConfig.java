@@ -1,8 +1,8 @@
 package org.foxesworld.cge.renderer;
 
-import com.jme3.math.ColorRGBA;
+import org.foxesworld.cge.core.module.ModuleConfig;
 
-public class RendererConfig {
+public class RendererConfig extends ModuleConfig {
     private int resolutionWidth = 1280;
     private int resolutionHeight = 720;
     private float nearClip = 0.1f;

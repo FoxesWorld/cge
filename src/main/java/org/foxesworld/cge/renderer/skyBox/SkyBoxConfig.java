@@ -1,6 +1,8 @@
 package org.foxesworld.cge.renderer.skyBox;
 
-public class SkyBoxConfig {
+import org.foxesworld.cge.core.module.ModuleConfig;
+
+public class SkyBoxConfig extends ModuleConfig {
     private String skyBoxTexture = "cubemap_0";
     /*
     * Options

@@ -1,6 +1,8 @@
 package org.foxesworld.cge.renderer.postProcessing;
 
-public class PostProcessingConfig {
+import org.foxesworld.cge.core.module.ModuleConfig;
+
+public class PostProcessingConfig extends ModuleConfig {
     private boolean enableBloom = true;
     private boolean enableLsf = true;
     private boolean enableDof = true;

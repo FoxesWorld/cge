@@ -25,6 +25,7 @@ import org.foxesworld.cge.core.module.ModuleManager;
 import org.foxesworld.cge.core.streaming.StreamingManager;
 import org.foxesworld.cge.core.streaming.StreamingParserLoader;
 import org.foxesworld.cge.physics.PhysicsModule;
+import org.foxesworld.cge.player.Player;
 import org.foxesworld.cge.renderer.RendererModule;
 import org.foxesworld.cge.scene.SceneModule;
 import org.foxesworld.cge.tmp.ShapeParty;
@@ -114,8 +115,8 @@ public class CalistaGameEngine extends SimpleApplication {
 
             scene = moduleManager.getModule(SceneModule.class);
             Material mat = new Material(assetManager, "Common/MatDefs/Light/PBRLighting.j3md");
-            mat.setTexture("BaseColorMap", textureMap.get("testgrid"));
-            //mat.setTexture("RoughnessMap", textureMap.get("calista_grid_test_normal"));
+            mat.setTexture("BaseColorMap", textureMap.get("calista_grid_test"));
+            mat.setTexture("RoughnessMap", textureMap.get("calista_grid_test_normal"));
             mat.setBoolean("BackfaceShadows", false);
             mat.setFloat("EmissivePower",  3.0f);
             mat.setFloat("EmissiveIntensity", 2.0f);
@@ -129,7 +130,7 @@ public class CalistaGameEngine extends SimpleApplication {
             Quad quad = new Quad(width, height);
             Geometry terrain = new Geometry("TerrainPlane", quad);
 
-            terrain.getMesh().scaleTextureCoordinates(new Vector2f(64,64));
+            terrain.getMesh().scaleTextureCoordinates(new Vector2f(4,4));
             terrain.setLocalTranslation(-width/2f, 0, height/2f);
             terrain.rotate(-FastMath.HALF_PI, 0, 0);
             terrain.setMaterial(mat);
@@ -145,15 +146,12 @@ public class CalistaGameEngine extends SimpleApplication {
                 }
             });
 
-            // ——— Камера сверху ———
-            float camHeight = 5f;
-            float camX = 0f;
-            float camZ = 0f;
-            cam.setLocation(new Vector3f(camX, camHeight, camZ));
-            cam.lookAt(new Vector3f(camX, 0f, camZ), Vector3f.UNIT_Y);
 
             ShapeParty cubeDerp = new ShapeParty(this);
             cubeDerp.startParty();
+            flyCam.setEnabled(false);
+            Player player = new Player(this, new Vector3f(0,20,0));
+            rootNode.attachChild(player);
         });
     }
 

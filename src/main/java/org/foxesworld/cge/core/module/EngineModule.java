@@ -18,14 +18,14 @@ import java.util.concurrent.atomic.AtomicInteger;
  * state management, scheduled updates, and centralized configuration service access.
  * Enhanced with detailed logging and failure handling.
  *
- * @param <T> the type of the module-specific configuration object
+ * @param <ModuleConfig> the type of the module-specific configuration object
  */
-public abstract class EngineModule<T> extends BaseAppState {
+public abstract class EngineModule<ModuleConfig> extends BaseAppState {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
     protected final CalistaGameEngine gameEngine;
     protected final ConfigService configService;
     protected final TaskScheduler taskScheduler;
-    private volatile T config;
+    private volatile ModuleConfig config;
     private final String configFile;
     private ModuleState state = ModuleState.UNLOADED;
     private Future<?> initFuture;
@@ -40,7 +40,7 @@ public abstract class EngineModule<T> extends BaseAppState {
      * @param configClass      the class object of the configuration type
      * @param calistaGameEngine the central game engine instance
      */
-    public EngineModule(String configFile, Class<T> configClass, CalistaGameEngine calistaGameEngine) {
+    public EngineModule(String configFile, Class<ModuleConfig> configClass, CalistaGameEngine calistaGameEngine) {
         this.gameEngine = calistaGameEngine;
         this.configService = calistaGameEngine.getConfigService();
         this.taskScheduler = calistaGameEngine.getTaskScheduler();
@@ -141,7 +141,7 @@ public abstract class EngineModule<T> extends BaseAppState {
         }
         taskScheduler.submit(() -> {
             try {
-                T newConfig = configService.reloadConfig(configFile);
+                ModuleConfig newConfig = configService.reloadConfig(configFile);
                 this.config = newConfig;
                 logger.debug("{} new config applied", getName());
                 onConfigReloaded();
@@ -179,7 +179,7 @@ public abstract class EngineModule<T> extends BaseAppState {
      *
      * @return the module configuration of type T
      */
-    public T getConfig() {
+    public ModuleConfig getConfig() {
         return config;
     }
 

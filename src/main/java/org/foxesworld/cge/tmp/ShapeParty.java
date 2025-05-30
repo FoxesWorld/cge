@@ -37,7 +37,7 @@ public class ShapeParty {
      */
     public void startParty() {
         Random random = new Random();
-        int count = 50;
+        int count = 5;
         float areaRadius = 8f;
         float baseHeight = 5f;
 

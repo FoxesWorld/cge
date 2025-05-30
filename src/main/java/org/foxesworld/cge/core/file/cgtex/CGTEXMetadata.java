@@ -4,7 +4,7 @@ package org.foxesworld.cge.core.file.cgtex;
  * Расширенный POJO для метаданных CGTEX файла.
  */
 public class CGTEXMetadata {
-    private final String magic;       // "CGTX"
+    private final String magic;
     private final int version;
     private int textureCount;
     private long dataOffset;          // смещение начала блока с текстурами
@@ -25,29 +25,14 @@ public class CGTEXMetadata {
     public int getVersion() {
         return version;
     }
-
     public int getTextureCount() {
         return textureCount;
     }
-
-    public void setTextureCount(int textureCount) {
-        this.textureCount = textureCount;
-    }
-
     public long getDataOffset() {
         return dataOffset;
     }
-
-    public void setDataOffset(long dataOffset) {
-        this.dataOffset = dataOffset;
-    }
-
     public long getFileSize() {
         return fileSize;
-    }
-
-    public void setFileSize(long fileSize) {
-        this.fileSize = fileSize;
     }
 
     @Override

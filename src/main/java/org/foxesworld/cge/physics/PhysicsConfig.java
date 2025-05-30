@@ -2,11 +2,12 @@ package org.foxesworld.cge.physics;
 
 import com.jme3.math.Vector3f;
 import com.jme3.bullet.PhysicsSpace.BroadphaseType;
+import org.foxesworld.cge.core.module.ModuleConfig;
 
 /**
  * Configuration for the PhysicsModule and its sub-modules.
  */
-public class PhysicsConfig {
+public class PhysicsConfig extends ModuleConfig {
     // === Global settings ===
     public Vector3f gravity = new Vector3f(0f, -9.81f, 0f);
     public BroadphaseType broadphaseType = BroadphaseType.DBVT;

@@ -10,7 +10,6 @@ public abstract class FileReader {
         this.thisFile = abstractFile;
         this.raf = abstractFile.getRaf();
     }
-
     public AbstractFile getThisFile() {
         return thisFile;
     }

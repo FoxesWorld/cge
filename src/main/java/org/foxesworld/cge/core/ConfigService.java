@@ -2,6 +2,8 @@ package org.foxesworld.cge.core;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import org.foxesworld.cge.core.module.ModuleConfig;
+
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
@@ -40,7 +42,7 @@ public class ConfigService {
     /**
      * Registers configuration file and its class type.
      */
-    public <T> void registerConfig(String fileName, Class<T> clazz) {
+    public <ModuleConfig> void registerConfig(String fileName, Class<ModuleConfig> clazz) {
         registry.put(fileName, clazz);
     }
 
