@@ -63,8 +63,7 @@ public class TerrainParser extends ChunkParser {
 
         quad.setLocalTranslation(0, 0, 0);
 
-        Material mat = new Material(calistaGameEngine.getAssetManager(),
-                "Common/MatDefs/Terrain/Terrain.j3md");
+        Material mat = new Material(calistaGameEngine.getAssetManager(), "Common/MatDefs/Terrain/Terrain.j3md");
         mat.setBoolean("useTriPlanarMapping", false);
         quad.setMaterial(mat);
 

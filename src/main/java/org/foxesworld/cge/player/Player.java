@@ -9,13 +9,17 @@ import com.jme3.renderer.Camera;
 import com.jme3.scene.Node;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.physics.PhysicsModule;
+import org.foxesworld.cge.ui.UIModule;
+import org.foxesworld.cge.ui.UIPanel;
 
 public class Player extends Node {
 
     private final CharacterControl character;
+    private final  CalistaGameEngine calistaGameEngine;
     private final MovementControl movementControl;
     private final CameraEffectsControl camEffectsControl;
     private final Node camNode;
+    private final  PlayerHud playerHud;
     private final InputManager input;
     private final Camera cam;
     private final CapsuleCollisionShape shape;
@@ -23,8 +27,11 @@ public class Player extends Node {
     public Player(CalistaGameEngine engine, Vector3f spawnPos) {
         super("Player");
         setLocalTranslation(spawnPos);
+        this.calistaGameEngine = engine;
         input = engine.getInputManager();
         BulletAppState bullet = engine.getModuleManager().getModule(PhysicsModule.class).getBulletAppState();
+        //stats = new StatsDisplay(engine.getAssetManager(), engine.getGuiNode(), this, "Interface/stats_config.xml");
+        playerHud = new PlayerHud(this);
         cam = engine.getCamera();
 
         // --- Physics setup ---
@@ -62,6 +69,19 @@ public class Player extends Node {
         });
     }
 
+    public static class PlayerHud {
+        private float playerSpeed;
+
+        PlayerHud(Player player){
+            UIModule uiModule = player.calistaGameEngine.getModuleManager().getModule(UIModule.class);
+            uiModule.addPanel(this, "Interface/stats_config.xml");
+        }
+
+        public void setPlayerSpeed(float playerSpeed) {
+            this.playerSpeed = playerSpeed;
+        }
+    }
+
     public CharacterControl getCharacter() {
         return character;
     }
@@ -84,5 +104,13 @@ public class Player extends Node {
 
     public CapsuleCollisionShape getShape() {
         return shape;
+    }
+
+    public CalistaGameEngine getCalistaGameEngine() {
+        return calistaGameEngine;
+    }
+
+    public PlayerHud getPlayerHud() {
+        return playerHud;
     }
 }

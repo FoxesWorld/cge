@@ -4,13 +4,30 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="283ff897-4432-4079-9530-7bc3ea1cccef" name="Changes" comment="Test Player">
+    <list default="true" id="283ff897-4432-4079-9530-7bc3ea1cccef" name="Changes" comment="Player Refactor">
+      <change afterPath="$PROJECT_DIR$/config/ui/stats_config.xml" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/tg.cgs" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/AbstractUIElement.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/ElementFactory.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/OnClickHandler.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/UIConfig.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/UIModule.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/UIPanel.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/elements/ChildMetrics.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/elements/ImageElement.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/elements/PanelElement.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/elements/TextElement.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/elements/UIElement.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/Interface/stats_config.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/hs_err_pid9048.log" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/logs/lastlog.log" beforeDir="false" afterPath="$PROJECT_DIR$/logs/lastlog.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/CalistaGameEngine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/CalistaGameEngine.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgs/parser/types/TerrainParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/cgs/parser/types/TerrainParser.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/CameraEffectsControl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/CameraEffectsControl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/FirstPersonCameraControl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/FirstPersonCameraControl.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/MovementControl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/MovementControl.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/Player.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/Player.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/chunkArguments.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/chunkArguments.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -56,6 +73,7 @@
   <component name="FileTemplateManagerImpl">
     <option name="RECENT_TEMPLATES">
       <list>
+        <option value="Interface" />
         <option value="Class" />
       </list>
     </option>
@@ -79,7 +97,7 @@
     "RunOnceActivity.ShowReadmeOnStart": "true",
     "SHARE_PROJECT_CONFIGURATION_FILES": "true",
     "WebServerToolWindowFactoryState": "false",
-    "last_opened_file_path": "C:/Users/Calista/Documents/GitHub/CGE/src/main/resources/theme",
+    "last_opened_file_path": "C:/Users/Calista/Documents/GitHub/CGE/src/main/resources/Interface/Icons",
     "node.js.detected.package.eslint": "true",
     "node.js.detected.package.tslint": "true",
     "node.js.selected.package.eslint": "(autodetect)",
@@ -89,18 +107,18 @@
 }]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\Interface\Icons" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\theme" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\Textures" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\java\org\foxesworld\cge\core\file\cgtex\writer" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\theme\icon" />
-      <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\Interface\Icons" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\Interface" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\theme" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\Textures\dynamic_sky" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\Textures\icons" />
-      <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\Textures" />
     </key>
     <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
       <recent name="org.foxesworld.cge.tools" />
@@ -204,7 +222,7 @@
       <workItem from="1748145756964" duration="30552000" />
       <workItem from="1748316663182" duration="96072000" />
       <workItem from="1748533541348" duration="11083000" />
-      <workItem from="1748577353047" duration="22207000" />
+      <workItem from="1748577353047" duration="38053000" />
     </task>
     <task id="LOCAL-00001" summary="initial">
       <option name="closed" value="true" />
@@ -398,7 +416,15 @@
       <option name="project" value="LOCAL" />
       <updated>1748606887947</updated>
     </task>
-    <option name="localTasksCounter" value="25" />
+    <task id="LOCAL-00025" summary="Player Refactor">
+      <option name="closed" value="true" />
+      <created>1748616766877</created>
+      <option name="number" value="00025" />
+      <option name="presentableId" value="LOCAL-00025" />
+      <option name="project" value="LOCAL" />
+      <updated>1748616766877</updated>
+    </task>
+    <option name="localTasksCounter" value="26" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -429,7 +455,8 @@
     <MESSAGE value="CGTEX updates" />
     <MESSAGE value="Texture tests" />
     <MESSAGE value="Test Player" />
-    <option name="LAST_COMMIT_MESSAGE" value="Test Player" />
+    <MESSAGE value="Player Refactor" />
+    <option name="LAST_COMMIT_MESSAGE" value="Player Refactor" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

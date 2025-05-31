@@ -7,7 +7,7 @@
     },
     "FLAT": {
       "heightMap": "String",
-      "detailLevel": "Integer"
+      "detailLevel": "Int"
     }
   },
   "LIGHTING": {

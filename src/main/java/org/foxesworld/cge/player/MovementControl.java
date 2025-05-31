@@ -8,10 +8,11 @@ import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
 import com.jme3.scene.control.AbstractControl;
+import org.foxesworld.cge.ui.elements.TextElement;
 
 /**
  * MovementControl: движение в направлении взгляда камеры,
- * с плавным ускорением/торможением и событиями прыжка.
+ * с плавным ускорением/торможением, событиями прыжка и возможностью читать текущую скорость.
  */
 public class MovementControl extends AbstractControl implements ActionListener {
 
@@ -20,25 +21,36 @@ public class MovementControl extends AbstractControl implements ActionListener {
         void onLanding(float peakHeight);
     }
 
-    private static final float MAX_SPEED    = 0.1f;   // м/с
-    private static final float ACCELERATION = 20f;  // м/с²
-    private static final float DECELERATION = 16f;  // м/с²
+    // Максимальные параметры, можно подстроить под желаемую скорость
+    private final float maxSpeed;       // м/с
+    private final float acceleration;   // м/с²
+    private final float deceleration;   // м/с²
 
+    private final Player player;
     private final CharacterControl character;
     private final InputManager    input;
     private final Camera          cam;
-    private JumpListener jumpListener;
+    private JumpListener          jumpListener;
 
+    // флаги ввода
     private boolean forward, backward, left, right;
-    private final Vector3f currentVel = new Vector3f();
-    private final Vector3f desiredDir = new Vector3f();
 
-    // Для прыжков
+    // текущая и целевая скорости
+    private final Vector3f currentVel = new Vector3f();
+    private final Vector3f targetVel  = new Vector3f();
+
+    // Для прыжков и приземлений
     private boolean wasInAir = false;
     private float   lastY    = 0;
     private float   jumpPeak = 0;
 
     public MovementControl(Player player) {
+        // Значения можно вытянуть из Player или задать конструктором
+        this.player = player;
+        this.maxSpeed     = 0.1f;     // ~5 м/с
+        this.acceleration = 20f;    // ~20 м/с²
+        this.deceleration = 16f;    // ~16 м/с²
+
         this.character = player.getCharacter();
         this.input     = player.getInput();
         this.cam       = player.getCam();
@@ -51,45 +63,44 @@ public class MovementControl extends AbstractControl implements ActionListener {
         input.addMapping("Left",     new KeyTrigger(KeyInput.KEY_A));
         input.addMapping("Right",    new KeyTrigger(KeyInput.KEY_D));
         input.addMapping("Jump",     new KeyTrigger(KeyInput.KEY_SPACE));
-        input.addListener(this, "Forward","Backward","Left","Right","Jump");
-    }
-
-    public void setJumpListener(JumpListener listener) {
-        this.jumpListener = listener;
+        input.addListener(this,
+                "Forward","Backward","Left","Right","Jump"
+        );
     }
 
     @Override
     protected void controlUpdate(float tpf) {
-        // 1) Определяем желаемое направление в локальных осях камеры
-        desiredDir.set(0, 0, 0);
-        if (forward)  desiredDir.z += 1;
-        if (backward) desiredDir.z -= 1;
-        if (left)     desiredDir.x += 1;
-        if (right)    desiredDir.x -= 1;
+        // 1) Определяем целевую скорость по вводу и направлению камеры
+        Vector3f dir = new Vector3f();
+        if (forward)  dir.z += 1;
+        if (backward) dir.z -= 1;
+        if (left)     dir.x += 1;
+        if (right)    dir.x -= 1;
 
-        Vector3f targetVel = new Vector3f();
-        if (!desiredDir.equals(Vector3f.ZERO)) {
-            // нормализуем и масштабируем
-            desiredDir.normalizeLocal();
-            // преобразуем из так называемых "камера-локальных" координат в мировые
+        if (!dir.equals(Vector3f.ZERO)) {
+            dir.normalizeLocal();
+            // преобразуем локальную камеру в мировое направление
             Vector3f camDir  = cam.getDirection().clone().setY(0).normalizeLocal();
             Vector3f camLeft = cam.getLeft().clone().setY(0).normalizeLocal();
-            targetVel.set(camDir).multLocal(desiredDir.z)
-                    .addLocal(camLeft.mult(desiredDir.x))
-                    .multLocal(MAX_SPEED);
+            targetVel.set(camDir).multLocal(dir.z)
+                    .addLocal(camLeft.mult(dir.x))
+                    .multLocal(maxSpeed);
+        } else {
+            targetVel.set(0, 0, 0);
         }
 
-        // 2) Плавное ускорение/торможение к targetVel
+        // 2) Плавное ускорение/торможение
         Vector3f delta = targetVel.subtract(currentVel);
-        float accelAmount = (targetVel.length() > currentVel.length()
-                ? ACCELERATION : DECELERATION) * tpf;
-        if (delta.length() > accelAmount) {
-            delta.normalizeLocal().multLocal(accelAmount);
+        float accelValue = (targetVel.length() > currentVel.length()
+                ? acceleration : deceleration) * tpf;
+
+        if (delta.length() > accelValue) {
+            delta.normalizeLocal().multLocal(accelValue);
         }
         currentVel.addLocal(delta);
 
         // 3) Применяем к CharacterControl
-        if (currentVel.lengthSquared() > 0.0001f) {
+        if (currentVel.lengthSquared() > 1e-4f) {
             character.setWalkDirection(currentVel.clone());
         } else {
             character.setWalkDirection(Vector3f.ZERO);
@@ -107,21 +118,25 @@ public class MovementControl extends AbstractControl implements ActionListener {
         }
         wasInAir = inAir;
         lastY    = currentY;
+        //((TextElement)this.player.getUiPanel().getElement("speedItem")).setText(String.valueOf(jumpPeak));
+        player.getPlayerHud().setPlayerSpeed(getCurrentSpeed());
     }
 
     @Override
     public void onAction(String name, boolean isPressed, float tpf) {
         switch (name) {
-            case "Forward":  forward  = isPressed; break;
-            case "Backward": backward = isPressed; break;
-            case "Left":     left     = isPressed; break;
-            case "Right":    right    = isPressed; break;
-            case "Jump":
+            case "Forward" -> forward = isPressed;
+            case "Backward" -> backward = isPressed;
+            case "Left" -> left = isPressed;
+            case "Right" -> right = isPressed;
+            case "Jump" -> {
                 if (isPressed && character.onGround()) {
                     character.jump();
-                    if (jumpListener != null) jumpListener.onJumpStart();
+                    if (jumpListener != null) {
+                        jumpListener.onJumpStart();
+                    }
                 }
-                break;
+            }
         }
     }
 
@@ -131,7 +146,28 @@ public class MovementControl extends AbstractControl implements ActionListener {
         // не используется
     }
 
+    public void setJumpListener(JumpListener listener) {
+        this.jumpListener = listener;
+    }
+
+    /**
+     * Возвращает текущую горизонтальную скорость персонажа (м/с).
+     */
+    public float getCurrentSpeed() {
+        return currentVel.length();
+    }
+
+    /**
+     * Возвращает максимальную скорость персонажа (м/с).
+     */
+    public float getMaxSpeed() {
+        return maxSpeed;
+    }
+
+    /**
+     * true, если персонаж сейчас движется.
+     */
     public boolean isMoving() {
-        return !currentVel.equals(Vector3f.ZERO);
+        return currentVel.lengthSquared() > 1e-4f;
     }
 }

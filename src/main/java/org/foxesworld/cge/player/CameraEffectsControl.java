@@ -7,75 +7,86 @@ import com.jme3.renderer.Camera;
 import com.jme3.scene.control.AbstractControl;
 import com.jme3.scene.Node;
 
+/**
+ * Реалистичные эффекты камеры: bobbing и spring-landing,
+ * параметризованные по размеру персонажа и скорости движения.
+ */
 public class CameraEffectsControl extends AbstractControl {
 
     private final Camera cam;
     private final Node camNode;
     private final MovementControl moveCtrl;
+    private final float characterHeight;
+    private final float characterRadius;
 
     // bobbing
     private float walkTime = 0;
-    private final float bobFrequency;
-    private final Vector3f bobAmplitude; // x: sway, y: bob, z: base height
-    private final float bobTilt;         // угол наклона корпуса в радианах
+    private final float bobBaseFreq;      // базовая частота
+    private final Vector3f bobAmplitude;  // амплитуды: sway, bob, base height
+    private final float bobTilt;          // максимальный наклон
 
-    // landing spring
+    // spring-landing
     private float landOffset = 0;
     private float landVelocity = 0;
-    private final float springK;   // жёсткость пружины
-    private final float damping;   // демпфирование
-    public CameraEffectsControl(Player player) {
-        this.cam            = player.getCam();
-        this.camNode        = player.getCamNode();
-        this.moveCtrl       = player.getMovementControl();
-        this.bobFrequency   = 1.8f;
-        this.bobTilt      = FastMath.DEG_TO_RAD * 3f;
-        this.bobAmplitude = new Vector3f(
-                player.getShape().getRadius() * 0.1f,    // боковое колебание
-                player.getShape().getHeight() * 0.03f,   // вертикальное колебание
-                1.6f         // базовая высота камеры
-        );
-        this.springK        = 50f;
-        this.damping        = 8f;
+    private final float springK;          // жёсткость
+    private final float damping;          // демпф
 
+    public CameraEffectsControl(Player player) {
+        this.cam              = player.getCam();
+        this.camNode          = player.getCamNode();
+        this.moveCtrl         = player.getMovementControl();
+        this.characterHeight  = player.getShape().getHeight() + 2 * player.getShape().getRadius();
+        this.characterRadius  = player.getShape().getRadius();
+
+        // базовые параметры, масштабируемые по росту
+        this.bobBaseFreq   = 1.5f; // шагов в секунду для среднего роста
+        this.bobAmplitude  = new Vector3f(
+                characterRadius * 0.1f,          // sway ~ 10% радиуса
+                characterHeight * 0.025f,        // bob ~ 2.5% роста
+                characterHeight * 0.9f           // base height ~90% роста
+        );
+        this.bobTilt       = FastMath.DEG_TO_RAD * (characterHeight * 0.5f);
+        // tilt ~ 0.5° на каждый метр роста
+
+        // spring-landing: жёсткость и демпф зависят от массы (рост ~ масса)
+        float massScale   = characterHeight * 0.8f;
+        this.springK      = 40f * massScale;
+        this.damping      = 6f * massScale;
     }
 
     public void notifyJumpStart() {
-        // обнуляем приземление, камера подпрыгнет заново
-        landOffset = 0;
+        landOffset   = 0;
         landVelocity = 0;
     }
 
     public void notifyLanding(float peakHeight) {
-        // начальная скорость пружины пропорциональна высоте
-        landVelocity = peakHeight * 2f;
+        // начальная скорость пропорциональна высоте прыжка и росту
+        landVelocity = peakHeight * 3f * (characterHeight * 0.5f);
     }
 
     @Override
     protected void controlUpdate(float tpf) {
-        Vector3f base = new Vector3f(0, bobAmplitude.z, 0);
+        Vector3f base   = new Vector3f(0, bobAmplitude.z, 0);
         Vector3f offset = new Vector3f();
 
-        // 1) bobbing при ходьбе
-        if (moveCtrl.isMoving()) {
-            walkTime += tpf * bobFrequency;
-            float bobSin = FastMath.sin(walkTime * FastMath.TWO_PI);
-            float bobCos = FastMath.cos(walkTime * FastMath.TWO_PI);
-            // вертикальный bob
-            offset.y += bobSin * bobAmplitude.y;
-            // горизонтальный sway
-            offset.x += bobCos * bobAmplitude.x;
-            // наклон вперёд-назад
-            float tilt = bobSin * bobTilt;
-            camNode.setLocalRotation(new Quaternion().fromAngles(tilt, 0, 0));
+        // 1) bobbing: частота пропорциональна скорости движения
+        float speed = moveCtrl.getCurrentSpeed(); // добавить getter в MovementControl
+        if (moveCtrl.isMoving() && speed > 0.1f) {
+            float freq = bobBaseFreq * (speed / moveCtrl.getMaxSpeed());
+            walkTime += tpf * freq;
+            float phase = walkTime * FastMath.TWO_PI;
+            float sin = FastMath.sin(phase);
+            float cos = FastMath.cos(phase);
+            offset.y += sin * bobAmplitude.y;
+            offset.x += cos * bobAmplitude.x * 0.6f;  // чуть меньше sway
+            camNode.setLocalRotation(new Quaternion().fromAngles(sin * bobTilt, 0, cos * bobTilt * 0.3f));
         } else {
-            // сброс наклона
-            camNode.setLocalRotation(new Quaternion().fromAngles(0, 0, 0));
+            camNode.setLocalRotation(Quaternion.IDENTITY);
+            walkTime = 0;
         }
 
-        // 2) spring-landing: имитируем пружину
+        // 2) spring-landing physics
         if (FastMath.abs(landOffset) > 0.001f || FastMath.abs(landVelocity) > 0.001f) {
-            // F = -k*x, a = F, verlet:
             float force = -springK * landOffset;
             landVelocity += force * tpf;
             landVelocity *= FastMath.clamp(1 - damping * tpf, 0, 1);
@@ -83,14 +94,11 @@ public class CameraEffectsControl extends AbstractControl {
             offset.y -= landOffset;
         }
 
-        // 3) применяем итог
+        // 3) apply
         camNode.setLocalTranslation(base.add(offset));
         cam.setLocation(camNode.getWorldTranslation());
     }
 
     @Override
-    protected void controlRender(com.jme3.renderer.RenderManager rm,
-                                 com.jme3.renderer.ViewPort vp) {
-        // no-op
-    }
+    protected void controlRender(com.jme3.renderer.RenderManager rm, com.jme3.renderer.ViewPort vp) {}
 }

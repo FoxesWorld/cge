@@ -30,6 +30,7 @@ import org.foxesworld.cge.renderer.RendererModule;
 import org.foxesworld.cge.scene.SceneModule;
 import org.foxesworld.cge.tmp.ShapeParty;
 import org.foxesworld.cge.tmp.TextureLoader;
+import org.foxesworld.cge.ui.UIModule;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.awt.image.BufferedImage;
@@ -59,7 +60,7 @@ public class CalistaGameEngine extends SimpleApplication {
 
         AppSettings settings = new AppSettings(false);
         settings.setTitle("Calista Game Engine");
-        settings.setSettingsDialogImage("/theme/logo2.png");
+        settings.setSettingsDialogImage("/theme/logo.png");
         settings.setResolution(1280, 720); // Примерное разрешение
         settings.setSamples(4); // Сглаживание
         settings.setVSync(false);
@@ -110,6 +111,7 @@ public class CalistaGameEngine extends SimpleApplication {
         moduleManager.register(new RendererModule(this), 20);
         moduleManager.register(new PhysicsModule(this), 35);
         moduleManager.register(new SceneModule(this), 10);
+        moduleManager.register(new UIModule(this), 5);
         moduleManager.initializeAll(this);
         moduleManager.loadAll(this, () -> {
 
@@ -130,7 +132,7 @@ public class CalistaGameEngine extends SimpleApplication {
             Quad quad = new Quad(width, height);
             Geometry terrain = new Geometry("TerrainPlane", quad);
 
-            terrain.getMesh().scaleTextureCoordinates(new Vector2f(4,4));
+            terrain.getMesh().scaleTextureCoordinates(new Vector2f(8,8));
             terrain.setLocalTranslation(-width/2f, 0, height/2f);
             terrain.rotate(-FastMath.HALF_PI, 0, 0);
             terrain.setMaterial(mat);
