@@ -14,7 +14,7 @@
             spacing="10"
     >
         <Panel id="textInfo"
-               margin="40"
+               margin="20"
                padding="0"
                bgColor="0,0,0,0.0"
                width="auto"
@@ -42,11 +42,11 @@
                layout="horizontal"
                spacing="10">
             <Element
-                    id="healthBar"
+                    id="playerSpeed3"
                     type="Progress"
                     margin="5"
-                    width="300"
-                    height="6"
+                    width="150"
+                    height="8"
                     borderColor="0,0,0,0.8"
                     backgroundColor="0.1,0.1,0.1,0.8"
                     fillColor="0,0.8,0.2,1"
@@ -56,8 +56,8 @@
             <Element
                     id="armorBar"
                     type="Progress"
-                    width="250"
-                    height="6"
+                    width="50"
+                    height="8"
                     borderColor="0,0,0,0.6"
                     backgroundColor="0.1,0.1,0.1,0.6"
                     fillColor="0.2,0.5,1,1"
@@ -67,8 +67,8 @@
             <Element
                     id="abilityBar"
                     type="Progress"
-                    width="250"
-                    height="6"
+                    width="45"
+                    height="8"
                     borderColor="0,0,0,0.6"
                     backgroundColor="0.1,0.1,0.1,0.6"
                     fillColor="1,0.8,0,1"

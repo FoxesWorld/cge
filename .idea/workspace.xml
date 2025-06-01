@@ -4,19 +4,31 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="283ff897-4432-4079-9530-7bc3ea1cccef" name="Changes" comment="UIModule">
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/UIElementCreator.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/elements/ProgressElement.java" afterDir="false" />
+    <list default="true" id="283ff897-4432-4079-9530-7bc3ea1cccef" name="Changes" comment="UIModule updates">
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/novaUi/UIPanel.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/novaUi/elements/progress/ProgressAnimator.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/novaUi/elements/progress/ProgressElement.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/novaUi/elements/progress/ProgressRenderer.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/novaUi/elements/text/TextAnimator.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/novaUi/elements/text/TextRenderer.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/novaUi/tmp/BindableUIElement.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/novaUi/tmp/ResizeListener.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/logs/lastlog.log" beforeDir="false" afterPath="$PROJECT_DIR$/logs/lastlog.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/module/EngineModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/module/EngineModule.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/module/ModuleManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/module/ModuleManager.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/AbstractUIElement.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/AbstractUIElement.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/ElementFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/ElementFactory.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/MovementControl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/MovementControl.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/Player.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/Player.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/AbstractUIElement.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/novaUi/AbstractUIElement.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/ElementFactory.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/novaUi/ElementFactory.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/OnClickHandler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/novaUi/OnClickHandler.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/UIElementCreator.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/novaUi/UIElementCreator.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/UIModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/UIModule.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/elements/PanelElement.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/elements/PanelElement.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/elements/TextElement.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/elements/TextElement.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/elements/UIElement.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/elements/UIElement.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/UIPanel.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/elements/ChildMetrics.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/novaUi/elements/ChildMetrics.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/elements/ImageElement.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/novaUi/elements/image/ImageElement.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/elements/PanelElement.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/novaUi/elements/PanelElement.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/elements/ProgressElement.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/elements/TextElement.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/novaUi/elements/text/TextElement.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/elements/UIElement.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/novaUi/elements/UIElement.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/resources/Interface/stats_config.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Interface/stats_config.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
@@ -211,7 +223,7 @@
       <workItem from="1748145756964" duration="30552000" />
       <workItem from="1748316663182" duration="96072000" />
       <workItem from="1748533541348" duration="11083000" />
-      <workItem from="1748577353047" duration="46327000" />
+      <workItem from="1748577353047" duration="54465000" />
     </task>
     <task id="LOCAL-00001" summary="initial">
       <option name="closed" value="true" />
@@ -421,7 +433,15 @@
       <option name="project" value="LOCAL" />
       <updated>1748700005029</updated>
     </task>
-    <option name="localTasksCounter" value="27" />
+    <task id="LOCAL-00027" summary="UIModule updates">
+      <option name="closed" value="true" />
+      <created>1748753953914</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1748753953914</updated>
+    </task>
+    <option name="localTasksCounter" value="28" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -429,7 +449,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="initial" />
     <MESSAGE value="Scene + Physics" />
     <MESSAGE value="CGS" />
     <MESSAGE value="CGS Abstract" />
@@ -454,7 +473,8 @@
     <MESSAGE value="Test Player" />
     <MESSAGE value="Player Refactor" />
     <MESSAGE value="UIModule" />
-    <option name="LAST_COMMIT_MESSAGE" value="UIModule" />
+    <MESSAGE value="UIModule updates" />
+    <option name="LAST_COMMIT_MESSAGE" value="UIModule updates" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

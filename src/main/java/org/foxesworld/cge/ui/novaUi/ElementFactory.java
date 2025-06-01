@@ -1,8 +1,11 @@
-package org.foxesworld.cge.ui;
+package org.foxesworld.cge.ui.novaUi;
 
 import org.foxesworld.cge.CalistaGameEngine;
-import org.foxesworld.cge.ui.elements.UIElement;
-import org.foxesworld.cge.ui.elements.PanelElement;
+import org.foxesworld.cge.ui.novaUi.elements.UIElement;
+import org.foxesworld.cge.ui.novaUi.elements.PanelElement;
+import org.foxesworld.cge.ui.novaUi.elements.image.ImageElement;
+import org.foxesworld.cge.ui.novaUi.elements.progress.ProgressElement;
+import org.foxesworld.cge.ui.novaUi.elements.text.TextElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
@@ -27,19 +30,19 @@ public class ElementFactory {
 
         // Регистрация базовых типов
         registerType("TextElement", (el, id, parent, fontPath, fontSize) -> {
-            var txt = new org.foxesworld.cge.ui.elements.TextElement(calistaGameEngine, id, parent, fontPath, fontSize);
+            var txt = new TextElement(calistaGameEngine, id, parent, fontPath, fontSize);
             applyAttributes(txt, el);
             return txt;
         });
 
         registerType("ImageElement", (el, id, parent, fontPath, fontSize) -> {
-            var img = new org.foxesworld.cge.ui.elements.ImageElement(calistaGameEngine, id, parent);
+            var img = new ImageElement(calistaGameEngine, id, parent);
             applyAttributes(img, el);
             return img;
         });
 
         registerType("Progress", (el, id, parent, fontPath, fontSize) -> {
-            var prog = new org.foxesworld.cge.ui.elements.ProgressElement(calistaGameEngine, id, parent);
+            var prog = new ProgressElement(calistaGameEngine, id, parent);
             applyAttributes(prog, el);
             return prog;
         });

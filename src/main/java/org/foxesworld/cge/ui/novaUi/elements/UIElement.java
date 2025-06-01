@@ -1,4 +1,4 @@
-package org.foxesworld.cge.ui.elements;
+package org.foxesworld.cge.ui.novaUi.elements;
 
 import com.jme3.scene.Node;
 

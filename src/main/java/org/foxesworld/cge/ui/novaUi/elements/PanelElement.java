@@ -1,4 +1,4 @@
-package org.foxesworld.cge.ui.elements;
+package org.foxesworld.cge.ui.novaUi.elements;
 
 import com.jme3.material.Material;
 import com.jme3.material.RenderState;
@@ -7,7 +7,10 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.shape.Quad;
 import org.foxesworld.cge.CalistaGameEngine;
-import org.foxesworld.cge.ui.AbstractUIElement;
+import org.foxesworld.cge.ui.novaUi.AbstractUIElement;
+import org.foxesworld.cge.ui.novaUi.elements.image.ImageElement;
+import org.foxesworld.cge.ui.novaUi.elements.progress.ProgressElement;
+import org.foxesworld.cge.ui.novaUi.elements.text.TextElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -505,4 +508,15 @@ public class PanelElement extends AbstractUIElement {
         }
     }
 
+    public float getMargin() {
+        return margin;
+    }
+
+    public float getPadding() {
+        return padding;
+    }
+
+    public List<UIElement> getChildren() {
+        return children;
+    }
 }

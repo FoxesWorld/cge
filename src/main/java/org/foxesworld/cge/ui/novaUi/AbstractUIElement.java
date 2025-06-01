@@ -1,8 +1,11 @@
-package org.foxesworld.cge.ui;
+package org.foxesworld.cge.ui.novaUi;
 
 import com.jme3.scene.Node;
-import org.foxesworld.cge.ui.elements.PanelElement;
-import org.foxesworld.cge.ui.elements.UIElement;
+import org.foxesworld.cge.ui.novaUi.elements.PanelElement;
+import org.foxesworld.cge.ui.novaUi.elements.UIElement;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * AbstractUIElement provides common functionality for all UI elements:
@@ -11,6 +14,7 @@ import org.foxesworld.cge.ui.elements.UIElement;
  *   • rawPosX, rawPosY: coordinates relative to parent (used by layout)
  *   • ownAlign: optional alignment string (e.g., "center", "top-right", "100,50")
  *   • onClick handler support via reflection
+ *   • resize listener support: allows elements to react when parent panel changes size
  *
  * Subclasses (TextElement, ImageElement, ProgressElement, PanelElement, etc.) inherit these fields
  * and override size methods as needed.
@@ -41,12 +45,26 @@ public abstract class AbstractUIElement implements UIElement {
     /** Click-handler wrapper that invokes a method by reflection on target. */
     protected OnClickHandler clickHandler;
 
+    /**
+     * Interface for resize listeners. Invoked when this element's size changes.
+     */
+    @FunctionalInterface
+    public interface ResizeListener {
+        void onResize(AbstractUIElement element, float newWidth, float newHeight);
+    }
+
+    /** Registered listeners for resize events. */
+    private final List<ResizeListener> resizeListeners = new ArrayList<>();
+
+    /** Last known width and height for notifying only on actual change. */
+    private float lastKnownWidth = -1f;
+    private float lastKnownHeight = -1f;
+
     public AbstractUIElement() {
-        // node is already initialized inline
+        // node initialized inline
     }
 
     // ==== ID ====
-
     @Override
     public String getId() {
         return id;
@@ -59,14 +77,12 @@ public abstract class AbstractUIElement implements UIElement {
     }
 
     // ==== Node ====
-
     @Override
     public Node getNode() {
         return node;
     }
 
     // ==== Parent Panel ====
-
     @Override
     public PanelElement getParentPanel() {
         return parentPanel;
@@ -86,19 +102,10 @@ public abstract class AbstractUIElement implements UIElement {
     }
 
     // ==== Raw Position ====
-
-    /**
-     * Returns the raw X offset (in pixels) from the parent panel's top-left.
-     * Used by PanelElement when computing layout or positioning.
-     */
     public float getRawPosX() {
         return rawPosX;
     }
 
-    /**
-     * Returns the raw Y offset (in pixels) from the parent panel's top-left.
-     * Used by PanelElement when computing layout or positioning.
-     */
     public float getRawPosY() {
         return rawPosY;
     }
@@ -114,11 +121,6 @@ public abstract class AbstractUIElement implements UIElement {
     }
 
     // ==== Alignment ====
-
-    /**
-     * If element has an explicit ownAlign (like "center", "10,20", "top-right"), PanelElement
-     * or parent layout will position based on this instead of rawPosX/rawPosY.
-     */
     @Override
     public boolean hasOwnAlign() {
         return ownAlign != null && !ownAlign.trim().isEmpty();
@@ -135,11 +137,6 @@ public abstract class AbstractUIElement implements UIElement {
     }
 
     // ==== OnClick Handler ====
-
-    /**
-     * Registers a click handler: methodName on eventHandlerTarget will be invoked via reflection
-     * whenever triggerClick() is called. If methodName or target is null/empty, no handler is set.
-     */
     @Override
     public void setOnClickHandler(String methodName, Object eventHandlerTarget) {
         if (methodName != null && !methodName.isEmpty() && eventHandlerTarget != null) {
@@ -156,30 +153,49 @@ public abstract class AbstractUIElement implements UIElement {
         }
     }
 
-    // ==== Visibility and Enabled (optional extensions) ====
+    // ==== Resize Listener Support ====
+    /**
+     * Registers a listener to be notified when this element's size changes.
+     */
+    public void addResizeListener(ResizeListener listener) {
+        if (listener != null && !resizeListeners.contains(listener)) {
+            resizeListeners.add(listener);
+        }
+    }
 
     /**
-     * Returns whether this element is currently visible. Subclasses may override.
-     * By default, true.
+     * Unregisters a previously registered resize listener.
      */
+    public void removeResizeListener(ResizeListener listener) {
+        resizeListeners.remove(listener);
+    }
+
+    /**
+     * Checks if width/height changed and notifies listeners. Should be called
+     * after any update that might affect getWidth()/getHeight().
+     */
+    protected void checkAndNotifyResize() {
+        float currentWidth = getWidth();
+        float currentHeight = getHeight();
+        if (currentWidth != lastKnownWidth || currentHeight != lastKnownHeight) {
+            for (ResizeListener listener : resizeListeners) {
+                listener.onResize(this, currentWidth, currentHeight);
+            }
+            lastKnownWidth = currentWidth;
+            lastKnownHeight = currentHeight;
+        }
+    }
+
+    // ==== Visibility and Enabled (optional extensions) ====
     public boolean isVisible() {
         return true;
     }
 
-    /**
-     * Enables or disables this element. Subclasses may override for custom behavior.
-     * By default, does nothing.
-     */
     public void setEnabled(boolean enabled) {
         // no-op by default
     }
 
     // ==== Property Support ====
-
-    /**
-     * Default implementation: if an unknown property key is passed, do nothing.
-     * Subclasses should override setProperty(key, value) if they support extra attributes.
-     */
     @Override
     public void setProperty(String key, String value) {
         // By default, unrecognized property → no action.
@@ -187,20 +203,10 @@ public abstract class AbstractUIElement implements UIElement {
     }
 
     // ==== Size (to be overridden) ====
-
-    /**
-     * Returns this element's width for layout calculations.
-     * Subclasses (TextElement, ImageElement, PanelElement, etc.) should override.
-     * Default: 0.
-     */
     public float getWidth() {
         return 0f;
     }
 
-    /**
-     * Returns this element's height for layout calculations.
-     * Subclasses should override. Default: 0.
-     */
     public float getHeight() {
         return 0f;
     }

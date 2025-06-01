@@ -1,4 +1,4 @@
-package org.foxesworld.cge.ui.elements;
+package org.foxesworld.cge.ui.novaUi.elements;
 
 /**
  * Интерфейс для извлечения метрик (rawX, rawY, width, height) для разных типов UIElement.

@@ -10,7 +10,6 @@ import com.jme3.scene.Node;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.physics.PhysicsModule;
 import org.foxesworld.cge.ui.UIModule;
-import org.foxesworld.cge.ui.UIPanel;
 
 public class Player extends Node {
 
@@ -69,8 +68,11 @@ public class Player extends Node {
         });
     }
 
+    @SuppressWarnings("unused")
     public static class PlayerHud {
         private float playerSpeed;
+        private float armorBar = 1.0f;
+        private float abilityBar = 1.0f;
 
         PlayerHud(Player player){
             UIModule uiModule = player.calistaGameEngine.getModuleManager().getModule(UIModule.class);
@@ -78,7 +80,7 @@ public class Player extends Node {
         }
 
         public void setPlayerSpeed(float playerSpeed) {
-            this.playerSpeed = playerSpeed;
+            this.playerSpeed = playerSpeed * 10;
         }
     }
 

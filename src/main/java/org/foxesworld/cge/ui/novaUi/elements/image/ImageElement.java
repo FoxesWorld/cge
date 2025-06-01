@@ -1,4 +1,4 @@
-package org.foxesworld.cge.ui.elements;
+package org.foxesworld.cge.ui.novaUi.elements.image;
 
 import com.jme3.asset.AssetManager;
 import com.jme3.material.RenderState;
@@ -7,7 +7,8 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.shape.Quad;
 import org.foxesworld.cge.CalistaGameEngine;
-import org.foxesworld.cge.ui.AbstractUIElement;
+import org.foxesworld.cge.ui.novaUi.AbstractUIElement;
+import org.foxesworld.cge.ui.novaUi.elements.PanelElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

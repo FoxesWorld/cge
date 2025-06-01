@@ -6,6 +6,7 @@ import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.module.EngineModule;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.foxesworld.cge.ui.novaUi.UIPanel;
 
 import java.util.ArrayList;
 import java.util.List;

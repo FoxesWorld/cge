@@ -1,4 +1,4 @@
-package org.foxesworld.cge.ui;
+package org.foxesworld.cge.ui.novaUi;
 
 import java.lang.reflect.Method;
 

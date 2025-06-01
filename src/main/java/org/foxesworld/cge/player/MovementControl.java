@@ -4,11 +4,9 @@ import com.jme3.bullet.control.CharacterControl;
 import com.jme3.input.InputManager;
 import com.jme3.input.KeyInput;
 import com.jme3.input.controls.*;
-import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
 import com.jme3.scene.control.AbstractControl;
-import org.foxesworld.cge.ui.elements.TextElement;
 
 /**
  * MovementControl: движение в направлении взгляда камеры,
