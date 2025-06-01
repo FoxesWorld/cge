@@ -116,7 +116,6 @@ public class MovementControl extends AbstractControl implements ActionListener {
         }
         wasInAir = inAir;
         lastY    = currentY;
-        //((TextElement)this.player.getUiPanel().getElement("speedItem")).setText(String.valueOf(jumpPeak));
         player.getPlayerHud().setPlayerSpeed(getCurrentSpeed());
     }
 
@@ -139,8 +138,7 @@ public class MovementControl extends AbstractControl implements ActionListener {
     }
 
     @Override
-    protected void controlRender(com.jme3.renderer.RenderManager rm,
-                                 com.jme3.renderer.ViewPort vp) {
+    protected void controlRender(com.jme3.renderer.RenderManager rm, com.jme3.renderer.ViewPort vp) {
         // не используется
     }
 

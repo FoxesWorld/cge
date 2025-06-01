@@ -15,10 +15,10 @@ import java.util.List;
  *   • ownAlign: optional alignment string (e.g., "center", "top-right", "100,50")
  *   • onClick handler support via reflection
  *   • resize listener support: allows elements to react when parent panel changes size
- *
  * Subclasses (TextElement, ImageElement, ProgressElement, PanelElement, etc.) inherit these fields
  * and override size methods as needed.
  */
+@SuppressWarnings("unused")
 public abstract class AbstractUIElement implements UIElement {
     /** Scene graph node representing this element. */
     protected final Node node = new Node();

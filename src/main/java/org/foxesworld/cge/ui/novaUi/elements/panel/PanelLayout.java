@@ -28,9 +28,9 @@ public class PanelLayout {
      * Пересчитывает текущую ширину/высоту панели (с учётом padding + контента),
      * а затем позиционирует каждого ребёнка с «clamp» — чтобы child не вышел за пределы panel.
      */
-    public void recomputeAndLayOut() {
+    public void recomputeAndLayOut(float width, float height) {
         if (!"none".equals(panel.getLayout())) {
-            applyLayoutMode();
+            applyLayoutMode(panel.getLayout());
         }
 
         // 1) Вычисляем требуемый контент
@@ -54,16 +54,16 @@ public class PanelLayout {
         float newW = panel.isAutoWidth() ? (contentMaxX + panel.getPadding()) : panel.getFixedWidth();
         float newH = panel.isAutoHeight() ? (contentMaxY + panel.getPadding()) : panel.getFixedHeight();
 
-        panel.getRenderer().setSize(newW, newH);
-
         // 3) Позиционируем каждого ребёнка, «клинапя» по границам
         for (UIElement ue : children) {
             positionChildClamped(ue, newW, newH);
         }
+
+        panel.getRenderer().setSize(width, height); //0, 0
+        panel.getRenderer().createBackground(width, height);
     }
 
-    private void applyLayoutMode() {
-        String mode = panel.getLayout();
+    private void applyLayoutMode(String mode) {
         List<UIElement> children = panel.getChildren();
         float pad = panel.getPadding();
         float spacing = panel.getSpacing();

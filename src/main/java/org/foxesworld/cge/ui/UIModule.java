@@ -20,7 +20,7 @@ public class UIModule extends EngineModule<UIConfig> {
     private final CalistaGameEngine calistaGameEngine;
     private static final Logger logger = LogManager.getLogger(UIModule.class);
     private static final String CONFIG_FILE = "ui_config";
-    private List<UIPanel> uiPanels = new ArrayList<>();
+    private final List<UIPanel> uiPanels = new ArrayList<>();
 
     public UIModule(CalistaGameEngine app) {
         super(CONFIG_FILE, UIConfig.class, app);

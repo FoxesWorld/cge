@@ -136,22 +136,19 @@ public class PanelElement extends AbstractUIElement {
      * 3) Обновляем geometry фона (PanelRenderer) под полученные fixedWidth/fixedHeight.
      */
     public void recomputeSizeAndRepositionChildren() {
-        if ("none".equalsIgnoreCase(layout)) {
-            // 1) Сначала вычисляем сумму ширин всех детей и максимальную высоту
-            float totalWidth = 0f;
-            float maxChildHeight = 0f;
+        float totalWidth = 0f, totalHeight = 0f, maxChildHeight = 0f;
 
-            for (UIElement child : children) {
-                if (child instanceof AbstractUIElement abs) {
-                    // Важно: используем текущие реальные размеры, а не геттеры width/height конфигурации
-                    float cw = abs.getWidth();
-                    float ch = abs.getHeight();
-                    totalWidth += cw;
-                    maxChildHeight = Math.max(maxChildHeight, ch);
-                }
+        for (UIElement child : children) {
+            if (child instanceof AbstractUIElement abs) {
+                // Важно: используем текущие реальные размеры, а не геттеры width/height конфигурации
+                float cw = abs.getWidth();
+                float ch = abs.getHeight();
+                totalWidth += cw;
+                totalHeight += ch;
+                maxChildHeight = Math.max(maxChildHeight, ch);
             }
-
-            // 2) Добавляем padding по бокам
+        }
+        if ("none".equalsIgnoreCase(layout)) {
             float neededW = totalWidth + 2f * padding;
             float neededH = maxChildHeight + 2f * padding;
 
@@ -182,17 +179,17 @@ public class PanelElement extends AbstractUIElement {
 
         } else {
             // Для vertical/horizontal — как и раньше, делегируем PanelLayout.
-            layoutHelper.recomputeAndLayOut();
+            layoutHelper.recomputeAndLayOut(totalWidth, totalHeight);
         }
 
         // 5) Обновляем фон (PanelRenderer) под новые размеры панели
-        renderer.updateGeometry();
+        //renderer.updateGeometry(totalWidth, totalHeight);
     }
 
     /**
      * Рекурсивно пересчитываем эту панель и всех её предков.
      */
-    void recalcAndRepositionSelfAndAncestors() {
+    public void recalcAndRepositionSelfAndAncestors() {
         PanelElement current = this;
         while (current != null) {
             current.recomputeSizeAndRepositionChildren();
@@ -291,18 +288,18 @@ public class PanelElement extends AbstractUIElement {
     void setMargin(float m)  { this.margin = m; }
     void setPadding(float p) { this.padding = p; }
     void setBgColor(ColorRGBA c) { this.bgColor = c; renderer.setBgColor(c); }
-    void setFixedWidth(float w)  { this.fixedWidth = w; this.autoWidth = false; }
-    void setFixedHeight(float h) { this.fixedHeight = h; this.autoHeight = false; }
+    public void setFixedWidth(float w)  { this.fixedWidth = w; this.autoWidth = false; }
+    public void setFixedHeight(float h) { this.fixedHeight = h; this.autoHeight = false; }
     void setAutoWidth() { this.autoWidth = true; }
     void setAutoHeight(){ this.autoHeight = true; }
     void setAlign(String a) { this.align = a; }
     void setLayout(String l){ this.layout = l; }
     void setSpacing(float s){ this.spacing = s; }
 
-    boolean isAutoWidth() { return autoWidth; }
-    boolean isAutoHeight(){ return autoHeight; }
-    float getFixedWidth() { return fixedWidth; }
-    float getFixedHeight(){ return fixedHeight; }
+    public boolean isAutoWidth() { return autoWidth; }
+    public boolean isAutoHeight(){ return autoHeight; }
+    public float getFixedWidth() { return fixedWidth; }
+    public float getFixedHeight(){ return fixedHeight; }
 
     ColorRGBA getBgColor() { return bgColor; }
 

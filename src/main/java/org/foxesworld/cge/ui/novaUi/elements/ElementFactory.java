@@ -56,12 +56,12 @@ public class ElementFactory {
 
     public UIElement create(Element el, PanelElement parent, String defaultFontPath, float defaultFontSize) {
         String id = el.getAttribute("id");
-        if (id == null || id.isEmpty()) {
+        if (id.isEmpty()) {
             throw new RuntimeException("Element missing required 'id' attribute!");
         }
 
         String type = el.getAttribute("type");
-        if (type == null || type.isEmpty()) {
+        if (type.isEmpty()) {
             throw new RuntimeException("Element[id=" + id + "] missing required 'type' attribute!");
         }
 

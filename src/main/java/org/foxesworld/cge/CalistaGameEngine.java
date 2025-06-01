@@ -1,6 +1,7 @@
 package org.foxesworld.cge;
 
 import com.jme3.app.SimpleApplication;
+import com.jme3.app.StatsAppState;
 import com.jme3.bullet.collision.shapes.MeshCollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.light.AmbientLight;
@@ -107,6 +108,7 @@ public class CalistaGameEngine extends SimpleApplication {
 
     @Override
     public void simpleInitApp() {
+        stateManager.getState(StatsAppState.class).setDisplayStatView(false);
         moduleManager = new ModuleManager(this);
         moduleManager.register(new RendererModule(this), 20);
         moduleManager.register(new PhysicsModule(this), 35);
@@ -156,7 +158,6 @@ public class CalistaGameEngine extends SimpleApplication {
             rootNode.attachChild(player);
         });
     }
-
     public ConfigService getConfigService() {
         return configService;
     }
