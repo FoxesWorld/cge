@@ -33,11 +33,15 @@ public class UIModule extends EngineModule<UIConfig> {
     }
 
     public void addPanel(Object handler, String xmlFile){
-        UIPanel uiPanel = new UIPanel(calistaGameEngine, xmlFile);
-        calistaGameEngine.getStateManager().attach(uiPanel);
-        uiPanel.registerEventHandler(handler);
-        uiPanels.add(uiPanel);
-        logger.info("Adding new panel...");
+        if(getIsLoaded().get()) {
+            UIPanel uiPanel = new UIPanel(calistaGameEngine, xmlFile);
+            calistaGameEngine.getStateManager().attach(uiPanel);
+            uiPanel.registerEventHandler(handler);
+            uiPanels.add(uiPanel);
+            logger.info("Adding new panel...");
+        } else {
+            logger.warn("UImodule is not loaded!");
+        }
     }
 
     @Override

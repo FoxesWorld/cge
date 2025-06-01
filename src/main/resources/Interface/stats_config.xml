@@ -1,14 +1,80 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <UI>
     <Font defaultPath="Interface/Fonts/Default.fnt" defaultSize="20"/>
-    <Panel id="rootPanel" margin="40" padding="30" bgColor="0,0,0,0.75" width="auto" height="auto" align="top-right">
-        <Element id="playerSpeed" type="TextElement"
-                 text=""
-                 color="1,1,1,1"
-                 fontSize="18"
-                 posX="5" posY="5"
-                 onClick="onSpeedClicked"
-        />
 
+    <Panel
+            id="rootPanel"
+            margin="40"
+            padding="30"
+            bgColor="0,0,0,0.75"
+            width="auto"
+            height="auto"
+            align="top-right"
+            layout="horizontal"
+            spacing="10"
+    >
+        <Panel id="textInfo"
+               margin="40"
+               padding="0"
+               bgColor="0,0,0,0.0"
+               width="auto"
+               height="auto"
+               align="top-right"
+               layout="horizontal"
+               spacing="10">
+            <Element
+                    id="playerSpeed"
+                    type="TextElement"
+                    text=""
+                    color="1,1,1,1"
+                    fontSize="18"
+                    onClick="onSpeedClicked"
+            />
+        </Panel>
+
+        <Panel id="barPanel"
+               margin="40"
+               padding="0"
+               bgColor="0,0,0,0.0"
+               width="auto"
+               height="auto"
+               align="top-right"
+               layout="horizontal"
+               spacing="10">
+            <Element
+                    id="healthBar"
+                    type="Progress"
+                    margin="5"
+                    width="300"
+                    height="6"
+                    borderColor="0,0,0,0.8"
+                    backgroundColor="0.1,0.1,0.1,0.8"
+                    fillColor="0,0.8,0.2,1"
+                    borderThickness="1"
+                    progress="1.0"
+            />
+            <Element
+                    id="armorBar"
+                    type="Progress"
+                    width="250"
+                    height="6"
+                    borderColor="0,0,0,0.6"
+                    backgroundColor="0.1,0.1,0.1,0.6"
+                    fillColor="0.2,0.5,1,1"
+                    borderThickness="1"
+                    progress="0.5"
+            />
+            <Element
+                    id="abilityBar"
+                    type="Progress"
+                    width="250"
+                    height="6"
+                    borderColor="0,0,0,0.6"
+                    backgroundColor="0.1,0.1,0.1,0.6"
+                    fillColor="1,0.8,0,1"
+                    borderThickness="1"
+                    progress="0.3"
+            />
+        </Panel>
     </Panel>
 </UI>

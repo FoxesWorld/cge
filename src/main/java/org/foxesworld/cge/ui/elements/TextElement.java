@@ -134,7 +134,6 @@ public class TextElement extends AbstractUIElement implements RawInputListener {
     @Override
     public void setOnClickHandler(String methodName, Object eventHandlerTarget) {
         super.setOnClickHandler(methodName, eventHandlerTarget);
-        // Подписываемся как RawInputListener, чтобы ловить клики
         calistaGameEngine.getInputManager().addRawInputListener(this);
     }
 

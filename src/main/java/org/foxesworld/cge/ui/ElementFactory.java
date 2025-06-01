@@ -1,103 +1,91 @@
 package org.foxesworld.cge.ui;
 
 import org.foxesworld.cge.CalistaGameEngine;
-import org.foxesworld.cge.ui.elements.ImageElement;
-import org.foxesworld.cge.ui.elements.PanelElement;
-import org.foxesworld.cge.ui.elements.TextElement;
 import org.foxesworld.cge.ui.elements.UIElement;
+import org.foxesworld.cge.ui.elements.PanelElement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
+import org.w3c.dom.Node;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
- * ElementFactory — создаёт конкретный UIElement (TextElement, ImageElement и т.д.)
- * на основе XML-тега <Element>.
+ * ElementFactory — создаёт UIElement по XML-тегу <Element>.
+ * Позволяет регистрировать новые типы без изменения исходного кода.
  */
 public class ElementFactory {
+
+    private static final Logger logger = LoggerFactory.getLogger(ElementFactory.class);
     private final CalistaGameEngine calistaGameEngine;
+    private final Map<String, UIElementCreator> registry = new HashMap<>();
 
     public ElementFactory(CalistaGameEngine engine) {
         this.calistaGameEngine = engine;
+
+        // Регистрация базовых типов
+        registerType("TextElement", (el, id, parent, fontPath, fontSize) -> {
+            var txt = new org.foxesworld.cge.ui.elements.TextElement(calistaGameEngine, id, parent, fontPath, fontSize);
+            applyAttributes(txt, el);
+            return txt;
+        });
+
+        registerType("ImageElement", (el, id, parent, fontPath, fontSize) -> {
+            var img = new org.foxesworld.cge.ui.elements.ImageElement(calistaGameEngine, id, parent);
+            applyAttributes(img, el);
+            return img;
+        });
+
+        registerType("Progress", (el, id, parent, fontPath, fontSize) -> {
+            var prog = new org.foxesworld.cge.ui.elements.ProgressElement(calistaGameEngine, id, parent);
+            applyAttributes(prog, el);
+            return prog;
+        });
+
+        // Пример: registerType("Button", (el, id, parent, fontPath, fontSize) -> new ButtonElement(...));
+    }
+
+    public void registerType(String type, UIElementCreator creator) {
+        registry.put(type, creator);
+        logger.debug("Registered '{}' UI element", type);
     }
 
     public UIElement create(Element el, PanelElement parent, String defaultFontPath, float defaultFontSize) {
-        // id — обязательный атрибут
         String id = el.getAttribute("id");
         if (id == null || id.isEmpty()) {
             throw new RuntimeException("Element missing required 'id' attribute!");
         }
 
-        // type — какой класс UIElement создавать
         String type = el.getAttribute("type");
         if (type == null || type.isEmpty()) {
             throw new RuntimeException("Element[id=" + id + "] missing required 'type' attribute!");
         }
 
-        UIElement result;
-        switch (type) {
-            case "TextElement": {
-                TextElement txt = new TextElement(calistaGameEngine, id, parent, defaultFontPath, defaultFontSize);
-                // Установим начальный текст, цвет и т.д. из атрибутов XML:
-                if (el.hasAttribute("text")) {
-                    txt.setProperty("text", el.getAttribute("text"));
-                }
-                if (el.hasAttribute("color")) {
-                    txt.setProperty("color", el.getAttribute("color"));
-                }
-                if (el.hasAttribute("fontSize")) {
-                    txt.setProperty("fontSize", el.getAttribute("fontSize"));
-                }
-                if (el.hasAttribute("fontPath")) {
-                    txt.setProperty("fontPath", el.getAttribute("fontPath"));
-                }
-                if (el.hasAttribute("posX")) {
-                    txt.setProperty("posX", el.getAttribute("posX"));
-                }
-                if (el.hasAttribute("posY")) {
-                    txt.setProperty("posY", el.getAttribute("posY"));
-                }
-                if (el.hasAttribute("align")) {
-                    txt.setProperty("align", el.getAttribute("align"));
-                }
-                result = txt;
-                break;
-            }
-            case "ImageElement": {
-                ImageElement img = new ImageElement(calistaGameEngine, id, parent);
-                if (el.hasAttribute("imagePath")) {
-                    img.setProperty("imagePath", el.getAttribute("imagePath"));
-                }
-                if (el.hasAttribute("posX")) {
-                    img.setProperty("posX", el.getAttribute("posX"));
-                }
-                if (el.hasAttribute("posY")) {
-                    img.setProperty("posY", el.getAttribute("posY"));
-                }
-                if (el.hasAttribute("width")) {
-                    img.setProperty("width", el.getAttribute("width"));
-                }
-                if (el.hasAttribute("height")) {
-                    img.setProperty("height", el.getAttribute("height"));
-                }
-                if (el.hasAttribute("color")) {
-                    img.setProperty("color", el.getAttribute("color"));
-                }
-                if (el.hasAttribute("align")) {
-                    img.setProperty("align", el.getAttribute("align"));
-                }
-                result = img;
-                break;
-            }
-            // При необходимости можно добавить новые типы: ButtonElement, SliderElement и т.д.
-            default:
-                throw new RuntimeException("Unknown Element type: " + type);
+        UIElementCreator creator = registry.get(type);
+        if (creator == null) {
+            throw new RuntimeException("Unknown Element type: " + type);
         }
 
-        // Если в XML указан onClick, привяжем его:
+        UIElement element = creator.create(el, id, parent, defaultFontPath, defaultFontSize);
+
+        // Обработчик onClick, если есть
         if (el.hasAttribute("onClick")) {
             String methodName = el.getAttribute("onClick");
-            result.setOnClickHandler(methodName, parent.getParentPanel() != null ? parent.getParentPanel() : parent);
-            // либо передавать eventHandlerTarget из UIPanel
+            element.setOnClickHandler(methodName, parent.getParentPanel() != null ? parent.getParentPanel() : parent);
         }
 
-        return result;
+        return element;
+    }
+
+    private void applyAttributes(UIElement element, Element xmlElement) {
+        NamedNodeMap attrs = xmlElement.getAttributes();
+        for (int i = 0; i < attrs.getLength(); i++) {
+            Node attr = attrs.item(i);
+            if (!"type".equals(attr.getNodeName()) && !"id".equals(attr.getNodeName())) {
+                element.setProperty(attr.getNodeName(), attr.getNodeValue());
+            }
+        }
     }
 }

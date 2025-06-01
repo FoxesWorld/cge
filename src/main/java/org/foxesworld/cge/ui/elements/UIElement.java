@@ -19,7 +19,8 @@ public interface UIElement {
     boolean hasOwnAlign();
 
     /**
-     * Если hasOwnAlign() == true, это возвращаемое строковое значение (например: "center", "top-right" или "100,50").
+     * Если hasOwnAlign() == true, это возвращаемое строковое значение
+     * (например: "center", "top-right" или "100,50").
      */
     String getOwnAlign();
 
@@ -27,14 +28,34 @@ public interface UIElement {
     PanelElement getParentPanel();
 
     /**
-     * Установить свойство по ключу (всё, что приходит через атрибуты XML, кроме специальных: id, type, onClick).
-     * Примеры: color="1,1,1,1", fontSize="24", posX="100", posY="200" и т.д.
+     * Установить свойство по ключу (всё, что приходит через атрибуты XML,
+     * кроме специальных: id, type, onClick). Примеры:
+     * color="1,1,1,1", fontSize="24", posX="100", posY="200" и т.д.
      */
     void setProperty(String key, String value);
 
     /**
      * Установить “onClick” обработчик (если в XML есть onClick="methodName").
-     * При клике (внутри TextElement/ImageElement) будет вызван метод methodName на eventHandlerTarget.
+     * При клике (внутри TextElement/ImageElement) будет вызван метод methodName
+     * на eventHandlerTarget.
      */
     void setOnClickHandler(String methodName, Object eventHandlerTarget);
+
+    /**
+     * Координата X «сырых» позиций внутри родительской панели.
+     * По умолчанию возвращает 0, но у TextElement, ImageElement и PanelElement
+     * должен быть свой override, чтобы DFS-алгоритм layout мог прочитать rawPos.
+     */
+    default float getRawPosX() {
+        return 0f;
+    }
+
+    /**
+     * Координата Y «сырых» позиций внутри родительской панели.
+     * По умолчанию возвращает 0, но у TextElement, ImageElement и PanelElement
+     * должен быть свой override, чтобы DFS-алгоритм layout мог прочитать rawPos.
+     */
+    default float getRawPosY() {
+        return 0f;
+    }
 }

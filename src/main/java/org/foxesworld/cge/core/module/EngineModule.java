@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.nio.ByteBuffer;
 import java.util.HexFormat;
 import java.util.concurrent.Future;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -22,6 +23,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public abstract class EngineModule<ModuleConfig> extends BaseAppState {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
+    private AtomicBoolean isLoaded = new AtomicBoolean(false);
     protected final CalistaGameEngine gameEngine;
     protected final ConfigService configService;
     protected final TaskScheduler taskScheduler;
@@ -86,6 +88,7 @@ public abstract class EngineModule<ModuleConfig> extends BaseAppState {
                 handleFailure(t, "initialize");
             }
         });
+        isLoaded.set(true);
     }
 
     /**
@@ -273,5 +276,9 @@ public abstract class EngineModule<ModuleConfig> extends BaseAppState {
      */
     public void setOnAllModulesLoadedRunnable(Runnable runnable) {
         this.onAllModulesLoadedRunnable = runnable;
+    }
+
+    public AtomicBoolean getIsLoaded() {
+        return isLoaded;
     }
 }

@@ -5,7 +5,6 @@ import com.jme3.material.RenderState;
 import com.jme3.math.ColorRGBA;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Mesh;
-import com.jme3.scene.Node;
 import com.jme3.scene.shape.Quad;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.ui.AbstractUIElement;
@@ -15,9 +14,24 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.function.Consumer;
 
+import static java.lang.Float.parseFloat;
+
 /**
- * PanelElement — контейнер, который автоматически расширяется под размеры своего содержимого,
- * полностью включает его внутри себя и поддерживает гибкую регистрацию свойств и метрик для детей.
+ * PanelElement — a container that automatically sizes itself to fit all its children,
+ * includes them entirely within its bounds, and supports flexible registration of
+ * properties and metrics for children. Now also supports a built-in layout manager.
+ *
+ * Supported properties (via setProperty or XML attributes):
+ *  • bgColor    : background color as "r,g,b,a"
+ *  • width      : fixed width (float) or "auto" (to size to children)
+ *  • height     : fixed height (float) or "auto" (to size to children)
+ *  • margin     : margin outside this panel (affects parent positioning)
+ *  • padding    : padding inside this panel (controls spacing from edges)
+ *  • align      : alignment relative to parent ("none" [default], "vertical", or "horizontal")
+ *  • spacing    : spacing in pixels between children (float)
+ *
+ * ChildMetrics registry must include any UIElement subclass whose raw position and
+ * size are used for automatic layout and sizing.
  */
 public class PanelElement extends AbstractUIElement {
     private static final Logger logger = LoggerFactory.getLogger(PanelElement.class);
@@ -25,24 +39,30 @@ public class PanelElement extends AbstractUIElement {
     private final CalistaGameEngine calistaGameEngine;
     private final List<UIElement> children = new ArrayList<>();
 
-    private float margin = 0f;
+    private float margin  = 0f;
     private float padding = 0f;
     private ColorRGBA bgColor = new ColorRGBA(0f, 0f, 0f, 0.5f);
 
-    private boolean autoWidth = false;
+    private boolean autoWidth  = false;
     private boolean autoHeight = false;
-
-    private float fixedWidth = 0f;
-    private float fixedHeight = 0f;
+    private float fixedWidth   = 0f;
+    private float fixedHeight  = 0f;
 
     private String align = "top-left";
 
+    // New layout properties:
+    //   "none"       — no automatic layout; children positioned by their own rawX/rawY
+    //   "vertical"   — stack children top-to-bottom
+    //   "horizontal" — stack children left-to-right
+    private String layout  = "none";
+    private float spacing  = 0f;
+
     private Geometry bgGeom;
 
-    /** Для регистрации обработчиков свойств: key → Consumer<String> */
+    /** Property handlers: key → Consumer<String> */
     private final Map<String, Consumer<String>> propertyHandlers = new HashMap<>();
 
-    /** Регистрация метрик для разных классов UIElement */
+    /** Registry of ChildMetrics for known UIElement subclasses */
     private final List<Map.Entry<Class<? extends UIElement>, ChildMetrics>> metricsRegistry = new ArrayList<>();
 
     public PanelElement(CalistaGameEngine calistaGameEngine, String id, PanelElement parent) {
@@ -57,18 +77,54 @@ public class PanelElement extends AbstractUIElement {
     }
 
     private void initPropertyHandlers() {
-        propertyHandlers.put("bgColor", v -> setBgColor(parseColor(v)));
+        propertyHandlers.put("bgColor", v -> {
+            bgColor = parseColorOrDefault(v, bgColor);
+            if (bgGeom != null) {
+                bgGeom.getMaterial().setColor("Color", bgColor);
+            }
+        });
         propertyHandlers.put("width", v -> {
-            if ("auto".equalsIgnoreCase(v)) setAutoWidth(true);
-            else setFixedWidth(Float.parseFloat(v));
+            if ("auto".equalsIgnoreCase(v)) {
+                setAutoWidth(true);
+            } else {
+                setFixedWidth(parseFloatOrDefault(v, fixedWidth));
+            }
+            recalcAndRepositionSelfAndAncestors();
         });
         propertyHandlers.put("height", v -> {
-            if ("auto".equalsIgnoreCase(v)) setAutoHeight(true);
-            else setFixedHeight(Float.parseFloat(v));
+            if ("auto".equalsIgnoreCase(v)) {
+                setAutoHeight(true);
+            } else {
+                setFixedHeight(parseFloatOrDefault(v, fixedHeight));
+            }
+            recalcAndRepositionSelfAndAncestors();
         });
-        propertyHandlers.put("margin", v -> setMargin(Float.parseFloat(v)));
-        propertyHandlers.put("padding", v -> setPadding(Float.parseFloat(v)));
-        propertyHandlers.put("align", this::setAlign);
+        propertyHandlers.put("margin", v -> {
+            setMargin(parseFloatOrDefault(v, margin));
+            recalcAndRepositionSelfAndAncestors();
+        });
+        propertyHandlers.put("padding", v -> {
+            setPadding(parseFloatOrDefault(v, padding));
+            recalcAndRepositionSelfAndAncestors();
+        });
+        propertyHandlers.put("align", v -> {
+            setAlign(v);
+            recalcAndRepositionSelfAndAncestors();
+        });
+        propertyHandlers.put("layout", v -> {
+            String val = v.trim().toLowerCase();
+            if (Set.of("none", "vertical", "horizontal").contains(val)) {
+                setLayout(val);
+            } else {
+                logger.warn("Panel '{}' invalid layout '{}', defaulting to 'none'", id, v);
+                setLayout("none");
+            }
+            recalcAndRepositionSelfAndAncestors();
+        });
+        propertyHandlers.put("spacing", v -> {
+            setSpacing(parseFloatOrDefault(v, spacing));
+            recalcAndRepositionSelfAndAncestors();
+        });
     }
 
     private void initMetricsRegistry() {
@@ -90,18 +146,27 @@ public class PanelElement extends AbstractUIElement {
             public float getWidth(UIElement ue)   { return ((PanelElement) ue).getCurrentWidth(); }
             public float getHeight(UIElement ue)  { return ((PanelElement) ue).getCurrentHeight(); }
         }));
+        metricsRegistry.add(new AbstractMap.SimpleEntry<>(ProgressElement.class, new ChildMetrics() {
+            public float getRawX(UIElement ue)    { return ((ProgressElement) ue).getRawPosX(); }
+            public float getRawY(UIElement ue)    { return ((ProgressElement) ue).getRawPosY(); }
+            public float getWidth(UIElement ue)   { return ((ProgressElement) ue).getWidth(); }
+            public float getHeight(UIElement ue)  { return ((ProgressElement) ue).getHeight(); }
+        }));
     }
 
+    /** Set panel margin. */
     public void setMargin(float m) {
         this.margin = m;
         logger.debug("Panel '{}' margin set to {}", id, m);
     }
 
+    /** Set panel padding (space inside panel edges). */
     public void setPadding(float p) {
         this.padding = p;
         logger.debug("Panel '{}' padding set to {}", id, p);
     }
 
+    /** Set panel background color. */
     public void setBgColor(ColorRGBA color) {
         this.bgColor = color.clone();
         if (bgGeom != null) {
@@ -109,26 +174,48 @@ public class PanelElement extends AbstractUIElement {
         }
     }
 
+    /** Set fixed width; disables autoWidth. */
     public void setFixedWidth(float w) {
         this.fixedWidth = w;
         this.autoWidth = false;
+        logger.debug("Panel '{}' fixedWidth set to {}", id, w);
     }
 
+    /** Set fixed height; disables autoHeight. */
     public void setFixedHeight(float h) {
         this.fixedHeight = h;
         this.autoHeight = false;
+        logger.debug("Panel '{}' fixedHeight set to {}", id, h);
     }
 
+    /** Enable or disable autoWidth. */
     public void setAutoWidth(boolean auto) {
         this.autoWidth = auto;
+        logger.debug("Panel '{}' autoWidth set to {}", id, auto);
     }
 
+    /** Enable or disable autoHeight. */
     public void setAutoHeight(boolean auto) {
         this.autoHeight = auto;
+        logger.debug("Panel '{}' autoHeight set to {}", id, auto);
     }
 
+    /** Set alignment relative to parent. */
     public void setAlign(String a) {
-        this.align = a;
+        this.align = a.trim().toLowerCase();
+        logger.debug("Panel '{}' align set to '{}'", id, a);
+    }
+
+    /** Set layout mode: "none", "vertical", or "horizontal". */
+    public void setLayout(String layout) {
+        this.layout = layout;
+        logger.debug("Panel '{}' layout set to '{}'", id, layout);
+    }
+
+    /** Set spacing (pixels) between children when layout is not "none". */
+    public void setSpacing(float s) {
+        this.spacing = s;
+        logger.debug("Panel '{}' spacing set to {}", id, s);
     }
 
     @Override
@@ -161,74 +248,72 @@ public class PanelElement extends AbstractUIElement {
         super.setOnClickHandler(methodName, eventHandlerTarget);
     }
 
+    /** Build the background quad (1×1), material, and attach to node. */
     public void buildBackgroundGeom() {
-        Quad quad = new Quad(1f, 1f);
-        bgGeom = new Geometry("BG_" + id, quad);
-        Material mat = new Material(calistaGameEngine.getAssetManager(), "Common/MatDefs/Gui/Gui.j3md");
-        mat.setColor("Color", bgColor);
-        mat.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
-        bgGeom.setMaterial(mat);
-        node.attachChild(bgGeom);
+        if (bgGeom == null) {
+            Quad quad = new Quad(1f, 1f);
+            bgGeom = new Geometry("BG_" + id, quad);
+            Material mat = new Material(calistaGameEngine.getAssetManager(), "Common/MatDefs/Gui/Gui.j3md");
+            mat.setColor("Color", bgColor);
+            mat.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
+            bgGeom.setMaterial(mat);
+            node.attachChild(bgGeom);
+        }
     }
 
+    /** Add a child. Child’s parentPanel is set, and child node is attached. */
     public void addChild(UIElement child) {
         children.add(child);
         if (child instanceof AbstractUIElement) {
             ((AbstractUIElement) child).setParentPanel(this);
         }
         node.attachChild(child.getNode());
+        recalcAndRepositionSelfAndAncestors();
     }
 
+    /** Remove a child and recalc layout. */
     public void removeChild(UIElement child) {
         children.remove(child);
         node.detachChild(child.getNode());
+        recalcAndRepositionSelfAndAncestors();
     }
 
     /**
-     * Пересчитывает размер панели так, чтобы полностью вместить всех детей:
-     * для каждого ребенка учитывается rawX + ширина и rawY + высота (от _верхнего_ края).
-     * newWidth = max(rawX + childWidth) + padding
-     * newHeight = max(rawY + childHeight) + padding
-     *
-     * После этого ставит фон (bgGeom) нужного размера и позиционирует детей:
-     * каждый ребенок располагается так, что его верхний левый угол == (rawX + padding, newHeight - padding - rawY).
+     * Recalculates panel size so it fully contains all children:
+     *   - If layout is not "none", children are automatically laid out.
+     *   - Background is resized, and children are positioned.
      */
     public void recomputeSizeAndRepositionChildren() {
+        // 1) Layout pass
+        if (!"none".equals(layout)) applyLayoutToChildren();
+
+        // 2) Compute content extents
         float contentMaxX = 0f;
         float contentMaxY = 0f;
-
-        // 1) Вычисляем максимальный правый и нижний край содержимого относительно верхнего левого
         for (UIElement ue : children) {
             ChildMetrics metrics = lookupMetrics(ue);
             if (metrics == null) continue;
 
             float rawX = metrics.getRawX(ue);
             float rawY = metrics.getRawY(ue);
-            float w = metrics.getWidth(ue);
-            float h = metrics.getHeight(ue);
+            float w    = metrics.getWidth(ue);
+            float h    = metrics.getHeight(ue);
 
-            // rawY отсчитывается от верхнего края; rawY + h = расстояние от верха до нижнего края ребенка
             contentMaxX = Math.max(contentMaxX, rawX + w);
             contentMaxY = Math.max(contentMaxY, rawY + h);
         }
 
-        // 2) Итоговые размеры панели
-        float newW = autoWidth ? (contentMaxX + padding) : fixedWidth;
+        // 3) Determine panel size
+        float newW = autoWidth  ? (contentMaxX + padding) : fixedWidth;
         float newH = autoHeight ? (contentMaxY + padding) : fixedHeight;
 
-        // 3) Обновляем bgGeom: если не создан, создаем; иначе меняем размер
-        if (bgGeom == null) {
-            buildBackgroundGeom();
-        }
-        if (bgGeom != null) {
-            bgGeom.setMesh(new Quad(newW, newH));
-            bgGeom.setLocalTranslation(0f, 0f, 0f);
-        }
+        // 4) Build or resize background
+        if (bgGeom == null) buildBackgroundGeom();
+        bgGeom.setMesh(new Quad(newW, newH));
+        bgGeom.setLocalTranslation(0f, 0f, 0f);
 
-        // 4) Позиционируем детей. Верхний левый угол ребенка => (rawX + padding, newH - padding - rawY)
-        for (UIElement ue : children) {
-            positionChild(ue, newW, newH);
-        }
+        // 5) Position children
+        for (UIElement ue : children) positionChild(ue, newW, newH);
     }
 
     private ChildMetrics lookupMetrics(UIElement ue) {
@@ -250,10 +335,8 @@ public class PanelElement extends AbstractUIElement {
 
         float rawX = metrics.getRawX(ue);
         float rawY = metrics.getRawY(ue);
-        float h = metrics.getHeight(ue);
+        float h    = metrics.getHeight(ue);
 
-        // px = rawX + padding
-        // py = panelH - padding - rawY - h    (чтобы верхний левый угол ребенка оказался выше нижнего края)
         float px = rawX + padding;
         float py = panelH - padding - rawY - h;
         ue.getNode().setLocalTranslation(px, py, 0f);
@@ -261,46 +344,41 @@ public class PanelElement extends AbstractUIElement {
 
     private void applyOwnAlign(UIElement ue, float panelW, float panelH) {
         String al = ue.getOwnAlign().trim().toLowerCase();
-        Node n = ue.getNode();
         ChildMetrics metrics = lookupMetrics(ue);
         if (metrics == null) return;
 
         float ew = metrics.getWidth(ue);
         float eh = metrics.getHeight(ue);
+        float px, py;
 
-        float px = 0f, py = 0f;
-        if ("top-left".equals(al)) {
-            px = padding;
-            py = panelH - padding;
-        } else if ("top-right".equals(al)) {
-            px = panelW - padding - ew;
-            py = panelH - padding;
-        } else if ("bottom-left".equals(al)) {
-            px = padding;
-            py = eh + padding;
-        } else if ("bottom-right".equals(al)) {
-            px = panelW - padding - ew;
-            py = eh + padding;
-        } else if ("center".equals(al)) {
-            px = (panelW - ew) / 2f;
-            py = (panelH + eh) / 2f;
-        } else if (al.contains(",")) {
+        if (al.contains(",")) {
             String[] coords = al.split(",");
             try {
-                px = padding + Float.parseFloat(coords[0].trim());
-                py = panelH - padding - Float.parseFloat(coords[1].trim());
-            } catch (NumberFormatException ex) {
+                px = padding + parseFloat(coords[0].trim());
+                py = panelH - padding - parseFloat(coords[1].trim());
+            } catch (Exception ex) {
                 logger.warn("Panel '{}' invalid ownAlign coords: {}", id, al);
+                px = padding;
+                py = panelH - padding;
             }
         } else {
-            logger.warn("Panel '{}' unknown ownAlign '{}'", id, al);
+            switch (al) {
+                case "top-left":    px = padding;                py = panelH - padding;               break;
+                case "top-right":   px = panelW - padding - ew;   py = panelH - padding;               break;
+                case "bottom-left": px = padding;                py = eh + padding;                   break;
+                case "bottom-right":px = panelW - padding - ew;   py = eh + padding;                   break;
+                case "center":      px = (panelW - ew) / 2f;      py = (panelH + eh) / 2f;             break;
+                default:
+                    logger.warn("Panel '{}' unknown ownAlign '{}'; defaulting to top-left", id, al);
+                    px = padding;
+                    py = panelH - padding;
+            }
         }
-        n.setLocalTranslation(px, py, 0f);
+        ue.getNode().setLocalTranslation(px, py, 0f);
     }
 
     /**
-     * Привязывает саму панель к экрану (если parentPanel==null) или к родительской панели.
-     * Вычисляем localTranslation() у узла panelNode по align + margin.
+     * Attach this panel to parent or GUI root and position it by align & margin.
      */
     public void repositionRecursively(float parentW, float parentH) {
         if (parentPanel != null) {
@@ -310,92 +388,121 @@ public class PanelElement extends AbstractUIElement {
 
         float w = getCurrentWidth();
         float h = getCurrentHeight();
-        float px = 0f, py = 0f;
+        float px, py;
 
-        String a = align.trim().toLowerCase();
-        if ("top-left".equals(a)) {
-            px = margin;
-            py = parentH - margin;
-        } else if ("top-right".equals(a)) {
-            px = parentW - margin - w;
-            py = parentH - margin;
-        } else if ("bottom-left".equals(a)) {
-            px = margin;
-            py = h + margin;
-        } else if ("bottom-right".equals(a)) {
-            px = parentW - margin - w;
-            py = h + margin;
-        } else if ("center".equals(a)) {
-            px = (parentW - w) / 2f;
-            py = (parentH + h) / 2f;
-        } else if (a.contains(",")) {
+        String a = align.toLowerCase();
+        if (a.contains(",")) {
             String[] coords = a.split(",");
             try {
-                px = margin + Float.parseFloat(coords[0].trim());
-                py = parentH - margin - Float.parseFloat(coords[1].trim());
-            } catch (NumberFormatException ex) {
+                px = margin + parseFloat(coords[0].trim());
+                py = parentH - margin - parseFloat(coords[1].trim());
+            } catch (Exception ex) {
                 logger.warn("Panel '{}' invalid align coords: {}", id, align);
+                px = margin;
+                py = parentH - margin;
             }
         } else {
-            logger.warn("Panel '{}' unknown align '{}'", id, align);
+            switch (a) {
+                case "top-left":    px = margin;                py = parentH - margin;             break;
+                case "top-right":   px = parentW - margin - w;  py = parentH - margin;             break;
+                case "bottom-left": px = margin;                py = h + margin;                   break;
+                case "bottom-right":px = parentW - margin - w;  py = h + margin;                   break;
+                case "center":      px = (parentW - w) / 2f;     py = (parentH + h) / 2f;           break;
+                default:
+                    logger.warn("Panel '{}' unknown align '{}'; defaulting to top-left", id, align);
+                    px = margin;
+                    py = parentH - margin;
+            }
         }
 
-        if (parentPanel == null) {
-            calistaGameEngine.getGuiNode().attachChild(node);
-            node.setLocalTranslation(px, py, 0f);
-        } else {
-            parentPanel.getNode().attachChild(node);
-            node.setLocalTranslation(px, py, 0f);
-        }
+        if (parentPanel == null) calistaGameEngine.getGuiNode().attachChild(node);
+        else parentPanel.getNode().attachChild(node);
+        node.setLocalTranslation(px, py, 0f);
 
-        for (UIElement ue : children) {
-            if (ue instanceof PanelElement) {
-                ((PanelElement) ue).repositionRecursively(0f, 0f);
+        for (UIElement child : children) {
+            if (child instanceof PanelElement) {
+                ((PanelElement) child).repositionRecursively(0f, 0f);
             }
         }
     }
 
+    /** Returns current panel width (from bgGeom). */
     public float getCurrentWidth() {
         if (bgGeom == null) return 0f;
         Mesh m = bgGeom.getMesh();
-        if (m instanceof Quad) {
-            return ((Quad) m).getWidth();
-        }
-        return 0f;
+        return (m instanceof Quad) ? ((Quad) m).getWidth() : 0f;
     }
 
+    /** Returns current panel height (from bgGeom). */
     public float getCurrentHeight() {
         if (bgGeom == null) return 0f;
         Mesh m = bgGeom.getMesh();
-        if (m instanceof Quad) {
-            return ((Quad) m).getHeight();
-        }
-        return 0f;
+        return (m instanceof Quad) ? ((Quad) m).getHeight() : 0f;
     }
 
-    public float getRawPosX() {
-        return 0f;
-    }
-
-    public float getRawPosY() {
-        return 0f;
-    }
-
-    private ColorRGBA parseColor(String value) {
-        String[] parts = value.split(",");
-        if (parts.length != 4) {
-            logger.warn("Panel '{}' invalid color string '{}'", id, value);
-            return bgColor;
-        }
+    private ColorRGBA parseColorOrDefault(String s, ColorRGBA def) {
+        if (s == null || s.isEmpty()) return def.clone();
+        String[] parts = s.split(",");
+        if (parts.length != 4) { logger.warn("Panel '{}' invalid color '{}'", id, s); return def.clone(); }
         try {
-            float r = Float.parseFloat(parts[0].trim());
-            float g = Float.parseFloat(parts[1].trim());
-            float b = Float.parseFloat(parts[2].trim());
-            float a = Float.parseFloat(parts[3].trim());
-            return new ColorRGBA(r, g, b, a);
+            return new ColorRGBA(parseFloat(parts[0].trim()), parseFloat(parts[1].trim()),
+                    parseFloat(parts[2].trim()), parseFloat(parts[3].trim()));
         } catch (NumberFormatException e) {
-            logger.warn("Panel '{}' failed to parse color '{}'", id, value);
-            return bgColor;
+            logger.warn("Panel '{}' failed to parse color '{}'", id, s);
+            return def.clone();
         }
     }
+
+    private float parseFloatOrDefault(String s, float def) {
+        if (s == null || s.isEmpty()) return def;
+        try { return parseFloat(s); }
+        catch (NumberFormatException e) {
+            logger.warn("Panel '{}' cannot parse '{}' as float, using {}", id, s, def);
+            return def;
+        }
+    }
+
+    private void recalcAndRepositionSelfAndAncestors() {
+        PanelElement current = this;
+        while (current != null) {
+            current.recomputeSizeAndRepositionChildren();
+            if (current.parentPanel != null) {
+                current.repositionRecursively(current.parentPanel.getCurrentWidth(),
+                        current.parentPanel.getCurrentHeight());
+            } else {
+                current.repositionRecursively(calistaGameEngine.getCamera().getWidth(),
+                        calistaGameEngine.getCamera().getHeight());
+            }
+            current = current.parentPanel;
+        }
+    }
+
+    private void applyLayoutToChildren() {
+        if ("vertical".equals(layout)) {
+            float yCursor = padding;
+            for (UIElement ue : children) {
+                ChildMetrics m = lookupMetrics(ue);
+                if (m == null) continue;
+                float h = m.getHeight(ue);
+                if (ue instanceof AbstractUIElement) {
+                    ((AbstractUIElement) ue).setRawPosX(padding);
+                    ((AbstractUIElement) ue).setRawPosY(yCursor);
+                }
+                yCursor += h + spacing;
+            }
+        } else if ("horizontal".equals(layout)) {
+            float xCursor = padding;
+            for (UIElement ue : children) {
+                ChildMetrics m = lookupMetrics(ue);
+                if (m == null) continue;
+                float w = m.getWidth(ue);
+                if (ue instanceof AbstractUIElement) {
+                    ((AbstractUIElement) ue).setRawPosX(xCursor);
+                    ((AbstractUIElement) ue).setRawPosY(padding);
+                }
+                xCursor += w + spacing;
+            }
+        }
+    }
+
 }

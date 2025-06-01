@@ -36,7 +36,6 @@ import java.util.stream.Collectors;
  */
 public class ModuleManager {
     private static final Logger logger = LoggerFactory.getLogger(ModuleManager.class);
-
     private final AppStateManager stateManager;
     private final ConfigService configService;
     private final TaskScheduler taskScheduler;
