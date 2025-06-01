@@ -3,8 +3,8 @@ package org.foxesworld.cge.ui.novaUi.elements.progress;
 import com.jme3.math.ColorRGBA;
 import com.jme3.scene.Geometry;
 import org.foxesworld.cge.CalistaGameEngine;
-import org.foxesworld.cge.ui.novaUi.AbstractUIElement;
-import org.foxesworld.cge.ui.novaUi.elements.PanelElement;
+import org.foxesworld.cge.ui.novaUi.elements.AbstractUIElement;
+import org.foxesworld.cge.ui.novaUi.elements.panel.PanelElement;
 import org.foxesworld.cge.ui.novaUi.elements.UIElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,8 +31,8 @@ public class ProgressElement extends AbstractUIElement {
     private float rawPosY = 0f;
 
     // Размеры рамки (px)
-    private float width  = 200f;
-    private float height = 12f;
+    //private float width  = 200f;
+    //private float height = 12f;
 
     // Цвета
     private ColorRGBA borderColor     = new ColorRGBA(0f, 0f, 0f, 0.8f);
@@ -69,7 +69,6 @@ public class ProgressElement extends AbstractUIElement {
         this.animator = new ProgressAnimator(0f, 1f);
 
         initPropertyHandlers();
-
         rebuildAllGeometries();
         recalcAndReposition();
 
@@ -279,5 +278,9 @@ public class ProgressElement extends AbstractUIElement {
 
     private float clamp(float val, float min, float max) {
         return (val < min) ? min : Math.min(val, max);
+    }
+
+    public Geometry getBorderGeom() {
+        return borderGeom;
     }
 }

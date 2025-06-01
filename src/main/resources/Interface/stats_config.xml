@@ -4,16 +4,16 @@
 
     <Panel
             id="rootPanel"
-            margin="40"
-            padding="30"
+            margin="10"
+            padding="10"
             bgColor="0,0,0,0.75"
             width="auto"
             height="auto"
             align="top-right"
             layout="horizontal"
-            spacing="10"
+            spacing="0"
     >
-        <Panel id="textInfo"
+    <!--    <Panel id="textInfo"
                margin="20"
                padding="0"
                bgColor="0,0,0,0.0"
@@ -30,10 +30,10 @@
                     fontSize="18"
                     onClick="onSpeedClicked"
             />
-        </Panel>
+        </Panel> -->
 
         <Panel id="barPanel"
-               margin="40"
+               margin="4"
                padding="0"
                bgColor="0,0,0,0.0"
                width="auto"
@@ -42,16 +42,14 @@
                layout="horizontal"
                spacing="10">
             <Element
-                    id="playerSpeed3"
+                    id="playerSpeed"
                     type="Progress"
-                    margin="5"
                     width="150"
                     height="8"
                     borderColor="0,0,0,0.8"
                     backgroundColor="0.1,0.1,0.1,0.8"
                     fillColor="0,0.8,0.2,1"
                     borderThickness="1"
-                    progress="1.0"
             />
             <Element
                     id="armorBar"
@@ -62,7 +60,6 @@
                     backgroundColor="0.1,0.1,0.1,0.6"
                     fillColor="0.2,0.5,1,1"
                     borderThickness="1"
-                    progress="0.5"
             />
             <Element
                     id="abilityBar"
@@ -73,7 +70,6 @@
                     backgroundColor="0.1,0.1,0.1,0.6"
                     fillColor="1,0.8,0,1"
                     borderThickness="1"
-                    progress="0.3"
             />
         </Panel>
     </Panel>

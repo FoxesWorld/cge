@@ -1,6 +1,6 @@
 package org.foxesworld.cge.ui.novaUi.tmp;
 
-import org.foxesworld.cge.ui.novaUi.elements.PanelElement;
+import org.foxesworld.cge.ui.novaUi.elements.panel.PanelElement;
 
 /** Интерфейс для элементов, поддерживающих привязку к полям обработчика */
 interface BindableUIElement {

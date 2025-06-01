@@ -1,9 +1,8 @@
-package org.foxesworld.cge.ui.novaUi;
+package org.foxesworld.cge.ui.novaUi.elements;
 
 import org.foxesworld.cge.CalistaGameEngine;
-import org.foxesworld.cge.ui.novaUi.elements.UIElement;
-import org.foxesworld.cge.ui.novaUi.elements.PanelElement;
 import org.foxesworld.cge.ui.novaUi.elements.image.ImageElement;
+import org.foxesworld.cge.ui.novaUi.elements.panel.PanelElement;
 import org.foxesworld.cge.ui.novaUi.elements.progress.ProgressElement;
 import org.foxesworld.cge.ui.novaUi.elements.text.TextElement;
 import org.slf4j.Logger;

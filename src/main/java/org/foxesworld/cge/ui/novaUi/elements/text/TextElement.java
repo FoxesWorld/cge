@@ -5,8 +5,8 @@ import com.jme3.input.RawInputListener;
 import com.jme3.input.event.*;
 import com.jme3.math.ColorRGBA;
 import org.foxesworld.cge.CalistaGameEngine;
-import org.foxesworld.cge.ui.novaUi.AbstractUIElement;
-import org.foxesworld.cge.ui.novaUi.elements.PanelElement;
+import org.foxesworld.cge.ui.novaUi.elements.AbstractUIElement;
+import org.foxesworld.cge.ui.novaUi.elements.panel.PanelElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

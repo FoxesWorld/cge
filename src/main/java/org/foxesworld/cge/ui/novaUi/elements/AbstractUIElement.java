@@ -1,8 +1,8 @@
-package org.foxesworld.cge.ui.novaUi;
+package org.foxesworld.cge.ui.novaUi.elements;
 
 import com.jme3.scene.Node;
-import org.foxesworld.cge.ui.novaUi.elements.PanelElement;
-import org.foxesworld.cge.ui.novaUi.elements.UIElement;
+import org.foxesworld.cge.ui.novaUi.OnClickHandler;
+import org.foxesworld.cge.ui.novaUi.elements.panel.PanelElement;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -22,6 +22,7 @@ import java.util.List;
 public abstract class AbstractUIElement implements UIElement {
     /** Scene graph node representing this element. */
     protected final Node node = new Node();
+    protected float width, height;
 
     /** Unique identifier for this UI element. */
     protected String id;
@@ -204,10 +205,10 @@ public abstract class AbstractUIElement implements UIElement {
 
     // ==== Size (to be overridden) ====
     public float getWidth() {
-        return 0f;
+        return this.width;
     }
 
     public float getHeight() {
-        return 0f;
+        return this.height;
     }
 }

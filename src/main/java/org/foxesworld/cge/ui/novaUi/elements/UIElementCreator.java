@@ -1,7 +1,6 @@
-package org.foxesworld.cge.ui.novaUi;
+package org.foxesworld.cge.ui.novaUi.elements;
 
-import org.foxesworld.cge.ui.novaUi.elements.PanelElement;
-import org.foxesworld.cge.ui.novaUi.elements.UIElement;
+import org.foxesworld.cge.ui.novaUi.elements.panel.PanelElement;
 import org.w3c.dom.Element;
 
 @FunctionalInterface
