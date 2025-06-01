@@ -6,7 +6,7 @@ import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.module.EngineModule;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.foxesworld.cge.ui.novaUi.UIPanel;
+import org.foxesworld.cge.ui.novaUi.NovaUI;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -20,7 +20,7 @@ public class UIModule extends EngineModule<UIConfig> {
     private final CalistaGameEngine calistaGameEngine;
     private static final Logger logger = LogManager.getLogger(UIModule.class);
     private static final String CONFIG_FILE = "ui_config";
-    private final List<UIPanel> uiPanels = new ArrayList<>();
+    private final List<NovaUI> novaUis = new ArrayList<>();
 
     public UIModule(CalistaGameEngine app) {
         super(CONFIG_FILE, UIConfig.class, app);
@@ -35,10 +35,10 @@ public class UIModule extends EngineModule<UIConfig> {
 
     public void addPanel(Object handler, String xmlFile){
         if(getIsLoaded().get()) {
-            UIPanel uiPanel = new UIPanel(calistaGameEngine, xmlFile);
-            calistaGameEngine.getStateManager().attach(uiPanel);
-            uiPanel.registerEventHandler(handler);
-            uiPanels.add(uiPanel);
+            NovaUI novaUi = new NovaUI(calistaGameEngine, xmlFile);
+            calistaGameEngine.getStateManager().attach(novaUi);
+            novaUi.registerEventHandler(handler);
+            novaUis.add(novaUi);
             logger.info("Adding new panel...");
         } else {
             logger.warn("UImodule is not loaded!");
@@ -53,18 +53,18 @@ public class UIModule extends EngineModule<UIConfig> {
     @Override
     protected void cleanupModule(Application app) {
         logger.info("Cleaning UIModule: disabling UIPanels...");
-        if (uiPanels.size() != 0) {
-            for(UIPanel uiPanel: uiPanels) {
-                app.getStateManager().detach(uiPanel);
-                logger.info("UIPanel {} detached.", uiPanel.getId());
+        if (novaUis.size() != 0) {
+            for(NovaUI novaUi : novaUis) {
+                app.getStateManager().detach(novaUi);
+                logger.info("UIPanel {} detached.", novaUi.getId());
             }
         }
     }
 
     @Override
     protected void onEnable() {
-        if (uiPanels != null) {
-            for(UIPanel panel: uiPanels) {
+        if (novaUis != null) {
+            for(NovaUI panel: novaUis) {
                 panel.setEnabled(true);
                 logger.debug("UIModule включён: UIPanel enabled.");
             }
@@ -73,8 +73,8 @@ public class UIModule extends EngineModule<UIConfig> {
 
     @Override
     protected void onDisable() {
-        if (uiPanels.size() != 0) {
-            for(UIPanel panel: uiPanels) {
+        if (novaUis.size() != 0) {
+            for(NovaUI panel: novaUis) {
                 panel.setEnabled(false);
                 logger.debug("UIModule отключён: UIPanel disabled.");
             }

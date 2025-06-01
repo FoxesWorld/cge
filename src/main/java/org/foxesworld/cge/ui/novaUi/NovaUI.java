@@ -29,9 +29,9 @@ import java.util.Map;
  *  – заново recomputeSizeAndRepositionChildren(), чтобы дети «прижались» к левому-нижнему углу,
  *  – ставим rootPanel.setLocalTranslation(0, 0, 0), чтобы он начинался от начала GUI-координат.
  */
-public class UIPanel extends BaseAppState {
+public class NovaUI extends BaseAppState {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(UIPanel.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(NovaUI.class);
 
     private final CalistaGameEngine engine;
     private final Node guiNode;
@@ -41,7 +41,7 @@ public class UIPanel extends BaseAppState {
     private Map<String, UIElement> allElements;
 
     // Обновления UI (bind/update/overlap)
-    private final UIPanelUpdater updater = new UIPanelUpdater();
+    private final NovaUIUpdater updater = new NovaUIUpdater();
 
     // Coalesce dirty
     private boolean globalDirty = false;
@@ -51,7 +51,7 @@ public class UIPanel extends BaseAppState {
     private int lastCamWidth  = -1;
     private int lastCamHeight = -1;
 
-    public UIPanel(CalistaGameEngine engine, String configPath) {
+    public NovaUI(CalistaGameEngine engine, String configPath) {
         this.engine     = engine;
         this.guiNode    = engine.getGuiNode();
         this.configPath = configPath;

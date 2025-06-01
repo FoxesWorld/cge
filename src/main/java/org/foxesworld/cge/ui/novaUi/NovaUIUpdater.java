@@ -21,8 +21,8 @@ import java.util.*;
  *       • после recomputeSize делает overlap-проверку
  *  • fixOverlaps(panel) – устраняет перекрытия дочерних элементов внутри панели
  */
-public class UIPanelUpdater {
-    private static final Logger LOGGER = LoggerFactory.getLogger(UIPanelUpdater.class);
+public class NovaUIUpdater {
+    private static final Logger LOGGER = LoggerFactory.getLogger(NovaUIUpdater.class);
 
     private Object eventHandlerTarget = null;
     private Map<String, UIElement> allElements;
@@ -143,7 +143,7 @@ public class UIPanelUpdater {
                         lastKnownValues.put(pe, newVal);
                         markDirty(pe.getParentPanel());
                     }
-                    pe.update(tpf);
+                    pe.updateSelf(tpf);
                 }
 
             } catch (IllegalAccessException iae) {

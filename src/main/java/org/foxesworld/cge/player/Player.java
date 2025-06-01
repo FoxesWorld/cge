@@ -71,8 +71,8 @@ public class Player extends Node {
     @SuppressWarnings("unused")
     public static class PlayerHud {
         private float playerSpeed;
-        private float armorBar = 1.0f;
-        private float abilityBar = 1.0f;
+        private float armorBar = 0.6f;
+        private float abilityBar = 0.4f;
 
         PlayerHud(Player player){
             UIModule uiModule = player.calistaGameEngine.getModuleManager().getModule(UIModule.class);

@@ -9,51 +9,33 @@ import org.foxesworld.cge.ui.novaUi.elements.UIElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.List;
+import java.util.*;
 import java.util.function.Consumer;
-import java.util.ArrayList;
-import java.util.Comparator;
 
-/**
- * ProgressElement – основной UI-элемент: плавно анимирует заполнение и
- * при позиционировании внутри родной PanelElement учитывает «коллизию»
- * с другими ProgressElement, чтобы не накладываться друг на друга.
- */
 public class ProgressElement extends AbstractUIElement {
     private static final Logger logger = LoggerFactory.getLogger(ProgressElement.class);
 
     private final CalistaGameEngine engine;
+    private final ProgressAnimator animator;
+    private final ProgressRenderer renderer;
 
-    // Исходные координаты (от левого-верхнего угла родителя), до учёта коллизий
-    private float rawPosX = 0f;
-    private float rawPosY = 0f;
-
-    // Размеры рамки (px)
-    //private float width  = 200f;
-    //private float height = 12f;
-
-    // Цвета
+    // Цвета (RGBA поддерживает прозрачность)
     private ColorRGBA borderColor     = new ColorRGBA(0f, 0f, 0f, 0.8f);
     private ColorRGBA backgroundColor = new ColorRGBA(0.2f, 0.2f, 0.2f, 0.8f);
     private ColorRGBA fillColor       = new ColorRGBA(0f, 0.75f, 0.2f, 1f);
 
-    // Толщина рамки, padding и внешний отступ (px)
+    // Положение и размеры (rawPosX/Y берутся из AbstractUIElement)
+    // rawPosX, rawPosY унаследованы
+    private float width  = 200f;
+    private float height = 12f;
+
+    // Толщина рамки, padding и внешний отступ
     private float borderThickness = 1f;
     private float padding         = 1f;
     private float margin          = 0f;
 
-    // Аниматор прогресса (отображаемый и целевой)
-    private final ProgressAnimator animator;
-
-    // Рендерер геометрий (border, background, fill)
-    private final ProgressRenderer renderer;
-
-    /** Обработчики свойств (ключ → Consumer<String>) */
     private final Map<String, Consumer<String>> propertyHandlers = new HashMap<>();
 
-    // Ссылки на Geometry, получаемые из renderer:
     private Geometry borderGeom;
     private Geometry bgGeom;
     private Geometry fgGeom;
@@ -71,7 +53,6 @@ public class ProgressElement extends AbstractUIElement {
         initPropertyHandlers();
         rebuildAllGeometries();
         recalcAndReposition();
-
         logger.debug("ProgressElement created: id='{}'", id);
     }
 
@@ -127,8 +108,8 @@ public class ProgressElement extends AbstractUIElement {
             recalcAndReposition();
         });
         propertyHandlers.put("progress", v -> {
-            float p = parseFloatOrDefault(v, animator.getTarget());
-            setProgress(p);
+            float p = clamp(parseFloatOrDefault(v, animator.getTarget()), 0f, 1f);
+            animator.setTarget(p);
         });
         propertyHandlers.put("animationSpeed", v -> {
             float s = parseFloatOrDefault(v, animator.getSpeed());
@@ -151,28 +132,38 @@ public class ProgressElement extends AbstractUIElement {
         super.setOnClickHandler(methodName, eventHandlerTarget);
     }
 
-    // ========================================
-    // Перестроение всех геометрий (border/bg/fill)
-    // ========================================
+    /**
+     * Полная перестройка геометрий: рамка, фон и заливка.
+     */
     private void rebuildAllGeometries() {
-        borderGeom = renderer.buildBorder(width, height, borderColor);
+        // Удаляем старые при повторном создании
+        if (borderGeom != null) { borderGeom.removeFromParent(); }
+        if (bgGeom != null)     { bgGeom.removeFromParent(); }
+        if (fgGeom != null)     { fgGeom.removeFromParent(); }
+
+        // 1. Рамка (скорее всего самый задний zIndex = 0)
+        borderGeom = renderer.buildOrUpdateBorder(width, height, borderColor, 0f);
         node.attachChild(borderGeom);
 
-        float innerW = Math.max(0f, width - 2f * (borderThickness + padding));
-        float innerH = Math.max(0f, height - 2f * (borderThickness + padding));
-        bgGeom = renderer.buildBackground(innerW, innerH, backgroundColor,
+        // 2. Фон
+        float innerW = Math.max(0f, width - 2f * borderThickness);
+        float innerH = Math.max(0f, height - 2f * borderThickness);
+        bgGeom = renderer.buildOrUpdateBackground(innerW, innerH, backgroundColor,
                 borderThickness, padding, 1f);
         node.attachChild(bgGeom);
 
-        float fgW = innerW * clamp(animator.getDisplayed(), 0f, 1f);
-        fgGeom = renderer.buildFill(fgW, innerH, fillColor,
-                borderThickness, padding, 2f);
+        // 3. Заливка (по текущему прогрессу)
+        float innerContentW = Math.max(0f, innerW - 2f * padding);
+        float displayed = clamp(animator.getDisplayed(), 0f, 1f);
+        float fgW = innerContentW * displayed;
+        fgGeom = renderer.buildOrUpdateFill(fgW, Math.max(0f, innerH - 2f * padding),
+                fillColor, borderThickness, padding, 2f);
         node.attachChild(fgGeom);
     }
 
-    // ========================================
-    // Управление прогрессом + анимация
-    // ========================================
+    /**
+     * Устанавливает целевой прогресс (0..1), анимация будет выполняться автоматически.
+     */
     public void setProgress(float value) {
         float c = clamp(value, 0f, 1f);
         animator.setTarget(c);
@@ -182,24 +173,30 @@ public class ProgressElement extends AbstractUIElement {
         return animator.getTarget();
     }
 
-    public void update(float tpf) {
+    /**
+     * Вызвать из NovaUI.update(tpf) для плавной анимации заливки.
+     */
+    public void updateSelf(float tpf) {
         boolean changed = animator.update(tpf);
         if (!changed) {
             return;
         }
-        float innerW = Math.max(0f, width - 2f * (borderThickness + padding));
-        float innerH = Math.max(0f, height - 2f * (borderThickness + padding));
-        float fgW = innerW * clamp(animator.getDisplayed(), 0f, 1f);
-        renderer.updateFill(fgW, innerH, fillColor, borderThickness, padding);
+        float innerW = Math.max(0f, width - 2f * borderThickness);
+        float innerH = Math.max(0f, height - 2f * borderThickness);
+        float innerContentW = Math.max(0f, innerW - 2f * padding);
+        float displayed = clamp(animator.getDisplayed(), 0f, 1f);
+        float fgW = innerContentW * displayed;
+        renderer.updateFill(fgW, Math.max(0f, innerH - 2f * padding),
+                fillColor, borderThickness, padding, 2f);
     }
 
-    // ========================================
-    // Позиционирование + улучшенная защита от перекрытия
-    // ========================================
+    /**
+     * Позиционирование с учётом коллизий: не допускаем наложения вертикальных полос.
+     */
     public void recalcAndReposition() {
-        float parentHeight = (parentPanel != null
+        float parentHeight = (parentPanel != null)
                 ? parentPanel.getCurrentHeight()
-                : engine.getCamera().getHeight());
+                : engine.getCamera().getHeight();
 
         if (parentPanel != null) {
             List<ProgressElement> siblings = new ArrayList<>();
@@ -208,6 +205,7 @@ public class ProgressElement extends AbstractUIElement {
                     siblings.add(pe);
                 }
             }
+            // Сортируем по rawPosY (чем больше rawPosY, тем выше на экране)
             siblings.sort(Comparator.comparing(pe -> pe.rawPosY));
 
             float prevBottom = Float.POSITIVE_INFINITY;
@@ -215,16 +213,13 @@ public class ProgressElement extends AbstractUIElement {
                 float basePy = parentHeight - pe.rawPosY - pe.height - pe.margin;
                 float finalPy = basePy;
                 if (prevBottom != Float.POSITIVE_INFINITY) {
-                    // верхняя граница текущего: basePy + height
                     float currentTop = basePy + pe.height;
-                    // если текущий топ выше или пересекает предыдущий низ, сдвигаем вниз
                     if (currentTop > prevBottom - pe.margin) {
                         finalPy = prevBottom - pe.height - pe.margin;
                     }
                 }
                 float px = pe.rawPosX + pe.margin;
                 pe.node.setLocalTranslation(px, finalPy, 0f);
-                // обновляем prevBottom: это Y нижней границы (нижний край) текущего
                 prevBottom = finalPy;
             }
         } else {
@@ -234,17 +229,26 @@ public class ProgressElement extends AbstractUIElement {
         }
     }
 
-    // ========================================
-    // Геттеры для PanelElement.layout и AABB-проверки
-    // ========================================
-    public float getRawPosX() { return rawPosX; }
-    public float getRawPosY() { return rawPosY; }
-    public float getWidth()   { return width;  }
-    public float getHeight()  { return height; }
+    public float getRawPosX() {
+        return rawPosX;
+    }
 
-    // ========================================
-    // Вспомогательные утилиты
-    // ========================================
+    public float getRawPosY() {
+        return rawPosY;
+    }
+
+    public float getWidth() {
+        return width;
+    }
+
+    public float getHeight() {
+        return height;
+    }
+
+    public Geometry getBorderGeom() {
+        return borderGeom;
+    }
+
     private float parseFloatOrDefault(String s, float def) {
         if (s == null || s.isEmpty()) return def;
         try {
@@ -255,12 +259,23 @@ public class ProgressElement extends AbstractUIElement {
         }
     }
 
+    /**
+     * Разбирает строку вида "r,g,b" или "r,g,b,a", где компоненты могут быть
+     * заданы либо в диапазоне [0..1], либо в [0..255]. Если указаны только
+     * три компонента, альфа считается равной 1 (или 255).
+     */
+    /**
+     * Разбирает строку вида "r,g,b" или "r,g,b,a", где компоненты могут быть
+     * заданы либо в диапазоне [0..1], либо в [0..255]. Если указаны только
+     * три компонента, альфа считается равной 1. Если указаны четыре,
+     * альфа делится на 255 только если > 1.
+     */
     private ColorRGBA parseColorOrDefault(String s, ColorRGBA def) {
         if (s == null || s.isEmpty()) {
             return def.clone();
         }
         String[] parts = s.split(",");
-        if (parts.length != 4) {
+        if (parts.length < 3 || parts.length > 4) {
             logger.warn("ProgressElement '{}': invalid color format '{}'", id, s);
             return def.clone();
         }
@@ -268,7 +283,23 @@ public class ProgressElement extends AbstractUIElement {
             float r = Float.parseFloat(parts[0].trim());
             float g = Float.parseFloat(parts[1].trim());
             float b = Float.parseFloat(parts[2].trim());
-            float a = Float.parseFloat(parts[3].trim());
+            float a = 1f;
+            if (parts.length == 4) {
+                a = Float.parseFloat(parts[3].trim());
+            }
+
+            // Если rgb > 1, предполагаем, что они в [0..255]
+            if (r > 1f || g > 1f || b > 1f) {
+                r /= 255f;
+                g /= 255f;
+                b /= 255f;
+            }
+
+            // Альфу делим на 255 только если она явно > 1
+            if (a > 1f) {
+                a /= 255f;
+            }
+
             return new ColorRGBA(r, g, b, a);
         } catch (NumberFormatException ex) {
             logger.warn("ProgressElement '{}': failed to parse color '{}'", id, s);
@@ -276,11 +307,8 @@ public class ProgressElement extends AbstractUIElement {
         }
     }
 
+
     private float clamp(float val, float min, float max) {
         return (val < min) ? min : Math.min(val, max);
-    }
-
-    public Geometry getBorderGeom() {
-        return borderGeom;
     }
 }
