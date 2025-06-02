@@ -9,8 +9,15 @@ import com.jme3.renderer.Camera;
 import com.jme3.scene.control.AbstractControl;
 
 /**
- * MovementControl: движение в направлении взгляда камеры,
- * с плавным ускорением/торможением, событиями прыжка и возможностью читать текущую скорость.
+ * MovementControl handles player movement based on camera orientation, with smooth acceleration/deceleration,
+ * jump detection/callbacks, and optional sprinting. Inspired by Frostbite-style movement:
+ * <ul>
+ *     <li>Movement aligns to camera forward/left vectors (projected onto horizontal plane).</li>
+ *     <li>Smooth acceleration and deceleration blend towards a target velocity.</li>
+ *     <li>Character rotation is updated to face movement direction when moving.</li>
+ *     <li>Sprinting via holding SHIFT increases max speed.</li>
+ *     <li>Jump and landing events notify a JumpListener.</li>
+ * </ul>
  */
 public class MovementControl extends AbstractControl implements ActionListener {
 
@@ -19,114 +26,173 @@ public class MovementControl extends AbstractControl implements ActionListener {
         void onLanding(float peakHeight);
     }
 
-    // Максимальные параметры, можно подстроить под желаемую скорость
-    private final float maxSpeed;       // м/с
-    private final float acceleration;   // м/с²
-    private final float deceleration;   // м/с²
+    // Input action names
+    private static final String MAPPING_FORWARD   = "MoveForward";
+    private static final String MAPPING_BACKWARD  = "MoveBackward";
+    private static final String MAPPING_LEFT      = "MoveLeft";
+    private static final String MAPPING_RIGHT     = "MoveRight";
+    private static final String MAPPING_JUMP      = "Jump";
+    private static final String MAPPING_SPRINT    = "Sprint";
 
-    private final Player player;
-    private final CharacterControl character;
-    private final InputManager    input;
-    private final Camera          cam;
-    private JumpListener          jumpListener;
+    private final Player            player;
+    private final CharacterControl  character;
+    private final InputManager      input;
+    private final Camera            cam;
+    private JumpListener            jumpListener;
 
-    // флаги ввода
-    private boolean forward, backward, left, right;
+    // Movement configuration (units: m/s and m/s²)
+    private final float walkSpeed;        // normal walking speed
+    private final float sprintSpeed;      // sprinting speed
+    private final float acceleration;     // acceleration rate
+    private final float deceleration;     // deceleration rate
 
-    // текущая и целевая скорости
+    // Input state
+    private boolean forward, backward, left, right, sprint;
+
+    // Velocity vectors (reused to avoid per-frame allocations)
     private final Vector3f currentVel = new Vector3f();
-    private final Vector3f targetVel  = new Vector3f();
+    private final Vector3f desiredVel = new Vector3f();
+    private final Vector3f camForward = new Vector3f();
+    private final Vector3f camLeft    = new Vector3f();
+    private final Vector3f moveDir    = new Vector3f();
 
-    // Для прыжков и приземлений
+    // Jump/landing detection
     private boolean wasInAir = false;
-    private float   lastY    = 0;
-    private float   jumpPeak = 0;
+    private float lastY      = 0f;
+    private float jumpPeak   = 0f;
 
-    public MovementControl(Player player) {
-        // Значения можно вытянуть из Player или задать конструктором
-        this.player = player;
-        this.maxSpeed     = 0.1f;     // ~5 м/с
-        this.acceleration = 20f;    // ~20 м/с²
-        this.deceleration = 16f;    // ~16 м/с²
+    /**
+     * Constructs a MovementControl.
+     *
+     * @param player       the Player instance containing CharacterControl, InputManager, Camera, and HUD
+     * @param walkSpeed    walking speed in m/s
+     * @param sprintSpeed  sprint speed in m/s
+     * @param acceleration acceleration rate in m/s²
+     * @param deceleration deceleration rate in m/s²
+     */
+    public MovementControl(Player player,
+                           float walkSpeed,
+                           float sprintSpeed,
+                           float acceleration,
+                           float deceleration) {
+        this.player       = player;
+        this.walkSpeed    = walkSpeed;
+        this.sprintSpeed  = sprintSpeed;
+        this.acceleration = acceleration;
+        this.deceleration = deceleration;
 
         this.character = player.getCharacter();
         this.input     = player.getInput();
         this.cam       = player.getCam();
-        initMappings();
+
+        initInputMappings();
     }
 
-    private void initMappings() {
-        input.addMapping("Forward",  new KeyTrigger(KeyInput.KEY_W));
-        input.addMapping("Backward", new KeyTrigger(KeyInput.KEY_S));
-        input.addMapping("Left",     new KeyTrigger(KeyInput.KEY_A));
-        input.addMapping("Right",    new KeyTrigger(KeyInput.KEY_D));
-        input.addMapping("Jump",     new KeyTrigger(KeyInput.KEY_SPACE));
+    /**
+     * Binds input mappings and registers this as ActionListener.
+     */
+    private void initInputMappings() {
+        input.addMapping(MAPPING_FORWARD,   new KeyTrigger(KeyInput.KEY_W));
+        input.addMapping(MAPPING_BACKWARD,  new KeyTrigger(KeyInput.KEY_S));
+        input.addMapping(MAPPING_LEFT,      new KeyTrigger(KeyInput.KEY_A));
+        input.addMapping(MAPPING_RIGHT,     new KeyTrigger(KeyInput.KEY_D));
+        input.addMapping(MAPPING_JUMP,      new KeyTrigger(KeyInput.KEY_SPACE));
+        input.addMapping(MAPPING_SPRINT,    new KeyTrigger(KeyInput.KEY_LSHIFT));
         input.addListener(this,
-                "Forward","Backward","Left","Right","Jump"
+                MAPPING_FORWARD, MAPPING_BACKWARD, MAPPING_LEFT,
+                MAPPING_RIGHT, MAPPING_JUMP, MAPPING_SPRINT
         );
     }
 
     @Override
     protected void controlUpdate(float tpf) {
-        // 1) Определяем целевую скорость по вводу и направлению камеры
-        Vector3f dir = new Vector3f();
-        if (forward)  dir.z += 1;
-        if (backward) dir.z -= 1;
-        if (left)     dir.x += 1;
-        if (right)    dir.x -= 1;
+        // 1) Determine raw movement direction from input (X = left/right, Z = forward/back)
+        moveDir.set(0, 0, 0);
+        if (forward)  moveDir.z += 1f;
+        if (backward) moveDir.z -= 1f;
+        if (left)     moveDir.x += 1f;
+        if (right)    moveDir.x -= 1f;
 
-        if (!dir.equals(Vector3f.ZERO)) {
-            dir.normalizeLocal();
-            // преобразуем локальную камеру в мировое направление
-            Vector3f camDir  = cam.getDirection().clone().setY(0).normalizeLocal();
-            Vector3f camLeft = cam.getLeft().clone().setY(0).normalizeLocal();
-            targetVel.set(camDir).multLocal(dir.z)
-                    .addLocal(camLeft.mult(dir.x))
-                    .multLocal(maxSpeed);
+        if (!moveDir.equals(Vector3f.ZERO)) {
+            moveDir.normalizeLocal();
+
+            // 2) Project camera basis onto horizontal plane and normalize
+            cam.getDirection(camForward).setY(0).normalizeLocal();
+            cam.getLeft(camLeft).setY(0).normalizeLocal();
+
+            // 3) Compute desired velocity: combine camera-forward and camera-left
+            desiredVel.set(camForward).multLocal(moveDir.z).addLocal(camLeft.mult(moveDir.x));
+
+            // 4) Scale by sprint or walk speed
+            float maxSpeed = sprint ? sprintSpeed : walkSpeed;
+            desiredVel.multLocal(maxSpeed);
+
+            // 5) Smoothly accelerate or decelerate toward desiredVel
+            Vector3f delta = desiredVel.subtract(currentVel);
+            float accelRate = (desiredVel.lengthSquared() > currentVel.lengthSquared()
+                    ? acceleration : deceleration) * tpf;
+
+            if (delta.lengthSquared() > accelRate * accelRate) {
+                delta.normalizeLocal().multLocal(accelRate);
+            }
+            currentVel.addLocal(delta);
+
+            // 6) Update character walk direction
+            character.setWalkDirection(currentVel);
+
+            // 7) Rotate character to face movement direction (yaw only)
+            Vector3f faceDir = new Vector3f(currentVel.x, 0, currentVel.z);
+            if (faceDir.lengthSquared() > 1e-4f) {
+                character.setViewDirection(faceDir.normalizeLocal());
+            }
         } else {
-            targetVel.set(0, 0, 0);
+            // No input: decelerate to zero
+            if (currentVel.lengthSquared() > 1e-4f) {
+                Vector3f delta = currentVel.normalize().negate().multLocal(deceleration * tpf);
+                if (delta.lengthSquared() > currentVel.lengthSquared()) {
+                    currentVel.set(0, 0, 0);
+                } else {
+                    currentVel.addLocal(delta);
+                }
+                character.setWalkDirection(currentVel);
+            } else {
+                // Fully stopped
+                currentVel.set(0, 0, 0);
+                character.setWalkDirection(Vector3f.ZERO);
+            }
         }
 
-        // 2) Плавное ускорение/торможение
-        Vector3f delta = targetVel.subtract(currentVel);
-        float accelValue = (targetVel.length() > currentVel.length()
-                ? acceleration : deceleration) * tpf;
-
-        if (delta.length() > accelValue) {
-            delta.normalizeLocal().multLocal(accelValue);
-        }
-        currentVel.addLocal(delta);
-
-        // 3) Применяем к CharacterControl
-        if (currentVel.lengthSquared() > 1e-4f) {
-            character.setWalkDirection(currentVel.clone());
-        } else {
-            character.setWalkDirection(Vector3f.ZERO);
-        }
-
-        // 4) Детекция прыжка/приземления
+        // 8) Jump/landing detection
         float currentY = character.getPhysicsLocation().y;
         boolean inAir = !character.onGround();
         if (inAir) {
-            jumpPeak = Math.max(jumpPeak, currentY - lastY);
+            float deltaY = currentY - lastY;
+            if (deltaY > 0) {
+                // ascending
+                jumpPeak = Math.max(jumpPeak, currentY);
+            }
         }
         if (wasInAir && !inAir && jumpListener != null) {
-            jumpListener.onLanding(jumpPeak);
-            jumpPeak = 0;
+            float peakHeight = jumpPeak - lastY;
+            jumpListener.onLanding(peakHeight);
+            jumpPeak = 0f;
         }
         wasInAir = inAir;
         lastY    = currentY;
+
+        // 9) Update HUD with horizontal speed
         player.getPlayerHud().setPlayerSpeed(getCurrentSpeed());
     }
 
     @Override
     public void onAction(String name, boolean isPressed, float tpf) {
         switch (name) {
-            case "Forward" -> forward = isPressed;
-            case "Backward" -> backward = isPressed;
-            case "Left" -> left = isPressed;
-            case "Right" -> right = isPressed;
-            case "Jump" -> {
+            case MAPPING_FORWARD  -> forward  = isPressed;
+            case MAPPING_BACKWARD -> backward = isPressed;
+            case MAPPING_LEFT     -> left     = isPressed;
+            case MAPPING_RIGHT    -> right    = isPressed;
+            case MAPPING_SPRINT   -> sprint   = isPressed;
+            case MAPPING_JUMP -> {
                 if (isPressed && character.onGround()) {
                     character.jump();
                     if (jumpListener != null) {
@@ -139,31 +205,43 @@ public class MovementControl extends AbstractControl implements ActionListener {
 
     @Override
     protected void controlRender(com.jme3.renderer.RenderManager rm, com.jme3.renderer.ViewPort vp) {
-        // не используется
+        // Not used
     }
 
+    /**
+     * Sets a JumpListener to receive jump start and landing events.
+     *
+     * @param listener listener implementation
+     */
     public void setJumpListener(JumpListener listener) {
         this.jumpListener = listener;
     }
 
     /**
-     * Возвращает текущую горизонтальную скорость персонажа (м/с).
+     * Returns the player's current horizontal speed (m/s).
+     *
+     * @return current ground-plane speed
      */
     public float getCurrentSpeed() {
-        return currentVel.length();
+        // horizontal speed magnitude
+        return (float) Math.sqrt(currentVel.x * currentVel.x + currentVel.z * currentVel.z);
     }
 
     /**
-     * Возвращает максимальную скорость персонажа (м/с).
+     * Returns the player's current maximum speed (m/s), depending on sprint state.
+     *
+     * @return walkSpeed or sprintSpeed if sprinting
      */
     public float getMaxSpeed() {
-        return maxSpeed;
+        return sprint ? sprintSpeed : walkSpeed;
     }
 
     /**
-     * true, если персонаж сейчас движется.
+     * Returns true if the player is currently moving (horizontal velocity > small threshold).
+     *
+     * @return true if walking or sprinting
      */
     public boolean isMoving() {
-        return currentVel.lengthSquared() > 1e-4f;
+        return currentVel.x * currentVel.x + currentVel.z * currentVel.z > 1e-4f;
     }
 }

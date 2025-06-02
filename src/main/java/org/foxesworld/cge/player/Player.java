@@ -17,52 +17,82 @@ public class Player extends Node {
     private final  CalistaGameEngine calistaGameEngine;
     private final MovementControl movementControl;
     private final CameraEffectsControl camEffectsControl;
-    private final Node camNode;
+    //private final Node camNode;
     private final  PlayerHud playerHud;
     private final InputManager input;
     private final Camera cam;
     private final CapsuleCollisionShape shape;
 
+    /**
+     * Конструктор Player.
+     *
+     * @param engine   ссылка на движок (содержит InputManager, Camera, BulletAppState и т.д.)
+     * @param spawnPos начальная позиция спавна
+     */
     public Player(CalistaGameEngine engine, Vector3f spawnPos) {
         super("Player");
         setLocalTranslation(spawnPos);
         this.calistaGameEngine = engine;
-        input = engine.getInputManager();
-        BulletAppState bullet = engine.getModuleManager().getModule(PhysicsModule.class).getBulletAppState();
-        //stats = new StatsDisplay(engine.getAssetManager(), engine.getGuiNode(), this, "Interface/stats_config.xml");
-        playerHud = new PlayerHud(this);
-        cam = engine.getCamera();
 
-        // --- Physics setup ---
-        shape = new CapsuleCollisionShape(0.5f, 1.8f, 1);
-        character = new CharacterControl(shape, 0.05f);
+        // Получаем InputManager и Camera из движка
+        this.input = engine.getInputManager();
+        this.cam   = engine.getCamera();
+
+        // HUD
+        this.playerHud = new PlayerHud(this);
+
+        // Physics setup
+        this.shape = new CapsuleCollisionShape(0.5f, 1.8f, 1);
+        this.character = new CharacterControl(shape, 0.05f);
         character.setJumpSpeed(4f);
         character.setFallSpeed(9.8f);
         character.setGravity(9.8f);
         character.setPhysicsLocation(spawnPos);
         addControl(character);
+
+        // Добавляем CharacterControl в физическую сцену
+        var bullet = engine.getModuleManager()
+                .getModule(PhysicsModule.class)
+                .getBulletAppState();
         bullet.getPhysicsSpace().add(character);
 
-        // --- Movement control ---
+        // --- Отключаем стандартный FlyCam и скрываем курсор ---
+        engine.getFlyByCamera().setEnabled(false);
+        input.setCursorVisible(false);
+        // Если версия JME поддерживает, можно попытаться захватить курсор:
+        // input.setCursorCaptured(true);
 
-        // --- First-person camera setup ---
-        FirstPersonCameraControl fpCamControl = new FirstPersonCameraControl(this, 1.6f);
+        // --- First-person camera setup (без CameraNode) ---
+        FirstPersonCameraControl fpCamControl = new FirstPersonCameraControl(
+                this,           // this == Player (имеет getInput() и getCam())
+                1.6f,           // высота «глаз» над землёй в метрах
+                0.2f,           // чувствительность мыши по горизонтали (yaw)
+                0.2f            // чувствительность мыши по вертикали (pitch)
+        );
         addControl(fpCamControl);
-        this.camNode = fpCamControl.getCamNode();
-        movementControl = new MovementControl(this);
+
+        // --- Movement control (Frostbite-like parameters) ---
+        movementControl = new MovementControl(
+                this,
+                0.1f,   // walking speed ~5 m/s
+                0.25f,  // sprint speed ~10 m/s
+                0.6f,  // acceleration ~20 m/s²
+                0.8f   // deceleration ~16 m/s²
+        );
         addControl(movementControl);
 
+        // --- Camera effects (увязка с прыжками) ---
         camEffectsControl = new CameraEffectsControl(this);
+        addControl(camEffectsControl);
 
-        camNode.addControl(camEffectsControl);
-        attachChild(camNode);
-
-        // --- Hook jump start to camera effects ---
         movementControl.setJumpListener(new MovementControl.JumpListener() {
-            @Override public void onJumpStart() {
+            @Override
+            public void onJumpStart() {
                 camEffectsControl.notifyJumpStart();
             }
-            @Override public void onLanding(float peak) {
+
+            @Override
+            public void onLanding(float peak) {
                 camEffectsControl.notifyLanding(peak);
             }
         });
@@ -90,10 +120,6 @@ public class Player extends Node {
 
     public MovementControl getMovementControl() {
         return movementControl;
-    }
-
-    public Node getCamNode() {
-        return camNode;
     }
 
     public InputManager getInput() {

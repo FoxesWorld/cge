@@ -126,7 +126,7 @@ public class PanelElement extends AbstractUIElement {
         } else {
             layoutHelper.recomputeAndLayOut(totalWidth, maxChildHeight);
         }
-        System.out.println("ttwdth "+totalWidth);
+        //System.out.println("ttwdth "+totalWidth);
         renderer.updateGeometry(getCurrentWidth(), getCurrentHeight());
     }
 

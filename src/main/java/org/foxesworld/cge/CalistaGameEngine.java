@@ -144,12 +144,14 @@ public class CalistaGameEngine extends SimpleApplication {
                 }
             });
 
+            this.moduleManager.getModule(SceneModule.class).onSceneReady(() ->{
+                ShapeParty cubeDerp = new ShapeParty(this);
+                cubeDerp.startParty();
+                flyCam.setEnabled(false);
+                Player player = new Player(this, new Vector3f(0,20,0));
+                rootNode.attachChild(player);
+            });
 
-            ShapeParty cubeDerp = new ShapeParty(this);
-            cubeDerp.startParty();
-            flyCam.setEnabled(false);
-            Player player = new Player(this, new Vector3f(0,20,0));
-            rootNode.attachChild(player);
         });
     }
     public ConfigService getConfigService() {
