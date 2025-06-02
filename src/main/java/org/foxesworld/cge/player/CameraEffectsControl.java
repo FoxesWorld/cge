@@ -1,111 +1,124 @@
 package org.foxesworld.cge.player;
 
+import com.jme3.bullet.collision.shapes.CollisionShape;
+import com.jme3.bullet.collision.shapes.CapsuleCollisionShape;
+import com.jme3.bullet.control.CharacterControl;
 import com.jme3.math.FastMath;
-import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
+import com.jme3.renderer.RenderManager;
+import com.jme3.renderer.ViewPort;
+import com.jme3.scene.Spatial;
 import com.jme3.scene.control.AbstractControl;
+import com.jme3.scene.control.Control;
 
 /**
- * Реалистичные эффекты камеры: bobbing и spring-landing.
- * Работает напрямую с камерой, без использования CameraNode.
+ * CameraEffectsControl отвечает за визуальные эффекты камеры при движении персонажа:
+ *  - «боб» при ходьбе/беге;
+ *  - плавный подъём при старте прыжка;
+ *  - сглаженный «удар» и затухание при приземлении.
  */
 public class CameraEffectsControl extends AbstractControl {
 
     private final Camera cam;
+    private final Player player;
     private final MovementControl moveCtrl;
+    private final CharacterControl characterCtrl;
     private final float characterHeight;
-    private final float characterRadius;
 
-    // bobbing
-    private float walkTime = 0;
-    private final float bobBaseFreq;
-    private final Vector3f bobAmplitude;
-    private final float bobTilt;
+    private float verticalOffset;
+    private float bobbingPhase = 0f;
+    private float bobbingAmplitude;
+    private float bobbingFrequency;
 
-    // spring-landing
-    private float landOffset = 0;
-    private float landVelocity = 0;
-    private final float springK;
-    private final float damping;
+    private boolean isJumping = false;
+    private float jumpStartHeight = 0f;
 
-    // внутренние параметры
-    private Vector3f camBasePos;
-    private Quaternion camBaseRot;
+    private float landingOffset = 0f;
+    private float landingShakeDuration;
+    private float landingShakeTimer = 0f;
 
+    /**
+     * @param player экземпляр Player, откуда берутся камера, MovementControl и CharacterControl.
+     */
     public CameraEffectsControl(Player player) {
+        this.player = player;
         this.cam = player.getCam();
         this.moveCtrl = player.getMovementControl();
-        this.characterHeight = player.getShape().getHeight() + 2 * player.getShape().getRadius();
-        this.characterRadius = player.getShape().getRadius();
+        this.characterCtrl = player.getCharacter();
 
-        this.bobBaseFreq = 1.5f;
-        this.bobAmplitude = new Vector3f(
-                characterRadius * 0.1f,
-                characterHeight * 0.025f,
-                characterHeight * 0.9f
-        );
-        this.bobTilt = FastMath.DEG_TO_RAD * (characterHeight * 0.5f);
+        CollisionShape shape = characterCtrl.getCharacter().getCollisionShape();
+        if (!(shape instanceof CapsuleCollisionShape)) {
+            throw new IllegalStateException("CameraEffectsControl ожидает CapsuleCollisionShape");
+        }
+        CapsuleCollisionShape capsule = (CapsuleCollisionShape) shape;
+        this.characterHeight = capsule.getHeight() + 2f * capsule.getRadius();
 
-        float massScale = characterHeight * 0.8f;
-        this.springK = 40f * massScale;
-        this.damping = 6f * massScale;
+        initParameters();
+    }
 
-        this.camBasePos = new Vector3f();
-        this.camBaseRot = new Quaternion();
+    private void initParameters() {
+        verticalOffset = characterHeight / 2f;
+        bobbingAmplitude = 0.03f;
+        bobbingFrequency = 6.0f;
+        landingShakeDuration = 0.3f; // увеличили на 0.3 для более плавного затухания
+        landingShakeTimer = 0f;
     }
 
     public void notifyJumpStart() {
-        landOffset = 0;
-        landVelocity = 0;
+        isJumping = true;
+        jumpStartHeight = characterCtrl.getPhysicsLocation().y;
+        landingOffset = 0f;
     }
 
     public void notifyLanding(float peakHeight) {
-        landVelocity = peakHeight * 3f * (characterHeight * 0.5f);
+        isJumping = false;
+        landingOffset = FastMath.clamp(peakHeight * 0.5f, 0f, 0.3f);
+        landingShakeTimer = landingShakeDuration;
+        bobbingPhase = 0f;
     }
 
     @Override
     protected void controlUpdate(float tpf) {
-        // Сохраняем исходную позицию и поворот
-        camBasePos.set(spatial.getWorldTranslation()).addLocal(0, bobAmplitude.z, 0);
-        camBaseRot.set(cam.getRotation());
+        Vector3f charPos = characterCtrl.getPhysicsLocation();
+        float halfHeight = characterHeight / 2f;
 
-        Vector3f offset = new Vector3f();
-        Quaternion rotation = new Quaternion();
+        if (isJumping) {
+            float currentY = charPos.y;
+            float targetOffset = (currentY - jumpStartHeight) + halfHeight;
+            verticalOffset = FastMath.interpolateLinear(tpf * 4f, verticalOffset, targetOffset);
 
-        float speed = moveCtrl.getCurrentSpeed();
-        if (moveCtrl.isMoving() && speed > 0.1f) {
-            float freq = bobBaseFreq * (speed / moveCtrl.getMaxSpeed());
-            walkTime += tpf * freq;
-            float phase = walkTime * FastMath.TWO_PI;
-            float sin = FastMath.sin(phase);
-            float cos = FastMath.cos(phase);
+        } else if (landingShakeTimer > 0f) {
+            float shake = computeLandingShake();
+            landingShakeTimer = Math.max(landingShakeTimer - tpf, 0f);
+            float targetOffset = halfHeight - shake;
+            verticalOffset = FastMath.interpolateLinear(tpf * 8f, verticalOffset, targetOffset);
 
-            offset.y += sin * bobAmplitude.y;
-            offset.x += cos * bobAmplitude.x * 0.6f;
-            rotation.fromAngles(sin * bobTilt, 0, cos * bobTilt * 0.3f);
+        } else if (moveCtrl.isMoving() && characterCtrl.onGround()) {
+            float speedFactor = moveCtrl.getCurrentSpeed() / player.getWalkSpeed() + player.getSprintSped();
+            bobbingPhase = (bobbingPhase + FastMath.TWO_PI * bobbingFrequency * tpf * speedFactor) % FastMath.TWO_PI;
+            float bobOffset = FastMath.sin(bobbingPhase) * bobbingAmplitude;
+            float targetOffset = halfHeight + bobOffset;
+            verticalOffset = FastMath.interpolateLinear(tpf * 5f, verticalOffset, targetOffset);
+
         } else {
-            walkTime = 0;
-            rotation.loadIdentity();
+            verticalOffset = FastMath.interpolateLinear(tpf * 5f, verticalOffset, halfHeight);
+            bobbingPhase = 0f;
         }
 
-        // spring-landing
-        if (FastMath.abs(landOffset) > 0.001f || FastMath.abs(landVelocity) > 0.001f) {
-            float force = -springK * landOffset;
-            landVelocity += force * tpf;
-            landVelocity *= FastMath.clamp(1 - damping * tpf, 0, 1);
-            landOffset += landVelocity * tpf;
-            offset.y -= landOffset;
-        }
-
-        // итоговая позиция и вращение
-        Vector3f finalPos = camBasePos.add(offset);
-        Quaternion finalRot = camBaseRot.mult(rotation);
-
-        cam.setLocation(finalPos);
-        cam.setRotation(finalRot);
+        cam.setLocation(new Vector3f(charPos.x, charPos.y + verticalOffset, charPos.z));
     }
 
     @Override
-    protected void controlRender(com.jme3.renderer.RenderManager rm, com.jme3.renderer.ViewPort vp) {}
+    protected void controlRender(RenderManager rm, ViewPort vp) { }
+
+    @Override
+    public Control cloneForSpatial(Spatial spatial) {
+        return this;
+    }
+
+    private float computeLandingShake() {
+        float progress = (landingShakeDuration - landingShakeTimer) / landingShakeDuration;
+        return landingOffset * (1f - progress);
+    }
 }

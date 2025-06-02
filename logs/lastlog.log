@@ -1,622 +1,712 @@
-[14:27:48.641][DEBUG][RendererModule] RendererModule constructor: configFile='render_config', configClass=RendererConfig 
-[14:27:48.644][INFO][RendererModule] RendererModule initialize() start
-[14:27:48.644][DEBUG][RendererModule] RendererModule: UNLOADED -> LOADING_CONFIG
-[14:27:48.645][DEBUG][ModuleHealthMonitor] Module 'RendererModule' state <none> -> LOADING_CONFIG (transitions=1)
-[14:27:48.647][DEBUG][RendererModule] Registered config 'render_config' for module RendererModule
-[14:27:48.647][DEBUG][TextureLoader] Loading CGTEX: data/testData.cgtex
-[14:27:48.648][DEBUG][RendererModule] RendererModule loading config from 'render_config'
-[14:27:48.649][DEBUG][CGTEXFileReader] ================ CGTEX FILE READ START ================
-[14:27:48.650][DEBUG][CGTEXFileReader] Opening file: C:\Users\Aiden\Documents\GitHub\CGE\cge\data\testData.cgtex
-[14:27:48.657][DEBUG][CGTEXFileReader] Full file HEX dump (7334175 bytes)
-[14:27:48.658][DEBUG][RendererModule] RendererModule: LOADING_CONFIG -> INITIALIZING
-[14:27:48.658][DEBUG][ModuleHealthMonitor] Module 'RendererModule' state LOADING_CONFIG -> INITIALIZING (transitions=2)
-[14:27:48.659][DEBUG][RendererModule] RendererModule calling initModule
-[14:27:48.659][INFO][RendererModule] Initializing RendererModule and sub-modules...
-[14:27:48.663][INFO][RendererModule] RendererModule initialized.
-[14:27:48.663][DEBUG][RendererModule] RendererModule: INITIALIZING -> RUNNING
-[14:27:48.663][DEBUG][ModuleHealthMonitor] Module 'RendererModule' state INITIALIZING -> RUNNING (transitions=3)
-[14:27:48.663][INFO][RendererModule] RendererModule initialized and running
-[14:27:48.663][INFO][ModuleManager] Searching for module: SceneModule
-[14:27:48.664][WARN][ModuleManager] Module SceneModule not found
-[14:27:48.667][DEBUG][CGTEXFileReader] Header Parsed: CGTEXMetadata{magic='CGTX', version=1, textureCount=11, dataOffset=20, fileSize=7334175}
-[14:27:48.668][DEBUG][CGTEXFileReader] Texture[0]: name=box size=920x1 format={}
-[14:27:48.668][DEBUG][CGTEXFileReader] Texture[1]: name=calista_grid_test size=2680x1 format={}
-[14:27:48.669][DEBUG][CGTEXFileReader] Texture[2]: name=calista_grid_test_normal size=2680x1 format={}
-[14:27:48.670][DEBUG][CGTEXFileReader] Texture[3]: name=cubemap_0 size=1144x5 format={}
-[14:27:48.674][DEBUG][CGTEXFileReader] Texture[4]: name=cubemap_1 size=3000x5 format={}
-[14:27:48.675][DEBUG][CGTEXFileReader] Texture[5]: name=cubemap_2 size=1144x5 format={}
-[14:27:48.676][DEBUG][CGTEXFileReader] Texture[6]: name=cubemap_3 size=1144x5 format={}
-[14:27:48.680][DEBUG][CGTEXFileReader] Texture[7]: name=cubemap_4 size=3000x5 format={}
-[14:27:48.680][DEBUG][CGTEXFileReader] Texture[8]: name=cubemap_5 size=1080x5 format={}
-[14:27:48.681][DEBUG][CGTEXFileReader] Texture[9]: name=box_normal size=920x1 format={}
-[14:27:48.681][DEBUG][CGTEXFileReader] Texture[10]: name=testgrid size=1144x1 format={}
-[14:27:48.681][DEBUG][CGTEXFileReader] ================= CGTEX FILE READ END =================
-[14:27:48.681][DEBUG][TextureLoader] Processing 'box' format 1
-[14:27:48.723][DEBUG][TextureLoader] Loaded 'box' 400x400
-[14:27:48.723][DEBUG][TextureLoader] Processing 'calista_grid_test' format 1
-[14:27:48.762][DEBUG][TextureLoader] Loaded 'calista_grid_test' 1024x1536
-[14:27:48.762][DEBUG][TextureLoader] Processing 'calista_grid_test_normal' format 1
-[14:27:48.783][DEBUG][TextureLoader] Loaded 'calista_grid_test_normal' 1024x1536
-[14:27:48.783][DEBUG][TextureLoader] Processing 'cubemap_0' format 5
-[14:27:48.807][DEBUG][TextureLoader] Loaded 'cubemap_0' 512x512
-[14:27:48.807][DEBUG][TextureLoader] Processing 'cubemap_1' format 5
-[14:27:48.853][DEBUG][TextureLoader] Loaded 'cubemap_1' 1440x1440
-[14:27:48.854][DEBUG][TextureLoader] Processing 'cubemap_2' format 5
-[14:27:48.859][DEBUG][TextureLoader] Loaded 'cubemap_2' 512x512
-[14:27:48.859][DEBUG][TextureLoader] Processing 'cubemap_3' format 5
-[14:27:48.865][DEBUG][TextureLoader] Loaded 'cubemap_3' 512x512
-[14:27:48.865][DEBUG][TextureLoader] Processing 'cubemap_4' format 5
-[14:27:48.903][DEBUG][TextureLoader] Loaded 'cubemap_4' 1440x1440
-[14:27:48.903][DEBUG][TextureLoader] Processing 'cubemap_5' format 5
-[14:27:48.908][DEBUG][TextureLoader] Loaded 'cubemap_5' 480x480
-[14:27:48.908][DEBUG][TextureLoader] Processing 'box_normal' format 1
-[14:27:48.911][DEBUG][TextureLoader] Loaded 'box_normal' 400x400
-[14:27:48.911][DEBUG][TextureLoader] Processing 'testgrid' format 1
-[14:27:48.915][DEBUG][TextureLoader] Loaded 'testgrid' 512x512
-[14:27:48.915][INFO][AbstractFile] Closing data\testData.cgtex
-[14:27:48.916][DEBUG][CameraModule] CameraModule constructor: configFile='camera_config', configClass=CameraConfig 
-[14:27:48.916][INFO][CameraModule] CameraModule initialize() start
-[14:27:48.916][DEBUG][CameraModule] CameraModule: UNLOADED -> LOADING_CONFIG
-[14:27:48.916][DEBUG][ModuleHealthMonitor] Module 'CameraModule' state <none> -> LOADING_CONFIG (transitions=1)
-[14:27:48.916][DEBUG][CameraModule] Registered config 'camera_config' for module CameraModule
-[14:27:48.916][DEBUG][CameraModule] CameraModule loading config from 'camera_config'
-[14:27:48.917][INFO][ModuleManager] Adding module CameraModule
-[14:27:48.917][DEBUG][SkyBox] SkyBox constructor: configFile='skybox', configClass=SkyBoxConfig 
-[14:27:48.917][DEBUG][CameraModule] CameraModule: LOADING_CONFIG -> INITIALIZING
-[14:27:48.917][INFO][SkyBox] SkyBox initialize() start
-[14:27:48.917][DEBUG][ModuleHealthMonitor] Module 'CameraModule' state LOADING_CONFIG -> INITIALIZING (transitions=2)
-[14:27:48.917][DEBUG][SkyBox] SkyBox: UNLOADED -> LOADING_CONFIG
-[14:27:48.917][DEBUG][CameraModule] CameraModule calling initModule
-[14:27:48.918][DEBUG][ModuleHealthMonitor] Module 'SkyBox' state <none> -> LOADING_CONFIG (transitions=1)
-[14:27:48.918][DEBUG][SkyBox] Registered config 'skybox' for module SkyBox
-[14:27:48.918][DEBUG][CameraModule] CameraModule: INITIALIZING -> RUNNING
-[14:27:48.918][INFO][ModuleManager] Adding module SkyBox
-[14:27:48.918][DEBUG][ModuleHealthMonitor] Module 'CameraModule' state INITIALIZING -> RUNNING (transitions=3)
-[14:27:48.918][INFO][CameraModule] CameraModule initialized and running
-[14:27:48.918][DEBUG][SkyBox] SkyBox loading config from 'skybox'
-[14:27:48.919][DEBUG][SkyBox] SkyBox: LOADING_CONFIG -> INITIALIZING
-[14:27:48.919][DEBUG][ModuleHealthMonitor] Module 'SkyBox' state LOADING_CONFIG -> INITIALIZING (transitions=2)
-[14:27:48.919][DEBUG][SkyBox] SkyBox calling initModule
-[14:27:48.920][DEBUG][PostProcessingModule] PostProcessingModule constructor: configFile='postprocessing_config', configClass=PostProcessingConfig 
-[14:27:48.920][INFO][PostProcessingModule] PostProcessingModule initialize() start
-[14:27:48.920][DEBUG][PostProcessingModule] PostProcessingModule: UNLOADED -> LOADING_CONFIG
-[14:27:48.920][DEBUG][ModuleHealthMonitor] Module 'PostProcessingModule' state <none> -> LOADING_CONFIG (transitions=1)
-[14:27:48.920][DEBUG][PostProcessingModule] Registered config 'postprocessing_config' for module PostProcessingModule
-[14:27:48.920][DEBUG][PostProcessingModule] PostProcessingModule loading config from 'postprocessing_config'
-[14:27:48.920][INFO][ModuleManager] Adding module PostProcessingModule
-[14:27:48.920][DEBUG][SkyBox] SkyBox: INITIALIZING -> RUNNING
-[14:27:48.921][INFO][ModuleManager] Adding module RendererModule
-[14:27:48.921][DEBUG][ModuleHealthMonitor] Module 'SkyBox' state INITIALIZING -> RUNNING (transitions=3)
-[14:27:48.921][INFO][SkyBox] SkyBox initialized and running
-[14:27:48.922][DEBUG][PostProcessingModule] PostProcessingModule: LOADING_CONFIG -> INITIALIZING
-[14:27:48.922][DEBUG][ModuleHealthMonitor] Module 'PostProcessingModule' state LOADING_CONFIG -> INITIALIZING (transitions=2)
-[14:27:48.922][DEBUG][PostProcessingModule] PostProcessingModule calling initModule
-[14:27:48.922][DEBUG][PhysicsModule] PhysicsModule constructor: configFile='physics', configClass=PhysicsConfig 
-[14:27:48.922][INFO][PhysicsModule] PhysicsModule initialize() start
-[14:27:48.922][DEBUG][PhysicsModule] PhysicsModule: UNLOADED -> LOADING_CONFIG
-[14:27:48.922][DEBUG][ModuleHealthMonitor] Module 'PhysicsModule' state <none> -> LOADING_CONFIG (transitions=1)
-[14:27:48.923][DEBUG][PhysicsModule] Registered config 'physics' for module PhysicsModule
-[14:27:48.923][DEBUG][PhysicsModule] PhysicsModule loading config from 'physics'
-[14:27:48.923][INFO][ModuleManager] Adding module PhysicsModule
-[14:27:48.923][DEBUG][SceneModule] SceneModule constructor: configFile='scene', configClass=SceneConfig 
-[14:27:48.924][INFO][SceneModule] SceneModule initialize() start
-[14:27:48.924][DEBUG][SceneModule] SceneModule: UNLOADED -> LOADING_CONFIG
-[14:27:48.924][DEBUG][ModuleHealthMonitor] Module 'SceneModule' state <none> -> LOADING_CONFIG (transitions=1)
-[14:27:48.924][DEBUG][SceneModule] Registered config 'scene' for module SceneModule
-[14:27:48.924][INFO][ModuleManager] Adding module SceneModule
-[14:27:48.924][DEBUG][SceneModule] SceneModule loading config from 'scene'
-[14:27:48.924][DEBUG][PostProcessingModule] PostProcessingModule: INITIALIZING -> RUNNING
-[14:27:48.924][DEBUG][PhysicsModule] PhysicsModule: LOADING_CONFIG -> INITIALIZING
-[14:27:48.924][DEBUG][UIModule] UIModule constructor: configFile='ui_config', configClass=UIConfig 
-[14:27:48.924][DEBUG][ModuleHealthMonitor] Module 'PostProcessingModule' state INITIALIZING -> RUNNING (transitions=3)
-[14:27:48.925][DEBUG][ModuleHealthMonitor] Module 'PhysicsModule' state LOADING_CONFIG -> INITIALIZING (transitions=2)
-[14:27:48.925][INFO][UIModule] UIModule initialize() start
-[14:27:48.925][INFO][PostProcessingModule] PostProcessingModule initialized and running
-[14:27:48.925][DEBUG][UIModule] UIModule: UNLOADED -> LOADING_CONFIG
-[14:27:48.925][DEBUG][PhysicsModule] PhysicsModule calling initModule
-[14:27:48.925][DEBUG][ModuleHealthMonitor] Module 'UIModule' state <none> -> LOADING_CONFIG (transitions=1)
-[14:27:48.925][INFO][PhysicsModule] initializing physics...
-[14:27:48.925][DEBUG][UIModule] Registered config 'ui_config' for module UIModule
-[14:27:48.925][DEBUG][UIModule] UIModule loading config from 'ui_config'
-[14:27:48.925][INFO][UIModule] UIModule создан (config = ui_config)
-[14:27:48.925][DEBUG][SceneModule] SceneModule: LOADING_CONFIG -> INITIALIZING
-[14:27:48.925][DEBUG][ModuleHealthMonitor] Module 'SceneModule' state LOADING_CONFIG -> INITIALIZING (transitions=2)
-[14:27:48.925][INFO][ModuleManager] Adding module UIModule
-[14:27:48.925][DEBUG][SceneModule] SceneModule calling initModule
-[14:27:48.925][DEBUG][UIModule] UIModule: LOADING_CONFIG -> INITIALIZING
-[14:27:48.925][INFO][ModuleManager] Attached manual module UIModule
-[14:27:48.926][DEBUG][SceneModule] SceneModule: initializing...
-[14:27:48.926][DEBUG][ModuleHealthMonitor] Module 'UIModule' state LOADING_CONFIG -> INITIALIZING (transitions=2)
-[14:27:48.926][DEBUG][UIModule] UIModule calling initModule
-[14:27:48.926][INFO][ModuleManager] Attached manual module SceneModule
-[14:27:48.926][INFO][UIModule] UIModule init...
-[14:27:48.926][INFO][ModuleManager] Attached manual module RendererModule
-[14:27:48.926][DEBUG][UIModule] UIModule: INITIALIZING -> RUNNING
-[14:27:48.926][INFO][ModuleManager] Attached manual module PhysicsModule
-[14:27:48.926][DEBUG][ModuleHealthMonitor] Module 'UIModule' state INITIALIZING -> RUNNING (transitions=3)
-[14:27:48.926][INFO][UIModule] UIModule initialized and running
-[14:27:48.927][WARN][ModuleManager] Modules directory 'modules' not found
-[14:27:48.929][INFO][ModuleManager] Attached module UIModule
-[14:27:48.929][INFO][ModuleManager] Attached module SceneModule
-[14:27:48.929][INFO][ModuleManager] Attached module RendererModule
-[14:27:48.929][INFO][ModuleManager] Attached module PhysicsModule
-[14:27:48.930][INFO][ModuleManager] Searching for module: SceneModule
-[14:27:48.930][INFO][ModuleManager] Found module in manual: SceneModule
-[14:27:48.932][INFO][ChunkFieldTypeConfigLoader] Loaded 5 chunk subtypes
-[14:27:48.934][DEBUG][SceneModule] SceneModule: INITIALIZING -> RUNNING
-[14:27:48.934][DEBUG][ModuleHealthMonitor] Module 'SceneModule' state INITIALIZING -> RUNNING (transitions=3)
-[14:27:48.934][INFO][SceneModule] SceneModule initialized and running
-[14:27:48.935][DEBUG][CGSFileReader] ================ CGS FILE READ START ================
-[14:27:48.936][DEBUG][CGSFileReader] Opening file: C:\Users\Aiden\Documents\GitHub\CGE\cge\data\testScene.cgs
-[14:27:48.936][DEBUG][CGSFileReader] Full file HEX dump (138 bytes):
+[15:44:36.564][DEBUG][RendererModule] RendererModule constructor: configFile='render_config', configClass=RendererConfig 
+[15:44:36.566][INFO][RendererModule] RendererModule initialize() start
+[15:44:36.567][DEBUG][RendererModule] RendererModule: UNLOADED -> LOADING_CONFIG
+[15:44:36.568][DEBUG][ModuleHealthMonitor] Module 'RendererModule' state <none> -> LOADING_CONFIG (transitions=1)
+[15:44:36.569][DEBUG][RendererModule] Registered config 'render_config' for module RendererModule
+[15:44:36.570][DEBUG][TextureLoader] Loading CGTEX: data/testData.cgtex
+[15:44:36.570][DEBUG][RendererModule] RendererModule loading config from 'render_config'
+[15:44:36.571][DEBUG][CGTEXFileReader] ================ CGTEX FILE READ START ================
+[15:44:36.571][DEBUG][CGTEXFileReader] Opening file: C:\Users\Aiden\Documents\GitHub\CGE\cge\data\testData.cgtex
+[15:44:36.579][DEBUG][RendererModule] RendererModule: LOADING_CONFIG -> INITIALIZING
+[15:44:36.579][DEBUG][ModuleHealthMonitor] Module 'RendererModule' state LOADING_CONFIG -> INITIALIZING (transitions=2)
+[15:44:36.579][DEBUG][RendererModule] RendererModule calling initModule
+[15:44:36.579][INFO][RendererModule] Initializing RendererModule and sub-modules...
+[15:44:36.580][DEBUG][CGTEXFileReader] Full file HEX dump (7334175 bytes)
+[15:44:36.581][INFO][RendererModule] RendererModule initialized.
+[15:44:36.581][DEBUG][RendererModule] RendererModule: INITIALIZING -> RUNNING
+[15:44:36.581][DEBUG][ModuleHealthMonitor] Module 'RendererModule' state INITIALIZING -> RUNNING (transitions=3)
+[15:44:36.581][INFO][RendererModule] RendererModule initialized and running
+[15:44:36.581][INFO][ModuleManager] Searching for module: SceneModule
+[15:44:36.582][WARN][ModuleManager] Module SceneModule not found
+[15:44:36.586][DEBUG][CGTEXFileReader] Header Parsed: CGTEXMetadata{magic='CGTX', version=1, textureCount=11, dataOffset=20, fileSize=7334175}
+[15:44:36.587][DEBUG][CGTEXFileReader] Texture[0]: name=box size=920x1 format={}
+[15:44:36.587][DEBUG][CGTEXFileReader] Texture[1]: name=calista_grid_test size=2680x1 format={}
+[15:44:36.588][DEBUG][CGTEXFileReader] Texture[2]: name=calista_grid_test_normal size=2680x1 format={}
+[15:44:36.588][DEBUG][CGTEXFileReader] Texture[3]: name=cubemap_0 size=1144x5 format={}
+[15:44:36.590][DEBUG][CGTEXFileReader] Texture[4]: name=cubemap_1 size=3000x5 format={}
+[15:44:36.590][DEBUG][CGTEXFileReader] Texture[5]: name=cubemap_2 size=1144x5 format={}
+[15:44:36.590][DEBUG][CGTEXFileReader] Texture[6]: name=cubemap_3 size=1144x5 format={}
+[15:44:36.592][DEBUG][CGTEXFileReader] Texture[7]: name=cubemap_4 size=3000x5 format={}
+[15:44:36.592][DEBUG][CGTEXFileReader] Texture[8]: name=cubemap_5 size=1080x5 format={}
+[15:44:36.592][DEBUG][CGTEXFileReader] Texture[9]: name=box_normal size=920x1 format={}
+[15:44:36.592][DEBUG][CGTEXFileReader] Texture[10]: name=testgrid size=1144x1 format={}
+[15:44:36.592][DEBUG][CGTEXFileReader] ================= CGTEX FILE READ END =================
+[15:44:36.592][DEBUG][TextureLoader] Processing 'box' format 1
+[15:44:36.620][DEBUG][TextureLoader] Loaded 'box' 400x400
+[15:44:36.620][DEBUG][TextureLoader] Processing 'calista_grid_test' format 1
+[15:44:36.654][DEBUG][TextureLoader] Loaded 'calista_grid_test' 1024x1536
+[15:44:36.654][DEBUG][TextureLoader] Processing 'calista_grid_test_normal' format 1
+[15:44:36.677][DEBUG][TextureLoader] Loaded 'calista_grid_test_normal' 1024x1536
+[15:44:36.678][DEBUG][TextureLoader] Processing 'cubemap_0' format 5
+[15:44:36.704][DEBUG][TextureLoader] Loaded 'cubemap_0' 512x512
+[15:44:36.704][DEBUG][TextureLoader] Processing 'cubemap_1' format 5
+[15:44:36.739][DEBUG][TextureLoader] Loaded 'cubemap_1' 1440x1440
+[15:44:36.740][DEBUG][TextureLoader] Processing 'cubemap_2' format 5
+[15:44:36.745][DEBUG][TextureLoader] Loaded 'cubemap_2' 512x512
+[15:44:36.745][DEBUG][TextureLoader] Processing 'cubemap_3' format 5
+[15:44:36.751][DEBUG][TextureLoader] Loaded 'cubemap_3' 512x512
+[15:44:36.751][DEBUG][TextureLoader] Processing 'cubemap_4' format 5
+[15:44:36.789][DEBUG][TextureLoader] Loaded 'cubemap_4' 1440x1440
+[15:44:36.789][DEBUG][TextureLoader] Processing 'cubemap_5' format 5
+[15:44:36.794][DEBUG][TextureLoader] Loaded 'cubemap_5' 480x480
+[15:44:36.794][DEBUG][TextureLoader] Processing 'box_normal' format 1
+[15:44:36.797][DEBUG][TextureLoader] Loaded 'box_normal' 400x400
+[15:44:36.797][DEBUG][TextureLoader] Processing 'testgrid' format 1
+[15:44:36.802][DEBUG][TextureLoader] Loaded 'testgrid' 512x512
+[15:44:36.803][INFO][AbstractFile] Closing data\testData.cgtex
+[15:44:36.803][DEBUG][CameraModule] CameraModule constructor: configFile='camera_config', configClass=CameraConfig 
+[15:44:36.804][INFO][CameraModule] CameraModule initialize() start
+[15:44:36.804][DEBUG][CameraModule] CameraModule: UNLOADED -> LOADING_CONFIG
+[15:44:36.804][DEBUG][ModuleHealthMonitor] Module 'CameraModule' state <none> -> LOADING_CONFIG (transitions=1)
+[15:44:36.804][DEBUG][CameraModule] Registered config 'camera_config' for module CameraModule
+[15:44:36.804][DEBUG][CameraModule] CameraModule loading config from 'camera_config'
+[15:44:36.804][INFO][ModuleManager] Adding module CameraModule
+[15:44:36.805][DEBUG][SkyBox] SkyBox constructor: configFile='skybox', configClass=SkyBoxConfig 
+[15:44:36.805][DEBUG][CameraModule] CameraModule: LOADING_CONFIG -> INITIALIZING
+[15:44:36.805][DEBUG][ModuleHealthMonitor] Module 'CameraModule' state LOADING_CONFIG -> INITIALIZING (transitions=2)
+[15:44:36.805][INFO][SkyBox] SkyBox initialize() start
+[15:44:36.805][DEBUG][CameraModule] CameraModule calling initModule
+[15:44:36.805][DEBUG][SkyBox] SkyBox: UNLOADED -> LOADING_CONFIG
+[15:44:36.805][DEBUG][ModuleHealthMonitor] Module 'SkyBox' state <none> -> LOADING_CONFIG (transitions=1)
+[15:44:36.805][DEBUG][CameraModule] CameraModule: INITIALIZING -> RUNNING
+[15:44:36.805][DEBUG][SkyBox] Registered config 'skybox' for module SkyBox
+[15:44:36.806][DEBUG][ModuleHealthMonitor] Module 'CameraModule' state INITIALIZING -> RUNNING (transitions=3)
+[15:44:36.806][INFO][ModuleManager] Adding module SkyBox
+[15:44:36.806][INFO][CameraModule] CameraModule initialized and running
+[15:44:36.806][DEBUG][SkyBox] SkyBox loading config from 'skybox'
+[15:44:36.807][DEBUG][SkyBox] SkyBox: LOADING_CONFIG -> INITIALIZING
+[15:44:36.807][DEBUG][ModuleHealthMonitor] Module 'SkyBox' state LOADING_CONFIG -> INITIALIZING (transitions=2)
+[15:44:36.807][DEBUG][SkyBox] SkyBox calling initModule
+[15:44:36.808][DEBUG][PostProcessingModule] PostProcessingModule constructor: configFile='postprocessing_config', configClass=PostProcessingConfig 
+[15:44:36.808][INFO][PostProcessingModule] PostProcessingModule initialize() start
+[15:44:36.808][DEBUG][PostProcessingModule] PostProcessingModule: UNLOADED -> LOADING_CONFIG
+[15:44:36.808][DEBUG][ModuleHealthMonitor] Module 'PostProcessingModule' state <none> -> LOADING_CONFIG (transitions=1)
+[15:44:36.808][DEBUG][PostProcessingModule] Registered config 'postprocessing_config' for module PostProcessingModule
+[15:44:36.808][DEBUG][PostProcessingModule] PostProcessingModule loading config from 'postprocessing_config'
+[15:44:36.808][INFO][ModuleManager] Adding module PostProcessingModule
+[15:44:36.808][DEBUG][SkyBox] SkyBox: INITIALIZING -> RUNNING
+[15:44:36.808][INFO][ModuleManager] Adding module RendererModule
+[15:44:36.808][DEBUG][ModuleHealthMonitor] Module 'SkyBox' state INITIALIZING -> RUNNING (transitions=3)
+[15:44:36.809][INFO][SkyBox] SkyBox initialized and running
+[15:44:36.810][DEBUG][PostProcessingModule] PostProcessingModule: LOADING_CONFIG -> INITIALIZING
+[15:44:36.810][DEBUG][ModuleHealthMonitor] Module 'PostProcessingModule' state LOADING_CONFIG -> INITIALIZING (transitions=2)
+[15:44:36.810][DEBUG][PostProcessingModule] PostProcessingModule calling initModule
+[15:44:36.810][DEBUG][PhysicsModule] PhysicsModule constructor: configFile='physics', configClass=PhysicsConfig 
+[15:44:36.810][INFO][PhysicsModule] PhysicsModule initialize() start
+[15:44:36.810][DEBUG][PhysicsModule] PhysicsModule: UNLOADED -> LOADING_CONFIG
+[15:44:36.810][DEBUG][ModuleHealthMonitor] Module 'PhysicsModule' state <none> -> LOADING_CONFIG (transitions=1)
+[15:44:36.810][DEBUG][PhysicsModule] Registered config 'physics' for module PhysicsModule
+[15:44:36.810][DEBUG][PhysicsModule] PhysicsModule loading config from 'physics'
+[15:44:36.811][INFO][ModuleManager] Adding module PhysicsModule
+[15:44:36.811][DEBUG][SceneModule] SceneModule constructor: configFile='scene', configClass=SceneConfig 
+[15:44:36.811][INFO][SceneModule] SceneModule initialize() start
+[15:44:36.811][DEBUG][SceneModule] SceneModule: UNLOADED -> LOADING_CONFIG
+[15:44:36.812][DEBUG][ModuleHealthMonitor] Module 'SceneModule' state <none> -> LOADING_CONFIG (transitions=1)
+[15:44:36.812][DEBUG][SceneModule] Registered config 'scene' for module SceneModule
+[15:44:36.812][INFO][ModuleManager] Adding module SceneModule
+[15:44:36.812][DEBUG][SceneModule] SceneModule loading config from 'scene'
+[15:44:36.812][DEBUG][PhysicsModule] PhysicsModule: LOADING_CONFIG -> INITIALIZING
+[15:44:36.813][DEBUG][UIModule] UIModule constructor: configFile='ui_config', configClass=UIConfig 
+[15:44:36.813][DEBUG][ModuleHealthMonitor] Module 'PhysicsModule' state LOADING_CONFIG -> INITIALIZING (transitions=2)
+[15:44:36.813][DEBUG][PostProcessingModule] PostProcessingModule: INITIALIZING -> RUNNING
+[15:44:36.813][INFO][UIModule] UIModule initialize() start
+[15:44:36.813][DEBUG][PhysicsModule] PhysicsModule calling initModule
+[15:44:36.813][DEBUG][ModuleHealthMonitor] Module 'PostProcessingModule' state INITIALIZING -> RUNNING (transitions=3)
+[15:44:36.813][DEBUG][UIModule] UIModule: UNLOADED -> LOADING_CONFIG
+[15:44:36.813][INFO][PhysicsModule] initializing physics...
+[15:44:36.813][INFO][PostProcessingModule] PostProcessingModule initialized and running
+[15:44:36.813][DEBUG][ModuleHealthMonitor] Module 'UIModule' state <none> -> LOADING_CONFIG (transitions=1)
+[15:44:36.813][DEBUG][UIModule] Registered config 'ui_config' for module UIModule
+[15:44:36.813][DEBUG][UIModule] UIModule loading config from 'ui_config'
+[15:44:36.813][DEBUG][SceneModule] SceneModule: LOADING_CONFIG -> INITIALIZING
+[15:44:36.813][INFO][UIModule] UIModule создан (config = ui_config)
+[15:44:36.813][DEBUG][ModuleHealthMonitor] Module 'SceneModule' state LOADING_CONFIG -> INITIALIZING (transitions=2)
+[15:44:36.813][INFO][ModuleManager] Adding module UIModule
+[15:44:36.814][DEBUG][UIModule] UIModule: LOADING_CONFIG -> INITIALIZING
+[15:44:36.814][DEBUG][SceneModule] SceneModule calling initModule
+[15:44:36.814][INFO][ModuleManager] Attached manual module UIModule
+[15:44:36.814][DEBUG][SceneModule] SceneModule: initializing...
+[15:44:36.814][DEBUG][ModuleHealthMonitor] Module 'UIModule' state LOADING_CONFIG -> INITIALIZING (transitions=2)
+[15:44:36.814][INFO][ModuleManager] Attached manual module SceneModule
+[15:44:36.814][DEBUG][UIModule] UIModule calling initModule
+[15:44:36.814][INFO][UIModule] UIModule init...
+[15:44:36.814][INFO][ModuleManager] Attached manual module RendererModule
+[15:44:36.814][DEBUG][UIModule] UIModule: INITIALIZING -> RUNNING
+[15:44:36.814][INFO][ModuleManager] Attached manual module PhysicsModule
+[15:44:36.814][DEBUG][ModuleHealthMonitor] Module 'UIModule' state INITIALIZING -> RUNNING (transitions=3)
+[15:44:36.814][INFO][UIModule] UIModule initialized and running
+[15:44:36.815][WARN][ModuleManager] Modules directory 'modules' not found
+[15:44:36.818][INFO][ModuleManager] Attached module SceneModule
+[15:44:36.818][INFO][ModuleManager] Attached module UIModule
+[15:44:36.818][INFO][ModuleManager] Attached module RendererModule
+[15:44:36.818][INFO][ModuleManager] Attached module PhysicsModule
+[15:44:36.819][INFO][ModuleManager] Searching for module: SceneModule
+[15:44:36.819][INFO][ModuleManager] Found module in manual: SceneModule
+[15:44:36.822][INFO][ChunkFieldTypeConfigLoader] Loaded 5 chunk subtypes
+[15:44:36.824][DEBUG][SceneModule] SceneModule: INITIALIZING -> RUNNING
+[15:44:36.824][DEBUG][ModuleHealthMonitor] Module 'SceneModule' state INITIALIZING -> RUNNING (transitions=3)
+[15:44:36.824][INFO][SceneModule] SceneModule initialized and running
+[15:44:36.826][DEBUG][CGSFileReader] ================ CGS FILE READ START ================
+[15:44:36.826][DEBUG][CGSFileReader] Opening file: C:\Users\Aiden\Documents\GitHub\CGE\cge\data\testScene.cgs
+[15:44:36.826][DEBUG][CGSFileReader] Full file HEX dump (138 bytes):
 434753300000000100000003686c33000000000000005e0003534b590000000041f0000000000000ffffffff3f80000001000b444952454354494f4e414c000000004110000000000000ffffffff3f800000bf800000c0000000c040000000000002001b82bc00000000000000170000001a000000030608067000000000000000310000002d00000003
-[14:27:48.937][DEBUG][CGSFileReader] Header Parsed: Magic='CGS0', Version=1, SceneName='hl3', TableOffset=94
-[14:27:48.937][DEBUG][CGSFileReader] Chunk Table: Count=2
-[14:27:48.939][INFO][ModuleManager] Searching for module: SceneModule
-[14:27:48.939][INFO][ModuleManager] Found module in manual: SceneModule
-[14:27:48.939][INFO][ModuleManager] Custom onModulesLoaded callback executed.
-[14:27:48.943][INFO][DomeMesh] 1 740 triangles
-[14:27:48.944][INFO][DomeMesh] 901 vertices
-[14:27:48.947][DEBUG][PhysicsModule] BulletAppState attached
-[14:27:48.948][DEBUG][RigidBodyModule] RigidBodyModule constructor: configFile='physics', configClass=PhysicsConfig 
-[14:27:48.948][DEBUG][RigidBodyModule] Registered config 'physics' for module RigidBodyModule
-[14:27:48.948][INFO][ModuleManager] Adding module RigidBodyModule
-[14:27:48.948][DEBUG][CollisionModule] CollisionModule constructor: configFile='physics', configClass=PhysicsConfig 
-[14:27:48.948][INFO][DomeMesh] coords 900
-[14:27:48.948][INFO][CollisionModule] CollisionModule initialize() start
-[14:27:48.948][DEBUG][CollisionModule] CollisionModule: UNLOADED -> LOADING_CONFIG
-[14:27:48.949][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state <none> -> LOADING_CONFIG (transitions=1)
-[14:27:48.949][DEBUG][CGSFileReader]   - Entry[0]: ChunkEntry[id=1802940, offset=23, length=26, type=LIGHTING]
-[14:27:48.949][DEBUG][CollisionModule] Registered config 'physics' for module CollisionModule
-[14:27:48.949][DEBUG][CollisionModule] CollisionModule loading config from 'physics'
-[14:27:48.949][DEBUG][CGSFileReader]   - Entry[1]: ChunkEntry[id=101189232, offset=49, length=45, type=LIGHTING]
-[14:27:48.949][DEBUG][CollisionModule] CollisionModule: LOADING_CONFIG -> INITIALIZING
-[14:27:48.949][DEBUG][CGSFileReader] ================= CGS FILE READ END =================
-[14:27:48.949][INFO][ModuleManager] Adding module CollisionModule
-[14:27:48.949][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state LOADING_CONFIG -> INITIALIZING (transitions=2)
-[14:27:48.949][DEBUG][CollisionModule] CollisionModule calling initModule
-[14:27:48.949][INFO][CollisionModule] CollisionModule initialized and registered listener
-[14:27:48.949][DEBUG][SoftBodyModule] SoftBodyModule constructor: configFile='physics', configClass=PhysicsConfig 
-[14:27:48.950][DEBUG][CollisionModule] CollisionModule: INITIALIZING -> RUNNING
-[14:27:48.950][INFO][SoftBodyModule] SoftBodyModule initialize() start
-[14:27:48.950][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state INITIALIZING -> RUNNING (transitions=3)
-[14:27:48.950][DEBUG][SoftBodyModule] SoftBodyModule: UNLOADED -> LOADING_CONFIG
-[14:27:48.950][INFO][CollisionModule] CollisionModule initialized and running
-[14:27:48.950][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state <none> -> LOADING_CONFIG (transitions=1)
-[14:27:48.950][DEBUG][SoftBodyModule] Registered config 'physics' for module SoftBodyModule
-[14:27:48.950][DEBUG][SoftBodyModule] SoftBodyModule loading config from 'physics'
-[14:27:48.950][INFO][ModuleManager] Adding module SoftBodyModule
-[14:27:48.950][DEBUG][SoftBodyModule] SoftBodyModule: LOADING_CONFIG -> INITIALIZING
-[14:27:48.950][INFO][ModuleManager] Attached manual module CollisionModule
-[14:27:48.950][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state LOADING_CONFIG -> INITIALIZING (transitions=2)
-[14:27:48.950][DEBUG][SceneModule] SceneModule: 2 chunks to stream
-[14:27:48.950][INFO][ModuleManager] Attached manual module RigidBodyModule
-[14:27:48.950][DEBUG][SoftBodyModule] SoftBodyModule calling initModule
-[14:27:48.951][INFO][ModuleManager] Attached manual module SoftBodyModule
-[14:27:48.951][INFO][PhysicsModule] PhysicsModule: physics sub-modules initialized
-[14:27:48.952][DEBUG][CGSFileReader] -- Reading Chunk id=101189232 --
-[14:27:48.951][DEBUG][CGSFileReader] -- Reading Chunk id=1802940 --
-[14:27:48.952][INFO][PhysicsModule] Physics gravity set to (0.0, -9.81, 0.0)
-[14:27:48.952][INFO][SoftBodyModule] Initialized SoftBodyModule: mass=1.0, stiffness=1.0, damping=0.01, pressure=0.0, iterations=10
-[14:27:48.952][DEBUG][CGSFileReader] Chunk 101189232 raw data (hex): 000b444952454354494f4e414c000000004110000000000000ffffffff3f800000bf800000c0000000c0400000
-[14:27:48.952][DEBUG][PhysicsModule] PhysicsModule: INITIALIZING -> RUNNING
-[14:27:48.952][DEBUG][CGSFileReader] Chunk 1802940 raw data (hex): 0003534b590000000041f0000000000000ffffffff3f80000001
-[14:27:48.952][DEBUG][SoftBodyModule] SoftBodyModule: INITIALIZING -> RUNNING
-[14:27:48.952][DEBUG][CGSFileReader] Chunk id=101189232 Read: 45 bytes
-[14:27:48.952][DEBUG][ModuleHealthMonitor] Module 'PhysicsModule' state INITIALIZING -> RUNNING (transitions=3)
-[14:27:48.952][DEBUG][CGSFileReader] Chunk id=1802940 Read: 26 bytes
-[14:27:48.952][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state INITIALIZING -> RUNNING (transitions=3)
-[14:27:48.952][INFO][PhysicsModule] PhysicsModule initialized and running
-[14:27:48.952][INFO][SoftBodyModule] SoftBodyModule initialized and running
-[14:27:48.952][DEBUG][SceneModule] Chunk LIGHTING data - 0003534b590000000041f0000000000000ffffffff3f80000001
-[14:27:48.952][DEBUG][SceneModule] Chunk LIGHTING data - 000b444952454354494f4e414c000000004110000000000000ffffffff3f800000bf800000c0000000c0400000
-[14:27:48.952][INFO][SkyMaterial] asset path="MatDefs/skies/dome20/dome20.j3md"
-[14:27:48.957][DEBUG][LightingParser] Parsing LightingChunk 101189232
-[14:27:48.957][DEBUG][LightingParser] Parsing LightingChunk 1802940
-[14:27:48.957][DEBUG][LightingParser] Chunk 101189232 raw size = 45 bytes
-[14:27:48.957][DEBUG][LightingParser] Chunk 1802940 raw size = 26 bytes
-[14:27:48.957][DEBUG][ChunkParser] readUTF: Read string='DIRECTIONAL' (length=11, pos=0, newPos=13)
-[14:27:48.957][DEBUG][ChunkParser] readUTF: Read string='SKY' (length=3, pos=0, newPos=5)
-[14:27:48.958][DEBUG][ChunkParser] Reading fields from buffer (32 bytes): 000000004110000000000000ffffffff3f800000bf800000c0000000c0400000
-[14:27:48.958][DEBUG][ChunkParser] Reading fields from buffer (21 bytes): 0000000041f0000000000000ffffffff3f80000001
-[14:27:48.958][DEBUG][ChunkParser] Field 'pos' = (0.0, 9.0, 0.0) (Vector3f)
-[14:27:48.958][DEBUG][ChunkParser] Field 'pos' = (0.0, 30.0, 0.0) (Vector3f)
-[14:27:48.958][DEBUG][ChunkParser] Field 'color' = Color[1.0, 1.0, 1.0, 1.0] (Color)
-[14:27:48.958][DEBUG][ChunkParser] Field 'color' = Color[1.0, 1.0, 1.0, 1.0] (Color)
-[14:27:48.959][DEBUG][ChunkParser] Field 'intensity' = 1.0 (Float)
-[14:27:48.959][DEBUG][ChunkParser] Field 'intensity' = 1.0 (Float)
-[14:27:48.959][DEBUG][ChunkParser] Field 'dir' = (-1.0, -2.0, -3.0) (Vector3f)
-[14:27:48.959][DEBUG][ChunkParser] Field 'castShadows' = true (Boolean)
-[14:27:48.959][DEBUG][ChunkParser] Completed reading fields: {pos=(0.0, 9.0, 0.0), color=Color[1.0, 1.0, 1.0, 1.0], intensity=1.0, dir=(-1.0, -2.0, -3.0)}
-[14:27:48.959][DEBUG][ChunkParser] Completed reading fields: {pos=(0.0, 30.0, 0.0), color=Color[1.0, 1.0, 1.0, 1.0], intensity=1.0, castShadows=true}
-[14:27:48.959][DEBUG][LightingParser] [1802940] SKY color=Color[1.0, 1.0, 1.0, 1.0] intensity=1.0 castShadows=true
-[14:27:48.959][DEBUG][LightingParser] [101189232] DIRECTIONAL dir=(-0.26726124, -0.5345225, -0.8017837) color=Color[1.0, 1.0, 1.0, 1.0] intensity=1.0
-[14:27:48.960][INFO][LightingParser] Finished LightingChunk 101189232, lights parsed: 1
-[14:27:48.960][INFO][LightingParser] Finished LightingChunk 1802940, lights parsed: 1
-[14:27:48.975][INFO][SkyMaterial] asset path="MatDefs/skies/dome06/dome06.j3md"
-[14:27:49.011][INFO][DomeMesh] 60 triangles
-[14:27:49.011][INFO][DomeMesh] 61 vertices
-[14:27:49.012][INFO][DomeMesh] coords 60
-[14:27:49.024][INFO][DomeMesh] 1 740 triangles
-[14:27:49.025][INFO][DomeMesh] 901 vertices
-[14:27:49.025][INFO][DomeMesh] coords 900
-[14:27:49.027][INFO][DomeMesh] 60 triangles
-[14:27:49.027][INFO][DomeMesh] 61 vertices
-[14:27:49.027][INFO][DomeMesh] coords 60
-[14:27:49.037][INFO][ModuleManager] Searching for module: PhysicsModule
-[14:27:49.037][INFO][ModuleManager] Found module in manual: PhysicsModule
-[14:27:49.038][INFO][SceneModule] All chunks streamed sceneRoot attached.
-[14:27:49.038][DEBUG][ModuleHealthMonitor] Module 'SceneModule' state RUNNING -> RUNNING (transitions=4)
-[14:27:49.041][INFO][ModuleManager] Searching for module: UIModule
-[14:27:49.041][INFO][ModuleManager] Found module in manual: UIModule
-[14:27:49.042][INFO][NovaUI] UIPanel created (config = Interface/stats_config.xml)
-[14:27:49.042][INFO][NovaUI] Event handler registered: PlayerHud
-[14:27:49.042][INFO][UIModule] Adding new panel...
-[14:27:49.045][INFO][ModuleManager] Searching for module: PhysicsModule
-[14:27:49.045][INFO][ModuleManager] Found module in manual: PhysicsModule
-[14:27:49.062][INFO][ModuleManager] Searching for module: PhysicsModule
-[14:27:49.062][INFO][ModuleManager] Found module in manual: PhysicsModule
-[14:27:49.071][DEBUG][PhysicsModule] Added RigidBodyControl (mass=1.4625785) to Cube0
-[14:27:49.073][DEBUG][PhysicsModule] Added RigidBodyControl (mass=0.70916057) to Cube1
-[14:27:49.074][DEBUG][PhysicsModule] Added RigidBodyControl (mass=2.49562) to Box2
-[14:27:49.075][DEBUG][PhysicsModule] Added RigidBodyControl (mass=0.24501829) to Cube3
-[14:27:49.076][DEBUG][PhysicsModule] Added RigidBodyControl (mass=0.9979585) to Box4
-[14:27:49.087][INFO][UIModule] UIModule initialize() start
-[14:27:49.087][DEBUG][UIModule] UIModule: RUNNING -> LOADING_CONFIG
-[14:27:49.087][DEBUG][ModuleHealthMonitor] Module 'UIModule' state RUNNING -> LOADING_CONFIG (transitions=4)
-[14:27:49.087][DEBUG][UIModule] UIModule loading config from 'ui_config'
-[14:27:49.087][DEBUG][UIModule] UIModule включён: UIPanel enabled.
-[14:27:49.087][DEBUG][UIModule] UIModule: LOADING_CONFIG -> INITIALIZING
-[14:27:49.087][INFO][SceneModule] SceneModule initialize() start
-[14:27:49.087][DEBUG][ModuleHealthMonitor] Module 'UIModule' state LOADING_CONFIG -> INITIALIZING (transitions=5)
-[14:27:49.087][DEBUG][SceneModule] SceneModule: RUNNING -> LOADING_CONFIG
-[14:27:49.087][DEBUG][UIModule] UIModule calling initModule
-[14:27:49.087][INFO][UIModule] UIModule init...
-[14:27:49.087][DEBUG][ModuleHealthMonitor] Module 'SceneModule' state RUNNING -> LOADING_CONFIG (transitions=5)
-[14:27:49.088][DEBUG][UIModule] UIModule: INITIALIZING -> RUNNING
-[14:27:49.088][DEBUG][SceneModule] SceneModule loading config from 'scene'
-[14:27:49.088][INFO][RendererModule] RendererModule initialize() start
-[14:27:49.088][DEBUG][ModuleHealthMonitor] Module 'UIModule' state INITIALIZING -> RUNNING (transitions=6)
-[14:27:49.088][DEBUG][SceneModule] SceneModule: LOADING_CONFIG -> INITIALIZING
-[14:27:49.088][DEBUG][RendererModule] RendererModule: RUNNING -> LOADING_CONFIG
-[14:27:49.088][INFO][UIModule] UIModule initialized and running
-[14:27:49.088][DEBUG][ModuleHealthMonitor] Module 'SceneModule' state LOADING_CONFIG -> INITIALIZING (transitions=6)
-[14:27:49.088][DEBUG][ModuleHealthMonitor] Module 'RendererModule' state RUNNING -> LOADING_CONFIG (transitions=4)
-[14:27:49.088][DEBUG][SceneModule] SceneModule calling initModule
-[14:27:49.088][DEBUG][SceneModule] SceneModule: initializing...
-[14:27:49.088][DEBUG][RendererModule] RendererModule loading config from 'render_config'
-[14:27:49.088][INFO][RendererModule] Renderer initialized:
-[14:27:49.088][DEBUG][RendererModule] RendererModule: LOADING_CONFIG -> INITIALIZING
-[14:27:49.088][INFO][RendererModule] Capabilities:
-[14:27:49.088][DEBUG][ModuleHealthMonitor] Module 'RendererModule' state LOADING_CONFIG -> INITIALIZING (transitions=5)
-[14:27:49.088][INFO][RendererModule]  - Shader Language Support: true
-[14:27:49.088][DEBUG][RendererModule] RendererModule calling initModule
-[14:27:49.088][INFO][RendererModule] Initializing RendererModule and sub-modules...
-[14:27:49.088][INFO][RendererModule]  - FrameBuffer Support:     true
-[14:27:49.088][INFO][RendererModule] RendererModule initialized.
-[14:27:49.088][INFO][RendererModule]  - Geometry Shader:          false
-[14:27:49.089][DEBUG][RendererModule] RendererModule: INITIALIZING -> RUNNING
-[14:27:49.089][INFO][RendererModule]  - Texture Array:            true
-[14:27:49.089][DEBUG][ModuleHealthMonitor] Module 'RendererModule' state INITIALIZING -> RUNNING (transitions=6)
-[14:27:49.089][INFO][RendererModule] RendererModule initialized and running
-[14:27:49.089][INFO][ChunkFieldTypeConfigLoader] Loaded 5 chunk subtypes
-[14:27:49.089][INFO][PhysicsModule] PhysicsModule initialize() start
-[14:27:49.089][INFO][ModuleManager] Attached manual module SkyBox
-[14:27:49.089][DEBUG][PhysicsModule] PhysicsModule: RUNNING -> LOADING_CONFIG
-[14:27:49.089][DEBUG][CGSFileReader] ================ CGS FILE READ START ================
-[14:27:49.089][INFO][ModuleManager] Attached manual module PostProcessingModule
-[14:27:49.089][DEBUG][ModuleHealthMonitor] Module 'PhysicsModule' state RUNNING -> LOADING_CONFIG (transitions=4)
-[14:27:49.089][DEBUG][CGSFileReader] Opening file: C:\Users\Aiden\Documents\GitHub\CGE\cge\data\testScene.cgs
-[14:27:49.089][INFO][ModuleManager] Searching for module: SceneModule
-[14:27:49.089][DEBUG][PhysicsModule] PhysicsModule loading config from 'physics'
-[14:27:49.089][INFO][ModuleManager] Found module in manual: SceneModule
-[14:27:49.089][INFO][CollisionModule] CollisionModule initialize() start
-[14:27:49.089][DEBUG][PhysicsModule] PhysicsModule: LOADING_CONFIG -> INITIALIZING
-[14:27:49.089][DEBUG][CollisionModule] CollisionModule: RUNNING -> LOADING_CONFIG
-[14:27:49.089][DEBUG][ModuleHealthMonitor] Module 'PhysicsModule' state LOADING_CONFIG -> INITIALIZING (transitions=5)
-[14:27:49.089][DEBUG][CGSFileReader] Full file HEX dump (138 bytes):
+[15:44:36.827][INFO][ModuleManager] Searching for module: SceneModule
+[15:44:36.827][INFO][ModuleManager] Found module in manual: SceneModule
+[15:44:36.827][INFO][ModuleManager] Custom onModulesLoaded callback executed.
+[15:44:36.828][DEBUG][CGSFileReader] Header Parsed: Magic='CGS0', Version=1, SceneName='hl3', TableOffset=94
+[15:44:36.828][DEBUG][CGSFileReader] Chunk Table: Count=2
+[15:44:36.834][INFO][DomeMesh] 1 740 triangles
+[15:44:36.834][INFO][DomeMesh] 901 vertices
+[15:44:36.837][DEBUG][PhysicsModule] BulletAppState attached
+[15:44:36.837][DEBUG][RigidBodyModule] RigidBodyModule constructor: configFile='physics', configClass=PhysicsConfig 
+[15:44:36.837][DEBUG][RigidBodyModule] Registered config 'physics' for module RigidBodyModule
+[15:44:36.838][INFO][ModuleManager] Adding module RigidBodyModule
+[15:44:36.838][DEBUG][CollisionModule] CollisionModule constructor: configFile='physics', configClass=PhysicsConfig 
+[15:44:36.838][INFO][CollisionModule] CollisionModule initialize() start
+[15:44:36.838][INFO][DomeMesh] coords 900
+[15:44:36.838][DEBUG][CollisionModule] CollisionModule: UNLOADED -> LOADING_CONFIG
+[15:44:36.838][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state <none> -> LOADING_CONFIG (transitions=1)
+[15:44:36.838][DEBUG][CollisionModule] Registered config 'physics' for module CollisionModule
+[15:44:36.838][DEBUG][CollisionModule] CollisionModule loading config from 'physics'
+[15:44:36.839][DEBUG][CollisionModule] CollisionModule: LOADING_CONFIG -> INITIALIZING
+[15:44:36.839][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state LOADING_CONFIG -> INITIALIZING (transitions=2)
+[15:44:36.839][INFO][ModuleManager] Adding module CollisionModule
+[15:44:36.839][DEBUG][CollisionModule] CollisionModule calling initModule
+[15:44:36.839][DEBUG][CGSFileReader]   - Entry[0]: ChunkEntry[id=1802940, offset=23, length=26, type=LIGHTING]
+[15:44:36.839][INFO][CollisionModule] CollisionModule initialized and registered listener
+[15:44:36.839][DEBUG][CollisionModule] CollisionModule: INITIALIZING -> RUNNING
+[15:44:36.839][DEBUG][SoftBodyModule] SoftBodyModule constructor: configFile='physics', configClass=PhysicsConfig 
+[15:44:36.839][DEBUG][CGSFileReader]   - Entry[1]: ChunkEntry[id=101189232, offset=49, length=45, type=LIGHTING]
+[15:44:36.839][INFO][SoftBodyModule] SoftBodyModule initialize() start
+[15:44:36.839][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state INITIALIZING -> RUNNING (transitions=3)
+[15:44:36.839][DEBUG][SoftBodyModule] SoftBodyModule: UNLOADED -> LOADING_CONFIG
+[15:44:36.839][DEBUG][CGSFileReader] ================= CGS FILE READ END =================
+[15:44:36.839][INFO][CollisionModule] CollisionModule initialized and running
+[15:44:36.839][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state <none> -> LOADING_CONFIG (transitions=1)
+[15:44:36.840][DEBUG][SoftBodyModule] Registered config 'physics' for module SoftBodyModule
+[15:44:36.840][DEBUG][SoftBodyModule] SoftBodyModule loading config from 'physics'
+[15:44:36.840][INFO][ModuleManager] Adding module SoftBodyModule
+[15:44:36.840][DEBUG][SoftBodyModule] SoftBodyModule: LOADING_CONFIG -> INITIALIZING
+[15:44:36.840][INFO][ModuleManager] Attached manual module CollisionModule
+[15:44:36.840][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state LOADING_CONFIG -> INITIALIZING (transitions=2)
+[15:44:36.840][INFO][ModuleManager] Attached manual module RigidBodyModule
+[15:44:36.840][DEBUG][SoftBodyModule] SoftBodyModule calling initModule
+[15:44:36.840][INFO][ModuleManager] Attached manual module SoftBodyModule
+[15:44:36.840][INFO][PhysicsModule] PhysicsModule: physics sub-modules initialized
+[15:44:36.841][DEBUG][SceneModule] SceneModule: 2 chunks to stream
+[15:44:36.841][INFO][PhysicsModule] Physics gravity set to (0.0, -9.81, 0.0)
+[15:44:36.841][INFO][SoftBodyModule] Initialized SoftBodyModule: mass=1.0, stiffness=1.0, damping=0.01, pressure=0.0, iterations=10
+[15:44:36.842][DEBUG][SoftBodyModule] SoftBodyModule: INITIALIZING -> RUNNING
+[15:44:36.842][DEBUG][PhysicsModule] PhysicsModule: INITIALIZING -> RUNNING
+[15:44:36.842][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state INITIALIZING -> RUNNING (transitions=3)
+[15:44:36.842][DEBUG][ModuleHealthMonitor] Module 'PhysicsModule' state INITIALIZING -> RUNNING (transitions=3)
+[15:44:36.842][INFO][SoftBodyModule] SoftBodyModule initialized and running
+[15:44:36.842][INFO][PhysicsModule] PhysicsModule initialized and running
+[15:44:36.842][DEBUG][CGSFileReader] -- Reading Chunk id=1802940 --
+[15:44:36.842][DEBUG][CGSFileReader] -- Reading Chunk id=101189232 --
+[15:44:36.842][DEBUG][CGSFileReader] Chunk 1802940 raw data (hex): 0003534b590000000041f0000000000000ffffffff3f80000001
+[15:44:36.843][DEBUG][CGSFileReader] Chunk id=1802940 Read: 26 bytes
+[15:44:36.843][DEBUG][CGSFileReader] Chunk 101189232 raw data (hex): 000b444952454354494f4e414c000000004110000000000000ffffffff3f800000bf800000c0000000c0400000
+[15:44:36.843][INFO][SkyMaterial] asset path="MatDefs/skies/dome20/dome20.j3md"
+[15:44:36.843][DEBUG][CGSFileReader] Chunk id=101189232 Read: 45 bytes
+[15:44:36.843][DEBUG][SceneModule] Chunk LIGHTING data - 0003534b590000000041f0000000000000ffffffff3f80000001
+[15:44:36.843][DEBUG][SceneModule] Chunk LIGHTING data - 000b444952454354494f4e414c000000004110000000000000ffffffff3f800000bf800000c0000000c0400000
+[15:44:36.848][DEBUG][LightingParser] Parsing LightingChunk 1802940
+[15:44:36.848][DEBUG][LightingParser] Parsing LightingChunk 101189232
+[15:44:36.849][DEBUG][LightingParser] Chunk 101189232 raw size = 45 bytes
+[15:44:36.849][DEBUG][LightingParser] Chunk 1802940 raw size = 26 bytes
+[15:44:36.849][DEBUG][ChunkParser] readUTF: Read string='DIRECTIONAL' (length=11, pos=0, newPos=13)
+[15:44:36.849][DEBUG][ChunkParser] readUTF: Read string='SKY' (length=3, pos=0, newPos=5)
+[15:44:36.850][DEBUG][ChunkParser] Reading fields from buffer (21 bytes): 0000000041f0000000000000ffffffff3f80000001
+[15:44:36.850][DEBUG][ChunkParser] Reading fields from buffer (32 bytes): 000000004110000000000000ffffffff3f800000bf800000c0000000c0400000
+[15:44:36.850][DEBUG][ChunkParser] Field 'pos' = (0.0, 30.0, 0.0) (Vector3f)
+[15:44:36.850][DEBUG][ChunkParser] Field 'pos' = (0.0, 9.0, 0.0) (Vector3f)
+[15:44:36.850][DEBUG][ChunkParser] Field 'color' = Color[1.0, 1.0, 1.0, 1.0] (Color)
+[15:44:36.850][DEBUG][ChunkParser] Field 'color' = Color[1.0, 1.0, 1.0, 1.0] (Color)
+[15:44:36.850][DEBUG][ChunkParser] Field 'intensity' = 1.0 (Float)
+[15:44:36.850][DEBUG][ChunkParser] Field 'intensity' = 1.0 (Float)
+[15:44:36.850][DEBUG][ChunkParser] Field 'castShadows' = true (Boolean)
+[15:44:36.850][DEBUG][ChunkParser] Field 'dir' = (-1.0, -2.0, -3.0) (Vector3f)
+[15:44:36.851][DEBUG][ChunkParser] Completed reading fields: {pos=(0.0, 30.0, 0.0), color=Color[1.0, 1.0, 1.0, 1.0], intensity=1.0, castShadows=true}
+[15:44:36.851][DEBUG][ChunkParser] Completed reading fields: {pos=(0.0, 9.0, 0.0), color=Color[1.0, 1.0, 1.0, 1.0], intensity=1.0, dir=(-1.0, -2.0, -3.0)}
+[15:44:36.851][DEBUG][LightingParser] [101189232] DIRECTIONAL dir=(-0.26726124, -0.5345225, -0.8017837) color=Color[1.0, 1.0, 1.0, 1.0] intensity=1.0
+[15:44:36.851][DEBUG][LightingParser] [1802940] SKY color=Color[1.0, 1.0, 1.0, 1.0] intensity=1.0 castShadows=true
+[15:44:36.851][INFO][LightingParser] Finished LightingChunk 101189232, lights parsed: 1
+[15:44:36.851][INFO][LightingParser] Finished LightingChunk 1802940, lights parsed: 1
+[15:44:36.868][INFO][SkyMaterial] asset path="MatDefs/skies/dome06/dome06.j3md"
+[15:44:36.915][INFO][DomeMesh] 60 triangles
+[15:44:36.916][INFO][DomeMesh] 61 vertices
+[15:44:36.916][INFO][DomeMesh] coords 60
+[15:44:36.931][INFO][DomeMesh] 1 740 triangles
+[15:44:36.932][INFO][DomeMesh] 901 vertices
+[15:44:36.933][INFO][DomeMesh] coords 900
+[15:44:36.935][INFO][DomeMesh] 60 triangles
+[15:44:36.935][INFO][DomeMesh] 61 vertices
+[15:44:36.936][INFO][DomeMesh] coords 60
+[15:44:36.947][INFO][ModuleManager] Searching for module: PhysicsModule
+[15:44:36.947][INFO][ModuleManager] Found module in manual: PhysicsModule
+[15:44:36.948][INFO][SceneModule] All chunks streamed sceneRoot attached.
+[15:44:36.948][DEBUG][ModuleHealthMonitor] Module 'SceneModule' state RUNNING -> RUNNING (transitions=4)
+[15:44:36.951][INFO][ModuleManager] Searching for module: UIModule
+[15:44:36.951][INFO][ModuleManager] Found module in manual: UIModule
+[15:44:36.953][INFO][NovaUI] UIPanel created (config = Interface/stats_config.xml)
+[15:44:36.953][INFO][NovaUI] Event handler registered: PlayerHud
+[15:44:36.953][INFO][UIModule] Adding new panel...
+[15:44:36.953][INFO][ModuleManager] Searching for module: PhysicsModule
+[15:44:36.953][INFO][ModuleManager] Found module in manual: PhysicsModule
+[15:44:36.958][INFO][ModuleManager] Searching for module: PhysicsModule
+[15:44:36.958][INFO][ModuleManager] Found module in manual: PhysicsModule
+[15:44:36.966][DEBUG][PhysicsModule] Added RigidBodyControl (mass=2.238605) to Box0
+[15:44:36.969][DEBUG][PhysicsModule] Added RigidBodyControl (mass=2.52229) to Cube1
+[15:44:36.972][DEBUG][PhysicsModule] Added RigidBodyControl (mass=21.552084) to Sphere2
+[15:44:36.973][DEBUG][PhysicsModule] Added RigidBodyControl (mass=15.107038) to Sphere3
+[15:44:36.974][DEBUG][PhysicsModule] Added RigidBodyControl (mass=2.1136358) to Box4
+[15:44:36.975][DEBUG][PhysicsModule] Added RigidBodyControl (mass=4.140815) to Cube5
+[15:44:36.976][DEBUG][PhysicsModule] Added RigidBodyControl (mass=5.5383067) to Cube6
+[15:44:36.977][DEBUG][PhysicsModule] Added RigidBodyControl (mass=3.2716763) to Box7
+[15:44:36.978][DEBUG][PhysicsModule] Added RigidBodyControl (mass=1.2482618) to Box8
+[15:44:36.979][DEBUG][PhysicsModule] Added RigidBodyControl (mass=3.9766505) to Sphere9
+[15:44:36.981][DEBUG][PhysicsModule] Added RigidBodyControl (mass=0.53695464) to Cube10
+[15:44:36.982][DEBUG][PhysicsModule] Added RigidBodyControl (mass=6.9685626) to Sphere11
+[15:44:36.983][DEBUG][PhysicsModule] Added RigidBodyControl (mass=5.8581967) to Cube12
+[15:44:36.984][DEBUG][PhysicsModule] Added RigidBodyControl (mass=0.93308675) to Box13
+[15:44:36.985][DEBUG][PhysicsModule] Added RigidBodyControl (mass=8.8076105) to Sphere14
+[15:44:36.986][DEBUG][PhysicsModule] Added RigidBodyControl (mass=4.544375) to Cube15
+[15:44:36.987][DEBUG][PhysicsModule] Added RigidBodyControl (mass=1.0556921) to Sphere16
+[15:44:36.988][DEBUG][PhysicsModule] Added RigidBodyControl (mass=9.529013) to Sphere17
+[15:44:36.989][DEBUG][PhysicsModule] Added RigidBodyControl (mass=1.5428847) to Box18
+[15:44:36.990][DEBUG][PhysicsModule] Added RigidBodyControl (mass=0.28929088) to Cube19
+[15:44:36.990][DEBUG][PhysicsModule] Added RigidBodyControl (mass=0.3021501) to Box20
+[15:44:36.991][DEBUG][PhysicsModule] Added RigidBodyControl (mass=0.80889636) to Box21
+[15:44:36.992][DEBUG][PhysicsModule] Added RigidBodyControl (mass=1.0481728) to Cube22
+[15:44:36.993][DEBUG][PhysicsModule] Added RigidBodyControl (mass=3.4246001) to Box23
+[15:44:36.994][DEBUG][PhysicsModule] Added RigidBodyControl (mass=1.5411671) to Cube24
+[15:44:36.994][DEBUG][PhysicsModule] Added RigidBodyControl (mass=3.0816758) to Box25
+[15:44:36.995][DEBUG][PhysicsModule] Added RigidBodyControl (mass=3.0493135) to Cube26
+[15:44:36.996][DEBUG][PhysicsModule] Added RigidBodyControl (mass=4.9505033) to Cube27
+[15:44:36.997][DEBUG][PhysicsModule] Added RigidBodyControl (mass=15.833746) to Sphere28
+[15:44:36.998][DEBUG][PhysicsModule] Added RigidBodyControl (mass=28.933382) to Sphere29
+[15:44:36.999][DEBUG][PhysicsModule] Added RigidBodyControl (mass=1.0482367) to Box30
+[15:44:37.000][DEBUG][PhysicsModule] Added RigidBodyControl (mass=0.15841569) to Cube31
+[15:44:37.001][DEBUG][PhysicsModule] Added RigidBodyControl (mass=3.464139) to Cube32
+[15:44:37.002][DEBUG][PhysicsModule] Added RigidBodyControl (mass=31.526852) to Sphere33
+[15:44:37.003][DEBUG][PhysicsModule] Added RigidBodyControl (mass=3.181104) to Box34
+[15:44:37.004][DEBUG][PhysicsModule] Added RigidBodyControl (mass=16.845123) to Sphere35
+[15:44:37.004][DEBUG][PhysicsModule] Added RigidBodyControl (mass=1.3327624) to Box36
+[15:44:37.005][DEBUG][PhysicsModule] Added RigidBodyControl (mass=0.9567881) to Box37
+[15:44:37.006][DEBUG][PhysicsModule] Added RigidBodyControl (mass=1.8394772) to Box38
+[15:44:37.006][DEBUG][PhysicsModule] Added RigidBodyControl (mass=3.8824253) to Box39
+[15:44:37.007][DEBUG][PhysicsModule] Added RigidBodyControl (mass=1.2649933) to Cube40
+[15:44:37.008][DEBUG][PhysicsModule] Added RigidBodyControl (mass=1.7877616) to Box41
+[15:44:37.009][DEBUG][PhysicsModule] Added RigidBodyControl (mass=5.7926483) to Cube42
+[15:44:37.009][DEBUG][PhysicsModule] Added RigidBodyControl (mass=16.36969) to Sphere43
+[15:44:37.010][DEBUG][PhysicsModule] Added RigidBodyControl (mass=4.13426) to Box44
+[15:44:37.011][DEBUG][PhysicsModule] Added RigidBodyControl (mass=27.62124) to Sphere45
+[15:44:37.012][DEBUG][PhysicsModule] Added RigidBodyControl (mass=14.251907) to Sphere46
+[15:44:37.013][DEBUG][PhysicsModule] Added RigidBodyControl (mass=1.045636) to Sphere47
+[15:44:37.013][DEBUG][PhysicsModule] Added RigidBodyControl (mass=5.9401064) to Box48
+[15:44:37.014][DEBUG][PhysicsModule] Added RigidBodyControl (mass=1.9039704) to Cube49
+[15:44:37.023][INFO][UIModule] UIModule initialize() start
+[15:44:37.023][DEBUG][UIModule] UIModule: RUNNING -> LOADING_CONFIG
+[15:44:37.023][DEBUG][ModuleHealthMonitor] Module 'UIModule' state RUNNING -> LOADING_CONFIG (transitions=4)
+[15:44:37.023][DEBUG][UIModule] UIModule включён: UIPanel enabled.
+[15:44:37.023][DEBUG][UIModule] UIModule loading config from 'ui_config'
+[15:44:37.024][INFO][SceneModule] SceneModule initialize() start
+[15:44:37.024][DEBUG][UIModule] UIModule: LOADING_CONFIG -> INITIALIZING
+[15:44:37.024][DEBUG][SceneModule] SceneModule: RUNNING -> LOADING_CONFIG
+[15:44:37.024][DEBUG][ModuleHealthMonitor] Module 'UIModule' state LOADING_CONFIG -> INITIALIZING (transitions=5)
+[15:44:37.024][DEBUG][ModuleHealthMonitor] Module 'SceneModule' state RUNNING -> LOADING_CONFIG (transitions=5)
+[15:44:37.024][DEBUG][UIModule] UIModule calling initModule
+[15:44:37.024][INFO][RendererModule] RendererModule initialize() start
+[15:44:37.024][INFO][UIModule] UIModule init...
+[15:44:37.024][DEBUG][SceneModule] SceneModule loading config from 'scene'
+[15:44:37.024][DEBUG][RendererModule] RendererModule: RUNNING -> LOADING_CONFIG
+[15:44:37.024][DEBUG][UIModule] UIModule: INITIALIZING -> RUNNING
+[15:44:37.024][DEBUG][SceneModule] SceneModule: LOADING_CONFIG -> INITIALIZING
+[15:44:37.024][DEBUG][ModuleHealthMonitor] Module 'RendererModule' state RUNNING -> LOADING_CONFIG (transitions=4)
+[15:44:37.024][DEBUG][ModuleHealthMonitor] Module 'UIModule' state INITIALIZING -> RUNNING (transitions=6)
+[15:44:37.024][INFO][UIModule] UIModule initialized and running
+[15:44:37.024][DEBUG][ModuleHealthMonitor] Module 'SceneModule' state LOADING_CONFIG -> INITIALIZING (transitions=6)
+[15:44:37.024][INFO][RendererModule] Renderer initialized:
+[15:44:37.024][DEBUG][RendererModule] RendererModule loading config from 'render_config'
+[15:44:37.024][DEBUG][SceneModule] SceneModule calling initModule
+[15:44:37.024][INFO][RendererModule] Capabilities:
+[15:44:37.024][DEBUG][RendererModule] RendererModule: LOADING_CONFIG -> INITIALIZING
+[15:44:37.024][DEBUG][SceneModule] SceneModule: initializing...
+[15:44:37.024][DEBUG][ModuleHealthMonitor] Module 'RendererModule' state LOADING_CONFIG -> INITIALIZING (transitions=5)
+[15:44:37.024][INFO][RendererModule]  - Shader Language Support: true
+[15:44:37.024][DEBUG][RendererModule] RendererModule calling initModule
+[15:44:37.024][INFO][RendererModule]  - FrameBuffer Support:     true
+[15:44:37.024][INFO][RendererModule] Initializing RendererModule and sub-modules...
+[15:44:37.024][INFO][RendererModule]  - Geometry Shader:          false
+[15:44:37.024][INFO][RendererModule] RendererModule initialized.
+[15:44:37.024][INFO][RendererModule]  - Texture Array:            true
+[15:44:37.024][DEBUG][RendererModule] RendererModule: INITIALIZING -> RUNNING
+[15:44:37.024][INFO][PhysicsModule] PhysicsModule initialize() start
+[15:44:37.024][DEBUG][ModuleHealthMonitor] Module 'RendererModule' state INITIALIZING -> RUNNING (transitions=6)
+[15:44:37.024][DEBUG][PhysicsModule] PhysicsModule: RUNNING -> LOADING_CONFIG
+[15:44:37.025][INFO][RendererModule] RendererModule initialized and running
+[15:44:37.025][DEBUG][ModuleHealthMonitor] Module 'PhysicsModule' state RUNNING -> LOADING_CONFIG (transitions=4)
+[15:44:37.024][INFO][ModuleManager] Attached manual module SkyBox
+[15:44:37.025][INFO][CollisionModule] CollisionModule initialize() start
+[15:44:37.025][INFO][ModuleManager] Attached manual module PostProcessingModule
+[15:44:37.025][DEBUG][PhysicsModule] PhysicsModule loading config from 'physics'
+[15:44:37.025][DEBUG][CollisionModule] CollisionModule: RUNNING -> LOADING_CONFIG
+[15:44:37.025][INFO][ModuleManager] Searching for module: SceneModule
+[15:44:37.025][DEBUG][PhysicsModule] PhysicsModule: LOADING_CONFIG -> INITIALIZING
+[15:44:37.025][INFO][ModuleManager] Found module in manual: SceneModule
+[15:44:37.025][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state RUNNING -> LOADING_CONFIG (transitions=4)
+[15:44:37.025][DEBUG][ModuleHealthMonitor] Module 'PhysicsModule' state LOADING_CONFIG -> INITIALIZING (transitions=5)
+[15:44:37.025][INFO][ChunkFieldTypeConfigLoader] Loaded 5 chunk subtypes
+[15:44:37.025][DEBUG][PhysicsModule] PhysicsModule calling initModule
+[15:44:37.025][INFO][SoftBodyModule] SoftBodyModule initialize() start
+[15:44:37.025][DEBUG][CGSFileReader] ================ CGS FILE READ START ================
+[15:44:37.025][DEBUG][CollisionModule] CollisionModule loading config from 'physics'
+[15:44:37.025][INFO][PhysicsModule] initializing physics...
+[15:44:37.025][DEBUG][CGSFileReader] Opening file: C:\Users\Aiden\Documents\GitHub\CGE\cge\data\testScene.cgs
+[15:44:37.025][DEBUG][CollisionModule] CollisionModule: LOADING_CONFIG -> INITIALIZING
+[15:44:37.025][DEBUG][SoftBodyModule] SoftBodyModule: RUNNING -> LOADING_CONFIG
+[15:44:37.025][DEBUG][PhysicsModule] BulletAppState already present
+[15:44:37.025][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state LOADING_CONFIG -> INITIALIZING (transitions=5)
+[15:44:37.025][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state RUNNING -> LOADING_CONFIG (transitions=4)
+[15:44:37.025][DEBUG][CGSFileReader] Full file HEX dump (138 bytes):
 434753300000000100000003686c33000000000000005e0003534b590000000041f0000000000000ffffffff3f80000001000b444952454354494f4e414c000000004110000000000000ffffffff3f800000bf800000c0000000c040000000000002001b82bc00000000000000170000001a000000030608067000000000000000310000002d00000003
-[14:27:49.089][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state RUNNING -> LOADING_CONFIG (transitions=4)
-[14:27:49.089][DEBUG][PhysicsModule] PhysicsModule calling initModule
-[14:27:49.089][DEBUG][CollisionModule] CollisionModule loading config from 'physics'
-[14:27:49.089][INFO][PhysicsModule] initializing physics...
-[14:27:49.089][DEBUG][CGSFileReader] Header Parsed: Magic='CGS0', Version=1, SceneName='hl3', TableOffset=94
-[14:27:49.089][INFO][SoftBodyModule] SoftBodyModule initialize() start
-[14:27:49.089][DEBUG][CollisionModule] CollisionModule: LOADING_CONFIG -> INITIALIZING
-[14:27:49.089][DEBUG][CGSFileReader] Chunk Table: Count=2
-[14:27:49.089][DEBUG][SoftBodyModule] SoftBodyModule: RUNNING -> LOADING_CONFIG
-[14:27:49.089][DEBUG][PhysicsModule] BulletAppState already present
-[14:27:49.089][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state LOADING_CONFIG -> INITIALIZING (transitions=5)
-[14:27:49.090][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state RUNNING -> LOADING_CONFIG (transitions=4)
-[14:27:49.090][DEBUG][CollisionModule] CollisionModule calling initModule
-[14:27:49.090][DEBUG][CGSFileReader]   - Entry[0]: ChunkEntry[id=1802940, offset=23, length=26, type=LIGHTING]
-[14:27:49.090][INFO][CollisionModule] CollisionModule initialized and registered listener
-[14:27:49.090][DEBUG][RigidBodyModule] RigidBodyModule constructor: configFile='physics', configClass=PhysicsConfig 
-[14:27:49.090][DEBUG][CollisionModule] CollisionModule: INITIALIZING -> RUNNING
-[14:27:49.090][DEBUG][RigidBodyModule] Registered config 'physics' for module RigidBodyModule
-[14:27:49.090][DEBUG][CGSFileReader]   - Entry[1]: ChunkEntry[id=101189232, offset=49, length=45, type=LIGHTING]
-[14:27:49.090][INFO][ModuleManager] Adding module RigidBodyModule
-[14:27:49.090][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state INITIALIZING -> RUNNING (transitions=6)
-[14:27:49.090][DEBUG][CGSFileReader] ================= CGS FILE READ END =================
-[14:27:49.090][INFO][NovaUI] Initializing UIPanel: camera = 7680?4320
-[14:27:49.090][INFO][CollisionModule] CollisionModule initialized and running
-[14:27:49.090][DEBUG][CollisionModule] CollisionModule constructor: configFile='physics', configClass=PhysicsConfig 
-[14:27:49.090][DEBUG][SceneModule] SceneModule: 2 chunks to stream
-[14:27:49.090][INFO][CollisionModule] CollisionModule initialize() start
-[14:27:49.090][DEBUG][CollisionModule] CollisionModule: UNLOADED -> LOADING_CONFIG
-[14:27:49.090][DEBUG][SoftBodyModule] SoftBodyModule loading config from 'physics'
-[14:27:49.090][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state RUNNING -> LOADING_CONFIG (transitions=7)
-[14:27:49.090][DEBUG][SoftBodyModule] SoftBodyModule: LOADING_CONFIG -> INITIALIZING
-[14:27:49.090][DEBUG][CollisionModule] Registered config 'physics' for module CollisionModule
-[14:27:49.090][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state LOADING_CONFIG -> INITIALIZING (transitions=5)
-[14:27:49.090][DEBUG][SceneModule] SceneModule: INITIALIZING -> RUNNING
-[14:27:49.090][INFO][ModuleManager] Adding module CollisionModule
-[14:27:49.090][DEBUG][SoftBodyModule] SoftBodyModule calling initModule
-[14:27:49.090][DEBUG][ModuleHealthMonitor] Module 'SceneModule' state INITIALIZING -> RUNNING (transitions=7)
-[14:27:49.090][DEBUG][CollisionModule] CollisionModule loading config from 'physics'
-[14:27:49.090][INFO][SceneModule] SceneModule initialized and running
-[14:27:49.090][DEBUG][SoftBodyModule] SoftBodyModule constructor: configFile='physics', configClass=PhysicsConfig 
-[14:27:49.090][INFO][SoftBodyModule] Initialized SoftBodyModule: mass=1.0, stiffness=1.0, damping=0.01, pressure=0.0, iterations=10
-[14:27:49.091][DEBUG][CollisionModule] CollisionModule: LOADING_CONFIG -> INITIALIZING
-[14:27:49.090][DEBUG][CGSFileReader] -- Reading Chunk id=1802940 --
-[14:27:49.091][INFO][SoftBodyModule] SoftBodyModule initialize() start
-[14:27:49.091][DEBUG][SoftBodyModule] SoftBodyModule: INITIALIZING -> RUNNING
-[14:27:49.091][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state LOADING_CONFIG -> INITIALIZING (transitions=8)
-[14:27:49.090][DEBUG][CGSFileReader] -- Reading Chunk id=101189232 --
-[14:27:49.091][DEBUG][CGSFileReader] Chunk 1802940 raw data (hex): 0003534b590000000041f0000000000000ffffffff3f80000001
-[14:27:49.091][DEBUG][SoftBodyModule] SoftBodyModule: UNLOADED -> LOADING_CONFIG
-[14:27:49.091][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state INITIALIZING -> RUNNING (transitions=6)
-[14:27:49.091][DEBUG][CollisionModule] CollisionModule calling initModule
-[14:27:49.091][DEBUG][CGSFileReader] Chunk id=1802940 Read: 26 bytes
-[14:27:49.091][DEBUG][CGSFileReader] Chunk 101189232 raw data (hex): 000b444952454354494f4e414c000000004110000000000000ffffffff3f800000bf800000c0000000c0400000
-[14:27:49.091][INFO][SoftBodyModule] SoftBodyModule initialized and running
-[14:27:49.091][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state RUNNING -> LOADING_CONFIG (transitions=7)
-[14:27:49.091][INFO][CollisionModule] CollisionModule initialized and registered listener
-[14:27:49.091][DEBUG][CGSFileReader] Chunk id=101189232 Read: 45 bytes
-[14:27:49.091][DEBUG][SceneModule] Chunk LIGHTING data - 0003534b590000000041f0000000000000ffffffff3f80000001
-[14:27:49.091][DEBUG][SoftBodyModule] Registered config 'physics' for module SoftBodyModule
-[14:27:49.091][DEBUG][CollisionModule] CollisionModule: INITIALIZING -> RUNNING
-[14:27:49.091][DEBUG][SceneModule] Chunk LIGHTING data - 000b444952454354494f4e414c000000004110000000000000ffffffff3f800000bf800000c0000000c0400000
-[14:27:49.091][DEBUG][SoftBodyModule] SoftBodyModule loading config from 'physics'
-[14:27:49.091][INFO][ModuleManager] Adding module SoftBodyModule
-[14:27:49.091][DEBUG][SoftBodyModule] SoftBodyModule: LOADING_CONFIG -> INITIALIZING
-[14:27:49.091][DEBUG][LightingParser] Parsing LightingChunk 101189232
-[14:27:49.091][DEBUG][LightingParser] Parsing LightingChunk 1802940
-[14:27:49.091][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state INITIALIZING -> RUNNING (transitions=9)
-[14:27:49.091][INFO][ModuleManager] Attached manual module CollisionModule
-[14:27:49.091][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state LOADING_CONFIG -> INITIALIZING (transitions=8)
-[14:27:49.091][DEBUG][LightingParser] Chunk 1802940 raw size = 26 bytes
-[14:27:49.091][DEBUG][LightingParser] Chunk 101189232 raw size = 45 bytes
-[14:27:49.091][INFO][ModuleManager] Attached manual module RigidBodyModule
-[14:27:49.091][DEBUG][SoftBodyModule] SoftBodyModule calling initModule
-[14:27:49.091][INFO][CollisionModule] CollisionModule initialized and running
-[14:27:49.091][INFO][UIXmlParser] UIXmlParser: loading XML 'Interface/stats_config.xml'
-[14:27:49.091][DEBUG][ChunkParser] readUTF: Read string='SKY' (length=3, pos=0, newPos=5)
-[14:27:49.091][DEBUG][ChunkParser] readUTF: Read string='DIRECTIONAL' (length=11, pos=0, newPos=13)
-[14:27:49.091][INFO][ModuleManager] Attached manual module SoftBodyModule
-[14:27:49.091][INFO][SoftBodyModule] Initialized SoftBodyModule: mass=1.0, stiffness=1.0, damping=0.01, pressure=0.0, iterations=10
-[14:27:49.092][DEBUG][ChunkParser] Reading fields from buffer (21 bytes): 0000000041f0000000000000ffffffff3f80000001
-[14:27:49.092][INFO][PhysicsModule] PhysicsModule: physics sub-modules initialized
-[14:27:49.092][DEBUG][SoftBodyModule] SoftBodyModule: INITIALIZING -> RUNNING
-[14:27:49.092][DEBUG][ChunkParser] Reading fields from buffer (32 bytes): 000000004110000000000000ffffffff3f800000bf800000c0000000c0400000
-[14:27:49.092][DEBUG][ChunkParser] Field 'pos' = (0.0, 30.0, 0.0) (Vector3f)
-[14:27:49.092][INFO][PhysicsModule] Physics gravity set to (0.0, -9.81, 0.0)
-[14:27:49.092][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state INITIALIZING -> RUNNING (transitions=9)
-[14:27:49.092][DEBUG][ChunkParser] Field 'pos' = (0.0, 9.0, 0.0) (Vector3f)
-[14:27:49.092][DEBUG][PhysicsModule] PhysicsModule: INITIALIZING -> RUNNING
-[14:27:49.092][INFO][SoftBodyModule] SoftBodyModule initialized and running
-[14:27:49.092][DEBUG][ChunkParser] Field 'color' = Color[1.0, 1.0, 1.0, 1.0] (Color)
-[14:27:49.092][DEBUG][ChunkParser] Field 'color' = Color[1.0, 1.0, 1.0, 1.0] (Color)
-[14:27:49.092][DEBUG][ModuleHealthMonitor] Module 'PhysicsModule' state INITIALIZING -> RUNNING (transitions=6)
-[14:27:49.092][DEBUG][ChunkParser] Field 'intensity' = 1.0 (Float)
-[14:27:49.092][DEBUG][ChunkParser] Field 'intensity' = 1.0 (Float)
-[14:27:49.092][INFO][PhysicsModule] PhysicsModule initialized and running
-[14:27:49.092][DEBUG][ChunkParser] Field 'castShadows' = true (Boolean)
-[14:27:49.092][DEBUG][ChunkParser] Field 'dir' = (-1.0, -2.0, -3.0) (Vector3f)
-[14:27:49.092][DEBUG][ChunkParser] Completed reading fields: {pos=(0.0, 9.0, 0.0), color=Color[1.0, 1.0, 1.0, 1.0], intensity=1.0, dir=(-1.0, -2.0, -3.0)}
-[14:27:49.092][DEBUG][ChunkParser] Completed reading fields: {pos=(0.0, 30.0, 0.0), color=Color[1.0, 1.0, 1.0, 1.0], intensity=1.0, castShadows=true}
-[14:27:49.092][DEBUG][LightingParser] [101189232] DIRECTIONAL dir=(-0.26726124, -0.5345225, -0.8017837) color=Color[1.0, 1.0, 1.0, 1.0] intensity=1.0
-[14:27:49.092][INFO][LightingParser] Finished LightingChunk 101189232, lights parsed: 1
-[14:27:49.092][DEBUG][LightingParser] [1802940] SKY color=Color[1.0, 1.0, 1.0, 1.0] intensity=1.0 castShadows=true
-[14:27:49.092][INFO][LightingParser] Finished LightingChunk 1802940, lights parsed: 1
-[14:27:49.095][DEBUG][UIXmlParser] Default fontPath -> Interface/Fonts/Default.fnt
-[14:27:49.095][DEBUG][UIXmlParser] Default fontSize -> 20.0
-[14:27:49.101][DEBUG][PanelElement] PanelElement created: id='rootPanel'
-[14:27:49.107][DEBUG][ElementFactory] Registered 'TextElement' UI element
-[14:27:49.107][DEBUG][ElementFactory] Registered 'ImageElement' UI element
-[14:27:49.107][DEBUG][ElementFactory] Registered 'Progress' UI element
-[14:27:49.107][DEBUG][PanelElement] PanelElement created: id='barPanel'
-[14:27:49.112][DEBUG][ElementFactory] Registered 'TextElement' UI element
-[14:27:49.112][DEBUG][ElementFactory] Registered 'ImageElement' UI element
-[14:27:49.112][DEBUG][ElementFactory] Registered 'Progress' UI element
-[14:27:49.118][DEBUG][ProgressElement] ProgressElement created: id='playerSpeed'
-[14:27:49.120][DEBUG][ProgressElement] ProgressElement created: id='armorBar'
-[14:27:49.122][DEBUG][ProgressElement] ProgressElement created: id='abilityBar'
-[14:27:49.124][DEBUG][NovaUIUpdater] bindAllFields: handler fields = [abilityBar, playerSpeed, armorBar]
-[14:27:49.126][INFO][NovaUI] UIPanel successfully initialized and attached to guiNode.
-[14:27:49.126][DEBUG][NovaUI] UIPanel enabled.
-[14:27:49.406][INFO][SceneModule] All chunks streamed sceneRoot attached.
-[14:27:49.406][DEBUG][ModuleHealthMonitor] Module 'SceneModule' state RUNNING -> RUNNING (transitions=8)
-[14:27:49.407][INFO][ModuleManager] Searching for module: UIModule
-[14:27:49.407][INFO][ModuleManager] Found module in manual: UIModule
-[14:27:49.407][INFO][NovaUI] UIPanel created (config = Interface/stats_config.xml)
-[14:27:49.407][INFO][NovaUI] Event handler registered: PlayerHud
-[14:27:49.407][INFO][UIModule] Adding new panel...
-[14:27:49.407][INFO][ModuleManager] Searching for module: PhysicsModule
-[14:27:49.407][INFO][ModuleManager] Found module in manual: PhysicsModule
-[14:27:49.408][INFO][RendererModule] Scene loaded, updating renderer settings...
-[14:27:49.408][INFO][RendererModule] Updating lights on scene loaded!
-[14:27:49.408][INFO][ModuleManager] Searching for module: PhysicsModule
-[14:27:49.408][INFO][ModuleManager] Found module in manual: PhysicsModule
-[14:27:49.409][DEBUG][PhysicsModule] Added RigidBodyControl (mass=1.3981842) to Box0
-[14:27:49.411][DEBUG][PhysicsModule] Added RigidBodyControl (mass=17.301626) to Sphere1
-[14:27:49.412][DEBUG][PhysicsModule] Added RigidBodyControl (mass=6.578903) to Cube2
-[14:27:49.413][DEBUG][PhysicsModule] Added RigidBodyControl (mass=29.656752) to Sphere3
-[14:27:49.414][DEBUG][PhysicsModule] Added RigidBodyControl (mass=32.46399) to Sphere4
-[14:27:49.414][INFO][SkyBox] SkyBox initialize() start
-[14:27:49.414][DEBUG][SkyBox] SkyBox: RUNNING -> LOADING_CONFIG
-[14:27:49.414][DEBUG][ModuleHealthMonitor] Module 'SkyBox' state RUNNING -> LOADING_CONFIG (transitions=4)
-[14:27:49.414][INFO][PostProcessingModule] PostProcessingModule initialize() start
-[14:27:49.414][DEBUG][SkyBox] SkyBox loading config from 'skybox'
-[14:27:49.414][DEBUG][PostProcessingModule] PostProcessingModule: RUNNING -> LOADING_CONFIG
-[14:27:49.414][DEBUG][SkyBox] SkyBox: LOADING_CONFIG -> INITIALIZING
-[14:27:49.415][DEBUG][ModuleHealthMonitor] Module 'PostProcessingModule' state RUNNING -> LOADING_CONFIG (transitions=4)
-[14:27:49.415][DEBUG][ModuleHealthMonitor] Module 'SkyBox' state LOADING_CONFIG -> INITIALIZING (transitions=5)
-[14:27:49.415][DEBUG][SkyBox] SkyBox calling initModule
-[14:27:49.415][INFO][CollisionModule] CollisionModule initialize() start
-[14:27:49.415][DEBUG][PostProcessingModule] PostProcessingModule loading config from 'postprocessing_config'
-[14:27:49.415][DEBUG][CollisionModule] CollisionModule: RUNNING -> LOADING_CONFIG
-[14:27:49.415][DEBUG][SkyBox] SkyBox: INITIALIZING -> RUNNING
-[14:27:49.415][DEBUG][PostProcessingModule] PostProcessingModule: LOADING_CONFIG -> INITIALIZING
-[14:27:49.415][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state RUNNING -> LOADING_CONFIG (transitions=10)
-[14:27:49.415][DEBUG][ModuleHealthMonitor] Module 'SkyBox' state INITIALIZING -> RUNNING (transitions=6)
-[14:27:49.415][DEBUG][ModuleHealthMonitor] Module 'PostProcessingModule' state LOADING_CONFIG -> INITIALIZING (transitions=5)
-[14:27:49.415][INFO][SkyBox] SkyBox initialized and running
-[14:27:49.415][INFO][SoftBodyModule] SoftBodyModule initialize() start
-[14:27:49.415][DEBUG][PostProcessingModule] PostProcessingModule calling initModule
-[14:27:49.415][DEBUG][SoftBodyModule] SoftBodyModule: RUNNING -> LOADING_CONFIG
-[14:27:49.415][DEBUG][CollisionModule] CollisionModule loading config from 'physics'
-[14:27:49.415][DEBUG][PostProcessingModule] PostProcessingModule: INITIALIZING -> RUNNING
-[14:27:49.415][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state RUNNING -> LOADING_CONFIG (transitions=10)
-[14:27:49.415][DEBUG][CollisionModule] CollisionModule: LOADING_CONFIG -> INITIALIZING
-[14:27:49.415][DEBUG][ModuleHealthMonitor] Module 'PostProcessingModule' state INITIALIZING -> RUNNING (transitions=6)
-[14:27:49.415][INFO][NovaUI] Initializing UIPanel: camera = 7680?4320
-[14:27:49.415][DEBUG][SoftBodyModule] SoftBodyModule loading config from 'physics'
-[14:27:49.415][INFO][PostProcessingModule] PostProcessingModule initialized and running
-[14:27:49.415][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state LOADING_CONFIG -> INITIALIZING (transitions=11)
-[14:27:49.415][INFO][UIXmlParser] UIXmlParser: loading XML 'Interface/stats_config.xml'
-[14:27:49.415][DEBUG][SoftBodyModule] SoftBodyModule: LOADING_CONFIG -> INITIALIZING
-[14:27:49.415][DEBUG][CollisionModule] CollisionModule calling initModule
-[14:27:49.415][INFO][CollisionModule] CollisionModule initialized and registered listener
-[14:27:49.415][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state LOADING_CONFIG -> INITIALIZING (transitions=11)
-[14:27:49.415][DEBUG][CollisionModule] CollisionModule: INITIALIZING -> RUNNING
-[14:27:49.415][DEBUG][SoftBodyModule] SoftBodyModule calling initModule
-[14:27:49.415][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state INITIALIZING -> RUNNING (transitions=12)
-[14:27:49.415][INFO][CollisionModule] CollisionModule initialized and running
-[14:27:49.415][INFO][SoftBodyModule] Initialized SoftBodyModule: mass=1.0, stiffness=1.0, damping=0.01, pressure=0.0, iterations=10
-[14:27:49.415][DEBUG][SoftBodyModule] SoftBodyModule: INITIALIZING -> RUNNING
-[14:27:49.415][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state INITIALIZING -> RUNNING (transitions=12)
-[14:27:49.415][INFO][SoftBodyModule] SoftBodyModule initialized and running
-[14:27:49.417][DEBUG][UIXmlParser] Default fontPath -> Interface/Fonts/Default.fnt
-[14:27:49.417][DEBUG][UIXmlParser] Default fontSize -> 20.0
-[14:27:49.418][DEBUG][PanelElement] PanelElement created: id='rootPanel'
-[14:27:49.419][DEBUG][ElementFactory] Registered 'TextElement' UI element
-[14:27:49.420][DEBUG][ElementFactory] Registered 'ImageElement' UI element
-[14:27:49.420][DEBUG][ElementFactory] Registered 'Progress' UI element
-[14:27:49.420][DEBUG][PanelElement] PanelElement created: id='barPanel'
-[14:27:49.422][DEBUG][ElementFactory] Registered 'TextElement' UI element
-[14:27:49.422][DEBUG][ElementFactory] Registered 'ImageElement' UI element
-[14:27:49.422][DEBUG][ElementFactory] Registered 'Progress' UI element
-[14:27:49.422][DEBUG][ProgressElement] ProgressElement created: id='playerSpeed'
-[14:27:49.423][DEBUG][ProgressElement] ProgressElement created: id='armorBar'
-[14:27:49.424][DEBUG][ProgressElement] ProgressElement created: id='abilityBar'
-[14:27:49.425][DEBUG][NovaUIUpdater] bindAllFields: handler fields = [abilityBar, playerSpeed, armorBar]
-[14:27:49.425][INFO][NovaUI] UIPanel successfully initialized and attached to guiNode.
-[14:27:49.425][DEBUG][NovaUI] UIPanel enabled.
-[14:27:49.754][INFO][SkyMaterial] asset path="MatDefs/skies/dome20/dome20.j3md"
-[14:27:49.755][INFO][SkyMaterial] asset path="MatDefs/skies/dome06/dome06.j3md"
-[14:27:49.756][INFO][DomeMesh] 60 triangles
-[14:27:49.756][INFO][DomeMesh] 61 vertices
-[14:27:49.756][INFO][DomeMesh] coords 60
-[14:27:49.757][INFO][DomeMesh] 1 740 triangles
-[14:27:49.757][INFO][DomeMesh] 901 vertices
-[14:27:49.758][INFO][DomeMesh] coords 900
-[14:27:49.759][INFO][DomeMesh] 60 triangles
-[14:27:49.759][INFO][DomeMesh] 61 vertices
-[14:27:49.759][INFO][DomeMesh] coords 60
-[14:29:20.339][DEBUG][NovaUI] UIPanel disabled.
-[14:29:20.339][DEBUG][UIModule] UIModule отключён: UIPanel disabled.
-[14:29:20.339][DEBUG][NovaUI] UIPanel disabled.
-[14:29:20.339][DEBUG][UIModule] UIModule отключён: UIPanel disabled.
-[14:29:20.340][INFO][UIModule] UIModule cleanup() start, current state=RUNNING
-[14:29:20.340][DEBUG][UIModule] UIModule: RUNNING -> SHUTTING_DOWN
-[14:29:20.340][DEBUG][ModuleHealthMonitor] Module 'UIModule' state RUNNING -> SHUTTING_DOWN (transitions=7)
-[14:29:20.340][INFO][UIModule] Cleaning UIModule: disabling UIPanels...
-[14:29:20.340][INFO][UIModule] UIPanel null detached.
-[14:29:20.340][INFO][UIModule] UIPanel null detached.
-[14:29:20.340][DEBUG][UIModule] UIModule: SHUTTING_DOWN -> CLEANED_UP
-[14:29:20.340][DEBUG][ModuleHealthMonitor] Module 'UIModule' state SHUTTING_DOWN -> CLEANED_UP (transitions=8)
-[14:29:20.340][INFO][UIModule] UIModule cleaned up successfully
-[14:29:20.340][INFO][SceneModule] SceneModule cleanup() start, current state=RUNNING
-[14:29:20.340][DEBUG][SceneModule] SceneModule: RUNNING -> SHUTTING_DOWN
-[14:29:20.340][DEBUG][ModuleHealthMonitor] Module 'SceneModule' state RUNNING -> SHUTTING_DOWN (transitions=9)
-[14:29:20.340][DEBUG][SceneModule] SceneModule: cleaning up...
-[14:29:20.341][INFO][AbstractFile] Closing data\testScene.cgs
-[14:29:20.341][DEBUG][SceneModule] SceneModule: SHUTTING_DOWN -> CLEANED_UP
-[14:29:20.341][DEBUG][ModuleHealthMonitor] Module 'SceneModule' state SHUTTING_DOWN -> CLEANED_UP (transitions=10)
-[14:29:20.341][INFO][SceneModule] SceneModule cleaned up successfully
-[14:29:20.341][INFO][RendererModule] RendererModule cleanup() start, current state=RUNNING
-[14:29:20.341][DEBUG][RendererModule] RendererModule: RUNNING -> SHUTTING_DOWN
-[14:29:20.341][DEBUG][ModuleHealthMonitor] Module 'RendererModule' state RUNNING -> SHUTTING_DOWN (transitions=7)
-[14:29:20.341][INFO][RendererModule] Cleaning up RendererModule and sub-modules...
-[14:29:20.341][INFO][RendererModule] RendererModule cleaned up.
-[14:29:20.341][DEBUG][RendererModule] RendererModule: SHUTTING_DOWN -> CLEANED_UP
-[14:29:20.341][DEBUG][ModuleHealthMonitor] Module 'RendererModule' state SHUTTING_DOWN -> CLEANED_UP (transitions=8)
-[14:29:20.341][INFO][RendererModule] RendererModule cleaned up successfully
-[14:29:20.341][INFO][PhysicsModule] PhysicsModule cleanup() start, current state=RUNNING
-[14:29:20.341][DEBUG][PhysicsModule] PhysicsModule: RUNNING -> SHUTTING_DOWN
-[14:29:20.341][DEBUG][ModuleHealthMonitor] Module 'PhysicsModule' state RUNNING -> SHUTTING_DOWN (transitions=7)
-[14:29:20.341][INFO][PhysicsModule] {}: cleaning up physics...
-[14:29:20.341][INFO][ModuleManager] ModuleManager shutdown complete
-[14:29:20.341][DEBUG][PhysicsModule] BulletAppState detached
-[14:29:20.341][DEBUG][PhysicsModule] PhysicsModule: SHUTTING_DOWN -> CLEANED_UP
-[14:29:20.342][DEBUG][ModuleHealthMonitor] Module 'PhysicsModule' state SHUTTING_DOWN -> CLEANED_UP (transitions=8)
-[14:29:20.342][INFO][PhysicsModule] PhysicsModule cleaned up successfully
-[14:29:20.342][INFO][CollisionModule] CollisionModule cleanup() start, current state=RUNNING
-[14:29:20.342][DEBUG][CollisionModule] CollisionModule: RUNNING -> SHUTTING_DOWN
-[14:29:20.342][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state RUNNING -> SHUTTING_DOWN (transitions=13)
-[14:29:20.342][DEBUG][CollisionModule] CollisionModule: SHUTTING_DOWN -> CLEANED_UP
-[14:29:20.342][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state SHUTTING_DOWN -> CLEANED_UP (transitions=14)
-[14:29:20.342][INFO][CollisionModule] CollisionModule cleaned up successfully
-[14:29:20.342][INFO][RigidBodyModule] RigidBodyModule cleaned up all bodies
-[14:29:20.342][INFO][RigidBodyModule] RigidBodyModule cleanup() start, current state=UNLOADED
-[14:29:20.342][DEBUG][RigidBodyModule] RigidBodyModule: UNLOADED -> SHUTTING_DOWN
-[14:29:20.342][DEBUG][ModuleHealthMonitor] Module 'RigidBodyModule' state <none> -> SHUTTING_DOWN (transitions=1)
-[14:29:20.342][INFO][RigidBodyModule] RigidBodyModule cleaned up all bodies
-[14:29:20.342][DEBUG][RigidBodyModule] RigidBodyModule: SHUTTING_DOWN -> CLEANED_UP
-[14:29:20.342][DEBUG][ModuleHealthMonitor] Module 'RigidBodyModule' state SHUTTING_DOWN -> CLEANED_UP (transitions=2)
-[14:29:20.342][INFO][RigidBodyModule] RigidBodyModule cleaned up successfully
-[14:29:20.342][INFO][SoftBodyModule] Cleaned up all soft bodies
-[14:29:20.342][INFO][SoftBodyModule] SoftBodyModule cleanup() start, current state=RUNNING
-[14:29:20.343][DEBUG][SoftBodyModule] SoftBodyModule: RUNNING -> SHUTTING_DOWN
-[14:29:20.343][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state RUNNING -> SHUTTING_DOWN (transitions=13)
-[14:29:20.343][INFO][SoftBodyModule] Cleaned up all soft bodies
-[14:29:20.343][DEBUG][SoftBodyModule] SoftBodyModule: SHUTTING_DOWN -> CLEANED_UP
-[14:29:20.343][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state SHUTTING_DOWN -> CLEANED_UP (transitions=14)
-[14:29:20.343][INFO][SoftBodyModule] SoftBodyModule cleaned up successfully
-[14:29:20.343][INFO][NovaUI] UIPanel cleaned up (detached rootPanel).
-[14:29:20.343][INFO][SkyBox] SkyBox cleanup() start, current state=RUNNING
-[14:29:20.343][DEBUG][SkyBox] SkyBox: RUNNING -> SHUTTING_DOWN
-[14:29:20.343][DEBUG][ModuleHealthMonitor] Module 'SkyBox' state RUNNING -> SHUTTING_DOWN (transitions=7)
-[14:29:20.343][DEBUG][SkyBox] SkyBox: SHUTTING_DOWN -> CLEANED_UP
-[14:29:20.343][DEBUG][ModuleHealthMonitor] Module 'SkyBox' state SHUTTING_DOWN -> CLEANED_UP (transitions=8)
-[14:29:20.343][INFO][SkyBox] SkyBox cleaned up successfully
-[14:29:20.343][INFO][PostProcessingModule] PostProcessingModule cleanup() start, current state=RUNNING
-[14:29:20.343][DEBUG][PostProcessingModule] PostProcessingModule: RUNNING -> SHUTTING_DOWN
-[14:29:20.343][DEBUG][ModuleHealthMonitor] Module 'PostProcessingModule' state RUNNING -> SHUTTING_DOWN (transitions=7)
-[14:29:20.343][DEBUG][PostProcessingModule] PostProcessingModule: SHUTTING_DOWN -> CLEANED_UP
-[14:29:20.343][DEBUG][ModuleHealthMonitor] Module 'PostProcessingModule' state SHUTTING_DOWN -> CLEANED_UP (transitions=8)
-[14:29:20.343][INFO][PostProcessingModule] PostProcessingModule cleaned up successfully
-[14:29:20.344][INFO][CollisionModule] CollisionModule cleanup() start, current state=RUNNING
-[14:29:20.344][DEBUG][CollisionModule] CollisionModule: RUNNING -> SHUTTING_DOWN
-[14:29:20.344][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state CLEANED_UP -> SHUTTING_DOWN (transitions=15)
-[14:29:20.344][DEBUG][CollisionModule] CollisionModule: SHUTTING_DOWN -> CLEANED_UP
-[14:29:20.344][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state SHUTTING_DOWN -> CLEANED_UP (transitions=16)
-[14:29:20.344][INFO][CollisionModule] CollisionModule cleaned up successfully
-[14:29:20.344][INFO][RigidBodyModule] RigidBodyModule cleaned up all bodies
-[14:29:20.344][INFO][RigidBodyModule] RigidBodyModule cleanup() start, current state=UNLOADED
-[14:29:20.344][DEBUG][RigidBodyModule] RigidBodyModule: UNLOADED -> SHUTTING_DOWN
-[14:29:20.344][DEBUG][ModuleHealthMonitor] Module 'RigidBodyModule' state CLEANED_UP -> SHUTTING_DOWN (transitions=3)
-[14:29:20.344][INFO][RigidBodyModule] RigidBodyModule cleaned up all bodies
-[14:29:20.344][DEBUG][RigidBodyModule] RigidBodyModule: SHUTTING_DOWN -> CLEANED_UP
-[14:29:20.344][DEBUG][ModuleHealthMonitor] Module 'RigidBodyModule' state SHUTTING_DOWN -> CLEANED_UP (transitions=4)
-[14:29:20.344][INFO][RigidBodyModule] RigidBodyModule cleaned up successfully
-[14:29:20.344][INFO][SoftBodyModule] Cleaned up all soft bodies
-[14:29:20.344][INFO][SoftBodyModule] SoftBodyModule cleanup() start, current state=RUNNING
-[14:29:20.344][DEBUG][SoftBodyModule] SoftBodyModule: RUNNING -> SHUTTING_DOWN
-[14:29:20.344][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state CLEANED_UP -> SHUTTING_DOWN (transitions=15)
-[14:29:20.344][INFO][SoftBodyModule] Cleaned up all soft bodies
-[14:29:20.344][DEBUG][SoftBodyModule] SoftBodyModule: SHUTTING_DOWN -> CLEANED_UP
-[14:29:20.344][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state SHUTTING_DOWN -> CLEANED_UP (transitions=16)
-[14:29:20.344][INFO][SoftBodyModule] SoftBodyModule cleaned up successfully
-[14:29:20.344][INFO][NovaUI] UIPanel cleaned up (detached rootPanel).
+[15:44:37.025][DEBUG][CollisionModule] CollisionModule calling initModule
+[15:44:37.025][INFO][CollisionModule] CollisionModule initialized and registered listener
+[15:44:37.025][DEBUG][CGSFileReader] Header Parsed: Magic='CGS0', Version=1, SceneName='hl3', TableOffset=94
+[15:44:37.025][DEBUG][RigidBodyModule] RigidBodyModule constructor: configFile='physics', configClass=PhysicsConfig 
+[15:44:37.025][DEBUG][CollisionModule] CollisionModule: INITIALIZING -> RUNNING
+[15:44:37.025][DEBUG][CGSFileReader] Chunk Table: Count=2
+[15:44:37.025][DEBUG][RigidBodyModule] Registered config 'physics' for module RigidBodyModule
+[15:44:37.025][INFO][NovaUI] Initializing UIPanel: camera = 2560?1600
+[15:44:37.026][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state INITIALIZING -> RUNNING (transitions=6)
+[15:44:37.026][INFO][ModuleManager] Adding module RigidBodyModule
+[15:44:37.026][INFO][CollisionModule] CollisionModule initialized and running
+[15:44:37.026][DEBUG][CGSFileReader]   - Entry[0]: ChunkEntry[id=1802940, offset=23, length=26, type=LIGHTING]
+[15:44:37.026][DEBUG][CollisionModule] CollisionModule constructor: configFile='physics', configClass=PhysicsConfig 
+[15:44:37.026][DEBUG][SoftBodyModule] SoftBodyModule loading config from 'physics'
+[15:44:37.026][INFO][CollisionModule] CollisionModule initialize() start
+[15:44:37.026][DEBUG][CGSFileReader]   - Entry[1]: ChunkEntry[id=101189232, offset=49, length=45, type=LIGHTING]
+[15:44:37.026][DEBUG][SoftBodyModule] SoftBodyModule: LOADING_CONFIG -> INITIALIZING
+[15:44:37.026][DEBUG][CollisionModule] CollisionModule: UNLOADED -> LOADING_CONFIG
+[15:44:37.026][DEBUG][CGSFileReader] ================= CGS FILE READ END =================
+[15:44:37.026][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state LOADING_CONFIG -> INITIALIZING (transitions=5)
+[15:44:37.026][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state RUNNING -> LOADING_CONFIG (transitions=7)
+[15:44:37.026][DEBUG][SoftBodyModule] SoftBodyModule calling initModule
+[15:44:37.026][DEBUG][SceneModule] SceneModule: 2 chunks to stream
+[15:44:37.026][DEBUG][CollisionModule] Registered config 'physics' for module CollisionModule
+[15:44:37.026][INFO][ModuleManager] Adding module CollisionModule
+[15:44:37.026][INFO][SoftBodyModule] Initialized SoftBodyModule: mass=1.0, stiffness=1.0, damping=0.01, pressure=0.0, iterations=10
+[15:44:37.026][DEBUG][CollisionModule] CollisionModule loading config from 'physics'
+[15:44:37.026][DEBUG][SoftBodyModule] SoftBodyModule: INITIALIZING -> RUNNING
+[15:44:37.026][DEBUG][SoftBodyModule] SoftBodyModule constructor: configFile='physics', configClass=PhysicsConfig 
+[15:44:37.026][DEBUG][SceneModule] SceneModule: INITIALIZING -> RUNNING
+[15:44:37.026][DEBUG][CollisionModule] CollisionModule: LOADING_CONFIG -> INITIALIZING
+[15:44:37.026][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state INITIALIZING -> RUNNING (transitions=6)
+[15:44:37.026][INFO][SoftBodyModule] SoftBodyModule initialize() start
+[15:44:37.026][DEBUG][ModuleHealthMonitor] Module 'SceneModule' state INITIALIZING -> RUNNING (transitions=7)
+[15:44:37.026][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state LOADING_CONFIG -> INITIALIZING (transitions=8)
+[15:44:37.026][DEBUG][SoftBodyModule] SoftBodyModule: UNLOADED -> LOADING_CONFIG
+[15:44:37.026][INFO][SoftBodyModule] SoftBodyModule initialized and running
+[15:44:37.026][INFO][SceneModule] SceneModule initialized and running
+[15:44:37.026][DEBUG][CollisionModule] CollisionModule calling initModule
+[15:44:37.027][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state RUNNING -> LOADING_CONFIG (transitions=7)
+[15:44:37.027][INFO][CollisionModule] CollisionModule initialized and registered listener
+[15:44:37.027][DEBUG][SoftBodyModule] Registered config 'physics' for module SoftBodyModule
+[15:44:37.026][DEBUG][CGSFileReader] -- Reading Chunk id=1802940 --
+[15:44:37.027][DEBUG][SoftBodyModule] SoftBodyModule loading config from 'physics'
+[15:44:37.027][DEBUG][CollisionModule] CollisionModule: INITIALIZING -> RUNNING
+[15:44:37.027][INFO][ModuleManager] Adding module SoftBodyModule
+[15:44:37.027][INFO][UIXmlParser] UIXmlParser: loading XML 'Interface/stats_config.xml'
+[15:44:37.027][DEBUG][CGSFileReader] Chunk 1802940 raw data (hex): 0003534b590000000041f0000000000000ffffffff3f80000001
+[15:44:37.027][DEBUG][SoftBodyModule] SoftBodyModule: LOADING_CONFIG -> INITIALIZING
+[15:44:37.027][INFO][ModuleManager] Attached manual module CollisionModule
+[15:44:37.027][DEBUG][CGSFileReader] -- Reading Chunk id=101189232 --
+[15:44:37.027][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state INITIALIZING -> RUNNING (transitions=9)
+[15:44:37.027][DEBUG][CGSFileReader] Chunk id=1802940 Read: 26 bytes
+[15:44:37.027][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state LOADING_CONFIG -> INITIALIZING (transitions=8)
+[15:44:37.027][INFO][CollisionModule] CollisionModule initialized and running
+[15:44:37.027][DEBUG][SceneModule] Chunk LIGHTING data - 0003534b590000000041f0000000000000ffffffff3f80000001
+[15:44:37.027][DEBUG][SoftBodyModule] SoftBodyModule calling initModule
+[15:44:37.027][DEBUG][CGSFileReader] Chunk 101189232 raw data (hex): 000b444952454354494f4e414c000000004110000000000000ffffffff3f800000bf800000c0000000c0400000
+[15:44:37.027][INFO][ModuleManager] Attached manual module RigidBodyModule
+[15:44:37.027][DEBUG][LightingParser] Parsing LightingChunk 1802940
+[15:44:37.027][DEBUG][CGSFileReader] Chunk id=101189232 Read: 45 bytes
+[15:44:37.027][INFO][ModuleManager] Attached manual module SoftBodyModule
+[15:44:37.027][INFO][SoftBodyModule] Initialized SoftBodyModule: mass=1.0, stiffness=1.0, damping=0.01, pressure=0.0, iterations=10
+[15:44:37.027][DEBUG][LightingParser] Chunk 1802940 raw size = 26 bytes
+[15:44:37.027][DEBUG][SceneModule] Chunk LIGHTING data - 000b444952454354494f4e414c000000004110000000000000ffffffff3f800000bf800000c0000000c0400000
+[15:44:37.027][INFO][PhysicsModule] PhysicsModule: physics sub-modules initialized
+[15:44:37.027][DEBUG][SoftBodyModule] SoftBodyModule: INITIALIZING -> RUNNING
+[15:44:37.027][DEBUG][ChunkParser] readUTF: Read string='SKY' (length=3, pos=0, newPos=5)
+[15:44:37.027][DEBUG][LightingParser] Parsing LightingChunk 101189232
+[15:44:37.027][INFO][PhysicsModule] Physics gravity set to (0.0, -9.81, 0.0)
+[15:44:37.027][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state INITIALIZING -> RUNNING (transitions=9)
+[15:44:37.027][DEBUG][LightingParser] Chunk 101189232 raw size = 45 bytes
+[15:44:37.027][DEBUG][ChunkParser] Reading fields from buffer (21 bytes): 0000000041f0000000000000ffffffff3f80000001
+[15:44:37.027][DEBUG][PhysicsModule] PhysicsModule: INITIALIZING -> RUNNING
+[15:44:37.027][INFO][SoftBodyModule] SoftBodyModule initialized and running
+[15:44:37.027][DEBUG][ChunkParser] readUTF: Read string='DIRECTIONAL' (length=11, pos=0, newPos=13)
+[15:44:37.027][DEBUG][ChunkParser] Field 'pos' = (0.0, 30.0, 0.0) (Vector3f)
+[15:44:37.027][DEBUG][ModuleHealthMonitor] Module 'PhysicsModule' state INITIALIZING -> RUNNING (transitions=6)
+[15:44:37.027][DEBUG][ChunkParser] Reading fields from buffer (32 bytes): 000000004110000000000000ffffffff3f800000bf800000c0000000c0400000
+[15:44:37.027][DEBUG][ChunkParser] Field 'color' = Color[1.0, 1.0, 1.0, 1.0] (Color)
+[15:44:37.027][INFO][PhysicsModule] PhysicsModule initialized and running
+[15:44:37.027][DEBUG][ChunkParser] Field 'pos' = (0.0, 9.0, 0.0) (Vector3f)
+[15:44:37.027][DEBUG][ChunkParser] Field 'intensity' = 1.0 (Float)
+[15:44:37.028][DEBUG][ChunkParser] Field 'color' = Color[1.0, 1.0, 1.0, 1.0] (Color)
+[15:44:37.028][DEBUG][ChunkParser] Field 'castShadows' = true (Boolean)
+[15:44:37.028][DEBUG][ChunkParser] Field 'intensity' = 1.0 (Float)
+[15:44:37.028][DEBUG][ChunkParser] Field 'dir' = (-1.0, -2.0, -3.0) (Vector3f)
+[15:44:37.028][DEBUG][ChunkParser] Completed reading fields: {pos=(0.0, 30.0, 0.0), color=Color[1.0, 1.0, 1.0, 1.0], intensity=1.0, castShadows=true}
+[15:44:37.028][DEBUG][LightingParser] [1802940] SKY color=Color[1.0, 1.0, 1.0, 1.0] intensity=1.0 castShadows=true
+[15:44:37.028][DEBUG][ChunkParser] Completed reading fields: {pos=(0.0, 9.0, 0.0), color=Color[1.0, 1.0, 1.0, 1.0], intensity=1.0, dir=(-1.0, -2.0, -3.0)}
+[15:44:37.028][INFO][LightingParser] Finished LightingChunk 1802940, lights parsed: 1
+[15:44:37.028][DEBUG][LightingParser] [101189232] DIRECTIONAL dir=(-0.26726124, -0.5345225, -0.8017837) color=Color[1.0, 1.0, 1.0, 1.0] intensity=1.0
+[15:44:37.028][INFO][LightingParser] Finished LightingChunk 101189232, lights parsed: 1
+[15:44:37.030][DEBUG][UIXmlParser] Default fontPath -> Interface/Fonts/Default.fnt
+[15:44:37.030][DEBUG][UIXmlParser] Default fontSize -> 20.0
+[15:44:37.036][DEBUG][PanelElement] PanelElement created: id='rootPanel'
+[15:44:37.041][DEBUG][ElementFactory] Registered 'TextElement' UI element
+[15:44:37.041][DEBUG][ElementFactory] Registered 'ImageElement' UI element
+[15:44:37.041][DEBUG][ElementFactory] Registered 'Progress' UI element
+[15:44:37.041][DEBUG][PanelElement] PanelElement created: id='barPanel'
+[15:44:37.044][DEBUG][ElementFactory] Registered 'TextElement' UI element
+[15:44:37.044][DEBUG][ElementFactory] Registered 'ImageElement' UI element
+[15:44:37.044][DEBUG][ElementFactory] Registered 'Progress' UI element
+[15:44:37.049][DEBUG][ProgressElement] ProgressElement created: id='playerSpeed'
+[15:44:37.050][DEBUG][ProgressElement] ProgressElement created: id='armorBar'
+[15:44:37.051][DEBUG][ProgressElement] ProgressElement created: id='abilityBar'
+[15:44:37.053][DEBUG][NovaUIUpdater] bindAllFields: handler fields = [abilityBar, ui, playerSpeed, armorBar]
+[15:44:37.055][INFO][NovaUI] UIPanel successfully initialized and attached to guiNode.
+[15:44:37.055][DEBUG][NovaUI] UIPanel enabled.
+[15:44:37.163][INFO][SceneModule] All chunks streamed sceneRoot attached.
+[15:44:37.163][DEBUG][ModuleHealthMonitor] Module 'SceneModule' state RUNNING -> RUNNING (transitions=8)
+[15:44:37.163][INFO][ModuleManager] Searching for module: UIModule
+[15:44:37.163][INFO][ModuleManager] Found module in manual: UIModule
+[15:44:37.163][INFO][NovaUI] UIPanel created (config = Interface/stats_config.xml)
+[15:44:37.163][INFO][NovaUI] Event handler registered: PlayerHud
+[15:44:37.163][INFO][UIModule] Adding new panel...
+[15:44:37.163][INFO][ModuleManager] Searching for module: PhysicsModule
+[15:44:37.163][INFO][ModuleManager] Found module in manual: PhysicsModule
+[15:44:37.166][INFO][RendererModule] Scene loaded, updating renderer settings...
+[15:44:37.166][INFO][RendererModule] Updating lights on scene loaded!
+[15:44:37.166][INFO][ModuleManager] Searching for module: PhysicsModule
+[15:44:37.166][INFO][ModuleManager] Found module in manual: PhysicsModule
+[15:44:37.167][DEBUG][PhysicsModule] Added RigidBodyControl (mass=29.580196) to Sphere0
+[15:44:37.168][DEBUG][PhysicsModule] Added RigidBodyControl (mass=3.465086) to Sphere1
+[15:44:37.169][DEBUG][PhysicsModule] Added RigidBodyControl (mass=4.508409) to Cube2
+[15:44:37.170][DEBUG][PhysicsModule] Added RigidBodyControl (mass=1.4248272) to Cube3
+[15:44:37.170][DEBUG][PhysicsModule] Added RigidBodyControl (mass=4.95582) to Cube4
+[15:44:37.171][DEBUG][PhysicsModule] Added RigidBodyControl (mass=4.712352) to Cube5
+[15:44:37.172][DEBUG][PhysicsModule] Added RigidBodyControl (mass=0.17906226) to Cube6
+[15:44:37.173][DEBUG][PhysicsModule] Added RigidBodyControl (mass=1.1906799) to Box7
+[15:44:37.173][DEBUG][PhysicsModule] Added RigidBodyControl (mass=0.18017821) to Cube8
+[15:44:37.174][DEBUG][PhysicsModule] Added RigidBodyControl (mass=1.5974455) to Cube9
+[15:44:37.175][DEBUG][PhysicsModule] Added RigidBodyControl (mass=2.3375397) to Box10
+[15:44:37.175][DEBUG][PhysicsModule] Added RigidBodyControl (mass=4.3486323) to Box11
+[15:44:37.176][DEBUG][PhysicsModule] Added RigidBodyControl (mass=5.742679) to Sphere12
+[15:44:37.177][DEBUG][PhysicsModule] Added RigidBodyControl (mass=0.69052726) to Cube13
+[15:44:37.178][DEBUG][PhysicsModule] Added RigidBodyControl (mass=0.6172462) to Cube14
+[15:44:37.179][DEBUG][PhysicsModule] Added RigidBodyControl (mass=1.68234) to Box15
+[15:44:37.179][DEBUG][PhysicsModule] Added RigidBodyControl (mass=0.56538934) to Cube16
+[15:44:37.180][DEBUG][PhysicsModule] Added RigidBodyControl (mass=0.51140803) to Cube17
+[15:44:37.181][DEBUG][PhysicsModule] Added RigidBodyControl (mass=0.15702711) to Cube18
+[15:44:37.181][DEBUG][PhysicsModule] Added RigidBodyControl (mass=4.979941) to Cube19
+[15:44:37.182][DEBUG][PhysicsModule] Added RigidBodyControl (mass=3.8710823) to Box20
+[15:44:37.183][DEBUG][PhysicsModule] Added RigidBodyControl (mass=1.806443) to Box21
+[15:44:37.183][DEBUG][PhysicsModule] Added RigidBodyControl (mass=0.9729926) to Cube22
+[15:44:37.184][DEBUG][PhysicsModule] Added RigidBodyControl (mass=6.8154387) to Cube23
+[15:44:37.185][DEBUG][PhysicsModule] Added RigidBodyControl (mass=1.9652108) to Box24
+[15:44:37.185][DEBUG][PhysicsModule] Added RigidBodyControl (mass=1.715947) to Box25
+[15:44:37.186][DEBUG][PhysicsModule] Added RigidBodyControl (mass=5.597132) to Cube26
+[15:44:37.186][DEBUG][PhysicsModule] Added RigidBodyControl (mass=1.4981221) to Box27
+[15:44:37.187][DEBUG][PhysicsModule] Added RigidBodyControl (mass=2.9483266) to Box28
+[15:44:37.188][DEBUG][PhysicsModule] Added RigidBodyControl (mass=5.255726) to Cube29
+[15:44:37.188][DEBUG][PhysicsModule] Added RigidBodyControl (mass=0.51436687) to Cube30
+[15:44:37.189][DEBUG][PhysicsModule] Added RigidBodyControl (mass=28.165392) to Sphere31
+[15:44:37.190][DEBUG][PhysicsModule] Added RigidBodyControl (mass=29.787544) to Sphere32
+[15:44:37.191][DEBUG][PhysicsModule] Added RigidBodyControl (mass=0.16340171) to Cube33
+[15:44:37.191][DEBUG][PhysicsModule] Added RigidBodyControl (mass=1.9815316) to Cube34
+[15:44:37.192][DEBUG][PhysicsModule] Added RigidBodyControl (mass=3.3028874) to Sphere35
+[15:44:37.193][DEBUG][PhysicsModule] Added RigidBodyControl (mass=1.5777904) to Sphere36
+[15:44:37.193][DEBUG][PhysicsModule] Added RigidBodyControl (mass=1.7765979) to Box37
+[15:44:37.194][DEBUG][PhysicsModule] Added RigidBodyControl (mass=7.094418) to Sphere38
+[15:44:37.195][DEBUG][PhysicsModule] Added RigidBodyControl (mass=1.8369036) to Cube39
+[15:44:37.195][DEBUG][PhysicsModule] Added RigidBodyControl (mass=26.2046) to Sphere40
+[15:44:37.196][DEBUG][PhysicsModule] Added RigidBodyControl (mass=1.3951924) to Box41
+[15:44:37.197][DEBUG][PhysicsModule] Added RigidBodyControl (mass=0.52779996) to Cube42
+[15:44:37.197][DEBUG][PhysicsModule] Added RigidBodyControl (mass=1.533987) to Sphere43
+[15:44:37.198][DEBUG][PhysicsModule] Added RigidBodyControl (mass=4.291268) to Sphere44
+[15:44:37.199][DEBUG][PhysicsModule] Added RigidBodyControl (mass=5.667233) to Cube45
+[15:44:37.200][DEBUG][PhysicsModule] Added RigidBodyControl (mass=19.986536) to Sphere46
+[15:44:37.200][DEBUG][PhysicsModule] Added RigidBodyControl (mass=0.7372158) to Box47
+[15:44:37.201][DEBUG][PhysicsModule] Added RigidBodyControl (mass=4.001436) to Box48
+[15:44:37.201][DEBUG][PhysicsModule] Added RigidBodyControl (mass=0.44678754) to Box49
+[15:44:37.201][INFO][SkyBox] SkyBox initialize() start
+[15:44:37.202][DEBUG][SkyBox] SkyBox: RUNNING -> LOADING_CONFIG
+[15:44:37.202][DEBUG][ModuleHealthMonitor] Module 'SkyBox' state RUNNING -> LOADING_CONFIG (transitions=4)
+[15:44:37.202][INFO][PostProcessingModule] PostProcessingModule initialize() start
+[15:44:37.202][DEBUG][SkyBox] SkyBox loading config from 'skybox'
+[15:44:37.202][DEBUG][PostProcessingModule] PostProcessingModule: RUNNING -> LOADING_CONFIG
+[15:44:37.202][DEBUG][SkyBox] SkyBox: LOADING_CONFIG -> INITIALIZING
+[15:44:37.202][DEBUG][ModuleHealthMonitor] Module 'PostProcessingModule' state RUNNING -> LOADING_CONFIG (transitions=4)
+[15:44:37.202][DEBUG][ModuleHealthMonitor] Module 'SkyBox' state LOADING_CONFIG -> INITIALIZING (transitions=5)
+[15:44:37.202][INFO][CollisionModule] CollisionModule initialize() start
+[15:44:37.202][DEBUG][PostProcessingModule] PostProcessingModule loading config from 'postprocessing_config'
+[15:44:37.202][DEBUG][SkyBox] SkyBox calling initModule
+[15:44:37.202][DEBUG][CollisionModule] CollisionModule: RUNNING -> LOADING_CONFIG
+[15:44:37.202][DEBUG][PostProcessingModule] PostProcessingModule: LOADING_CONFIG -> INITIALIZING
+[15:44:37.202][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state RUNNING -> LOADING_CONFIG (transitions=10)
+[15:44:37.202][DEBUG][SkyBox] SkyBox: INITIALIZING -> RUNNING
+[15:44:37.202][DEBUG][ModuleHealthMonitor] Module 'PostProcessingModule' state LOADING_CONFIG -> INITIALIZING (transitions=5)
+[15:44:37.202][INFO][SoftBodyModule] SoftBodyModule initialize() start
+[15:44:37.202][DEBUG][ModuleHealthMonitor] Module 'SkyBox' state INITIALIZING -> RUNNING (transitions=6)
+[15:44:37.202][DEBUG][PostProcessingModule] PostProcessingModule calling initModule
+[15:44:37.202][DEBUG][CollisionModule] CollisionModule loading config from 'physics'
+[15:44:37.202][DEBUG][SoftBodyModule] SoftBodyModule: RUNNING -> LOADING_CONFIG
+[15:44:37.202][INFO][SkyBox] SkyBox initialized and running
+[15:44:37.202][DEBUG][CollisionModule] CollisionModule: LOADING_CONFIG -> INITIALIZING
+[15:44:37.202][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state RUNNING -> LOADING_CONFIG (transitions=10)
+[15:44:37.202][DEBUG][PostProcessingModule] PostProcessingModule: INITIALIZING -> RUNNING
+[15:44:37.202][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state LOADING_CONFIG -> INITIALIZING (transitions=11)
+[15:44:37.202][DEBUG][ModuleHealthMonitor] Module 'PostProcessingModule' state INITIALIZING -> RUNNING (transitions=6)
+[15:44:37.202][INFO][NovaUI] Initializing UIPanel: camera = 2560?1600
+[15:44:37.202][DEBUG][CollisionModule] CollisionModule calling initModule
+[15:44:37.202][DEBUG][SoftBodyModule] SoftBodyModule loading config from 'physics'
+[15:44:37.202][INFO][PostProcessingModule] PostProcessingModule initialized and running
+[15:44:37.202][INFO][UIXmlParser] UIXmlParser: loading XML 'Interface/stats_config.xml'
+[15:44:37.202][INFO][CollisionModule] CollisionModule initialized and registered listener
+[15:44:37.202][DEBUG][SoftBodyModule] SoftBodyModule: LOADING_CONFIG -> INITIALIZING
+[15:44:37.202][DEBUG][CollisionModule] CollisionModule: INITIALIZING -> RUNNING
+[15:44:37.202][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state LOADING_CONFIG -> INITIALIZING (transitions=11)
+[15:44:37.202][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state INITIALIZING -> RUNNING (transitions=12)
+[15:44:37.203][DEBUG][SoftBodyModule] SoftBodyModule calling initModule
+[15:44:37.203][INFO][CollisionModule] CollisionModule initialized and running
+[15:44:37.203][INFO][SoftBodyModule] Initialized SoftBodyModule: mass=1.0, stiffness=1.0, damping=0.01, pressure=0.0, iterations=10
+[15:44:37.203][DEBUG][SoftBodyModule] SoftBodyModule: INITIALIZING -> RUNNING
+[15:44:37.203][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state INITIALIZING -> RUNNING (transitions=12)
+[15:44:37.203][INFO][SoftBodyModule] SoftBodyModule initialized and running
+[15:44:37.205][DEBUG][UIXmlParser] Default fontPath -> Interface/Fonts/Default.fnt
+[15:44:37.205][DEBUG][UIXmlParser] Default fontSize -> 20.0
+[15:44:37.205][DEBUG][PanelElement] PanelElement created: id='rootPanel'
+[15:44:37.206][DEBUG][ElementFactory] Registered 'TextElement' UI element
+[15:44:37.206][DEBUG][ElementFactory] Registered 'ImageElement' UI element
+[15:44:37.206][DEBUG][ElementFactory] Registered 'Progress' UI element
+[15:44:37.206][DEBUG][PanelElement] PanelElement created: id='barPanel'
+[15:44:37.208][DEBUG][ElementFactory] Registered 'TextElement' UI element
+[15:44:37.209][DEBUG][ElementFactory] Registered 'ImageElement' UI element
+[15:44:37.209][DEBUG][ElementFactory] Registered 'Progress' UI element
+[15:44:37.209][DEBUG][ProgressElement] ProgressElement created: id='playerSpeed'
+[15:44:37.210][DEBUG][ProgressElement] ProgressElement created: id='armorBar'
+[15:44:37.210][DEBUG][ProgressElement] ProgressElement created: id='abilityBar'
+[15:44:37.211][DEBUG][NovaUIUpdater] bindAllFields: handler fields = [abilityBar, ui, playerSpeed, armorBar]
+[15:44:37.211][INFO][NovaUI] UIPanel successfully initialized and attached to guiNode.
+[15:44:37.211][DEBUG][NovaUI] UIPanel enabled.
+[15:44:37.230][INFO][SkyMaterial] asset path="MatDefs/skies/dome20/dome20.j3md"
+[15:44:37.230][INFO][SkyMaterial] asset path="MatDefs/skies/dome06/dome06.j3md"
+[15:44:37.231][INFO][DomeMesh] 60 triangles
+[15:44:37.231][INFO][DomeMesh] 61 vertices
+[15:44:37.231][INFO][DomeMesh] coords 60
+[15:44:37.232][INFO][DomeMesh] 1 740 triangles
+[15:44:37.232][INFO][DomeMesh] 901 vertices
+[15:44:37.233][INFO][DomeMesh] coords 900
+[15:44:37.234][INFO][DomeMesh] 60 triangles
+[15:44:37.234][INFO][DomeMesh] 61 vertices
+[15:44:37.234][INFO][DomeMesh] coords 60
+[15:45:57.198][DEBUG][NovaUI] UIPanel disabled.
+[15:45:57.198][DEBUG][UIModule] UIModule отключён: UIPanel disabled.
+[15:45:57.198][DEBUG][NovaUI] UIPanel disabled.
+[15:45:57.198][DEBUG][UIModule] UIModule отключён: UIPanel disabled.
+[15:45:57.198][INFO][UIModule] UIModule cleanup() start, current state=RUNNING
+[15:45:57.198][DEBUG][UIModule] UIModule: RUNNING -> SHUTTING_DOWN
+[15:45:57.198][DEBUG][ModuleHealthMonitor] Module 'UIModule' state RUNNING -> SHUTTING_DOWN (transitions=7)
+[15:45:57.198][INFO][UIModule] Cleaning UIModule: disabling UIPanels...
+[15:45:57.198][INFO][UIModule] UIPanel null detached.
+[15:45:57.198][INFO][UIModule] UIPanel null detached.
+[15:45:57.198][DEBUG][UIModule] UIModule: SHUTTING_DOWN -> CLEANED_UP
+[15:45:57.198][DEBUG][ModuleHealthMonitor] Module 'UIModule' state SHUTTING_DOWN -> CLEANED_UP (transitions=8)
+[15:45:57.198][INFO][UIModule] UIModule cleaned up successfully
+[15:45:57.198][INFO][SceneModule] SceneModule cleanup() start, current state=RUNNING
+[15:45:57.198][DEBUG][SceneModule] SceneModule: RUNNING -> SHUTTING_DOWN
+[15:45:57.198][DEBUG][ModuleHealthMonitor] Module 'SceneModule' state RUNNING -> SHUTTING_DOWN (transitions=9)
+[15:45:57.198][DEBUG][SceneModule] SceneModule: cleaning up...
+[15:45:57.199][INFO][AbstractFile] Closing data\testScene.cgs
+[15:45:57.199][DEBUG][SceneModule] SceneModule: SHUTTING_DOWN -> CLEANED_UP
+[15:45:57.199][DEBUG][ModuleHealthMonitor] Module 'SceneModule' state SHUTTING_DOWN -> CLEANED_UP (transitions=10)
+[15:45:57.199][INFO][SceneModule] SceneModule cleaned up successfully
+[15:45:57.199][INFO][RendererModule] RendererModule cleanup() start, current state=RUNNING
+[15:45:57.199][DEBUG][RendererModule] RendererModule: RUNNING -> SHUTTING_DOWN
+[15:45:57.199][DEBUG][ModuleHealthMonitor] Module 'RendererModule' state RUNNING -> SHUTTING_DOWN (transitions=7)
+[15:45:57.199][INFO][RendererModule] Cleaning up RendererModule and sub-modules...
+[15:45:57.199][INFO][RendererModule] RendererModule cleaned up.
+[15:45:57.199][DEBUG][RendererModule] RendererModule: SHUTTING_DOWN -> CLEANED_UP
+[15:45:57.199][DEBUG][ModuleHealthMonitor] Module 'RendererModule' state SHUTTING_DOWN -> CLEANED_UP (transitions=8)
+[15:45:57.199][INFO][RendererModule] RendererModule cleaned up successfully
+[15:45:57.199][INFO][PhysicsModule] PhysicsModule cleanup() start, current state=RUNNING
+[15:45:57.199][DEBUG][PhysicsModule] PhysicsModule: RUNNING -> SHUTTING_DOWN
+[15:45:57.200][DEBUG][ModuleHealthMonitor] Module 'PhysicsModule' state RUNNING -> SHUTTING_DOWN (transitions=7)
+[15:45:57.200][INFO][PhysicsModule] {}: cleaning up physics...
+[15:45:57.200][INFO][ModuleManager] ModuleManager shutdown complete
+[15:45:57.200][DEBUG][PhysicsModule] BulletAppState detached
+[15:45:57.200][DEBUG][PhysicsModule] PhysicsModule: SHUTTING_DOWN -> CLEANED_UP
+[15:45:57.200][DEBUG][ModuleHealthMonitor] Module 'PhysicsModule' state SHUTTING_DOWN -> CLEANED_UP (transitions=8)
+[15:45:57.200][INFO][PhysicsModule] PhysicsModule cleaned up successfully
+[15:45:57.200][INFO][CollisionModule] CollisionModule cleanup() start, current state=RUNNING
+[15:45:57.200][DEBUG][CollisionModule] CollisionModule: RUNNING -> SHUTTING_DOWN
+[15:45:57.200][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state RUNNING -> SHUTTING_DOWN (transitions=13)
+[15:45:57.200][DEBUG][CollisionModule] CollisionModule: SHUTTING_DOWN -> CLEANED_UP
+[15:45:57.200][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state SHUTTING_DOWN -> CLEANED_UP (transitions=14)
+[15:45:57.200][INFO][CollisionModule] CollisionModule cleaned up successfully
+[15:45:57.200][INFO][RigidBodyModule] RigidBodyModule cleaned up all bodies
+[15:45:57.200][INFO][RigidBodyModule] RigidBodyModule cleanup() start, current state=UNLOADED
+[15:45:57.200][DEBUG][RigidBodyModule] RigidBodyModule: UNLOADED -> SHUTTING_DOWN
+[15:45:57.200][DEBUG][ModuleHealthMonitor] Module 'RigidBodyModule' state <none> -> SHUTTING_DOWN (transitions=1)
+[15:45:57.200][INFO][RigidBodyModule] RigidBodyModule cleaned up all bodies
+[15:45:57.201][DEBUG][RigidBodyModule] RigidBodyModule: SHUTTING_DOWN -> CLEANED_UP
+[15:45:57.201][DEBUG][ModuleHealthMonitor] Module 'RigidBodyModule' state SHUTTING_DOWN -> CLEANED_UP (transitions=2)
+[15:45:57.201][INFO][RigidBodyModule] RigidBodyModule cleaned up successfully
+[15:45:57.201][INFO][SoftBodyModule] Cleaned up all soft bodies
+[15:45:57.201][INFO][SoftBodyModule] SoftBodyModule cleanup() start, current state=RUNNING
+[15:45:57.201][DEBUG][SoftBodyModule] SoftBodyModule: RUNNING -> SHUTTING_DOWN
+[15:45:57.201][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state RUNNING -> SHUTTING_DOWN (transitions=13)
+[15:45:57.201][INFO][SoftBodyModule] Cleaned up all soft bodies
+[15:45:57.201][DEBUG][SoftBodyModule] SoftBodyModule: SHUTTING_DOWN -> CLEANED_UP
+[15:45:57.201][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state SHUTTING_DOWN -> CLEANED_UP (transitions=14)
+[15:45:57.201][INFO][SoftBodyModule] SoftBodyModule cleaned up successfully
+[15:45:57.201][INFO][NovaUI] UIPanel cleaned up (detached rootPanel).
+[15:45:57.201][INFO][SkyBox] SkyBox cleanup() start, current state=RUNNING
+[15:45:57.201][DEBUG][SkyBox] SkyBox: RUNNING -> SHUTTING_DOWN
+[15:45:57.201][DEBUG][ModuleHealthMonitor] Module 'SkyBox' state RUNNING -> SHUTTING_DOWN (transitions=7)
+[15:45:57.201][DEBUG][SkyBox] SkyBox: SHUTTING_DOWN -> CLEANED_UP
+[15:45:57.201][DEBUG][ModuleHealthMonitor] Module 'SkyBox' state SHUTTING_DOWN -> CLEANED_UP (transitions=8)
+[15:45:57.201][INFO][SkyBox] SkyBox cleaned up successfully
+[15:45:57.201][INFO][PostProcessingModule] PostProcessingModule cleanup() start, current state=RUNNING
+[15:45:57.201][DEBUG][PostProcessingModule] PostProcessingModule: RUNNING -> SHUTTING_DOWN
+[15:45:57.201][DEBUG][ModuleHealthMonitor] Module 'PostProcessingModule' state RUNNING -> SHUTTING_DOWN (transitions=7)
+[15:45:57.202][DEBUG][PostProcessingModule] PostProcessingModule: SHUTTING_DOWN -> CLEANED_UP
+[15:45:57.202][DEBUG][ModuleHealthMonitor] Module 'PostProcessingModule' state SHUTTING_DOWN -> CLEANED_UP (transitions=8)
+[15:45:57.202][INFO][PostProcessingModule] PostProcessingModule cleaned up successfully
+[15:45:57.202][INFO][CollisionModule] CollisionModule cleanup() start, current state=RUNNING
+[15:45:57.202][DEBUG][CollisionModule] CollisionModule: RUNNING -> SHUTTING_DOWN
+[15:45:57.202][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state CLEANED_UP -> SHUTTING_DOWN (transitions=15)
+[15:45:57.202][DEBUG][CollisionModule] CollisionModule: SHUTTING_DOWN -> CLEANED_UP
+[15:45:57.202][DEBUG][ModuleHealthMonitor] Module 'CollisionModule' state SHUTTING_DOWN -> CLEANED_UP (transitions=16)
+[15:45:57.202][INFO][CollisionModule] CollisionModule cleaned up successfully
+[15:45:57.202][INFO][RigidBodyModule] RigidBodyModule cleaned up all bodies
+[15:45:57.202][INFO][RigidBodyModule] RigidBodyModule cleanup() start, current state=UNLOADED
+[15:45:57.202][DEBUG][RigidBodyModule] RigidBodyModule: UNLOADED -> SHUTTING_DOWN
+[15:45:57.202][DEBUG][ModuleHealthMonitor] Module 'RigidBodyModule' state CLEANED_UP -> SHUTTING_DOWN (transitions=3)
+[15:45:57.202][INFO][RigidBodyModule] RigidBodyModule cleaned up all bodies
+[15:45:57.202][DEBUG][RigidBodyModule] RigidBodyModule: SHUTTING_DOWN -> CLEANED_UP
+[15:45:57.202][DEBUG][ModuleHealthMonitor] Module 'RigidBodyModule' state SHUTTING_DOWN -> CLEANED_UP (transitions=4)
+[15:45:57.202][INFO][RigidBodyModule] RigidBodyModule cleaned up successfully
+[15:45:57.202][INFO][SoftBodyModule] Cleaned up all soft bodies
+[15:45:57.202][INFO][SoftBodyModule] SoftBodyModule cleanup() start, current state=RUNNING
+[15:45:57.202][DEBUG][SoftBodyModule] SoftBodyModule: RUNNING -> SHUTTING_DOWN
+[15:45:57.202][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state CLEANED_UP -> SHUTTING_DOWN (transitions=15)
+[15:45:57.202][INFO][SoftBodyModule] Cleaned up all soft bodies
+[15:45:57.202][DEBUG][SoftBodyModule] SoftBodyModule: SHUTTING_DOWN -> CLEANED_UP
+[15:45:57.202][DEBUG][ModuleHealthMonitor] Module 'SoftBodyModule' state SHUTTING_DOWN -> CLEANED_UP (transitions=16)
+[15:45:57.202][INFO][SoftBodyModule] SoftBodyModule cleaned up successfully
+[15:45:57.202][INFO][NovaUI] UIPanel cleaned up (detached rootPanel).

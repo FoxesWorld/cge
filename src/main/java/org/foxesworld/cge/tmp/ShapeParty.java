@@ -37,9 +37,9 @@ public class ShapeParty {
      */
     public void startParty() {
         Random random = new Random();
-        int count = 5;
-        float areaRadius = 8f;
-        float baseHeight = 5f;
+        int count = 50;
+        float areaRadius = 40f;
+        float baseHeight = 2f;
 
         calistaGameEngine.enqueue(() -> {
             PhysicsModule physicsModule = calistaGameEngine.getModuleManager().getModule(PhysicsModule.class);
