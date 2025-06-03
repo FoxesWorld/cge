@@ -25,7 +25,6 @@ import org.foxesworld.cge.renderer.RendererModule;
 import org.foxesworld.cge.scene.SceneModule;
 import org.foxesworld.cge.tmp.ShapeParty;
 import org.foxesworld.cge.tmp.TextureLoader;
-import org.foxesworld.cge.ui.UIModule;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.awt.image.BufferedImage;
@@ -107,7 +106,6 @@ public class CalistaGameEngine extends SimpleApplication {
         moduleManager.register(new RendererModule(this), 20);
         moduleManager.register(new PhysicsModule(this), 35);
         moduleManager.register(new SceneModule(this), 10);
-        moduleManager.register(new UIModule(this), 5);
         moduleManager.initializeAll(this);
         moduleManager.loadAll(this, () -> {
 

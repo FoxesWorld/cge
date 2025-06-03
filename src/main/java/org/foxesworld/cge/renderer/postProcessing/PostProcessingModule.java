@@ -3,6 +3,7 @@ package org.foxesworld.cge.renderer.postProcessing;
 import com.jme3.math.Vector3f;
 import com.jme3.post.filters.DepthOfFieldFilter;
 import com.jme3.post.filters.LightScatteringFilter;
+import com.jme3.shadow.DirectionalLightShadowFilter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.CalistaGameEngine;
@@ -67,7 +68,6 @@ public class PostProcessingModule extends EngineModule<PostProcessingConfig> {
             fpp.addFilter(fxaaFilter);
         }
 
-        app.getViewPort().addProcessor(fpp);
     }
 
     @Override

@@ -11,5 +11,5 @@
   ],
   "lsfDestiny": 0.2,
   "bloomIntensity": 0.5,
-  "enableFXAA": false
+  "enableFXAA": true
 }

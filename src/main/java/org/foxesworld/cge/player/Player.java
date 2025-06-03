@@ -9,7 +9,7 @@ import com.jme3.renderer.Camera;
 import com.jme3.scene.Node;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.physics.PhysicsModule;
-import org.foxesworld.cge.ui.UIModule;
+
 
 /**
  * Represents the player character with physics, movement, and camera effects.
@@ -147,16 +147,16 @@ public class Player extends Node {
         private float playerSpeed;
         private float armorBar = 0.6f;
         private float abilityBar = 0.4f;
-        private final UIModule ui;
+        //private final UIModule ui;
 
         /**
          * @param player reference to the Player to obtain the UIModule
          */
         public PlayerHud(Player player) {
-            this.ui = player.engine
-                    .getModuleManager()
-                    .getModule(UIModule.class);
-            ui.addPanel(this, "Interface/stats_config.xml");
+           // this.ui = player.engine
+           //         .getModuleManager()
+           //         .getModule(UIModule.class);
+           // ui.addPanel(this, "Interface/stats_config.xml");
         }
 
         public void setPlayerSpeed(float speed) {

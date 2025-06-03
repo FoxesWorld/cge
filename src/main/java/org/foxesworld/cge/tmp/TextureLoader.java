@@ -8,6 +8,7 @@ import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.file.cgtex.CGTEXFile;
 import org.foxesworld.cge.core.file.cgtex.TextureEntry;
+import org.foxesworld.cge.renderer.utils.DDSDecoder;
 
 import java.awt.image.BufferedImage;
 import java.io.File;

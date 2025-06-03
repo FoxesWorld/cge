@@ -1,5 +1,9 @@
 package org.foxesworld.cge.renderer;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.stream.JsonReader;
 import com.jme3.app.Application;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.module.EngineModule;
@@ -12,6 +16,7 @@ import org.foxesworld.cge.renderer.skyBox.SkyBox;
 import org.foxesworld.cge.scene.SceneModule;
 
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.util.EnumSet;
 import java.util.concurrent.CompletableFuture;
 
@@ -29,11 +34,7 @@ public class RendererModule extends EngineModule<RendererConfig> {
         subManager = new ModuleManager(app);
 
         // Пример загрузки текстуры (можно сделать асинхронно, если нужно)
-        try {
-            app.getTextureLoader().loadCgtex("data/testData.cgtex");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        loadTexturesAsync("textureFiles.json");
 
         // Регистрируем подмодули в зависимостях
         subManager.register(new CameraModule(app), 10);
@@ -41,11 +42,21 @@ public class RendererModule extends EngineModule<RendererConfig> {
         if(getConfig().isEnablePostEffects()) {
             subManager.register(new PostProcessingModule(app), 30);
         }
+    }
 
-        // Регистрация LightingModule с условием (можно сделать на основе конфигурации или других факторов)
-        //if (isLightingEnabled()) {
-            //subManager.register(new LightingModule(app), 20);
-        //}
+    public void loadTexturesAsync(String texturesFile) {
+        try {
+            Gson gson = new Gson();
+            try (JsonReader reader = new JsonReader(new InputStreamReader(RendererModule.class.getClassLoader().getResourceAsStream(texturesFile)))) {
+                JsonArray array = gson.fromJson(reader, JsonArray.class);
+                for (JsonElement element : array) {
+                    gameEngine.getTextureLoader().loadCgtex(element.getAsString());
+                }
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override
