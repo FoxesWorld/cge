@@ -1,10 +1,11 @@
 package org.foxesworld.cge.core.file.cgs;
 
-public class CGSMetadata {
+import org.foxesworld.cge.core.file.Metadata;
+
+public class CGSMetadata extends Metadata {
     private final String magic;
     private final String sceneName;
     private final int version;
-    private final long tableOffset;
     private int chunkCount;
 
     public CGSMetadata(String magic, String sceneName, int version, long tableOffset, int chunkCount) {

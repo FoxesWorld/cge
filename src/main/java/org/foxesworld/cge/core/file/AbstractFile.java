@@ -12,120 +12,84 @@ import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
-import static java.nio.ByteOrder.BIG_ENDIAN;
 import static java.nio.ByteOrder.LITTLE_ENDIAN;
 
 /**
  * Base file handler: manages opening/closing RandomAccessFile and provides
  * common utility methods for reading/writing bytes, strings and primitive types.
  */
-public abstract class AbstractFile implements AutoCloseable {
+public abstract class AbstractFile<M extends Metadata> implements AutoCloseable {
     private static final Logger logger = LogManager.getLogger(AbstractFile.class);
+    protected final HexFormat HEX = HexFormat.of();
+    protected M metadata;
     protected final RandomAccessFile raf;
     private String MAGIC;
     private int VERSION;
-    private int MAX_NAME_LENGTH = 4096;
     private ByteOrder BYTE_ORDER = LITTLE_ENDIAN;
     private final File file;
+    private final  FileReader fileReader;
 
     protected FileFormatDefinition formatDefinition;
-
-    protected AbstractFile(File file, String mode, FileFormatDefinition formatDefinition) {
-        this.file = file;
-        this.raf = openRandomAccess(file, mode);
-        this.formatDefinition = formatDefinition;
-    }
-
     protected AbstractFile(File file, String mode) {
         this.file = file;
-        this.raf = openRandomAccess(file, mode);
+        this.fileReader = new FileReader(this, mode);
+        this.raf = this.fileReader.getRaf();
     }
-
-    public void readFileNew() throws IOException {
-        if (formatDefinition == null) {
-            throw new IllegalStateException("Format definition not loaded");
-        }
-
-        logger.debug("Reading file using format: {}", formatDefinition);
-
-        // 1. Считываем всё из header в headerMap
-        Map<String, Object> headerMap = new LinkedHashMap<>();
-        for (FieldDefinition field : formatDefinition.getHeader()) {
-            Object value = readField(field, headerMap);
-            headerMap.put(field.getName(), value);
-            logger.debug("Header field: {} = {}", field.getName(), value);
-        }
-
-        // 2. Извлекаем необходимые параметры
-        Integer textureCount = (Integer) headerMap.get("textureCount");
-        Integer dataOffset    = (Integer) headerMap.get("dataOffset");
-
-        if (textureCount == null) {
-            throw new IOException("Header does not contain 'textureCount'");
-        }
-        if (dataOffset == null) {
-            throw new IOException("Header does not contain 'dataOffset'");
-        }
-
-        // 3. Перемещаемся к смещению dataOffset
-        raf.seek(dataOffset);
-
-        // 4. Читаем каждую запись (entry) в соответствии с форматDefinition.getEntry()
-        for (int i = 0; i < textureCount; i++) {
-            Map<String, Object> entryMap = new LinkedHashMap<>();
-            for (FieldDefinition field : formatDefinition.getEntry()) {
-                Object value = readField(field, entryMap);
-                entryMap.put(field.getName(), value);
-                if (field.getName() != "data")
-                logger.debug("Entry[{}] field: {} = {}", i, field.getName(), value);
-            }
-            onEntryRead(entryMap);
-        }
-    }
-
-
+    protected abstract void readFileNew() throws IOException;
     protected abstract void onEntryRead(Map<String, Object> entry);
 
-    private Object readField(FieldDefinition field) throws IOException {
-        return readField(field, new LinkedHashMap<>());
-    }
-
     protected Object readField(FieldDefinition field, Map<String, Object> context) throws IOException {
-        ByteOrder order = field.getByteOrder() != null ? field.getByteOrder() : BYTE_ORDER;
+        //ByteOrder order = field.getByteOrder() != null ? field.getByteOrder() : BYTE_ORDER;
+        return switch (field.getType()) {
+            case "byte" -> raf.readByte();
 
-        switch (field.getType()) {
-            case "byte" -> {
-                return raf.readByte();
-            }
-            case "ushort" -> {
-                return raf.readUnsignedShort();
-            }
-            case "int" -> {
-                return readInt(order);
-            }
-            case "long" -> {
-                return raf.readLong();
-            }
-            case "length" -> {
-                return  raf.length();
-            }
+            case "ushort" -> raf.readUnsignedShort();
+
+            case "int" -> readInt(field);
+
+            case "long" -> readLong();
+
+            case "length" -> raf.length();
+
             case "string" -> {
-                int length = field.getLength() != null ? field.getLength() : (int) context.get(field.getLengthField());
+                int length = field.getLength() != null
+                        ? field.getLength()
+                        : (int) context.get(field.getLengthField());
                 byte[] strBytes = new byte[length];
                 raf.readFully(strBytes);
-                return new String(strBytes, StandardCharsets.UTF_8);
+                yield new String(strBytes, StandardCharsets.UTF_8);
             }
+
             case "byteArray" -> {
-                int arrLen = field.getLength() != null ? field.getLength() : (int) context.get(field.getLengthField());
+                int arrLen = field.getLength() != null
+                        ? field.getLength()
+                        : (int) context.get(field.getLengthField());
                 byte[] bytes = new byte[arrLen];
                 raf.readFully(bytes);
-                return bytes;
+                yield bytes;
             }
+
+            case "array" -> {
+                int count = (int) context.get(field.getCountField());
+                List<Map<String, Object>> elements = new ArrayList<>();
+
+                for (int i = 0; i < count; i++) {
+                    Map<String, Object> elementContext = new HashMap<>();
+                    List<FieldDefinition> fields = field.getElement().getFields();
+                    for (FieldDefinition subField : fields) {
+                        Object value = readField(subField, elementContext);
+                        elementContext.put(subField.getName(), value);
+                    }
+                    elements.add(elementContext);
+                }
+
+                yield elements;
+            }
+
             default -> throw new IllegalArgumentException("Unsupported type: " + field.getType());
-        }
+        };
     }
 
     private short readShort(ByteOrder order) throws IOException {
@@ -133,16 +97,6 @@ public abstract class AbstractFile implements AutoCloseable {
         raf.readFully(buf);
         ByteBuffer bb = ByteBuffer.wrap(buf).order(order);
         return bb.getShort();
-    }
-
-    protected abstract FileReader readFile();
-
-    private RandomAccessFile openRandomAccess(File f, String mode) {
-        try {
-            return new RandomAccessFile(f, mode);
-        } catch (FileNotFoundException e) {
-            throw new IllegalStateException("Cannot open file: " + f.getAbsolutePath(), e);
-        }
     }
 
     public void writeVariableLengthString(String value) throws IOException {
@@ -173,7 +127,15 @@ public abstract class AbstractFile implements AutoCloseable {
         return bb.getInt();
     }
 
-    public int readInt() throws IOException {
+    public int readInt(FieldDefinition field) throws IOException {
+        if(field.getSeek() != null) {
+            if(field.getSeek().contains("->")){
+                String[] seekOption = field.getSeek().split("->");
+                if(seekOption[0].equals("header")){
+                   raf.seek(metadata.getTableOffset());
+                }
+            }
+        }
         return raf.readInt();
     }
 
@@ -209,12 +171,8 @@ public abstract class AbstractFile implements AutoCloseable {
         return file;
     }
 
-    public RandomAccessFile getRaf() {
-        return raf;
-    }
-
     @Override
-    public void close() throws IOException {
+    public void close() {
         try {
             raf.close();
             logger.info("Closing {}", this.file);
@@ -231,10 +189,6 @@ public abstract class AbstractFile implements AutoCloseable {
         this.VERSION = VERSION;
     }
 
-    public void setMAX_NAME_LENGTH(int MAX_NAME_LENGTH) {
-        this.MAX_NAME_LENGTH = MAX_NAME_LENGTH;
-    }
-
     public void setBYTE_ORDER(ByteOrder BYTE_ORDER) {
         this.BYTE_ORDER = BYTE_ORDER;
     }
@@ -247,15 +201,42 @@ public abstract class AbstractFile implements AutoCloseable {
         return VERSION;
     }
 
-    public int getMAX_NAME_LENGTH() {
-        return MAX_NAME_LENGTH;
-    }
-
     public ByteOrder getBYTE_ORDER() {
         return BYTE_ORDER;
     }
 
     public void setFormatDefinition(FileFormatDefinition formatDefinition) {
         this.formatDefinition = formatDefinition;
+    }
+
+    public M getMetadata() {
+        return metadata;
+    }
+
+    public FileReader getFileReader() {
+        return fileReader;
+    }
+
+    public static class  FileReader {
+        private final  AbstractFile abstractFile;
+        protected final RandomAccessFile raf;
+        private final  String mode;
+        FileReader(AbstractFile abstractFile, String mode){
+            this.abstractFile = abstractFile;
+            this.mode = mode;
+            this.raf = this.openRandomAccess(abstractFile.getFile(), this.mode);
+        }
+
+        private RandomAccessFile openRandomAccess(File f, String mode) {
+            try {
+                return new RandomAccessFile(f, mode);
+            } catch (FileNotFoundException e) {
+                throw new IllegalStateException("Cannot open file: " + f.getAbsolutePath(), e);
+            }
+        }
+
+        public RandomAccessFile getRaf() {
+            return raf;
+        }
     }
 }

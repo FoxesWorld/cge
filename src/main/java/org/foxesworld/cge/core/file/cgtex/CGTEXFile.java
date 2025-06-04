@@ -3,7 +3,6 @@ package org.foxesworld.cge.core.file.cgtex;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.core.file.AbstractFile;
-import org.foxesworld.cge.core.file.FileReader;
 import org.foxesworld.cge.core.file.cgs.CGSFile;
 import org.foxesworld.cge.core.file.definition.FieldDefinition;
 import org.foxesworld.cge.core.file.definition.FileFormatDefinition;
@@ -14,10 +13,8 @@ import java.io.File;
 import java.io.IOException;
 import java.util.*;
 
-public class CGTEXFile extends AbstractFile {
-
+public class CGTEXFile extends AbstractFile<CGTEXMetadata> {
     private final List<TextureEntry> entries = new ArrayList<>();
-    private CGTEXMetadata metadata;
     private static final Logger logger = LogManager.getLogger(CGTEXFile.class);
 
     public CGTEXFile(File file, String mode) {
@@ -42,11 +39,6 @@ public class CGTEXFile extends AbstractFile {
     }
 
     @Override
-    public FileReader readFile() {
-        return null;
-    }
-
-    @Override
     public void readFileNew() throws IOException {
         if (formatDefinition == null) {
             throw new IllegalStateException("Format definition not loaded");
@@ -65,7 +57,7 @@ public class CGTEXFile extends AbstractFile {
         String magic       = (String) headerMap.get("magic");
         int version        = (Integer) headerMap.get("version");
         int textureCount   = (Integer) headerMap.get("textureCount");
-        long dataOffset    = getRaf().getFilePointer();
+        long dataOffset    = getFileReader().getRaf().getFilePointer();
         long fileSize      = getFile().length();
 
         metadata = new CGTEXMetadata(magic, version, textureCount, dataOffset, fileSize);
@@ -106,9 +98,5 @@ public class CGTEXFile extends AbstractFile {
 
     public List<TextureEntry> getEntries() {
         return entries;
-    }
-
-    public CGTEXMetadata getMetadata() {
-        return metadata;
     }
 }

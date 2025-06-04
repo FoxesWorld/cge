@@ -144,7 +144,7 @@ public class ChunkControlsPanel extends JPanel {
 
     private void save() {
         writer.setSceneName(SceneCgsCreatorFrame.sceneNameField.getText());
-        writer.writeFile();
+        //writer.writeFile();
         JOptionPane.showMessageDialog(this, "Saved successfully", "Info", JOptionPane.INFORMATION_MESSAGE);
     }
 

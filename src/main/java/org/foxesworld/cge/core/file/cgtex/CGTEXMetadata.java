@@ -1,20 +1,21 @@
 package org.foxesworld.cge.core.file.cgtex;
 
+import org.foxesworld.cge.core.file.Metadata;
+
 /**
  * Расширенный POJO для метаданных CGTEX файла.
  */
-public class CGTEXMetadata {
+public class CGTEXMetadata extends Metadata {
     private final String magic;
     private final int version;
     private int textureCount;
-    private long dataOffset;
     private long fileSize;
 
-    public CGTEXMetadata(String magic, int version, int textureCount, long dataOffset, long fileSize) {
+    public CGTEXMetadata(String magic, int version, int textureCount, long tableOffset, long fileSize) {
         this.magic = magic;
         this.version = version;
         this.textureCount = textureCount;
-        this.dataOffset = dataOffset;
+        this.tableOffset = tableOffset;
         this.fileSize = fileSize;
     }
 
@@ -28,8 +29,8 @@ public class CGTEXMetadata {
     public int getTextureCount() {
         return textureCount;
     }
-    public long getDataOffset() {
-        return dataOffset;
+    public long getTableOffset() {
+        return tableOffset;
     }
     public long getFileSize() {
         return fileSize;
@@ -41,7 +42,7 @@ public class CGTEXMetadata {
                 "magic='" + magic + '\'' +
                 ", version=" + version +
                 ", textureCount=" + textureCount +
-                ", dataOffset=" + dataOffset +
+                ", tableOffset=" + tableOffset +
                 ", fileSize=" + fileSize +
                 '}';
     }

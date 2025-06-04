@@ -1,11 +1,6 @@
 package org.foxesworld.cge.core.file.ydr;
 
-import org.foxesworld.cge.core.file.AbstractFile;
-import org.foxesworld.cge.core.file.FileReader;
-
-import java.io.File;
-import java.util.Map;
-
+/*
 public class YDRFile extends AbstractFile {
     //TODO
     protected YDRFile(File file, String mode) {
@@ -25,3 +20,4 @@ public class YDRFile extends AbstractFile {
     }
 
 }
+*/

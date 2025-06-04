@@ -5,7 +5,6 @@ import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.file.cgs.*;
-import org.foxesworld.cge.core.file.cgs.parser.CGSFileReader;
 import org.foxesworld.cge.core.file.cgs.parser.types.LightingParser;
 import org.foxesworld.cge.core.file.cgs.parser.types.TerrainParser;
 import org.foxesworld.cge.core.module.EngineModule;
@@ -58,10 +57,11 @@ public class SceneModule extends EngineModule<SceneConfig> {
                 bytes -> {
                     try {
                         this.sceneFile = new CGSFile(new File(cfg.getScenePath()), "r");
-                        CGSFileReader reader = this.sceneFile.readFile();
-                        this.cgsMetadata = reader.getMetadata();
-                        this.entries = new ArrayList<>(reader.getChunkEntries());
-                        setupStreamingForChunks(reader);
+                        //CGSFileReader reader = this.sceneFile.readFile();
+                        this.sceneFile.readFileNew();
+                        this.cgsMetadata = sceneFile.getMetadata();
+                        this.entries = new ArrayList<>(sceneFile.getChunkTable());
+                        setupStreamingForChunks(this.sceneFile);
 
                     } catch (Exception e) {
                         logger.error("Failed to parse CGS bytes", e);
@@ -75,7 +75,7 @@ public class SceneModule extends EngineModule<SceneConfig> {
         );
     }
 
-    private void setupStreamingForChunks(CGSFileReader reader) {
+    private void setupStreamingForChunks(CGSFile reader) {
         this.streamingManager = new StreamingManager<>(reader::readChunk, true, 2);
         this.sceneRoot = new Node(cgsMetadata.getSceneName());
         chunksRemaining.set(entries.size());
