@@ -7,8 +7,8 @@ public class CGTEXMetadata {
     private final String magic;
     private final int version;
     private int textureCount;
-    private long dataOffset;          // смещение начала блока с текстурами
-    private long fileSize;            // общий размер файла
+    private long dataOffset;
+    private long fileSize;
 
     public CGTEXMetadata(String magic, int version, int textureCount, long dataOffset, long fileSize) {
         this.magic = magic;

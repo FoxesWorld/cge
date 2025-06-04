@@ -1,5 +1,7 @@
 package org.foxesworld.cge.core.file.cgtex;
 
+import java.util.Map;
+
 public class TextureEntry {
     private final int width;
     private final int height;
@@ -43,5 +45,10 @@ public class TextureEntry {
 
     public String getName() {
         return name;
+    }
+
+    public static TextureEntry fromMap(Map<String, Object> map) {
+        TextureEntry entry = new TextureEntry((Integer) map.get("width"), (Integer) map.get("height"), (String) map.get("name"), (byte) map.get("format"), (byte[]) map.get("data"));
+        return entry;
     }
 }

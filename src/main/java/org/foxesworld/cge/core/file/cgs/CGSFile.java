@@ -7,6 +7,7 @@ import org.foxesworld.cge.core.file.cgs.writer.CGSFileWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.ByteOrder;
+import java.util.Map;
 
 /**
  * CGS-specific file handler: reads/writes CGS header and chunk table using
@@ -21,6 +22,11 @@ public class CGSFile extends AbstractFile {
         setMAGIC("CGS0");
         setVERSION(1);
         setMAX_NAME_LENGTH(4096);
+    }
+
+    @Override
+    protected void onEntryRead(Map<String, Object> entry) {
+
     }
 
     /**

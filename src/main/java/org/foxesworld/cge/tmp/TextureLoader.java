@@ -25,7 +25,9 @@ public class TextureLoader {
     public void loadCgtex(String path) throws IOException {
         logger.debug("Loading CGTEX: {}", path);
         try (CGTEXFile cgtex = new CGTEXFile(new File(path), "r")) {
-            for (TextureEntry entry : cgtex.readFile().getTextures()) {
+            cgtex.readFileNew();
+            logger.debug("File metadata - {}", cgtex.getMetadata());
+            for (TextureEntry entry : cgtex.getEntries()) {
                 String name = entry.getName();
                 int fmt = entry.getFormat();
                 logger.debug("Processing '{}' format {}", name, fmt);

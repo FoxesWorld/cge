@@ -2,14 +2,21 @@ package org.foxesworld.cge.core.file;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
-import org.foxesworld.cge.tmp.TextureLoader;
+import org.foxesworld.cge.core.file.definition.FieldDefinition;
+import org.foxesworld.cge.core.file.definition.FileFormatDefinition;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
+import java.util.LinkedHashMap;
+import java.util.Map;
+
+import static java.nio.ByteOrder.BIG_ENDIAN;
+import static java.nio.ByteOrder.LITTLE_ENDIAN;
 
 /**
  * Base file handler: manages opening/closing RandomAccessFile and provides
@@ -21,16 +28,114 @@ public abstract class AbstractFile implements AutoCloseable {
     private String MAGIC;
     private int VERSION;
     private int MAX_NAME_LENGTH = 4096;
-    private ByteOrder BYTE_ORDER    = ByteOrder.LITTLE_ENDIAN;
+    private ByteOrder BYTE_ORDER = LITTLE_ENDIAN;
     private final File file;
+
+    protected FileFormatDefinition formatDefinition;
+
+    protected AbstractFile(File file, String mode, FileFormatDefinition formatDefinition) {
+        this.file = file;
+        this.raf = openRandomAccess(file, mode);
+        this.formatDefinition = formatDefinition;
+    }
 
     protected AbstractFile(File file, String mode) {
         this.file = file;
-        this.raf  = openRandomAccess(file, mode);
+        this.raf = openRandomAccess(file, mode);
+    }
+
+    public void readFileNew() throws IOException {
+        if (formatDefinition == null) {
+            throw new IllegalStateException("Format definition not loaded");
+        }
+
+        logger.debug("Reading file using format: {}", formatDefinition);
+
+        // 1. Считываем всё из header в headerMap
+        Map<String, Object> headerMap = new LinkedHashMap<>();
+        for (FieldDefinition field : formatDefinition.getHeader()) {
+            Object value = readField(field, headerMap);
+            headerMap.put(field.getName(), value);
+            logger.debug("Header field: {} = {}", field.getName(), value);
+        }
+
+        // 2. Извлекаем необходимые параметры
+        Integer textureCount = (Integer) headerMap.get("textureCount");
+        Integer dataOffset    = (Integer) headerMap.get("dataOffset");
+
+        if (textureCount == null) {
+            throw new IOException("Header does not contain 'textureCount'");
+        }
+        if (dataOffset == null) {
+            throw new IOException("Header does not contain 'dataOffset'");
+        }
+
+        // 3. Перемещаемся к смещению dataOffset
+        raf.seek(dataOffset);
+
+        // 4. Читаем каждую запись (entry) в соответствии с форматDefinition.getEntry()
+        for (int i = 0; i < textureCount; i++) {
+            Map<String, Object> entryMap = new LinkedHashMap<>();
+            for (FieldDefinition field : formatDefinition.getEntry()) {
+                Object value = readField(field, entryMap);
+                entryMap.put(field.getName(), value);
+                if (field.getName() != "data")
+                logger.debug("Entry[{}] field: {} = {}", i, field.getName(), value);
+            }
+            onEntryRead(entryMap);
+        }
+    }
+
+
+    protected abstract void onEntryRead(Map<String, Object> entry);
+
+    private Object readField(FieldDefinition field) throws IOException {
+        return readField(field, new LinkedHashMap<>());
+    }
+
+    protected Object readField(FieldDefinition field, Map<String, Object> context) throws IOException {
+        ByteOrder order = field.getByteOrder() != null ? field.getByteOrder() : BYTE_ORDER;
+
+        switch (field.getType()) {
+            case "byte" -> {
+                return raf.readByte();
+            }
+            case "ushort" -> {
+                return raf.readUnsignedShort();
+            }
+            case "int" -> {
+                return readInt(order);
+            }
+            case "long" -> {
+                return raf.readLong();
+            }
+            case "length" -> {
+                return  raf.length();
+            }
+            case "string" -> {
+                int length = field.getLength() != null ? field.getLength() : (int) context.get(field.getLengthField());
+                byte[] strBytes = new byte[length];
+                raf.readFully(strBytes);
+                return new String(strBytes, StandardCharsets.UTF_8);
+            }
+            case "byteArray" -> {
+                int arrLen = field.getLength() != null ? field.getLength() : (int) context.get(field.getLengthField());
+                byte[] bytes = new byte[arrLen];
+                raf.readFully(bytes);
+                return bytes;
+            }
+            default -> throw new IllegalArgumentException("Unsupported type: " + field.getType());
+        }
+    }
+
+    private short readShort(ByteOrder order) throws IOException {
+        byte[] buf = new byte[2];
+        raf.readFully(buf);
+        ByteBuffer bb = ByteBuffer.wrap(buf).order(order);
+        return bb.getShort();
     }
 
     protected abstract FileReader readFile();
-    //protected abstract FileWriter writeFile();
 
     private RandomAccessFile openRandomAccess(File f, String mode) {
         try {
@@ -47,7 +152,6 @@ public abstract class AbstractFile implements AutoCloseable {
         raf.write(valueBytes);
     }
 
-
     public void seek(long position) throws IOException {
         raf.seek(position);
     }
@@ -60,6 +164,13 @@ public abstract class AbstractFile implements AutoCloseable {
 
     protected void writeBytes(byte[] data) throws IOException {
         raf.write(data);
+    }
+
+    private int readInt(ByteOrder order) throws IOException {
+        byte[] buf = new byte[4];
+        raf.readFully(buf);
+        ByteBuffer bb = ByteBuffer.wrap(buf).order(order);
+        return bb.getInt();
     }
 
     public int readInt() throws IOException {
@@ -142,5 +253,9 @@ public abstract class AbstractFile implements AutoCloseable {
 
     public ByteOrder getBYTE_ORDER() {
         return BYTE_ORDER;
+    }
+
+    public void setFormatDefinition(FileFormatDefinition formatDefinition) {
+        this.formatDefinition = formatDefinition;
     }
 }
