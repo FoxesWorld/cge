@@ -1,5 +1,6 @@
 package org.foxesworld.cge.player;
 
+import com.jme3.bullet.control.BetterCharacterControl;
 import com.jme3.bullet.control.CharacterControl;
 import com.jme3.input.InputManager;
 import com.jme3.input.KeyInput;
@@ -10,14 +11,7 @@ import com.jme3.scene.control.AbstractControl;
 
 /**
  * Handles player movement with smooth acceleration/deceleration and jump callbacks.
- * <ul>
- *   <li>Movement aligns to camera forward/left vectors on the horizontal plane.</li>
- *   <li>Smooth acceleration/deceleration toward a target velocity.</li>
- *   <li>Character rotation updates to face movement direction when moving.</li>
- *   <li>Sprinting by holding SHIFT increases max speed.</li>
- *   <li>Jumping is allowed whenever on ground.</li>
- *   <li>Jump and landing events notify a JumpListener.</li>
- * </ul>
+ * Now uses BetterCharacterControl instead of CharacterControl.
  */
 public class MovementControl extends AbstractControl implements ActionListener {
 
@@ -59,7 +53,7 @@ public class MovementControl extends AbstractControl implements ActionListener {
     private float jumpPeak   = 0f;
 
     /**
-     * @param player       Player instance containing CharacterControl, InputManager, Camera, and HUD
+     * @param player       Player instance containing BetterCharacterControl, InputManager, Camera, and HUD
      * @param walkSpeed    walking speed (m/s)
      * @param sprintSpeed  sprint speed (m/s)
      * @param acceleration acceleration rate (m/s²)
@@ -98,7 +92,6 @@ public class MovementControl extends AbstractControl implements ActionListener {
 
     @Override
     protected void controlUpdate(float tpf) {
-        // Determine movement direction
         moveDir.set(0, 0, 0);
         if (forward)  moveDir.z += 1f;
         if (backward) moveDir.z -= 1f;
@@ -143,8 +136,7 @@ public class MovementControl extends AbstractControl implements ActionListener {
             }
         }
 
-        // Jump/landing detection
-        float currentY = character.getPhysicsLocation().y;
+        float currentY = player.getLocalTranslation().y;
         boolean inAir = !character.onGround();
         if (inAir) {
             float deltaY = currentY - lastY;
@@ -187,23 +179,14 @@ public class MovementControl extends AbstractControl implements ActionListener {
         // Not used
     }
 
-    /**
-     * Sets a listener to receive jump start and landing events.
-     */
     public void setJumpListener(JumpListener listener) {
         this.jumpListener = listener;
     }
 
-    /**
-     * Returns the player's current horizontal speed (m/s).
-     */
     public float getCurrentSpeed() {
         return (float) Math.sqrt(currentVel.x * currentVel.x + currentVel.z * currentVel.z);
     }
 
-    /**
-     * Returns true if the player is moving horizontally.
-     */
     public boolean isMoving() {
         return currentVel.x * currentVel.x + currentVel.z * currentVel.z > 1e-4f;
     }

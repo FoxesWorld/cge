@@ -1,4 +1,4 @@
-package org.foxesworld.cge.core.file.cgs.parser.types;
+package org.foxesworld.cge.core.file.extensions.cgs.parser.types;
 /*
 import com.jme3.asset.AssetManager;
 import com.jme3.scene.Geometry;

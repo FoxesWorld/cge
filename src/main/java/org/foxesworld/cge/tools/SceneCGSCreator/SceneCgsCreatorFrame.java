@@ -4,7 +4,7 @@ import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatPropertiesLaf;
 import org.foxesworld.cge.ICOParser;
-import org.foxesworld.cge.core.file.cgs.writer.CGSFileWriter;
+import org.foxesworld.cge.core.file.extensions.cgs.writer.CGSFileWriter;
 import org.foxesworld.cge.tools.SceneCGSCreator.util.ChunkControlsPanel;
 import org.foxesworld.cge.tools.SceneCGSCreator.util.ChunkListPanel;
 import org.foxesworld.cge.tools.SceneCGSCreator.util.ChunkViewport;

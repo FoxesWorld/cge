@@ -1,8 +1,8 @@
 package org.foxesworld.cge.tools.SceneCGSCreator.util;
 
-import org.foxesworld.cge.core.file.cgs.ChunkType;
-import org.foxesworld.cge.core.file.cgs.writer.CGSFileWriter;
-import org.foxesworld.cge.core.file.cgs.ChunkFieldTypeConfigLoader;
+import org.foxesworld.cge.core.file.extensions.cgs.ChunkType;
+import org.foxesworld.cge.core.file.extensions.cgs.writer.CGSFileWriter;
+import org.foxesworld.cge.core.file.extensions.cgs.ChunkFieldTypeConfigLoader;
 import org.foxesworld.cge.tools.utils.AttributeFieldFactory;
 import org.foxesworld.cge.tools.SceneCGSCreator.SceneCgsCreatorFrame;
 

@@ -1,20 +1,19 @@
 package org.foxesworld.cge.ui;
 
-
 import com.jme3.app.Application;
-import org.foxesworld.cge.CalistaGameEngine;
-import org.foxesworld.cge.core.module.EngineModule;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.foxesworld.cge.CalistaGameEngine;
+import org.foxesworld.cge.core.module.EngineModule;
 import org.foxesworld.cge.ui.novaUi.NovaUI;
 
 import java.util.ArrayList;
 import java.util.List;
 
 /**
- * UIModule: обёртка для UIPanel в виде EngineModule.
- * Загружает конфигурацию UI, создаёт и регистрирует UIPanel как AppState,
- * управляет его жизненным циклом и реакцией на перезагрузку конфигурации.
+ * UIModule: a wrapper for UIPanel as an EngineModule.
+ * Loads the UI configuration, creates and registers UIPanel as an AppState,
+ * and manages its lifecycle and response to configuration reloads.
  */
 public class UIModule extends EngineModule<UIConfig> {
     private final CalistaGameEngine calistaGameEngine;
@@ -25,83 +24,82 @@ public class UIModule extends EngineModule<UIConfig> {
     public UIModule(CalistaGameEngine app) {
         super(CONFIG_FILE, UIConfig.class, app);
         this.calistaGameEngine = app;
-        logger.info("UIModule создан (config = {})", CONFIG_FILE);
+        logger.info("UIModule created (config = {})", CONFIG_FILE);
     }
 
     @Override
     protected void initModule(CalistaGameEngine app) {
-        logger.info("UIModule init...");
+        logger.info("UIModule initializing...");
     }
 
-    public void addPanel(Object handler, String xmlFile){
-        if(getIsLoaded().get()) {
+    public void addPanel(Object handler, String xmlFile) {
+        if (getIsLoaded().get()) {
             NovaUI novaUi = new NovaUI(calistaGameEngine, xmlFile);
             calistaGameEngine.getStateManager().attach(novaUi);
             novaUi.registerEventHandler(handler);
             novaUis.add(novaUi);
-            logger.info("Adding new panel...");
+            logger.info("Panel added from file: {}", xmlFile);
         } else {
-            logger.warn("UImodule is not loaded!");
+            logger.warn("UIModule not loaded, cannot add panel!");
         }
+    }
+
+    /**
+     * Adds an image to the center or specified position of the UI.
+     *
+     * @param handler   the owner of this UI element
+     * @param imagePath path to the image file
+     * @param relX      relative X position (0.5 = center of screen)
+     * @param relY      relative Y position (0.5 = center of screen)
+     * @param width     width of the image in pixels
+     * @param height    height of the image in pixels
+     * @return an identifier object for the image (can be used to remove it later)
+     */
+    public Object addImage(Object handler, String imagePath, float relX, float relY, int width, int height) {
+        if (novaUis.isEmpty()) {
+            logger.warn("No active UI panels to display the image.");
+            return null;
+        }
+
+        NovaUI novaUi = novaUis.get(0);
+        Object imageElement = novaUi.addImageElement(handler, imagePath, relX, relY, width, height);
+        logger.info("Image '{}' added at position ({}, {})", imagePath, relX, relY);
+        return imageElement;
     }
 
     @Override
     protected void updateModule(float tpf) {
-        // UIPanel сам обновляется как AppState, дополнительных действий не требуется
+        // NovaUI updates itself as an AppState
     }
 
     @Override
     protected void cleanupModule(Application app) {
-        logger.info("Cleaning UIModule: disabling UIPanels...");
-        if (novaUis.size() != 0) {
-            for(NovaUI novaUi : novaUis) {
-                app.getStateManager().detach(novaUi);
-                logger.info("UIPanel {} detached.", novaUi.getId());
-            }
+        logger.info("Cleaning UIModule: detaching UI panels...");
+        for (NovaUI novaUi : novaUis) {
+            app.getStateManager().detach(novaUi);
+            logger.info("UIPanel {} detached.", novaUi.getId());
         }
+        novaUis.clear();
     }
 
     @Override
     protected void onEnable() {
-        if (novaUis != null) {
-            for(NovaUI panel: novaUis) {
-                panel.setEnabled(true);
-                logger.debug("UIModule включён: UIPanel enabled.");
-            }
+        for (NovaUI panel : novaUis) {
+            panel.setEnabled(true);
+            logger.debug("UIPanel enabled.");
         }
     }
 
     @Override
     protected void onDisable() {
-        if (novaUis.size() != 0) {
-            for(NovaUI panel: novaUis) {
-                panel.setEnabled(false);
-                logger.debug("UIModule отключён: UIPanel disabled.");
-            }
+        for (NovaUI panel : novaUis) {
+            panel.setEnabled(false);
+            logger.debug("UIPanel disabled.");
         }
     }
 
     @Override
     protected void onConfigReloaded() {
-        /*
-        logger.info("Конфигурация UI перезагружена, пересоздаём UIPanel...");
-        // 1) Отключаем старую панель
-        if (uiPanels.size() != 0) {
-            this.getApplication().getStateManager().detach(uiPanel);
-        }
-        // 2) Создаём новую тулзы из обновлённой конфигурации
-        String xmlPath = getConfig().getUiXmlPath();
-        uiPanel = new UIPanel(calistaGameEngine, xmlPath);
-
-        // При необходимости снова биндим eventHandler
-        Object handler = getConfig().getEventHandlerTarget();
-        if (handler != null) {
-            uiPanel.registerEventHandler(handler);
-        }
-
-        // 3) Регистрируем в StateManager
-        this.getApplication().getStateManager().attach(uiPanel);
-        logger.info("Новая UIPanel ({}) создана и прикреплена.", xmlPath);
-         */
+        // TODO: implement config reload logic if needed
     }
 }

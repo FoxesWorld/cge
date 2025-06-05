@@ -50,6 +50,9 @@ public class PanelElement extends AbstractUIElement {
     }
 
     public void updateSelf(float tpf) {
+        // Optional: uncomment if layout is dynamic
+        // recomputeSizeAndRepositionChildren();
+
         for (UIElement child : children) {
             if (child instanceof AbstractUIElement abs) {
                 abs.updateSelf(tpf);
@@ -126,7 +129,6 @@ public class PanelElement extends AbstractUIElement {
         } else {
             layoutHelper.recomputeAndLayOut(totalWidth, maxChildHeight);
         }
-        //System.out.println("ttwdth "+totalWidth);
         renderer.updateGeometry(getCurrentWidth(), getCurrentHeight());
     }
 
@@ -207,11 +209,23 @@ public class PanelElement extends AbstractUIElement {
     }
 
     public float getCurrentWidth() {
-        return renderer.getWidth();
+        float w = renderer.getWidth();
+        return w > 0f ? w : fixedWidth;
     }
 
     public float getCurrentHeight() {
-        return renderer.getHeight();
+        float h = renderer.getHeight();
+        return h > 0f ? h : fixedHeight;
+    }
+
+    @Override
+    public float getWidth() {
+        return getCurrentWidth();
+    }
+
+    @Override
+    public float getHeight() {
+        return getCurrentHeight();
     }
 
     public float getMargin() {

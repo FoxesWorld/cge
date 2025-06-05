@@ -28,7 +28,6 @@ public class StreamingParserLoader<T> {
     }
 
     protected InputStream openInputStream(String path) throws IOException {
-        // По умолчанию — просто открываем файл с диска.
         return new FileInputStream(path);
     }
 }

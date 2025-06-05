@@ -57,12 +57,7 @@ public class CalistaGameEngine extends SimpleApplication {
         AppSettings settings = new AppSettings(false);
         settings.setTitle("Calista Game Engine");
         settings.setSettingsDialogImage("/theme/logo.png");
-        settings.setResolution(1280, 720); // Примерное разрешение
-        settings.setSamples(4); // Сглаживание
-        settings.setVSync(false);
         settings.setFrameRate(-1);
-        settings.setFullscreen(false);
-        settings.setResizable(true);
         try (InputStream icoStream = CalistaGameEngine.class.getClassLoader().getResourceAsStream("theme/icon/engineLogo.ico")) {
             ICOParser icoParser = new ICOParser();
             BufferedImage bestIcon = icoParser.getBestIcon(icoParser.parse(icoStream));

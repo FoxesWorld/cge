@@ -6,8 +6,8 @@ import com.jme3.texture.image.ColorSpace;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.CalistaGameEngine;
-import org.foxesworld.cge.core.file.cgtex.CGTEXFile;
-import org.foxesworld.cge.core.file.cgtex.TextureEntry;
+import org.foxesworld.cge.core.file.extensions.cgtex.CGTEXFile;
+import org.foxesworld.cge.core.file.extensions.cgtex.TextureEntry;
 
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -24,8 +24,9 @@ public class TextureLoader {
 
     public void loadCgtex(String path) throws IOException {
         logger.debug("Loading CGTEX: {}", path);
-        try (CGTEXFile cgtex = new CGTEXFile(new File(path), "r")) {
-            cgtex.readFileNew();
+       // try (CGTEXFile cgtex = new CGTEXFile(new File(path), "r")) {
+        CGTEXFile cgtex = new CGTEXFile(new File(path), "r");
+        cgtex.readFileNew();
             logger.debug("File metadata - {}", cgtex.getMetadata());
             for (TextureEntry entry : cgtex.getEntries()) {
                 String name = entry.getName();
@@ -45,7 +46,7 @@ public class TextureLoader {
                 engine.addTexture(name, tex);
                 logger.debug("Loaded '{}' {}x{}", name, entry.getWidth(), entry.getHeight());
             }
-        }
+        //}
     }
 
     private ByteBuffer toFlippedByteBuffer(BufferedImage img) {

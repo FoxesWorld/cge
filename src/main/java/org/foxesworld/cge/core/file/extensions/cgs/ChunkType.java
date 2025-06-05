@@ -1,4 +1,4 @@
-package org.foxesworld.cge.core.file.cgs;
+package org.foxesworld.cge.core.file.extensions.cgs;
 
 
 public enum ChunkType {

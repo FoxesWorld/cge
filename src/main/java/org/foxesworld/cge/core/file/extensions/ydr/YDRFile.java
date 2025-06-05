@@ -1,4 +1,4 @@
-package org.foxesworld.cge.core.file.ydr;
+package org.foxesworld.cge.core.file.extensions.ydr;
 
 /*
 public class YDRFile extends AbstractFile {

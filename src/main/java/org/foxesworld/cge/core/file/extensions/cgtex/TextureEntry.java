@@ -1,4 +1,4 @@
-package org.foxesworld.cge.core.file.cgtex;
+package org.foxesworld.cge.core.file.extensions.cgtex;
 
 import java.util.Map;
 

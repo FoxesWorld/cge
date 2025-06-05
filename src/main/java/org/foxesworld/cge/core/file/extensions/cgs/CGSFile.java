@@ -1,10 +1,9 @@
-package org.foxesworld.cge.core.file.cgs;
+package org.foxesworld.cge.core.file.extensions.cgs;
 
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.core.file.AbstractFile;
 import org.foxesworld.cge.core.file.definition.FieldDefinition;
-import org.foxesworld.cge.core.file.definition.FileFormatDefinition;
 import org.foxesworld.cge.core.file.definition.FileStructureLoader;
 import org.foxesworld.cge.core.file.definition.JsonFileStructureLoader;
 
@@ -15,74 +14,69 @@ import java.nio.ByteOrder;
 import java.util.*;
 
 /**
- * CGS-specific file handler, updated to work with the new AbstractFile.
+ * Handler for CGS files used in Calista Game Engine.
+ * Supports reading CGS headers, metadata, and scene chunks.
  */
 public class CGSFile extends AbstractFile<CGSMetadata> {
     private static final Logger logger = LogManager.getLogger(CGSFile.class);
-
     private final Map<Integer, ChunkEntry> chunkTable = new LinkedHashMap<>();
 
+    /**
+     * Constructs a new CGSFile handler.
+     *
+     * @param file the CGS file to open
+     * @param mode the mode in which to open the file (e.g., "r" or "rw")
+     */
     public CGSFile(File file, String mode) {
         super(file, mode);
-
         setMAGIC("CGS0");
         setVERSION(1);
-        //setMAX_NAME_LENGTH(4096);
         setBYTE_ORDER(ByteOrder.LITTLE_ENDIAN);
+        loadFormatDefinition();
+    }
 
+    /**
+     * Loads the file format definition from the JSON descriptor.
+     */
+    private void loadFormatDefinition() {
         try {
             FileStructureLoader loader = new JsonFileStructureLoader(
                     CGSFile.class.getClassLoader().getResourceAsStream("cgs.json")
             );
-            FileFormatDefinition format = loader.loadFormatDefinition("CGS");
-            setFormatDefinition(format);
+            setFormatDefinition(loader.loadFormatDefinition("CGS"));
         } catch (IOException e) {
             throw new RuntimeException("Failed to load CGS format", e);
         }
     }
 
+    /**
+     * Called when a chunk entry has been parsed. Populates the chunk table.
+     *
+     * @param entry parsed entry map
+     */
     @Override
     @SuppressWarnings("unchecked")
     protected void onEntryRead(Map<String, Object> entry) {
-        System.out.println(entry);
-
         List<Map<String, Object>> chunks = (List<Map<String, Object>>) entry.get("chunks");
-
         if (chunks != null) {
             for (Map<String, Object> chunkMap : chunks) {
-                int id      = ((Number) chunkMap.get("id")).intValue();
+                int id = ((Number) chunkMap.get("id")).intValue();
                 long offset = ((Number) chunkMap.get("offset")).longValue();
-                int length  = ((Number) chunkMap.get("length")).intValue();
-                int typeOrd = ((Number) chunkMap.get("type")).intValue();
-                ChunkType type = ChunkType.values()[typeOrd];
-                ChunkEntry chunk = new ChunkEntry(id, offset, length, type);
-                chunkTable.put(id, chunk);
+                int length = ((Number) chunkMap.get("length")).intValue();
+                int typeOrdinal = ((Number) chunkMap.get("type")).intValue();
+                ChunkType type = ChunkType.values()[typeOrdinal];
+                chunkTable.put(id, new ChunkEntry(id, offset, length, type));
             }
         } else {
-           logger.warn("No chunks found in entry: {} ", entry);
+            logger.warn("No chunks found in entry: {}", entry);
         }
     }
 
-    public SceneChunk readChunk(int id) throws IOException {
-        logger.debug("-- Reading Chunk id={} --", id);
-        ChunkEntry entry = chunkTable.get(id);
-        if (entry == null) {
-            logger.error("Chunk id not found: {}", id);
-            throw new IllegalArgumentException("Chunk id not found: " + id);
-        }
-        raf.seek(entry.offset());
-        byte[] data = new byte[entry.length()];
-        raf.readFully(data);
-
-        // Log raw hex data
-        logger.debug("Chunk {} raw data (hex): {}", id, HEX.formatHex(data));
-        logger.debug("Chunk id={} Read: {} bytes", id, data.length);
-
-        ByteBuffer buf = ByteBuffer.wrap(data).order(this.getBYTE_ORDER());
-        return new SceneChunk(entry, buf);
-    }
-
-
+    /**
+     * Reads and parses the CGS file header and chunk entries.
+     *
+     * @throws IOException if reading fails
+     */
     @Override
     public void readFileNew() throws IOException {
         if (formatDefinition == null) {
@@ -96,18 +90,14 @@ public class CGSFile extends AbstractFile<CGSMetadata> {
             logger.debug("Header field: {} = {}", field.getName(), value);
         }
 
-        String magic       = (String) headerMap.get("magic");
-        int version        = (Integer) headerMap.get("version");
-        int sceneNameLen   = (Integer) headerMap.get("sceneNameLength");
-        String sceneName   = (String)  headerMap.get("sceneName");
-        long tableOffset   = (Long)    headerMap.get("tableOffset");
-        long fileSize      = getFile().length();
-        System.out.println(headerMap);
-
-
+        String magic = (String) headerMap.get("magic");
+        int version = (Integer) headerMap.get("version");
+        String sceneName = (String) headerMap.get("sceneName");
+        long tableOffset = (Long) headerMap.get("tableOffset");
 
         raf.seek(tableOffset);
         int chunkCount = raf.readInt();
+
         metadata = new CGSMetadata(magic, sceneName, version, tableOffset, chunkCount);
 
         for (int i = 0; i < chunkCount; i++) {
@@ -121,6 +111,36 @@ public class CGSFile extends AbstractFile<CGSMetadata> {
         }
     }
 
+    /**
+     * Reads a scene chunk from the file based on its chunk ID.
+     *
+     * @param id the chunk ID
+     * @return a SceneChunk instance
+     * @throws IOException if reading fails or chunk ID is invalid
+     */
+    public SceneChunk readChunk(int id) throws IOException {
+        ChunkEntry entry = chunkTable.get(id);
+        if (entry == null) {
+            logger.error("Chunk id not found: {}", id);
+            throw new IllegalArgumentException("Chunk id not found: " + id);
+        }
+
+        raf.seek(entry.offset());
+        byte[] data = new byte[entry.length()];
+        raf.readFully(data);
+
+        logger.debug("Chunk {} raw data (hex): {}", id, HEX.formatHex(data));
+        logger.debug("Chunk id={} Read: {} bytes", id, data.length);
+
+        ByteBuffer buffer = ByteBuffer.wrap(data).order(getBYTE_ORDER());
+        return new SceneChunk(entry, buffer);
+    }
+
+    /**
+     * Returns all chunk entries parsed from the CGS file.
+     *
+     * @return collection of chunk entries
+     */
     public Collection<ChunkEntry> getChunkTable() {
         return chunkTable.values();
     }

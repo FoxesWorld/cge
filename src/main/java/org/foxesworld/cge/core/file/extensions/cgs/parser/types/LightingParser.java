@@ -1,4 +1,4 @@
-package org.foxesworld.cge.core.file.cgs.parser.types;
+package org.foxesworld.cge.core.file.extensions.cgs.parser.types;
 
 import com.jme3.light.*;
 import com.jme3.math.ColorRGBA;
@@ -6,9 +6,9 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import org.foxesworld.cge.CalistaGameEngine;
-import org.foxesworld.cge.core.file.cgs.SceneChunk;
-import org.foxesworld.cge.core.file.cgs.parser.ChunkParser;
-import org.foxesworld.cge.core.file.cgs.ChunkFieldTypeConfigLoader;
+import org.foxesworld.cge.core.file.extensions.cgs.SceneChunk;
+import org.foxesworld.cge.core.file.extensions.cgs.parser.ChunkParser;
+import org.foxesworld.cge.core.file.extensions.cgs.ChunkFieldTypeConfigLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

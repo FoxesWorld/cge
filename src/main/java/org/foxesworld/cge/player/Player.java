@@ -156,7 +156,10 @@ public class Player extends Node {
             this.ui = player.engine
                     .getModuleManager()
                     .getModule(UIModule.class);
+
+            // Load main HUD panel
             ui.addPanel(this, "Interface/stats_config.xml");
+
         }
 
         public void setPlayerSpeed(float speed) {
@@ -177,8 +180,10 @@ public class Player extends Node {
          * @param tpf time per frame in seconds
          */
         public void update(float tpf) {
+            // Update HUD if needed
         }
     }
+
 
     public PlayerHud getPlayerHud() {
         return playerHud;

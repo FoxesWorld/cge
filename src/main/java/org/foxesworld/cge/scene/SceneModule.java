@@ -4,9 +4,9 @@ import com.jme3.app.Application;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import org.foxesworld.cge.CalistaGameEngine;
-import org.foxesworld.cge.core.file.cgs.*;
-import org.foxesworld.cge.core.file.cgs.parser.types.LightingParser;
-import org.foxesworld.cge.core.file.cgs.parser.types.TerrainParser;
+import org.foxesworld.cge.core.file.extensions.cgs.*;
+import org.foxesworld.cge.core.file.extensions.cgs.parser.types.LightingParser;
+import org.foxesworld.cge.core.file.extensions.cgs.parser.types.TerrainParser;
 import org.foxesworld.cge.core.module.EngineModule;
 import org.foxesworld.cge.core.module.ModuleHealthMonitor;
 import org.foxesworld.cge.core.module.ModuleState;
@@ -161,14 +161,6 @@ public class SceneModule extends EngineModule<SceneConfig> {
         if (streamingManager != null) {
             streamingManager.shutdown();
             streamingManager = null;
-        }
-        if (sceneFile != null) {
-            try {
-                sceneFile.close();
-            } catch (Exception e) {
-                logger.warn("Error closing sceneFile", e);
-            }
-            sceneFile = null;
         }
     }
 

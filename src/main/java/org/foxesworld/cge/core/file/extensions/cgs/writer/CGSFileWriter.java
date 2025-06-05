@@ -1,13 +1,15 @@
-package org.foxesworld.cge.core.file.cgs.writer;
+package org.foxesworld.cge.core.file.extensions.cgs.writer;
 
-import org.foxesworld.cge.core.file.cgs.CGSFile;
-import org.foxesworld.cge.core.file.cgs.ChunkEntry;
-import org.foxesworld.cge.core.file.cgs.ChunkType;
+import org.foxesworld.cge.core.file.extensions.cgs.CGSFile;
+import org.foxesworld.cge.core.file.extensions.cgs.ChunkEntry;
+import org.foxesworld.cge.core.file.extensions.cgs.ChunkType;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.RandomAccessFile;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -19,8 +21,8 @@ public class CGSFileWriter extends CGSFile {
 
     private final File file;
     private String sceneName = "";
-    private final List<ChunkEntry> chunkEntries    = new ArrayList<>();
-    private final List<byte[]>      chunkData       = new ArrayList<>();
+    private final List<ChunkEntry> chunkEntries = new ArrayList<>();
+    private final List<byte[]> chunkData = new ArrayList<>();
     private final List<Map<String, Object>> chunkArgs = new ArrayList<>();
     private long headerTableOffsetPos;
 
@@ -33,9 +35,6 @@ public class CGSFileWriter extends CGSFile {
         this.sceneName = sceneName != null ? sceneName : "";
     }
 
-    /**
-     * Теперь принимает дополнительно Map<String,Object> attributes
-     */
     public void addChunk(int id, ChunkType type, byte[] data, Map<String, Object> attributes) {
         if (data == null) throw new IllegalArgumentException("Chunk data cannot be null");
         logger.debug("Adding chunk id={} type={} size={}", id, type, data.length);
@@ -55,13 +54,10 @@ public class CGSFileWriter extends CGSFile {
         }
     }
 
-    /**
-     * Теперь форматируем spec+c аргументами из chunkArgs.get(index)
-     */
     public String getChunkSpec(int index) {
         if (index >= 0 && index < chunkEntries.size()) {
             ChunkEntry e = chunkEntries.get(index);
-            Map<String,Object> attrs = chunkArgs.get(index);
+            Map<String, Object> attrs = chunkArgs.get(index);
 
             StringBuilder sb = new StringBuilder();
             sb.append("Chunk ID: ").append(e.id()).append("\n");
@@ -91,6 +87,7 @@ public class CGSFileWriter extends CGSFile {
     }
 
     public void writeToFile() throws IOException {
+        RandomAccessFile raf = getFileReader().getRaf();
         raf.setLength(0);
         logger.info("Writing CGS: {}", file.getAbsolutePath());
 
@@ -104,12 +101,10 @@ public class CGSFileWriter extends CGSFile {
             logByteData(data, entry.id());
 
             raf.write(data);
-            // обновляем offset в entry
             chunkEntries.set(i, new ChunkEntry(entry.id(), offset, data.length, entry.type()));
             logger.debug("Wrote chunk id={} at offset={}, len={}", entry.id(), offset, data.length);
         }
 
-        // запись таблицы чанков...
         long tableOffset = raf.getFilePointer();
         raf.writeInt(chunkEntries.size());
         for (ChunkEntry entry : chunkEntries) {
@@ -123,24 +118,28 @@ public class CGSFileWriter extends CGSFile {
     }
 
     public long writeHeader(String sceneName) throws IOException {
-        raf.setLength(0);
-        seek(0);
+        RandomAccessFile raf = getFileReader().getRaf();
+        raf.seek(0);
 
-        writeBytes(getMAGIC().getBytes(java.nio.charset.StandardCharsets.US_ASCII));
-        writeInt(getVERSION());
-        writeString(sceneName);
+        raf.write(getMAGIC().getBytes(StandardCharsets.US_ASCII));
+        raf.writeInt(getVERSION());
+        writeString(raf, sceneName);
 
         long placeholder = raf.getFilePointer();
-        writeLong(0L);
+        raf.writeLong(0L);  // placeholder for table offset
         return placeholder;
     }
 
-    /**
-     * Updates the placeholder with the actual chunk table offset.
-     */
     public void updateHeaderOffset(long placeholderPos, long offset) throws IOException {
-        seek(placeholderPos);
-        writeLong(offset);
+        RandomAccessFile raf = getFileReader().getRaf();
+        raf.seek(placeholderPos);
+        raf.writeLong(offset);
+    }
+
+    private void writeString(RandomAccessFile raf, String str) throws IOException {
+        byte[] strBytes = str.getBytes(StandardCharsets.UTF_8);
+        raf.writeInt(strBytes.length);
+        raf.write(strBytes);
     }
 
     private void logByteData(byte[] data, int chunkId) {
