@@ -1,46 +1,39 @@
 package org.foxesworld.cge.core.io;
 
-import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.Objects;
 
-/**
- * Абстрактный класс для парсинга файлов в виде байтов.
- * Читает InputStream целиком в байты и вызывает абстрактный метод
- * для парсинга конкретного объекта из массива байтов.
- */
 public abstract class ByteParser<T> {
 
-    /**
-     * Метод для парсинга конкретного объекта из массива байт.
-     * Наследники реализуют этот метод.
-     *
-     * @param data байтовый массив файла
-     * @return объект типа T, распарсенный из байтов
-     * @throws IOException при ошибках парсинга
-     */
     protected abstract T parseBytes(byte[] data) throws IOException;
 
-    /**
-     * Метод для чтения из InputStream и запуска парсинга.
-     *
-     * @param inputStream входящий поток
-     * @return объект типа T
-     * @throws IOException при ошибках чтения или парсинга
-     */
-    public T parse(InputStream inputStream) throws IOException {
-        if (inputStream == null) {
-            throw new IllegalArgumentException("InputStream cannot be null");
-        }
-
-        ByteArrayOutputStream baos = new ByteArrayOutputStream();
-        byte[] buffer = new byte[8192];
-        int read;
-        while ((read = inputStream.read(buffer)) != -1) {
-            baos.write(buffer, 0, read);
-        }
-        byte[] data = baos.toByteArray();
-
+    public T parse(byte[] data) throws IOException {
+        Objects.requireNonNull(data, "Data byte array cannot be null");
         return parseBytes(data);
+    }
+
+    public T parse(InputStream input) throws IOException {
+        Objects.requireNonNull(input, "InputStream cannot be null");
+        byte[] data = input.readAllBytes();
+        return parseBytes(data);
+    }
+
+    public T parse(File file) throws IOException {
+        Objects.requireNonNull(file, "File cannot be null");
+        try (InputStream in = new FileInputStream(file)) {
+            return parse(in);
+        }
+    }
+
+    public T parse(Path path) throws IOException {
+        Objects.requireNonNull(path, "Path cannot be null");
+        try (InputStream in = Files.newInputStream(path)) {
+            return parse(in);
+        }
     }
 }

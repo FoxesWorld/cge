@@ -60,7 +60,7 @@ public class SceneModule extends EngineModule<SceneConfig> {
                         //CGSFileReader reader = this.sceneFile.readFile();
                         this.sceneFile.readFileNew();
                         this.cgsMetadata = sceneFile.getMetadata();
-                        this.entries = new ArrayList<>(sceneFile.getChunkTable());
+                        this.entries = new ArrayList<>((Collection) sceneFile.getChunkTable());
                         setupStreamingForChunks(this.sceneFile);
 
                     } catch (Exception e) {
@@ -173,10 +173,6 @@ public class SceneModule extends EngineModule<SceneConfig> {
 
     public void onSceneReady(Runnable callback) {
         onSceneReadyCallbacks.add(Objects.requireNonNull(callback));
-    }
-
-    public CGSMetadata getMetadata() {
-        return cgsMetadata;
     }
 
     @Override

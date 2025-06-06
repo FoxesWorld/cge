@@ -66,7 +66,7 @@ public class TaskScheduler {
      */
     public void awaitAllTasksCompletion() throws InterruptedException {
         while (!pool.isQuiescent()) {
-            Thread.sleep(10); // Can adjust this sleep time based on task load
+            Thread.sleep(10);
         }
     }
 
@@ -89,5 +89,9 @@ public class TaskScheduler {
         } catch (Exception e) {
             logger.log(Level.SEVERE, "Synchronous task execution failed", e);
         }
+    }
+
+    public ForkJoinPool getPool() {
+        return pool;
     }
 }

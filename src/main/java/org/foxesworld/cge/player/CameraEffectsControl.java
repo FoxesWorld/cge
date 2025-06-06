@@ -1,7 +1,7 @@
 package org.foxesworld.cge.player;
 
-import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.collision.shapes.CapsuleCollisionShape;
+import com.jme3.bullet.collision.shapes.CollisionShape;
 import com.jme3.bullet.control.CharacterControl;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
@@ -38,9 +38,6 @@ public class CameraEffectsControl extends AbstractControl {
     private float landingShakeDuration;
     private float landingShakeTimer = 0f;
 
-    /**
-     * @param player экземпляр Player, откуда берутся камера, MovementControl и CharacterControl.
-     */
     public CameraEffectsControl(Player player) {
         this.player = player;
         this.cam = player.getCam();
@@ -61,7 +58,7 @@ public class CameraEffectsControl extends AbstractControl {
         verticalOffset = characterHeight / 2f;
         bobbingAmplitude = 0.03f;
         bobbingFrequency = 6.0f;
-        landingShakeDuration = 0.3f; // увеличили на 0.3 для более плавного затухания
+        landingShakeDuration = 0.3f;
         landingShakeTimer = 0f;
     }
 
@@ -95,8 +92,14 @@ public class CameraEffectsControl extends AbstractControl {
             verticalOffset = FastMath.interpolateLinear(tpf * 8f, verticalOffset, targetOffset);
 
         } else if (moveCtrl.isMoving() && characterCtrl.onGround()) {
-            float speedFactor = moveCtrl.getCurrentSpeed() / player.getWalkSpeed() + player.getSprintSped();
+            float walkSpeed = player.getWalkSpeed();
+            float sprintSpeed = player.getSprintSpeed();
+            float totalSpeed = walkSpeed + sprintSpeed;
+            if (totalSpeed <= 0f) totalSpeed = 0.0001f; // предохранитель от деления на 0
+
+            float speedFactor = moveCtrl.getCurrentSpeed() / totalSpeed;
             bobbingPhase = (bobbingPhase + FastMath.TWO_PI * bobbingFrequency * tpf * speedFactor) % FastMath.TWO_PI;
+
             float bobOffset = FastMath.sin(bobbingPhase) * bobbingAmplitude;
             float targetOffset = halfHeight + bobOffset;
             verticalOffset = FastMath.interpolateLinear(tpf * 5f, verticalOffset, targetOffset);
@@ -110,7 +113,9 @@ public class CameraEffectsControl extends AbstractControl {
     }
 
     @Override
-    protected void controlRender(RenderManager rm, ViewPort vp) { }
+    protected void controlRender(RenderManager rm, ViewPort vp) {
+        // не используется
+    }
 
     @Override
     public Control cloneForSpatial(Spatial spatial) {

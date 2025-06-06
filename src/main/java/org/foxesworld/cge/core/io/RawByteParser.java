@@ -28,8 +28,6 @@ public class RawByteParser {
 
     public float readFloat() { return buffer.getFloat(); }
     public double readDouble() { return buffer.getDouble(); }
-
-    // --- Вспомогательные чтения ---
     public int readLEShort() {
         return (readUnsignedByte()) | (readUnsignedByte() << 8);
     }

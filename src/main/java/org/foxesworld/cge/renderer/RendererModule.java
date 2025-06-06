@@ -1,19 +1,16 @@
 package org.foxesworld.cge.renderer;
 
 import com.jme3.app.Application;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.module.EngineModule;
 import org.foxesworld.cge.core.module.ModuleManager;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
-import org.foxesworld.cge.renderer.camera.CameraModule;
 import org.foxesworld.cge.renderer.postProcessing.PostProcessingModule;
 import org.foxesworld.cge.renderer.skyBox.SkyBox;
 import org.foxesworld.cge.scene.SceneModule;
 
-import java.io.IOException;
 import java.util.EnumSet;
-import java.util.concurrent.CompletableFuture;
 
 /**
  * Universal RendererModule: aggregates Camera, Lighting, and PostProcessing sub-modules.
@@ -24,43 +21,21 @@ public class RendererModule extends EngineModule<RendererConfig> {
 
     private final ModuleManager subManager;
 
+
     public RendererModule(CalistaGameEngine app) {
-        super(CONFIG_FILE, RendererConfig.class, app);
-        subManager = new ModuleManager(app);
-
-        // Пример загрузки текстуры (можно сделать асинхронно, если нужно)
-        try {
-            app.getTextureLoader().loadCgtex("data/testData.cgtex");
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-
-        // Регистрируем подмодули в зависимостях
-        subManager.register(new CameraModule(app), 10);
+        super("renderer", RendererConfig.class, app);
+        this.subManager = new ModuleManager(app);
         subManager.register(new SkyBox(this), 10);
-        if(getConfig().isEnablePostEffects()) {
-            subManager.register(new PostProcessingModule(app), 30);
-        }
-
-        // Регистрация LightingModule с условием (можно сделать на основе конфигурации или других факторов)
-        //if (isLightingEnabled()) {
-            //subManager.register(new LightingModule(app), 20);
-        //}
     }
-
     @Override
     protected void onEnable() {
-        // Получаем объект Renderer
         com.jme3.renderer.Renderer renderer = getApplication().getRenderer();
-
-        // Логируем основную информацию о рендерере
         logger.info("Renderer initialized:");
         EnumSet<com.jme3.renderer.Caps> caps = renderer.getCaps();
         logRendererCapabilities(caps);
     }
 
     private void logRendererCapabilities(EnumSet<com.jme3.renderer.Caps> caps) {
-        // Оптимизация логирования, чтобы выводить только важную информацию
         logger.info("Capabilities:");
         logger.info(" - Shader Language Support: {}", caps.contains(com.jme3.renderer.Caps.GLSL100));
         logger.info(" - FrameBuffer Support:     {}", caps.contains(com.jme3.renderer.Caps.FrameBuffer));
@@ -79,17 +54,28 @@ public class RendererModule extends EngineModule<RendererConfig> {
     }
 
     @Override
-    protected void initModule(CalistaGameEngine app) {
-        logger.info("Initializing RendererModule and sub-modules...");
+    protected void initModule(CalistaGameEngine app) throws Exception {
+        RendererConfig cfg = getConfig();
+        if (cfg == null) {
+            throw new IllegalStateException("RendererConfig not loaded");
+        }
 
-        // Инициализация подмодулей асинхронно
-        CompletableFuture.runAsync(() -> {
-            subManager.initializeAll(app);
-            initializeSceneModule(app);
+        //TextureLoader loader = app.getTextureLoader();
+        //loader.loadCgtexAsync("data/testData.cgtex")
+        //        .thenRun(() -> {
+        //          logger.info("Textures Loaded");
+        //        });
+
+        if (cfg.isEnablePostEffects()) {
+            subManager.register(new PostProcessingModule(app), 30);
+        }
+
+        subManager.initializeAll(app);
+        subManager.loadAll(app, () -> {
+            logger.info("All render modules are ready!");
         });
-
-        logger.info("RendererModule initialized.");
     }
+
 
     private void initializeSceneModule(CalistaGameEngine app) {
         // Получаем SceneModule
@@ -103,13 +89,7 @@ public class RendererModule extends EngineModule<RendererConfig> {
     }
 
     private void updateRendererSettingsBasedOnScene() {
-        // Здесь вызываем методы подсистем освещения, постобработки и т.п.
         logger.info("Updating lights on scene loaded!");
-    }
-
-    private boolean isLightingEnabled() {
-        // Здесь можно проверить конфигурацию или другие параметры, чтобы включить/выключить LightingModule
-        return true; // Пример, можно заменить на реальную логику
     }
 
     @Override

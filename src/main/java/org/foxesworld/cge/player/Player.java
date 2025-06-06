@@ -28,8 +28,13 @@ public class Player extends Node {
     private final PlayerHud playerHud;
 
     private final float eyeHeight = 1.6f;
-    private final  float walkSpeed = 0.1f, sprintSped = 0.25f, acceleration = 0.6f, deceleration = 0.8f
-            ,maxStamina = 1.0f,staminaDrainRate = 0.3f, staminaRegenRate = 0.05f;
+    private final float walkSpeed = 0.1f;
+    private final float sprintSpeed = 0.25f;
+    private final float acceleration = 0.6f;
+    private final float deceleration = 0.8f;
+    private final float maxStamina = 1.0f;
+    private final float staminaDrainRate = 0.3f;
+    private final float staminaRegenRate = 0.05f;
 
     /**
      * Creates a new Player instance.
@@ -68,7 +73,7 @@ public class Player extends Node {
         );
         addControl(fpCamControl);
 
-        this.movementControl = new MovementControl(this, walkSpeed, sprintSped, acceleration,deceleration);
+        this.movementControl = new MovementControl(this, walkSpeed, sprintSpeed, acceleration, deceleration);
         addControl(movementControl);
 
         this.camEffectsControl = new CameraEffectsControl(this);
@@ -79,6 +84,7 @@ public class Player extends Node {
             public void onJumpStart() {
                 camEffectsControl.notifyJumpStart();
             }
+
             @Override
             public void onLanding(float peak) {
                 camEffectsControl.notifyLanding(peak);
@@ -99,6 +105,9 @@ public class Player extends Node {
 
     /**
      * Updates the player each frame.
+     *
+     * Note: This method must be called manually from the main application loop,
+     * or you can wrap it in an AppState or Control for automatic updates.
      *
      * @param tpf time per frame in seconds
      */
@@ -139,6 +148,42 @@ public class Player extends Node {
         return engine;
     }
 
+    public PlayerHud getPlayerHud() {
+        return playerHud;
+    }
+
+    public float getEyeHeight() {
+        return eyeHeight;
+    }
+
+    public float getWalkSpeed() {
+        return walkSpeed;
+    }
+
+    public float getSprintSpeed() {
+        return sprintSpeed;
+    }
+
+    public float getAcceleration() {
+        return acceleration;
+    }
+
+    public float getDeceleration() {
+        return deceleration;
+    }
+
+    public float getMaxStamina() {
+        return maxStamina;
+    }
+
+    public float getStaminaDrainRate() {
+        return staminaDrainRate;
+    }
+
+    public float getStaminaRegenRate() {
+        return staminaRegenRate;
+    }
+
     /**
      * Displays HUD elements such as speed, armor, and abilities.
      */
@@ -160,6 +205,8 @@ public class Player extends Node {
             // Load main HUD panel
             ui.addPanel(this, "Interface/stats_config.xml");
 
+            // Add crosshair at screen center (optional)
+            // ui.addImage(this, "Interface/crosshair.png", 5f, 5f, 32, 32);
         }
 
         public void setPlayerSpeed(float speed) {
@@ -180,44 +227,7 @@ public class Player extends Node {
          * @param tpf time per frame in seconds
          */
         public void update(float tpf) {
-            // Update HUD if needed
+
         }
-    }
-
-
-    public PlayerHud getPlayerHud() {
-        return playerHud;
-    }
-
-    public float getEyeHeight() {
-        return eyeHeight;
-    }
-
-    public float getWalkSpeed() {
-        return walkSpeed;
-    }
-
-    public float getSprintSped() {
-        return sprintSped;
-    }
-
-    public float getAcceleration() {
-        return acceleration;
-    }
-
-    public float getDeceleration() {
-        return deceleration;
-    }
-
-    public float getMaxStamina() {
-        return maxStamina;
-    }
-
-    public float getStaminaDrainRate() {
-        return staminaDrainRate;
-    }
-
-    public float getStaminaRegenRate() {
-        return staminaRegenRate;
     }
 }

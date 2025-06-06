@@ -33,8 +33,6 @@ public abstract class AbstractFile<M extends Metadata> {
     private final File file;
     private final FileReader fileReader;
     protected FileFormatDefinition formatDefinition;
-    @Deprecated
-    private final RawByteParser rawByteParser;
 
     /**
      * Constructs a new AbstractFile with the given {@code File} and mode.
@@ -46,7 +44,6 @@ public abstract class AbstractFile<M extends Metadata> {
         this.file = file;
         this.fileReader = new FileReader(this, mode);
         this.raf = this.fileReader.getRaf();
-        this.rawByteParser = new RawByteParser(this.fileReader.getFileBytes());
     }
 
     /**
@@ -318,6 +315,10 @@ public abstract class AbstractFile<M extends Metadata> {
      */
     public void setFormatDefinition(FileFormatDefinition formatDefinition) {
         this.formatDefinition = formatDefinition;
+    }
+
+    public FileFormatDefinition getFormatDefinition() {
+        return formatDefinition;
     }
 
     /**

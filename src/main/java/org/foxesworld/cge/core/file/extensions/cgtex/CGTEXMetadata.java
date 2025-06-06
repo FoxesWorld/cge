@@ -2,12 +2,7 @@ package org.foxesworld.cge.core.file.extensions.cgtex;
 
 import org.foxesworld.cge.core.file.Metadata;
 
-/**
- * Расширенный POJO для метаданных CGTEX файла.
- */
 public class CGTEXMetadata extends Metadata {
-    private final String magic;
-    private final int version;
     private int textureCount;
     private long fileSize;
 
