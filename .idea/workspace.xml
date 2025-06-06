@@ -5,38 +5,13 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="283ff897-4432-4079-9530-7bc3ea1cccef" name="Changes" comment="FileDefinition Гзвфеу + NovaUI Fixes">
-      <change afterPath="$PROJECT_DIR$/config/renderer" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/AssetLoader.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/TextureLoader.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/definition/FormatLoader.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/extensions/cgmat/CGMATFile.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/extensions/cgmat/CGMATMetadata.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/extensions/cgmat/MaterialEntry.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/CgtexEntry.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/CollisionParticleEmitter.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tools/MaterialEditorApp.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/Textures/explosion.png" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/cgmat.json" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/textures.json" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/popcycle/EventListener.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/popcycle/GameEvent.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/popcycle/PopCycle.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/popcycle/TimeEvent.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/popcycle/TimeEventListener.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/logs/lastlog.log" beforeDir="false" afterPath="$PROJECT_DIR$/logs/lastlog.log" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/CalistaGameEngine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/CalistaGameEngine.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/TaskScheduler.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/TaskScheduler.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/AbstractFile.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/AbstractFile.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/Metadata.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/Metadata.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/extensions/cgs/CGSMetadata.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/extensions/cgs/CGSMetadata.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/extensions/cgtex/CGTEXMetadata.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/extensions/cgtex/CGTEXMetadata.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/io/ByteParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/io/ByteParser.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/io/RawByteParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/io/RawByteParser.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/CameraEffectsControl.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/CameraEffectsControl.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/Player.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/Player.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/RendererModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/RendererModule.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/camera/CameraConfig.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/camera/CameraModule.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/scene/SceneModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/scene/SceneModule.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/DDSDecoder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/utils/DDSDecoder.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/TextureLoader.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/Interface/stats_config.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Interface/stats_config.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -230,6 +205,7 @@
       <workItem from="1749015134010" duration="24347000" />
       <workItem from="1749110923861" duration="10058000" />
       <workItem from="1749182932542" duration="6656000" />
+      <workItem from="1749194541284" duration="667000" />
     </task>
     <task id="LOCAL-00001" summary="initial">
       <option name="closed" value="true" />

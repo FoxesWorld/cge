@@ -23,6 +23,7 @@ import org.foxesworld.cge.core.streaming.StreamingManager;
 import org.foxesworld.cge.core.streaming.StreamingParserLoader;
 import org.foxesworld.cge.physics.PhysicsModule;
 import org.foxesworld.cge.player.Player;
+import org.foxesworld.cge.popcycle.PopCycle;
 import org.foxesworld.cge.renderer.RendererModule;
 import org.foxesworld.cge.scene.SceneModule;
 import org.foxesworld.cge.tmp.CollisionParticleEmitter;
@@ -43,6 +44,7 @@ public class CalistaGameEngine extends SimpleApplication {
     private final Map<String, Texture> textureMap = new HashMap<>();
 
     private final AssetLoader assetLoader;
+    private final PopCycle popCycle;
     @Deprecated
     private final StreamingManager<String, Byte[]> byteStreamer;
     private ModuleManager moduleManager;
@@ -78,6 +80,7 @@ public class CalistaGameEngine extends SimpleApplication {
         LogManager.getLogManager().reset();
         SLF4JBridgeHandler.install();
         this.assetLoader = new AssetLoader(this);
+        this.popCycle = new PopCycle(this);
         this.configService = new ConfigService();
         this.taskScheduler = new TaskScheduler();
 
