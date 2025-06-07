@@ -4,6 +4,8 @@ import com.jme3.app.Application;
 import com.jme3.app.state.BaseAppState;
 import com.jme3.scene.Node;
 import org.foxesworld.cge.CalistaGameEngine;
+import org.foxesworld.cge.core.module.ModuleState;
+import org.foxesworld.cge.ui.UIModule;
 import org.foxesworld.cge.ui.novaUi.UIXmlParser.ParseResult;
 import org.foxesworld.cge.ui.novaUi.elements.image.ImageElement;
 import org.foxesworld.cge.ui.novaUi.elements.panel.PanelElement;
@@ -23,14 +25,15 @@ public class NovaUI extends BaseAppState {
 
     private PanelElement rootPanel;
     private Map<String, UIElement> allElements;
-
+    private final UIModule uiModule;
     private final NovaUIUpdater updater = new NovaUIUpdater();
     private boolean globalDirty = false;
     private PanelElement dirtyRoot = null;
     private int lastCamWidth = -1, lastCamHeight = -1;
 
-    public NovaUI(CalistaGameEngine engine, String configPath) {
-        this.engine = engine;
+    public NovaUI(UIModule uiModule, String configPath) {
+        this.uiModule = uiModule;
+        this.engine = uiModule.getGameEngine();
         this.guiNode = engine.getGuiNode();
         this.configPath = configPath;
     }
@@ -44,19 +47,8 @@ public class NovaUI extends BaseAppState {
         lastCamWidth = engine.getCamera().getWidth();
         lastCamHeight = engine.getCamera().getHeight();
 
-        try {
-            loadConfiguration();
-            guiNode.attachChild(rootPanel.getNode());
-            rootPanel.getNode().setLocalTranslation(0f, 0f, 0f);
-
-            updater.setAllElements(allElements);
-            updater.bindAllFields();
-
-            expandAndPositionRootPanel();
-        } catch (Exception e) {
-            LOGGER.error("Failed to initialize UIPanel", e);
-            throw new RuntimeException(e);
-        }
+        // Асинхронная загрузка конфигурации
+        loadConfigurationAsync();
     }
 
     @Override
@@ -70,20 +62,25 @@ public class NovaUI extends BaseAppState {
 
     @Override
     public void update(float tpf) {
-        updater.update(tpf);
+        if (uiModule.getState() == ModuleState.RUNNING) {
+            // Эффективные обновления UI и избегание ненужных перерасчётов
+            updater.update(tpf);
 
-        if (globalDirty && dirtyRoot != null) {
-            dirtyRoot.recalcAndRepositionSelfAndAncestors();
-            globalDirty = false;
-            dirtyRoot = null;
-        }
+            // Обработка изменений в UI только в случае реальных изменений
+            if (globalDirty && dirtyRoot != null) {
+                dirtyRoot.recalcAndRepositionSelfAndAncestors();
+                globalDirty = false;
+                dirtyRoot = null;
+            }
 
-        int camW = engine.getCamera().getWidth();
-        int camH = engine.getCamera().getHeight();
-        if (camW != lastCamWidth || camH != lastCamHeight) {
-            expandAndPositionRootPanel();
-            lastCamWidth = camW;
-            lastCamHeight = camH;
+            // Обновление UI только при изменении размеров камеры
+            int camW = engine.getCamera().getWidth();
+            int camH = engine.getCamera().getHeight();
+            if (camW != lastCamWidth || camH != lastCamHeight) {
+                expandAndPositionRootPanel();
+                lastCamWidth = camW;
+                lastCamHeight = camH;
+            }
         }
     }
 
@@ -147,6 +144,27 @@ public class NovaUI extends BaseAppState {
         ParseResult result = parser.parse();
         rootPanel = result.rootPanel;
         allElements = result.allElements;
+
+        // Обновления UI выполняются в главном потоке
+        engine.enqueue(() -> {
+            guiNode.attachChild(rootPanel.getNode());
+            rootPanel.getNode().setLocalTranslation(0f, 0f, 0f);
+
+            updater.setAllElements(allElements);
+            updater.bindAllFields();
+
+            expandAndPositionRootPanel();
+        });
+    }
+
+    private void loadConfigurationAsync() {
+        new Thread(() -> {
+            try {
+                loadConfiguration();
+            } catch (Exception e) {
+                LOGGER.error("Failed to initialize UIPanel asynchronously", e);
+            }
+        }).start();
     }
 
     private void expandAndPositionRootPanel() {

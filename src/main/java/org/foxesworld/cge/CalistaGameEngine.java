@@ -123,8 +123,7 @@ public class CalistaGameEngine extends SimpleApplication {
                 }
                 createTestTerrain();
                 ShapeParty cubeDerp = new ShapeParty(this);
-                cubeDerp.startParty();
-                flyCam.setEnabled(false);
+                //cubeDerp.startParty();
                 Player player = new Player(this, new Vector3f(0,20,0));
                 rootNode.attachChild(player);
             });

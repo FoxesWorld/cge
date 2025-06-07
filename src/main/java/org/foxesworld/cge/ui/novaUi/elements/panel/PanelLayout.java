@@ -37,29 +37,28 @@ public class PanelLayout {
         float contentMaxX = 0f;
         float contentMaxY = 0f;
         List<UIElement> children = panel.getChildren();
+
+        // Оптимизация: получаем метрики для всех детей только один раз
         for (UIElement ue : children) {
             ChildMetrics metrics = metricsRegistry.getMetricsFor(ue);
             if (metrics == null) continue;
 
-            float rawX = metrics.getRawX(ue);
-            float rawY = metrics.getRawY(ue);
-            float w    = metrics.getWidth(ue);
-            float h    = metrics.getHeight(ue);
-
-            contentMaxX = Math.max(contentMaxX, rawX + w);
-            contentMaxY = Math.max(contentMaxY, rawY + h);
+            contentMaxX = Math.max(contentMaxX, metrics.getRawX(ue) + metrics.getWidth(ue));
+            contentMaxY = Math.max(contentMaxY, metrics.getRawY(ue) + metrics.getHeight(ue));
         }
 
         // 2) Определяем новую ширину/высоту панели
-        float newW = panel.isAutoWidth() ? (contentMaxX + panel.getPadding()) : panel.getFixedWidth();
-        float newH = panel.isAutoHeight() ? (contentMaxY + panel.getPadding()) : panel.getFixedHeight();
+        float padding = panel.getPadding();
+        float newW = panel.isAutoWidth() ? (contentMaxX + padding) : panel.getFixedWidth();
+        float newH = panel.isAutoHeight() ? (contentMaxY + padding) : panel.getFixedHeight();
 
         // 3) Позиционируем каждого ребёнка, «клинапя» по границам
         for (UIElement ue : children) {
             positionChildClamped(ue, newW, newH);
         }
 
-        panel.getRenderer().setSize(width, height); //0, 0
+        // Обновляем фон панели с учётом новых размеров
+        panel.getRenderer().setSize(width, height);
         panel.getRenderer().createBackground(width, height);
     }
 
@@ -68,30 +67,94 @@ public class PanelLayout {
         float pad = panel.getPadding();
         float spacing = panel.getSpacing();
 
-        if ("vertical".equals(mode)) {
-            float yCursor = pad;
-            for (UIElement ue : children) {
-                ChildMetrics m = metricsRegistry.getMetricsFor(ue);
-                if (m == null) continue;
-                float h = m.getHeight(ue);
-                if (ue instanceof AbstractUIElement) {
-                    ((AbstractUIElement) ue).setRawPosX(pad);
-                    ((AbstractUIElement) ue).setRawPosY(yCursor);
-                }
-                yCursor += h + spacing;
+        // Универсальная обработка вертикального и горизонтального выравнивания
+        switch (mode.toLowerCase()) {
+            case "vertical":
+                positionVertical(children, pad, spacing);
+                break;
+            case "horizontal":
+                positionHorizontal(children, pad, spacing);
+                break;
+            case "grid":
+                positionGrid(children, pad, spacing);
+                break;
+            case "stack":
+                positionStack(children, pad, spacing);
+                break;
+            default:
+                logger.warn("Unknown layout mode: {}", mode);
+                break;
+        }
+    }
+
+    private void positionVertical(List<UIElement> children, float pad, float spacing) {
+        float yCursor = pad;
+        for (UIElement ue : children) {
+            ChildMetrics m = metricsRegistry.getMetricsFor(ue);
+            if (m == null) continue;
+            float h = m.getHeight(ue);
+            if (ue instanceof AbstractUIElement) {
+                ((AbstractUIElement) ue).setRawPosX(pad);
+                ((AbstractUIElement) ue).setRawPosY(yCursor);
             }
-        } else if ("horizontal".equals(mode)) {
-            float xCursor = pad;
-            for (UIElement ue : children) {
-                ChildMetrics m = metricsRegistry.getMetricsFor(ue);
-                if (m == null) continue;
-                float w = m.getWidth(ue);
-                if (ue instanceof AbstractUIElement) {
-                    ((AbstractUIElement) ue).setRawPosX(xCursor);
-                    ((AbstractUIElement) ue).setRawPosY(pad);
-                }
-                xCursor += w + spacing;
+            yCursor += h + spacing;
+        }
+    }
+
+    private void positionHorizontal(List<UIElement> children, float pad, float spacing) {
+        float xCursor = pad;
+        for (UIElement ue : children) {
+            ChildMetrics m = metricsRegistry.getMetricsFor(ue);
+            if (m == null) continue;
+            float w = m.getWidth(ue);
+            if (ue instanceof AbstractUIElement) {
+                ((AbstractUIElement) ue).setRawPosX(xCursor);
+                ((AbstractUIElement) ue).setRawPosY(pad);
             }
+            xCursor += w + spacing;
+        }
+    }
+
+    private void positionGrid(List<UIElement> children, float pad, float spacing) {
+        // Простая сетка: предполагаем, что количество столбцов известно
+        int columns = 3;
+        int row = 0, col = 0;
+        for (UIElement ue : children) {
+            ChildMetrics m = metricsRegistry.getMetricsFor(ue);
+            if (m == null) continue;
+
+            float w = m.getWidth(ue);
+            float h = m.getHeight(ue);
+            float x = pad + (col * (w + spacing));
+            float y = pad + (row * (h + spacing));
+
+            if (ue instanceof AbstractUIElement) {
+                ((AbstractUIElement) ue).setRawPosX(x);
+                ((AbstractUIElement) ue).setRawPosY(y);
+            }
+
+            // Следующий элемент в сетке
+            col++;
+            if (col >= columns) {
+                col = 0;
+                row++;
+            }
+        }
+    }
+
+    private void positionStack(List<UIElement> children, float pad, float spacing) {
+        // Ставим все элементы друг на друга
+        float yCursor = pad;
+        for (UIElement ue : children) {
+            ChildMetrics m = metricsRegistry.getMetricsFor(ue);
+            if (m == null) continue;
+
+            float w = m.getWidth(ue);
+            if (ue instanceof AbstractUIElement) {
+                ((AbstractUIElement) ue).setRawPosX(pad);
+                ((AbstractUIElement) ue).setRawPosY(yCursor);
+            }
+            yCursor += m.getHeight(ue) + spacing;
         }
     }
 

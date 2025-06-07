@@ -34,7 +34,7 @@ public class UIModule extends EngineModule<UIConfig> {
 
     public void addPanel(Object handler, String xmlFile) {
         if (getIsLoaded().get()) {
-            NovaUI novaUi = new NovaUI(calistaGameEngine, xmlFile);
+            NovaUI novaUi = new NovaUI(this, xmlFile);
             calistaGameEngine.getStateManager().attach(novaUi);
             novaUi.registerEventHandler(handler);
             novaUis.add(novaUi);

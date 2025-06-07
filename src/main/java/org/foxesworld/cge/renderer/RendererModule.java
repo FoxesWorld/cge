@@ -25,7 +25,6 @@ public class RendererModule extends EngineModule<RendererConfig> {
     public RendererModule(CalistaGameEngine app) {
         super("renderer", RendererConfig.class, app);
         this.subManager = new ModuleManager(app);
-        subManager.register(new SkyBox(this), 10);
     }
     @Override
     protected void onEnable() {
@@ -55,16 +54,11 @@ public class RendererModule extends EngineModule<RendererConfig> {
 
     @Override
     protected void initModule(CalistaGameEngine app) throws Exception {
+        subManager.register(new SkyBox(this), 10);
         RendererConfig cfg = getConfig();
         if (cfg == null) {
             throw new IllegalStateException("RendererConfig not loaded");
         }
-
-        //TextureLoader loader = app.getTextureLoader();
-        //loader.loadCgtexAsync("data/testData.cgtex")
-        //        .thenRun(() -> {
-        //          logger.info("Textures Loaded");
-        //        });
 
         if (cfg.isEnablePostEffects()) {
             subManager.register(new PostProcessingModule(app), 30);

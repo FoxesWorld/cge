@@ -15,6 +15,7 @@ import jme3utilities.sky.StarsOption;
 import jme3utilities.sky.Updater;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.module.EngineModule;
+import org.foxesworld.cge.core.module.ModuleState;
 import org.foxesworld.cge.renderer.RendererModule;
 
 import java.time.LocalTime;
@@ -104,26 +105,28 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
 
     @Override
     public void update(float tpf) {
-        LocalTime currentTime = LocalTime.now();
-        float hour = currentTime.getHour() + currentTime.getMinute() / 60f;
+        if(getState() == ModuleState.RUNNING && skyControl != null) {
+            LocalTime currentTime = LocalTime.now();
+            float hour = currentTime.getHour() + currentTime.getMinute() / 60f;
 
-        // Устанавливаем час в SkyControl
-        skyControl.getSunAndStars().setHour(hour);
+            // Устанавливаем час в SkyControl
+            skyControl.getSunAndStars().setHour(hour);
 
-        // Получаем направление солнца (Vector3d)
-        Vector3f sunDirD = skyControl.getSunAndStars().sunDirection(sunDir);
+            // Получаем направление солнца (Vector3d)
+            Vector3f sunDirD = skyControl.getSunAndStars().sunDirection(sunDir);
 
-        // Преобразуем в Vector3f и инвертируем (в JME3 направление к источнику задаётся *в сторону света*)
-        Vector3f sunDirF = new Vector3f((float) -sunDirD.x, (float) -sunDirD.y, (float) -sunDirD.z);
-        sunLight.setDirection(sunDirF);
+            // Преобразуем в Vector3f и инвертируем (в JME3 направление к источнику задаётся *в сторону света*)
+            Vector3f sunDirF = new Vector3f((float) -sunDirD.x, (float) -sunDirD.y, (float) -sunDirD.z);
+            sunLight.setDirection(sunDirF);
 
-        // Направление луны — противоположно направлению солнца
-        Vector3f moonDirF = sunDirF.negate(); // уже инвертировано, ещё раз инвертируем для противоположного направления
-        moonLight.setDirection(moonDirF);
+            // Направление луны — противоположно направлению солнца
+            Vector3f moonDirF = sunDirF.negate(); // уже инвертировано, ещё раз инвертируем для противоположного направления
+            moonLight.setDirection(moonDirF);
 
-        // Обновляем тени, если используется DirectionalLightShadowRenderer
-        if (dlsr != null) {
-            dlsr.setLight(sunLight);
+            // Обновляем тени, если используется DirectionalLightShadowRenderer
+            if (dlsr != null) {
+                dlsr.setLight(sunLight);
+            }
         }
     }
     @Override

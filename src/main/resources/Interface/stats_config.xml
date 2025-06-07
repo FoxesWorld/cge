@@ -6,54 +6,23 @@
             id="rootPanel"
             margin="10"
             padding="0"
-            bgColor="0,0,0,0.5"
+            bgColor="0,0,0,0.1"
             width="auto"
             height="auto"
-            align="top-right"
+            align="bottom-left"
             layout="horizontal"
-            spacing="0"
     >
-
-
         <Panel id="barPanel"
-               margin="2"
+               margin="4"
                padding="0"
                bgColor="0,0,0,0.0"
                width="auto"
                height="auto"
                align="top-right"
-               layout="horizontal"
-               spacing="10">
-            <Element
-                    id="playerSpeed"
-                    type="Progress"
-                    width="150"
-                    height="8"
-                    borderColor="0,0,0,0.8"
-                    backgroundColor="59,99,63,0.5"
-                    fillColor="88,135,81,1"
-                    borderThickness="0.1"
-            />
-            <Element
-                    id="armorBar"
-                    type="Progress"
-                    width="50"
-                    height="8"
-                    borderColor="0,0,0,0.6"
-                    backgroundColor="58,100,121,0.5"
-                    fillColor="61,150,170,1"
-                    borderThickness="0.1"
-            />
-            <Element
-                    id="abilityBar"
-                    type="Progress"
-                    width="45"
-                    height="8"
-                    borderColor="0,0,0,0.6"
-                    backgroundColor="188,155,65,0.5"
-                    fillColor="208,187,81,1"
-                    borderThickness="0.1"
-            />
+               layout="horizontal">
+            <Element id="playerSpeed" type="Progress" width="150" height="8" borderColor="0,0,0,0.8" backgroundColor="59,99,63,0.5" fillColor="88,135,81,1" borderThickness="0.1" />
+            <Element id="armorBar" type="Progress" width="50" height="8" borderColor="0,0,0,0.6" backgroundColor="58,100,121,0.5" fillColor="61,150,170,1" borderThickness="0.1"  />
+            <Element id="abilityBar" type="Progress" width="45" height="8" borderColor="0,0,0,0.6" backgroundColor="188,155,65,0.5" fillColor="208,187,81,1" borderThickness="0.1" />
         </Panel>
     </Panel>
 </UI>
