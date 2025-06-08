@@ -54,21 +54,44 @@ public class RendererModule extends EngineModule<RendererConfig> {
 
     @Override
     protected void initModule(CalistaGameEngine app) throws Exception {
-        subManager.register(new SkyBox(this), 10);
         RendererConfig cfg = getConfig();
         if (cfg == null) {
             throw new IllegalStateException("RendererConfig not loaded");
         }
 
-        if (cfg.isEnablePostEffects()) {
-            subManager.register(new PostProcessingModule(app), 30);
-        }
+        // Регистрируем SkyBox (с приоритетом выше PostProcessing)
+        subManager.register(new SkyBox(this), 30);
 
+        // Инициализация AppStates (в том числе вызов onEnable)
         subManager.initializeAll(app);
+
+        // Последовательная загрузка SkyBox
         subManager.loadAll(app, () -> {
-            logger.info("All render modules are ready!");
+            logger.info("SkyBox loaded. Checking post-processing...");
+
+            // Проверка, загружен ли SkyBox
+            SkyBox skyBox = subManager.getModule(SkyBox.class);
+            if (skyBox == null) {
+                logger.error("SkyBox not loaded properly. Cannot continue.");
+                return;
+            }
+
+            // Если эффекты включены — регистрируем и загружаем PostProcessing
+            if (cfg.isEnablePostEffects()) {
+                logger.info("PostProcessing enabled, registering...");
+                subManager.register(new PostProcessingModule(app), 10);
+
+                // Загружаем PostProcessing после SkyBox
+                subManager.loadAll(app, () -> {
+                    logger.info("PostProcessingModule loaded. All render modules are ready!");
+                });
+
+            } else {
+                logger.info("PostProcessing disabled. All render modules are ready!");
+            }
         });
     }
+
 
 
     private void initializeSceneModule(CalistaGameEngine app) {

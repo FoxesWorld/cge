@@ -43,7 +43,7 @@ public class ShapeParty {
                 Spatial instance = model.clone();
                 instance.setName("ModelInstance_" + i);
 
-                scaleTextureCoordinates(instance, new Vector2f(2, 2));
+                //caleTextureCoordinates(instance, new Vector2f(2, 2));
 
                 // Случайная позиция
                 float x = (random.nextFloat() * 2 - 1) * areaRadius;

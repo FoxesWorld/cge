@@ -4,19 +4,15 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="283ff897-4432-4079-9530-7bc3ea1cccef" name="Changes" comment="FileDefinition Гзвфеу + NovaUI Fixes">
+    <list default="true" id="283ff897-4432-4079-9530-7bc3ea1cccef" name="Changes" comment="OBJ Importer">
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/skybox" beforeDir="false" afterPath="$PROJECT_DIR$/config/skybox" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/logs/lastlog.log" beforeDir="false" afterPath="$PROJECT_DIR$/logs/lastlog.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/CalistaGameEngine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/CalistaGameEngine.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/module/ModuleManager.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/module/ModuleManager.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/RendererModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/RendererModule.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/postProcessing/PostProcessingModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/postProcessing/PostProcessingModule.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/skyBox/SkyBox.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/skyBox/SkyBox.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/UIConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/UIConfig.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/UIModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/UIModule.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/novaUi/NovaUI.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/novaUi/NovaUI.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/novaUi/elements/panel/MetricsRegistry.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/novaUi/elements/panel/MetricsRegistry.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/novaUi/elements/panel/PanelLayout.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/novaUi/elements/panel/PanelLayout.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/novaUi/elements/panel/PanelRenderer.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/novaUi/elements/panel/PanelRenderer.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/novaUi/elements/progress/ProgressElement.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/ui/novaUi/elements/progress/ProgressElement.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/resources/Interface/stats_config.xml" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/Interface/stats_config.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/ShapeParty.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/ShapeParty.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -70,36 +66,36 @@
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
-  <component name="PropertiesComponent">{
-  &quot;keyToString&quot;: {
-    &quot;ASKED_ADD_EXTERNAL_FILES&quot;: &quot;true&quot;,
-    &quot;ASKED_SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.OpenProjectViewOnStart&quot;: &quot;true&quot;,
-    &quot;RunOnceActivity.ShowReadmeOnStart&quot;: &quot;true&quot;,
-    &quot;SHARE_PROJECT_CONFIGURATION_FILES&quot;: &quot;true&quot;,
-    &quot;WebServerToolWindowFactoryState&quot;: &quot;false&quot;,
-    &quot;last_opened_file_path&quot;: &quot;C:/Users/Aiden/Documents/GitHub/CGE/cge&quot;,
-    &quot;node.js.detected.package.eslint&quot;: &quot;true&quot;,
-    &quot;node.js.detected.package.tslint&quot;: &quot;true&quot;,
-    &quot;node.js.selected.package.eslint&quot;: &quot;(autodetect)&quot;,
-    &quot;node.js.selected.package.tslint&quot;: &quot;(autodetect)&quot;,
-    &quot;vue.rearranger.settings.migration&quot;: &quot;true&quot;
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "ASKED_ADD_EXTERNAL_FILES": "true",
+    "ASKED_SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "RunOnceActivity.OpenProjectViewOnStart": "true",
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "SHARE_PROJECT_CONFIGURATION_FILES": "true",
+    "WebServerToolWindowFactoryState": "false",
+    "last_opened_file_path": "C:/Users/Calista/Documents/GitHub/CGE/src/main/resources/Textures/furniture/bench",
+    "node.js.detected.package.eslint": "true",
+    "node.js.detected.package.tslint": "true",
+    "node.js.selected.package.eslint": "(autodetect)",
+    "node.js.selected.package.tslint": "(autodetect)",
+    "vue.rearranger.settings.migration": "true"
   }
-}</component>
+}]]></component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
+      <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\Textures\furniture\bench" />
+      <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\meshes\furniture\light" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\Interface\Icons" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\theme" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\Textures" />
-      <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\java\org\foxesworld\cge\core\file\cgtex\writer" />
-      <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\theme\icon" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\Textures" />
+      <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources" />
+      <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\java\org\foxesworld\cge\tmp" />
       <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\java\org\foxesworld\cge\ui" />
       <recent name="C:\Users\Aiden\Documents\GitHub\CGE\cge\src\main\java\org\foxesworld\cge\core\file\extensions" />
-      <recent name="C:\Users\Aiden\Documents\GitHub\CGE\cge\src\main\resources\Textures" />
-      <recent name="C:\Users\Aiden\Documents\GitHub\CGE\cge\src\main\resources\Interface" />
-      <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\Interface" />
     </key>
     <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
       <recent name="org.foxesworld.cge.tools" />
@@ -466,7 +462,23 @@
       <option name="project" value="LOCAL" />
       <updated>1749106404599</updated>
     </task>
-    <option name="localTasksCounter" value="33" />
+    <task id="LOCAL-00033" summary="UI fixes">
+      <option name="closed" value="true" />
+      <created>1749279679436</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1749279679436</updated>
+    </task>
+    <task id="LOCAL-00034" summary="OBJ Importer">
+      <option name="closed" value="true" />
+      <created>1749364647865</created>
+      <option name="number" value="00034" />
+      <option name="presentableId" value="LOCAL-00034" />
+      <option name="project" value="LOCAL" />
+      <updated>1749364647865</updated>
+    </task>
+    <option name="localTasksCounter" value="35" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -474,8 +486,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="ChunkArgs WIP" />
-    <MESSAGE value="WORKING11!!!!11" />
     <MESSAGE value="CGTEX + CGTEX creator tool" />
     <MESSAGE value="CGTEX + CGS refactor" />
     <MESSAGE value="Clean" />
@@ -499,7 +509,9 @@
     <MESSAGE value="Player Fixes" />
     <MESSAGE value="Complete FileDefinition" />
     <MESSAGE value="FileDefinition Гзвфеу + NovaUI Fixes" />
-    <option name="LAST_COMMIT_MESSAGE" value="FileDefinition Гзвфеу + NovaUI Fixes" />
+    <MESSAGE value="UI fixes" />
+    <MESSAGE value="OBJ Importer" />
+    <option name="LAST_COMMIT_MESSAGE" value="OBJ Importer" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>

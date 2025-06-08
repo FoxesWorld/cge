@@ -72,7 +72,7 @@ public class PostProcessingModule extends EngineModule<PostProcessingConfig> {
 
         if(getConfig().isEnableShadowFilter()) {
             DirectionalLightShadowFilter shadowFilter = new DirectionalLightShadowFilter(gameEngine.getAssetManager(), getConfig().getSize(), getConfig().getNbSplits());
-            shadowFilter.setLight(app.getModuleManager().getModule(SkyBox.class).getSunLight());
+            shadowFilter.setLight(app.getModuleManager().getModule(SkyBox.class).getCurrentLight());
             //shadowFilter.setEdgeFilteringMode(EdgeFilteringMode.PCF8);
             //shadowFilter.setShadowZExtend(100f);
             //shadowFilter.setShadowZFadeLength(5f);

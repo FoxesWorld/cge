@@ -1,5 +1,8 @@
 {
   "skyBoxTexture": "cubemap_1",
+  "shadowMapSize": 4096,
+  "shadowFrustumCount": 2,
+  "shadowZExtend": 32,
   "shadowMode": "CastAndReceive",
   "starsOption": "TopDome",
   "cloudFlattering": 0.8,

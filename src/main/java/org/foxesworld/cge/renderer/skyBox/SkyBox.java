@@ -110,18 +110,33 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
     public void update(float tpf) {
         if (getState() != ModuleState.RUNNING || skyControl == null) return;
 
-        float hour = LocalTime.now().getHour() + LocalTime.now().getMinute() / 60f;
+        LocalTime now = LocalTime.now();
+        float hour = now.getHour() + now.getMinute() / 60f;
+
         skyControl.getSunAndStars().setHour(hour);
 
-        Vector3f sunDirF = skyControl.getSunAndStars().sunDirection(tempSunDir).negate();
-        sunLight.setDirection(sunDirF);
+        // Получаем нормализованное направление солнца
+        Vector3f sunDir = skyControl.getSunAndStars().sunDirection(tempSunDir).normalizeLocal();
+        sunLight.setDirection(sunDir.negate());
 
-        Vector3f moonDirF = sunDirF.negate();
-        moonLight.setDirection(moonDirF);
+        // Луна противоположна солнцу
+        moonLight.setDirection(sunDir);
 
+        // Изменение интенсивности света в зависимости от положения солнца
+        float elevation = sunDir.y; // Высота солнца над горизонтом
+        float sunIntensity = clamp(elevation, 0f, 1f) * getConfig().getSunLightIntensity();
+        float moonIntensity = (1f - clamp(elevation, 0f, 1f)) * getConfig().getMoonLightIntensity();
+
+        sunLight.setColor(ColorRGBA.White.mult(sunIntensity));
+        moonLight.setColor(new ColorRGBA(0.6f, 0.6f, 0.8f, 1f).mult(moonIntensity));
+
+        // Обновляем тень только при необходимости (можно закешировать предыдущее значение)
         if (shadowRenderer != null) {
-            shadowRenderer.setLight(sunLight); // May not be needed every frame
+            shadowRenderer.setLight(sunLight);
         }
+    }
+    private float clamp(float value, float min, float max) {
+        return Math.max(min, Math.min(max, value));
     }
 
     @Override
@@ -164,6 +179,25 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
     public SkyControl getSkyControl() {
         return skyControl;
     }
+
+    /**
+     * Возвращает текущий главный источник света (солнце или луна)
+     * в зависимости от времени суток.
+     */
+    public DirectionalLight getCurrentLight() {
+        if (skyControl == null) return sunLight; // по умолчанию
+
+        float hour = LocalTime.now().getHour() + LocalTime.now().getMinute() / 60f;
+        skyControl.getSunAndStars().setHour(hour);
+
+        // Получаем высоту солнца
+        Vector3f sunDir = skyControl.getSunAndStars().sunDirection(new Vector3f()).normalizeLocal();
+        float elevation = sunDir.y;
+
+        // Если солнце выше горизонта — это дневной свет
+        return elevation > 0f ? sunLight : moonLight;
+    }
+
 
     public DirectionalLightShadowRenderer getShadowRenderer() {
         return shadowRenderer;
