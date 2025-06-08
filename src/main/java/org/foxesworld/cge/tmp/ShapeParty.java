@@ -1,116 +1,90 @@
 package org.foxesworld.cge.tmp;
 
+import com.jme3.asset.AssetManager;
 import com.jme3.material.Material;
-import com.jme3.math.FastMath;
 import com.jme3.math.Vector2f;
 import com.jme3.scene.Geometry;
-import com.jme3.scene.shape.Box;
-import com.jme3.scene.shape.Sphere;
+import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
 import com.jme3.texture.Texture;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.physics.PhysicsModule;
 
 import java.util.Random;
 
-/**
- * Класс ShapeParty генерирует случайный набор различных физических тел:
- * кубов, прямоугольных параллелепипедов и сфер.
- * Каждое тело добавляется в сцену с рандомной позицией, размером и физическими свойствами.
- */
 public class ShapeParty {
 
     private final CalistaGameEngine calistaGameEngine;
 
-    /**
-     * Конструктор.
-     *
-     * @param calistaGameEngine экземпляр движка, необходимый для доступа к сцене и модулям физики.
-     */
     public ShapeParty(CalistaGameEngine calistaGameEngine) {
         this.calistaGameEngine = calistaGameEngine;
     }
 
-    /**
-     * Запускает процесс генерации набора фигур.
-     * В общей сложности создаётся 50 объектов с равным шансом:
-     * куб, прямоугольник (параллелепипед) или сфера.
-     */
     public void startParty() {
         Random random = new Random();
-        int count = 50;
-        float areaRadius = 40f;
+        int count = 1;
+        float areaRadius = 4f;
         float baseHeight = 2f;
 
         calistaGameEngine.enqueue(() -> {
             PhysicsModule physicsModule = calistaGameEngine.getModuleManager().getModule(PhysicsModule.class);
+            AssetManager assetManager = calistaGameEngine.getAssetManager();
+
+            // Загрузка модели вместо создания случайных фигур
+            Spatial model = assetManager.loadModel("meshes/furniture/bench/ParkBench01.obj");
+
+            // Убедимся, что модель является Geometry или Node
+            if (model == null) {
+                throw new RuntimeException("Не удалось загрузить модель");
+            }
 
             for (int i = 0; i < count; i++) {
-                Geometry geometry;
-                float mass;
-                String shapeType;
+                // Создаем клон загруженной модели
+                Spatial instance = model.clone();
+                instance.setName("ModelInstance_" + i);
 
-                // Выбор случайной формы: 0 - куб, 1 - параллелепипед, 2 - сфера
-                int shapeSelector = random.nextInt(3);
+                scaleTextureCoordinates(instance, new Vector2f(2, 2));
 
-                switch (shapeSelector) {
-                    case 0 -> {
-                        // Куб
-                        float size = 0.5f + random.nextFloat() * 1.5f;
-                        Box box = new Box(size / 2, size / 2, size / 2);
-                        geometry = new Geometry("Cube" + i, box);
-                        mass = size * size * size;
-                        shapeType = "Cube";
-                    }
-                    case 1 -> {
-                        // Прямоугольный параллелепипед
-                        float width = 0.5f + random.nextFloat() * 1.5f;
-                        float height = 0.5f + random.nextFloat() * 1.5f;
-                        float depth = 0.5f + random.nextFloat() * 1.5f;
-                        Box box = new Box(width / 2, height / 2, depth / 2);
-                        geometry = new Geometry("Box" + i, box);
-                        mass = width * height * depth;
-                        shapeType = "Box";
-                    }
-                    default -> {
-                        // Сфера
-                        float radius = 0.5f + random.nextFloat() * 1.5f;
-                        Sphere sphere = new Sphere(16, 16, radius);
-                        geometry = new Geometry("Sphere" + i, sphere);
-                        mass = (4f / 3f) * FastMath.PI * FastMath.pow(radius, 3);
-                        shapeType = "Sphere";
-                    }
-                }
-
-                // Материал с текстурой (предположительно для всех форм одна текстура)
-                Material material = new Material(
-                        calistaGameEngine.getAssetManager(),
-                        "Common/MatDefs/Light/Lighting.j3md"
-                );
-                material.setTexture("DiffuseMap", calistaGameEngine.getTexture("box"));
-                material.setTexture("NormalMap", calistaGameEngine.getTexture("box_normal"));
-                material.setBoolean("UseMaterialColors", false);
-                material.setFloat("Shininess", 4f);
-                material.getTextureParam("DiffuseMap").getTextureValue().setWrap(Texture.WrapMode.Repeat);
-                geometry.setMaterial(material);
-                geometry.getMesh().scaleTextureCoordinates(new Vector2f(2,2));
-
-                // Случайная позиция в области
+                // Случайная позиция
                 float x = (random.nextFloat() * 2 - 1) * areaRadius;
                 float z = (random.nextFloat() * 2 - 1) * areaRadius;
                 float y = baseHeight + random.nextFloat() * 5f;
-                geometry.setLocalTranslation(x, y, z);
+                instance.setLocalTranslation(x, y, z);
 
-                // Добавляем в сцену
-                calistaGameEngine.getRootNode().attachChild(geometry);
+                // Прикрепляем к сцене
+                calistaGameEngine.getRootNode().attachChild(instance);
 
-                // Добавляем физику, если модуль физики активен
-                if (physicsModule != null) {
-                    physicsModule.addRigidBody(geometry, mass);
+                // Добавляем физику для всех Geometry в иерархии
+                if (physicsModule != null && instance instanceof Geometry) {
+                    physicsModule.addRigidBody((Geometry) instance, 1.0f);
+                } else if (physicsModule != null && instance instanceof Node) {
+                    processNodePhysics((Node) instance, physicsModule);
                 }
 
-                System.out.printf("Created %s[%d] at (%.2f, %.2f, %.2f) with mass=%.2f%n",
-                        shapeType, i, x, y, z, mass);
+                //System.out.printf("Created ModelInstance_%d at (%.2f, %.2f, %.2f)%n", i, x, y, z);
             }
         });
+    }
+
+    // Рекурсивное масштабирование текстурных координат
+    private void scaleTextureCoordinates(Spatial spatial, Vector2f scale) {
+        if (spatial instanceof Geometry) {
+            ((Geometry) spatial).getMesh().scaleTextureCoordinates(scale);
+        } else if (spatial instanceof Node) {
+            for (Spatial child : ((Node) spatial).getChildren()) {
+                scaleTextureCoordinates(child, scale);
+            }
+        }
+    }
+
+    // Обработка физики для нод
+    private void processNodePhysics(Node node, PhysicsModule physicsModule) {
+        for (Spatial child : node.getChildren()) {
+            if (child instanceof Geometry) {
+                physicsModule.addRigidBody(child, 1.0f);
+            } else if (child instanceof Node) {
+                processNodePhysics((Node) child, physicsModule);
+            }
+        }
     }
 }

@@ -3,6 +3,7 @@ package org.foxesworld.cge.renderer.postProcessing;
 import com.jme3.math.Vector3f;
 import com.jme3.post.filters.DepthOfFieldFilter;
 import com.jme3.post.filters.LightScatteringFilter;
+import com.jme3.shadow.DirectionalLightShadowFilter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.CalistaGameEngine;
@@ -11,6 +12,7 @@ import com.jme3.app.Application;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.BloomFilter;
 import com.jme3.post.filters.FXAAFilter;
+import org.foxesworld.cge.renderer.skyBox.SkyBox;
 
 @SuppressWarnings("unused")
 public class PostProcessingModule extends EngineModule<PostProcessingConfig> {
@@ -61,10 +63,23 @@ public class PostProcessingModule extends EngineModule<PostProcessingConfig> {
             dof = new DepthOfFieldFilter();
             dof.setFocusDistance(getConfig().getDofFocus());
             dof.setFocusRange(getConfig().getDofRange());
+            fpp.addFilter(dof);
         }
         if (getConfig().isEnableFXAA()) {
             fxaaFilter = new FXAAFilter();
             fpp.addFilter(fxaaFilter);
+        }
+
+        if(getConfig().isEnableShadowFilter()) {
+            DirectionalLightShadowFilter shadowFilter = new DirectionalLightShadowFilter(gameEngine.getAssetManager(), getConfig().getSize(), getConfig().getNbSplits());
+            shadowFilter.setLight(app.getModuleManager().getModule(SkyBox.class).getSunLight());
+            //shadowFilter.setEdgeFilteringMode(EdgeFilteringMode.PCF8);
+            //shadowFilter.setShadowZExtend(100f);
+            //shadowFilter.setShadowZFadeLength(5f);
+            shadowFilter.setShadowIntensity(getConfig().getShadowIntensity());
+            shadowFilter.setEnabledStabilization(getConfig().isShadowStabilization());
+            shadowFilter.setLambda(getConfig().getShadowLambda());
+            fpp.addFilter(shadowFilter);
         }
 
         app.getViewPort().addProcessor(fpp);

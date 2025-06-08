@@ -27,7 +27,9 @@ import org.foxesworld.cge.popcycle.PopCycle;
 import org.foxesworld.cge.renderer.RendererModule;
 import org.foxesworld.cge.scene.SceneModule;
 import org.foxesworld.cge.tmp.CollisionParticleEmitter;
+import org.foxesworld.cge.tmp.OBJ;
 import org.foxesworld.cge.tmp.ShapeParty;
+import org.foxesworld.cge.tmp.obj.OBJImporter;
 import org.foxesworld.cge.ui.UIModule;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
@@ -83,6 +85,7 @@ public class CalistaGameEngine extends SimpleApplication {
         this.popCycle = new PopCycle(this);
         this.configService = new ConfigService();
         this.taskScheduler = new TaskScheduler();
+        //this.obj = new OBJ(this);
 
         GenericByteParser<Byte[]> parser = new GenericByteParser<>(bytes -> {
             Byte[] boxed = new Byte[bytes.length];
@@ -108,11 +111,11 @@ public class CalistaGameEngine extends SimpleApplication {
         moduleManager.register(new RendererModule(this), 20);
         moduleManager.register(new PhysicsModule(this), 35);
         moduleManager.register(new SceneModule(this), 10);
-        moduleManager.register(new UIModule(this), 5);
+        //moduleManager.register(new UIModule(this), 5);
         moduleManager.initializeAll(this);
         moduleManager.loadAll(this, () -> {
-
-        scene = moduleManager.getModule(SceneModule.class);
+            this.assetManager.registerLoader(OBJImporter.class, "obj");
+            scene = moduleManager.getModule(SceneModule.class);
 
 
             this.moduleManager.getModule(SceneModule.class).onSceneReady(() ->{
@@ -123,7 +126,7 @@ public class CalistaGameEngine extends SimpleApplication {
                 }
                 createTestTerrain();
                 ShapeParty cubeDerp = new ShapeParty(this);
-                //cubeDerp.startParty();
+                cubeDerp.startParty();
                 Player player = new Player(this, new Vector3f(0,20,0));
                 rootNode.attachChild(player);
             });

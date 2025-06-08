@@ -1,15 +1,22 @@
 {
   "enableBloom": true,
   "enableLsf": true,
-  "enableDof": false,
-  "dofRange": 50,
-  "dofFocus": 9,
+  "enableDof": true,
+  "enableShadowFilter": true,
+  "size": 4096,
+  "nbSplits": 4,
+  "shadowStabilization": false,
+  "shadowIntensity": 0.7,
+  "shadowLambda": 0.55,
+  "dofRange": 40,
+  "dofFocus": 15,
   "lsfLightDir": [
-    10.0,
-    3.0,
-    7.0
+    -1.5,
+    -1.0,
+    -0.5
   ],
-  "lsfDestiny": 0.2,
-  "bloomIntensity": 0.5,
-  "enableFXAA": false
+  "lsfDestiny": 0.9,
+  "bloomIntensity": 0.3,
+  "bloomExposurePower": 0.5,
+  "enableFXAA": true
 }

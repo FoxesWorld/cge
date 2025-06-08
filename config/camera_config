@@ -1,8 +1,0 @@
-{
-  "fov": 60.0,
-  "resolutionWidth": 1280,
-  "resolutionHeight": 720,
-  "nearClip": 0.1,
-  "farClip": 1000.0,
-  "moveSpeed": 20.0
-}

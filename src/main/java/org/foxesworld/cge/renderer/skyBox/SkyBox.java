@@ -7,8 +7,8 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.ViewPort;
 import com.jme3.renderer.queue.RenderQueue;
-import com.jme3.shadow.DirectionalLightShadowRenderer;
 import com.jme3.scene.Spatial;
+import com.jme3.shadow.DirectionalLightShadowRenderer;
 import com.jme3.util.SkyFactory;
 import jme3utilities.sky.SkyControl;
 import jme3utilities.sky.StarsOption;
@@ -20,160 +20,152 @@ import org.foxesworld.cge.renderer.RendererModule;
 
 import java.time.LocalTime;
 
-/**
- * Улучшенный SkyBox: добавлено два направленных света для солнца и луны,
- * а также тени от солнца.
- */
 public class SkyBox extends EngineModule<SkyBoxConfig> {
-    private final CalistaGameEngine calistaGameEngine;
-    private final Vector3f sunDir = new Vector3f();
+
+    private final CalistaGameEngine engine;
+    private final Vector3f tempSunDir = new Vector3f();
+    private final ViewPort mainViewPort;
+
     private SkyControl skyControl;
     private DirectionalLight sunLight;
     private DirectionalLight moonLight;
-    private DirectionalLightShadowRenderer dlsr;
+    private DirectionalLightShadowRenderer shadowRenderer;
 
     public SkyBox(RendererModule rendererModule) {
         super("skybox", SkyBoxConfig.class, rendererModule.getGameEngine());
-        this.calistaGameEngine = rendererModule.getGameEngine();
+        this.engine = rendererModule.getGameEngine();
+        this.mainViewPort = engine.getRenderManager().getMainView("Default");
     }
 
     @Override
     protected void onConfigReloaded() {
-        // Можно обновить параметры skyControl или ShadowRenderer при перезагрузке конфига
+        // TODO: Update sky settings dynamically, if necessary
     }
 
     @Override
     protected void initModule(CalistaGameEngine app) {
-        calistaGameEngine.enqueue(() -> {
-            // 1) Создаем sky-куб
-            Spatial sky = SkyFactory.createSky(
-                    calistaGameEngine.getAssetManager(),
-                    calistaGameEngine.getTexture(getConfig().getSkyBoxTexture()),
-                    SkyFactory.EnvMapType.valueOf(getConfig().getEnvMap())
-            );
-            sky.setShadowMode(RenderQueue.ShadowMode.Off);
-
-            // 2) Инициализируем SkyControl
-            skyControl = new SkyControl(
-                    calistaGameEngine.getAssetManager(),
-                    calistaGameEngine.getCamera(),
-                    getConfig().getCloudFlattering(),
-                    StarsOption.valueOf(getConfig().getStarsOption()),
-                    getConfig().isBottomDome()
-            );
-            calistaGameEngine.getRootNode().addControl(skyControl);
-
-            skyControl.setCloudiness(0.8f);
-            skyControl.setCloudsYOffset(0.4f);
-            skyControl.setTopVerticalAngle(1.78f);
-
-            Updater updater = skyControl.getUpdater();
-
-            // Заменяем недоступный interpolate:
-            ColorRGBA ambientColor = ColorRGBA.DarkGray.mult(0.7f).add(ColorRGBA.LightGray.mult(0.3f));
-            updater.setAmbientLight(new AmbientLight(ambientColor));
-
-            // 3) Создаем направленный свет для Солнца
-            sunLight = new DirectionalLight();
-            sunLight.setColor(ColorRGBA.White.mult(getConfig().getSunLightIntensity()));
-            calistaGameEngine.getRootNode().addLight(sunLight);
-            updater.setMainLight(sunLight);
-
-            // 4) Создаем направленный свет для Луны
-            moonLight = new DirectionalLight();
-            moonLight.setColor(new ColorRGBA(0.6f, 0.6f, 0.8f, 1f).mult(getConfig().getMoonLightIntensity()));
-            calistaGameEngine.getRootNode().addLight(moonLight);
-
-            // 5) Настраиваем ShadowRenderer
-            int shadowMapSize = getConfig().getShadowMapSize();
-            int shadowFrustumCount = getConfig().getShadowFrustumCount();
-            dlsr = new DirectionalLightShadowRenderer(
-                    calistaGameEngine.getAssetManager(),
-                    shadowMapSize,
-                    shadowFrustumCount
-            );
-            dlsr.setLight(sunLight);
-            //dlsr.setEdgeFilteringMode(getConfig().getEdgeFilteringMode());
-            dlsr.setShadowZExtend(getConfig().getShadowZExtend());
-            ViewPort viewPort = calistaGameEngine.getRenderManager().getMainView("Default");
-            viewPort.addProcessor(dlsr);
-
-            skyControl.setEnabled(true);
-        });
+        engine.enqueue(this::initializeSkyBox);
     }
 
+    private void initializeSkyBox() {
+        Spatial sky = SkyFactory.createSky(
+                engine.getAssetManager(),
+                engine.getTexture(getConfig().getSkyBoxTexture()),
+                SkyFactory.EnvMapType.valueOf(getConfig().getEnvMap())
+        );
+        sky.setShadowMode(RenderQueue.ShadowMode.Off);
+
+        skyControl = new SkyControl(
+                engine.getAssetManager(),
+                engine.getCamera(),
+                getConfig().getCloudFlattering(),
+                StarsOption.valueOf(getConfig().getStarsOption()),
+                getConfig().isBottomDome()
+        );
+
+        skyControl.setCloudiness(0.8f);
+        skyControl.setCloudsYOffset(0.4f);
+        skyControl.setTopVerticalAngle(1.78f);
+        engine.getRootNode().addControl(skyControl);
+
+        setupLighting();
+        setupShadows();
+
+        skyControl.setEnabled(true);
+    }
+
+    private void setupLighting() {
+        // Ambient Light
+        ColorRGBA ambientColor = ColorRGBA.DarkGray.mult(0.7f).add(ColorRGBA.LightGray.mult(0.3f));
+        AmbientLight ambientLight = new AmbientLight(ambientColor);
+        engine.getRootNode().addLight(ambientLight);
+
+        // Sun
+        sunLight = new DirectionalLight();
+        sunLight.setColor(ColorRGBA.White.mult(getConfig().getSunLightIntensity()));
+        engine.getRootNode().addLight(sunLight);
+
+        // Moon
+        moonLight = new DirectionalLight();
+        moonLight.setColor(new ColorRGBA(0.6f, 0.6f, 0.8f, 1f).mult(getConfig().getMoonLightIntensity()));
+        engine.getRootNode().addLight(moonLight);
+
+        // Bind to SkyControl
+        skyControl.getUpdater().setMainLight(sunLight);
+        skyControl.getUpdater().setAmbientLight(ambientLight);
+    }
+
+    private void setupShadows() {
+        shadowRenderer = new DirectionalLightShadowRenderer(
+                engine.getAssetManager(),
+                getConfig().getShadowMapSize(),
+                getConfig().getShadowFrustumCount()
+        );
+        shadowRenderer.setLight(sunLight);
+        shadowRenderer.setShadowZExtend(getConfig().getShadowZExtend());
+        mainViewPort.addProcessor(shadowRenderer);
+    }
 
     @Override
     public void update(float tpf) {
-        if(getState() == ModuleState.RUNNING && skyControl != null) {
-            LocalTime currentTime = LocalTime.now();
-            float hour = currentTime.getHour() + currentTime.getMinute() / 60f;
+        if (getState() != ModuleState.RUNNING || skyControl == null) return;
 
-            // Устанавливаем час в SkyControl
-            skyControl.getSunAndStars().setHour(hour);
+        float hour = LocalTime.now().getHour() + LocalTime.now().getMinute() / 60f;
+        skyControl.getSunAndStars().setHour(hour);
 
-            // Получаем направление солнца (Vector3d)
-            Vector3f sunDirD = skyControl.getSunAndStars().sunDirection(sunDir);
+        Vector3f sunDirF = skyControl.getSunAndStars().sunDirection(tempSunDir).negate();
+        sunLight.setDirection(sunDirF);
 
-            // Преобразуем в Vector3f и инвертируем (в JME3 направление к источнику задаётся *в сторону света*)
-            Vector3f sunDirF = new Vector3f((float) -sunDirD.x, (float) -sunDirD.y, (float) -sunDirD.z);
-            sunLight.setDirection(sunDirF);
+        Vector3f moonDirF = sunDirF.negate();
+        moonLight.setDirection(moonDirF);
 
-            // Направление луны — противоположно направлению солнца
-            Vector3f moonDirF = sunDirF.negate(); // уже инвертировано, ещё раз инвертируем для противоположного направления
-            moonLight.setDirection(moonDirF);
-
-            // Обновляем тени, если используется DirectionalLightShadowRenderer
-            if (dlsr != null) {
-                dlsr.setLight(sunLight);
-            }
+        if (shadowRenderer != null) {
+            shadowRenderer.setLight(sunLight); // May not be needed every frame
         }
     }
+
     @Override
-    protected void updateModule(float tpf) throws Exception {
-        // Дополнительная логика модуля (если потребуется)
+    protected void updateModule(float tpf) {
+        // Optional: add your own logic here
     }
 
     @Override
     protected void cleanupModule(Application app) {
-        if (skyControl != null) {
-            skyControl.setEnabled(false);
-        }
-        if (sunLight != null) {
-            calistaGameEngine.getRootNode().removeLight(sunLight);
-        }
-        if (moonLight != null) {
-            calistaGameEngine.getRootNode().removeLight(moonLight);
-        }
-        if (dlsr != null) {
-            viewPort().removeProcessor(dlsr);
-        }
+        if (skyControl != null) skyControl.setEnabled(false);
+        if (sunLight != null) engine.getRootNode().removeLight(sunLight);
+        if (moonLight != null) engine.getRootNode().removeLight(moonLight);
+        if (shadowRenderer != null) mainViewPort.removeProcessor(shadowRenderer);
     }
 
     @Override
     protected void onEnable() {
-        if (skyControl != null) {
-            skyControl.setEnabled(true);
-        }
-        if (dlsr != null) {
-            viewPort().addProcessor(dlsr);
+        if (skyControl != null) skyControl.setEnabled(true);
+        if (shadowRenderer != null && !mainViewPort.getProcessors().contains(shadowRenderer)) {
+            mainViewPort.addProcessor(shadowRenderer);
         }
     }
 
     @Override
     protected void onDisable() {
-        if (skyControl != null) {
-            skyControl.setEnabled(false);
-        }
-        if (dlsr != null) {
-            viewPort().removeProcessor(dlsr);
-        }
+        if (skyControl != null) skyControl.setEnabled(false);
+        if (shadowRenderer != null) mainViewPort.removeProcessor(shadowRenderer);
     }
 
-    /**
-     * Удобный метод для получения MainViewPort из движка.
-     */
-    private ViewPort viewPort() {
-        return calistaGameEngine.getRenderManager().getMainView("Default");
+    // Getters
+
+    public DirectionalLight getSunLight() {
+        return sunLight;
+    }
+
+    public DirectionalLight getMoonLight() {
+        return moonLight;
+    }
+
+    public SkyControl getSkyControl() {
+        return skyControl;
+    }
+
+    public DirectionalLightShadowRenderer getShadowRenderer() {
+        return shadowRenderer;
     }
 }
