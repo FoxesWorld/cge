@@ -47,7 +47,7 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
             // 1) Создаем sky-куб
             Spatial sky = SkyFactory.createSky(
                     calistaGameEngine.getAssetManager(),
-                    calistaGameEngine.getTexture(getConfig().getSkyBoxTexture()),
+                    calistaGameEngine.getAssetRepo().getTexture(getConfig().getSkyBoxTexture()),
                     SkyFactory.EnvMapType.valueOf(getConfig().getEnvMap())
             );
             sky.setShadowMode(RenderQueue.ShadowMode.Off);

@@ -10,6 +10,7 @@ import org.foxesworld.cge.core.file.definition.JsonFileStructureLoader;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
 /**

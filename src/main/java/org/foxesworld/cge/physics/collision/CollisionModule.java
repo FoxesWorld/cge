@@ -39,7 +39,7 @@ public class CollisionModule extends EngineModule<PhysicsConfig> implements Phys
 
     @Override
     protected void initModule(CalistaGameEngine app) {
-       // bulletState = app.getStateManager().getState(BulletAppState.class);
+        bulletState = app.getStateManager().getState(BulletAppState.class);
         bulletState.getPhysicsSpace().addCollisionListener(this);
         LOGGER.info("CollisionModule initialized and registered listener");
     }

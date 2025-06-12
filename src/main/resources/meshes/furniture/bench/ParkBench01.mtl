@@ -1,0 +1,9 @@
+newmtl Material.000001
+size 0.03 0.03 0.03
+Ka 1 1 1
+Kd 1 1 1
+Ks 1 1 1
+d 1
+Ns 33
+map_Kd /Textures/furniture/bench/HFs_ParkBench01.png
+map_Kn /Textures/furniture/bench/HFs_ParkBench01_n.png

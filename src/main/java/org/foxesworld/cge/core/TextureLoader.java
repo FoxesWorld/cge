@@ -39,7 +39,7 @@ public class TextureLoader {
 
     /**
      * Loads all textures from a CGTEX file synchronously.
-     * Each texture is added to the engine via {@link CalistaGameEngine#addTexture(String, Texture)}.
+     * Each texture is added to the engine via {@link CalistaGameEngine#getAssetRepo()} addTexture(String, Texture)}.
      *
      * @param path path to the .cgtex file
      * @throws IOException if reading or decoding fails
@@ -73,7 +73,7 @@ public class TextureLoader {
             Image jmeImage = new Image(Image.Format.RGBA8, width, height, buf, ColorSpace.sRGB);
             Texture2D tex = new Texture2D(jmeImage);
             tex.setName(name);
-            engine.addTexture(name, tex);
+            engine.getAssetRepo().addTexture(name, tex);
             logger.debug("Loaded texture '{}' ({}x{}) into engine", name, width, height);
         }
     }
@@ -93,13 +93,6 @@ public class TextureLoader {
     }
 
 
-    /**
-     * Converts a BufferedImage into a ByteBuffer in RGBA format,
-     * flipping rows as needed for JME.
-     *
-     * @param img the source BufferedImage (TYPE_INT_ARGB or similar)
-     * @return a direct ByteBuffer containing RGBA bytes for JME
-     */
     /**
      * Converts a {@link BufferedImage} to a {@link ByteBuffer} in RGBA format.
      *
@@ -136,3 +129,5 @@ public class TextureLoader {
         return buffer;
     }
 }
+
+

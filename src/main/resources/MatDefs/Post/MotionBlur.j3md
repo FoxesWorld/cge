@@ -1,0 +1,18 @@
+MaterialDef MotionBlur {
+    MaterialParameters {
+        Texture2D PrevTex
+        Float BlurStrength
+    }
+    Technique {
+        VertexShader GLSL100: Common/MatDefs/Post/Post.vert
+        FragmentShader GLSL100: MatDefs/Post/MotionBlur.frag
+        WorldParameters {
+            FrameBufferSize
+        }
+        RenderState {
+            Blend Off
+            DepthTest Off
+            DepthWrite Off
+        }
+    }
+}

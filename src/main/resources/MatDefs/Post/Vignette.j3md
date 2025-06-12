@@ -1,0 +1,18 @@
+MaterialDef Vignette {
+    MaterialParameters {
+        Vector2 Resolution
+        Float Radius
+        Float Softness
+        Float Strength
+    }
+    Technique {
+        VertexShader GLSL100: Common/MatDefs/Post/Post.vert
+        FragmentShader GLSL100: MatDefs/Post/Vignette.frag
+        WorldParameters { }
+        RenderState {
+            Blend Off
+            DepthTest Off
+            DepthWrite Off
+        }
+    }
+}

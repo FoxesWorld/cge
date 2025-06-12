@@ -1,5 +1,6 @@
 package org.foxesworld.cge.renderer.skyBox;
 
+import com.jme3.math.ColorRGBA;
 import org.foxesworld.cge.core.module.ModuleConfig;
 
 /**
@@ -32,11 +33,11 @@ public class SkyBoxConfig extends ModuleConfig {
     /**
      * Тип отображения звёзд и луны:
      * Options:
-     *   CubeMap,
-     *   SphereMap,
-     *   EquirectMap
+     * Cube,
+     * TopDome,
+     * TwoDomes;
      */
-    private String starsOption = "EquirectMap";
+    private String starsOption = "Cube";
 
     /** Интенсивность «плющения» облаков (0.0 … 1.0). */
     private float cloudFlattering = 0.5f;
@@ -69,6 +70,64 @@ public class SkyBoxConfig extends ModuleConfig {
 
     /** Интенсивность направленного света луны (1.0 = стандартный белый). */
     private float moonLightIntensity = 0.4f;
+    private float cloudiness = 0.5f;
+    private float cloudYOffset = 0.4f;
+    private float topAngle = 1.78f;
+    /** Продолжительность полного виртуального дня в секундах (например, 600.0f для 10 минут). */
+    private float dayLengthSec = 600f;
+
+    /** Включает блюм (световые ореолы) через FilterPostProcessor. */
+    private boolean bloomEnabled = true;
+
+    /** Яркость экспозиции для небесного бокса (обычно 1.0). */
+    private float skyExposure = 1.0f;
+
+    /** Включает отображение облаков (SkyControl). */
+    private boolean cloudsEnabled = true;
+
+    /** Включает отображение звёзд. */
+    private boolean starsEnabled = true;
+
+    /** Включает включение DirectionalLightShadowRenderer (генерация теней). */
+    private boolean enableShadows = true;
+
+    /** Включает динамическое направление солнца (анимация). */
+    private boolean animatedSun = true;
+
+    /** Включает динамическое направление луны (анимация). */
+    private boolean animatedMoon = true;
+
+    /** Цвет фонового (окружающего) освещения — AmbientLight. */
+    private ColorRGBA ambientColor = new ColorRGBA(0.2f, 0.2f, 0.2f, 1.0f);
+
+    /** Интенсивность блюма (например, 1.2f). */
+    private float bloomIntensity = 1.2f;
+
+    /** Параметр экспозиции для блюма (например, 2.0f). */
+    private float bloomExposure = 2.0f;
+
+    /** Цвет солнца (RGB), применяется к направленному свету днём. */
+    private ColorRGBA sunColor = ColorRGBA.White.clone();
+
+    /** Цвет луны (обычно серовато-голубой, RGB). */
+    private ColorRGBA moonColor = new ColorRGBA(0.6f, 0.7f, 1.0f, 1.0f);
+
+    /** Интенсивность солнечного света днём. */
+    private float dayIntensity = 1.5f;
+
+    /** Интенсивность освещения ночью. */
+    private float nightIntensity = 0.1f;
+
+    /** Интенсивность лунного света. */
+    private float moonIntensity = 0.3f;
+
+    /** Экспозиция HDR в дневное время. */
+    private float dayExposure = 1.2f;
+
+    /** Экспозиция HDR в ночное время. */
+    private float nightExposure = 0.3f;
+
+
 
     // ----------------------------------
     // Геттеры
@@ -122,7 +181,89 @@ public class SkyBoxConfig extends ModuleConfig {
         return moonLightIntensity;
     }
 
-    // ----------------------------------
+    public float getCloudiness() {
+        return cloudiness;
+    }
+
+    public float getCloudYOffset() {
+        return cloudYOffset;
+    }
+
+    public float getTopAngle() {
+        return topAngle;
+    }
+    public float getDayLengthSec() {
+        return dayLengthSec;
+    }
+
+    public boolean isBloomEnabled() {
+        return bloomEnabled;
+    }
+
+    public float getSkyExposure() {
+        return skyExposure;
+    }
+
+    public boolean isCloudsEnabled() {
+        return cloudsEnabled;
+    }
+
+    public boolean isStarsEnabled() {
+        return starsEnabled;
+    }
+
+    public boolean isEnableShadows() {
+        return enableShadows;
+    }
+
+    public boolean isAnimatedSun() {
+        return animatedSun;
+    }
+
+    public boolean isAnimatedMoon() {
+        return animatedMoon;
+    }
+
+    public float getBloomIntensity() {
+        return bloomIntensity;
+    }
+
+    public float getBloomExposure() {
+        return bloomExposure;
+    }
+
+    public ColorRGBA getSunColor() {
+        return sunColor;
+    }
+
+    public ColorRGBA getMoonColor() {
+        return moonColor;
+    }
+
+    public float getDayIntensity() {
+        return dayIntensity;
+    }
+
+    public float getNightIntensity() {
+        return nightIntensity;
+    }
+
+    public float getMoonIntensity() {
+        return moonIntensity;
+    }
+
+    public float getDayExposure() {
+        return dayExposure;
+    }
+
+    public float getNightExposure() {
+        return nightExposure;
+    }
+
+    public ColorRGBA getAmbientColor() {
+        return ambientColor;
+    }
+// ----------------------------------
     // Сеттеры (если конфиг поддерживает изменение во время работы)
     // ----------------------------------
 
@@ -173,4 +314,48 @@ public class SkyBoxConfig extends ModuleConfig {
     public void setMoonLightIntensity(float moonLightIntensity) {
         this.moonLightIntensity = moonLightIntensity;
     }
+
+    public void setCloudiness(float cloudiness) {
+        this.cloudiness = cloudiness;
+    }
+
+    public void setCloudYOffset(float cloudYOffset) {
+        this.cloudYOffset = cloudYOffset;
+    }
+
+    public void setTopAngle(float topAngle) {
+        this.topAngle = topAngle;
+    }
+    public void setDayLengthSec(float dayLengthSec) {
+        this.dayLengthSec = dayLengthSec;
+    }
+
+    public void setBloomEnabled(boolean bloomEnabled) {
+        this.bloomEnabled = bloomEnabled;
+    }
+
+    public void setSkyExposure(float skyExposure) {
+        this.skyExposure = skyExposure;
+    }
+
+    public void setCloudsEnabled(boolean cloudsEnabled) {
+        this.cloudsEnabled = cloudsEnabled;
+    }
+
+    public void setStarsEnabled(boolean starsEnabled) {
+        this.starsEnabled = starsEnabled;
+    }
+
+    public void setEnableShadows(boolean enableShadows) {
+        this.enableShadows = enableShadows;
+    }
+
+    public void setAnimatedSun(boolean animatedSun) {
+        this.animatedSun = animatedSun;
+    }
+
+    public void setAnimatedMoon(boolean animatedMoon) {
+        this.animatedMoon = animatedMoon;
+    }
+
 }

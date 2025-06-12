@@ -1,7 +1,17 @@
 {
-  "skyBoxTexture": "cubemap_1",
+  "skyBoxTexture": "cubemap_0",
   "shadowMode": "CastAndReceive",
-  "starsOption": "TopDome",
-  "cloudFlattering": 0.8,
-  "bottomDome": true
+  "envMap": "CubeMap",
+  "starsOption": "Cube",
+  "cloudFlattering": 0.5,
+  "bottomDome": true,
+  "shadowMapSize": 4096,
+  "shadowFrustumCount": 4,
+  "edgeFilteringMode": "PCF4",
+  "shadowZExtend": 1000.0,
+  "sunLightIntensity": 1.2,
+  "moonLightIntensity": 0.4,
+  "cloudiness": 0.5,
+  "cloudYOffset": 0.4,
+  "topAngle": 1.78
 }

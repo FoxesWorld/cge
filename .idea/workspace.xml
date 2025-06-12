@@ -4,14 +4,59 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="283ff897-4432-4079-9530-7bc3ea1cccef" name="Changes" comment="FileDefinition Гзвфеу + NovaUI Fixes">
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/popcycle/EventListener.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/popcycle/GameEvent.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/popcycle/PopCycle.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/popcycle/TimeEvent.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/popcycle/TimeEventListener.java" afterDir="false" />
+    <list default="true" id="283ff897-4432-4079-9530-7bc3ea1cccef" name="Changes" comment="Popcycle Test">
+      <change afterPath="$PROJECT_DIR$/data/road.cgtex" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/data/testGrid.cgtex" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/AssetRepo.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/ModelLoader.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/utils/NamedThreadFactory.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/effects/MotionBlurFilter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/effects/VignetteFilter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/obj/ColorSetter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/obj/Face.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/obj/MaterialData.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/obj/OBJImporter.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/obj/Vertex.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/obj/utils/MeshUtils.java" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/Interface/Icons/bug.png" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/MatDefs/Post/MotionBlur.frag" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/MatDefs/Post/MotionBlur.j3md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/MatDefs/Post/Vignette.frag" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/MatDefs/Post/Vignette.j3md" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/MatDefs/Post/Vignette.vert" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/meshes/furniture/bench/FederalistMuseumBench01.mtl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/meshes/furniture/bench/FederalistMuseumBench01.obj" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/meshes/furniture/bench/ParkBench01.mtl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/meshes/furniture/bench/ParkBench01.obj" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/meshes/furniture/light/Streetlight_HighRes.mtl" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/meshes/furniture/light/Streetlight_HighRes.obj" afterDir="false" />
+      <change afterPath="$PROJECT_DIR$/src/main/resources/models.json" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/camera_config" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/postprocessing_config" beforeDir="false" afterPath="$PROJECT_DIR$/config/postprocessing_config" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/render_config" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/config/skybox" beforeDir="false" afterPath="$PROJECT_DIR$/config/skybox" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data/testData.cgtex" beforeDir="false" afterPath="$PROJECT_DIR$/data/testData.cgtex" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/logs/lastlog.log" beforeDir="false" afterPath="$PROJECT_DIR$/logs/lastlog.log" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/com/jme3/awt/AWTErrorDialog.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/com/jme3/awt/AWTErrorDialog.java" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/CalistaGameEngine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/CalistaGameEngine.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/AssetLoader.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/AssetLoader.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/TextureLoader.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/TextureLoader.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/extensions/cgs/parser/types/GeometryParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/extensions/cgs/parser/types/GeometryParser.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/extensions/cgs/parser/types/PhysicsParser.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/extensions/cgs/parser/types/PhysicsParser.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/extensions/cgtex/CGTEXFile.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/file/extensions/cgtex/CGTEXFile.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/utils/DDSDecoder.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/utils/DDSDecoder.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/physics/collision/CollisionModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/physics/collision/CollisionModule.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/popcycle/TimeEvent.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/popcycle/TimeEvent.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/postProcessing/PostProcessingConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/postProcessing/PostProcessingConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/postProcessing/PostProcessingModule.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/postProcessing/PostProcessingModule.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/skyBox/SkyBox.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/skyBox/SkyBox.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/skyBox/SkyBoxConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/skyBox/SkyBoxConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/CgtexEntry.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/CgtexEntry.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/CollisionParticleEmitter.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/CollisionParticleEmitter.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/ModelLoader.java" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/ShapeParty.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/tmp/ShapeParty.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/resources/textures.json" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/resources/textures.json" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -90,27 +135,27 @@
       <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\theme\icon" />
     </key>
     <key name="MoveFile.RECENT_KEYS">
-      <recent name="C:\Users\Aiden\Documents\GitHub\CGE\cge\src\main\java\org\foxesworld\cge\core\file\extensions" />
+      <recent name="C:\Users\Aiden\Documents\GitHub\CGE\cge\src\main\resources\Interface\Icons" />
       <recent name="C:\Users\Aiden\Documents\GitHub\CGE\cge\src\main\resources\Textures" />
-      <recent name="C:\Users\Aiden\Documents\GitHub\CGE\cge\src\main\resources\Interface" />
-      <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\Interface" />
-      <recent name="C:\Users\Calista\Documents\GitHub\CGE\src\main\resources\theme" />
+      <recent name="C:\Users\Aiden\Documents\GitHub\CGE\cge\src\main\resources" />
+      <recent name="C:\Users\Aiden\Documents\GitHub\CGE\cge\src\main\java\org\foxesworld\cge\tmp" />
+      <recent name="C:\Users\Aiden\Documents\GitHub\CGE\cge\src\main\java\org\foxesworld\cge\core\file\extensions" />
     </key>
     <key name="MoveClassesOrPackagesDialog.RECENTS_KEY">
-      <recent name="org.foxesworld.cge.tools" />
       <recent name="org.foxesworld.cge.core" />
+      <recent name="org.foxesworld.cge.tools" />
     </key>
     <key name="CopyClassDialog.RECENTS_KEY">
       <recent name="org.foxesworld.cge.tmp" />
     </key>
   </component>
-  <component name="RunManager" selected="Application.CalistaGameEngine">
-    <configuration name="CGTEXCreatorUI" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
-      <option name="MAIN_CLASS_NAME" value="org.foxesworld.cge.tools.CGTEXcreator.CGTEXCreatorUI" />
+  <component name="RunManager" selected="Application.AWTErrorDialog">
+    <configuration name="AWTErrorDialog" type="Application" factoryName="Application" temporary="true" nameIsGenerated="true">
+      <option name="MAIN_CLASS_NAME" value="com.jme3.awt.AWTErrorDialog" />
       <module name="CGE.main" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="org.foxesworld.cge.tools.CGTEXcreator.preview.*" />
+          <option name="PATTERN" value="com.jme3.awt.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -123,7 +168,7 @@
       <module name="CGE.main" />
       <extension name="coverage">
         <pattern>
-          <option name="PATTERN" value="org.foxesworld.cge.*" />
+          <option name="PATTERN" value="org.foxesworld.cge.core.*" />
           <option name="ENABLED" value="true" />
         </pattern>
       </extension>
@@ -179,11 +224,11 @@
     </configuration>
     <recent_temporary>
       <list>
+        <item itemvalue="Application.AWTErrorDialog" />
         <item itemvalue="Application.MaterialEditorApp" />
         <item itemvalue="Application.CalistaGameEngine" />
         <item itemvalue="Application.GeometryBatchFactory" />
         <item itemvalue="Gradle.CGE [clean]" />
-        <item itemvalue="Application.CGTEXCreatorUI" />
       </list>
     </recent_temporary>
   </component>
@@ -205,7 +250,8 @@
       <workItem from="1749015134010" duration="24347000" />
       <workItem from="1749110923861" duration="10058000" />
       <workItem from="1749182932542" duration="6656000" />
-      <workItem from="1749194541284" duration="667000" />
+      <workItem from="1749194541284" duration="1010000" />
+      <workItem from="1749707121474" duration="20503000" />
     </task>
     <task id="LOCAL-00001" summary="initial">
       <option name="closed" value="true" />
@@ -460,7 +506,14 @@
       <option name="project" value="LOCAL" />
       <updated>1749106404599</updated>
     </task>
-    <option name="localTasksCounter" value="33" />
+    <task id="LOCAL-00033" summary="Popcycle Test">
+      <created>1749195237993</created>
+      <option name="number" value="00033" />
+      <option name="presentableId" value="LOCAL-00033" />
+      <option name="project" value="LOCAL" />
+      <updated>1749195237993</updated>
+    </task>
+    <option name="localTasksCounter" value="34" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -468,7 +521,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="ChunkArgs WIP" />
     <MESSAGE value="WORKING11!!!!11" />
     <MESSAGE value="CGTEX + CGTEX creator tool" />
     <MESSAGE value="CGTEX + CGS refactor" />
@@ -493,20 +545,21 @@
     <MESSAGE value="Player Fixes" />
     <MESSAGE value="Complete FileDefinition" />
     <MESSAGE value="FileDefinition Гзвфеу + NovaUI Fixes" />
-    <option name="LAST_COMMIT_MESSAGE" value="FileDefinition Гзвфеу + NovaUI Fixes" />
+    <MESSAGE value="Popcycle Test" />
+    <option name="LAST_COMMIT_MESSAGE" value="Popcycle Test" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
       <breakpoints>
         <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/RendererModule.java</url>
-          <line>63</line>
-          <option name="timeStamp" value="52" />
+          <url>file://$PROJECT_DIR$/src/main/java/org/foxesworld/cge/CalistaGameEngine.java</url>
+          <line>141</line>
+          <option name="timeStamp" value="81" />
         </line-breakpoint>
         <line-breakpoint enabled="true" type="java-line">
-          <url>file://$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/TextureLoader.java</url>
-          <line>69</line>
-          <option name="timeStamp" value="58" />
+          <url>file://$PROJECT_DIR$/src/main/java/org/foxesworld/cge/CalistaGameEngine.java</url>
+          <line>142</line>
+          <option name="timeStamp" value="82" />
         </line-breakpoint>
       </breakpoints>
     </breakpoint-manager>

@@ -1,7 +1,17 @@
 [
   {
-    "path": "data/testData.cgtex",
-    "flipY": true,
+    "path": "data/testData.cgtex" ,
+    "flipY": true ,
+    "generateMipmaps": true
+  } ,
+  {
+    "path": "data/road.cgtex" ,
+    "flipY": true ,
+    "generateMipmaps": true
+  } ,
+  {
+    "path": "data/testGrid.cgtex" ,
+    "flipY": true ,
     "generateMipmaps": true
   }
 ]
