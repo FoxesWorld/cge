@@ -19,7 +19,7 @@ public class MetricsRegistry {
 
     public MetricsRegistry() {
         registry.add(new AbstractMap.SimpleEntry<>(TextElement.class, new ChildMetrics() {
-            @Override public float getRawX(UIElement ue)    { return (ue).getRawPosX(); }
+            @Override public float getRawX(UIElement ue)    { return ((TextElement) ue).getRawPosX(); }
             @Override public float getRawY(UIElement ue)    { return ((TextElement) ue).getRawPosY(); }
             @Override public float getWidth(UIElement ue)   { return ((TextElement) ue).getWidth(); }
             @Override public float getHeight(UIElement ue)  { return ((TextElement) ue).getHeight(); }

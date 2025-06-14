@@ -2,52 +2,90 @@ package org.foxesworld.cge.core;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import org.foxesworld.cge.core.module.ModuleConfig;
+import com.jme3.math.ColorRGBA;
+import org.foxesworld.cge.core.utils.json.ColorRGBAAdapter;
 
 import java.io.IOException;
 import java.io.Reader;
 import java.io.Writer;
+import java.lang.reflect.InvocationTargetException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
 import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
-import java.util.concurrent.Future;
 
 /**
- * Centralized service for loading, caching, and hot-reloading JSON configurations.
+ * Provides centralized loading, caching, saving, and optional asynchronous hot-reloading
+ * of JSON-based configuration files. Supports auto-creation of default config instances.
+ * <p>
+ * Configurations must be registered with their corresponding class type prior to access.
+ * </p>
+ *
+ * <p><b>Thread-safe:</b> All cache and registry operations are thread-safe.</p>
+ *
+ * Usage example:
+ * <pre>
+ *     configService.registerConfig("graphics.json", GraphicsConfig.class);
+ *     GraphicsConfig cfg = configService.getConfig("graphics.json");
+ * </pre>
  */
 public class ConfigService {
+
     private static final Path CONFIG_DIR = Paths.get("config");
+
     private final Gson gson;
     private final ForkJoinPool pool;
     private final Map<String, Object> cache = new ConcurrentHashMap<>();
     private final Map<String, Class<?>> registry = new ConcurrentHashMap<>();
 
+    /**
+     * Constructs a new ConfigService with GSON support for JME's ColorRGBA.
+     */
     public ConfigService() {
-        this.gson = new GsonBuilder().setPrettyPrinting().create();
+        this.gson = new GsonBuilder()
+                .setPrettyPrinting()
+                .registerTypeAdapter(ColorRGBA.class, new ColorRGBAAdapter())
+                .create();
         this.pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
-        ensureConfigDir();
+        ensureConfigDirExists();
     }
 
-    private void ensureConfigDir() {
+    /**
+     * Ensures the configuration directory exists. Creates it if missing.
+     */
+    private void ensureConfigDirExists() {
         try {
-            if (!Files.exists(CONFIG_DIR)) {
-                Files.createDirectories(CONFIG_DIR);
-            }
+            Files.createDirectories(CONFIG_DIR);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to create config directory", e);
+            throw new IllegalStateException("Failed to create config directory: " + CONFIG_DIR, e);
         }
     }
 
     /**
-     * Registers configuration file and its class type.
+     * Registers a configuration file name with its corresponding configuration class.
+     * Must be called before loading or saving the file.
+     *
+     * @param fileName the file name (e.g., "engine.json")
+     * @param clazz    the class representing the configuration structure
+     * @param <T>      the type of the config class
      */
-    public <ModuleConfig> void registerConfig(String fileName, Class<ModuleConfig> clazz) {
+    public <T> void registerConfig(String fileName, Class<T> clazz) {
+        Objects.requireNonNull(fileName, "fileName must not be null");
+        Objects.requireNonNull(clazz, "clazz must not be null");
         registry.put(fileName, clazz);
     }
 
     /**
-     * Asynchronously load or get cached config.
+     * Retrieves the configuration instance from cache or loads it from disk.
+     * If the file doesn't exist, it is created using a new instance of the config class.
+     *
+     * @param fileName the file name (e.g., "physics.json")
+     * @param <T>      the type of the configuration object
+     * @return the configuration object
+     * @throws IOException if loading fails
      */
     @SuppressWarnings("unchecked")
     public <T> T getConfig(String fileName) throws IOException {
@@ -55,13 +93,18 @@ public class ConfigService {
             try {
                 return loadConfig(key);
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new RuntimeException("Failed to load config: " + fileName, e);
             }
         });
     }
 
     /**
-     * Reloads config from disk and updates cache.
+     * Reloads the configuration from disk, replacing the cached version.
+     *
+     * @param fileName the name of the file
+     * @param <T>      the config type
+     * @return the reloaded configuration object
+     * @throws IOException if loading fails
      */
     @SuppressWarnings("unchecked")
     public <T> T reloadConfig(String fileName) throws IOException {
@@ -70,41 +113,109 @@ public class ConfigService {
         return cfg;
     }
 
+    /**
+     * Internal method to load a config file or create a default one if not found.
+     *
+     * @param fileName the config file name
+     * @param <T>      the config type
+     * @return the loaded or newly created config
+     * @throws IOException if deserialization or instantiation fails
+     */
     private <T> T loadConfig(String fileName) throws IOException {
-        Class<T> clazz = (Class<T>) registry.get(fileName);
-        if (clazz == null) {
-            throw new IllegalArgumentException("Unregistered config: " + fileName);
-        }
+        Class<T> clazz = getRegisteredClass(fileName);
         Path path = CONFIG_DIR.resolve(fileName);
-        if (!Files.exists(path)) {
-            // create default
-            try {
-                T instance = clazz.getDeclaredConstructor().newInstance();
-                saveConfigInternal(fileName, instance);
-                return instance;
-            } catch (Exception e) {
-                throw new IOException("Failed to instantiate default config", e);
-            }
+
+        if (Files.notExists(path)) {
+            return createAndSaveDefault(fileName, clazz);
         }
-        try (Reader reader = Files.newBufferedReader(path)) {
+
+        try (Reader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
             return gson.fromJson(reader, clazz);
         }
     }
 
     /**
-     * Saves config object to disk.
+     * Saves a configuration object to disk and updates the cache.
+     *
+     * @param fileName the file name to save
+     * @param config   the config object
+     * @param <T>      the config type
+     * @throws IOException if writing fails
      */
     public <T> void saveConfig(String fileName, T config) throws IOException {
+        Objects.requireNonNull(config, "Config object cannot be null");
         cache.put(fileName, config);
         saveConfigInternal(fileName, config);
     }
 
+    /**
+     * Internal method to save a config to disk.
+     *
+     * @param fileName the config file name
+     * @param config   the config object
+     * @param <T>      the config type
+     * @throws IOException if writing fails
+     */
     private <T> void saveConfigInternal(String fileName, T config) throws IOException {
         Path path = CONFIG_DIR.resolve(fileName);
-        try (Writer writer = Files.newBufferedWriter(path, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+        try (Writer writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8,
+                StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
             gson.toJson(config, writer);
         }
     }
+
+    /**
+     * Retrieves the registered config class for a given file.
+     *
+     * @param fileName the config file name
+     * @param <T>      the config type
+     * @return the registered class
+     * @throws IllegalArgumentException if not registered
+     */
+    @SuppressWarnings("unchecked")
+    private <T> Class<T> getRegisteredClass(String fileName) {
+        Class<?> clazz = registry.get(fileName);
+        if (clazz == null) {
+            throw new IllegalArgumentException("Config not registered: " + fileName);
+        }
+        return (Class<T>) clazz;
+    }
+
+    /**
+     * Creates a default instance of the config class and saves it to disk.
+     *
+     * @param fileName the config file name
+     * @param clazz    the config class
+     * @param <T>      the config type
+     * @return the created default config
+     * @throws IOException if instantiation or writing fails
+     */
+    private <T> T createAndSaveDefault(String fileName, Class<T> clazz) throws IOException {
+        try {
+            T instance = clazz.getDeclaredConstructor().newInstance();
+            saveConfigInternal(fileName, instance);
+            return instance;
+        } catch (InstantiationException | IllegalAccessException |
+                 InvocationTargetException | NoSuchMethodException e) {
+            throw new IOException("Failed to instantiate default config: " + clazz.getName(), e);
+        }
+    }
+
+    /**
+     * Asynchronously preloads a configuration in a background thread.
+     * Useful for initializing configurations during engine startup.
+     *
+     * @param fileName the config file name
+     * @param <T>      the config type
+     * @return Optional of the config or empty if loading failed
+     */
+    public <T> Optional<Object> preloadConfigAsync(String fileName) {
+        return Optional.ofNullable(pool.submit(() -> {
+            try {
+                return getConfig(fileName);
+            } catch (IOException e) {
+                return null;
+            }
+        }).join());
+    }
 }
-
-

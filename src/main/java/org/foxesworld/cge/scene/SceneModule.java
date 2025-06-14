@@ -20,6 +20,13 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
+/**
+ * SceneModule is responsible for loading and streaming scene chunks (.cgs files)
+ * into the engine. It handles terrain, lighting, and other scene data in chunks,
+ * streamed asynchronously via {@link StreamingManager}.
+ *
+ * @author Calista
+ */
 public class SceneModule extends EngineModule<SceneConfig> {
     private static final Logger logger = LoggerFactory.getLogger(SceneModule.class);
 
@@ -60,7 +67,7 @@ public class SceneModule extends EngineModule<SceneConfig> {
                         //CGSFileReader reader = this.sceneFile.readFile();
                         this.sceneFile.readFileNew();
                         this.cgsMetadata = sceneFile.getMetadata();
-                        this.entries = new ArrayList<>((Collection) sceneFile.getChunkTable());
+                        this.entries = new ArrayList<>(sceneFile.getChunkTable());
                         setupStreamingForChunks(this.sceneFile);
 
                     } catch (Exception e) {

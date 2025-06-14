@@ -229,6 +229,14 @@ public class ProgressElement extends AbstractUIElement {
         }
     }
 
+    public float getRawPosX() {
+        return rawPosX;
+    }
+
+    public float getRawPosY() {
+        return rawPosY;
+    }
+
     public float getWidth() {
         return width;
     }
@@ -251,6 +259,11 @@ public class ProgressElement extends AbstractUIElement {
         }
     }
 
+    /**
+     * Разбирает строку вида "r,g,b" или "r,g,b,a", где компоненты могут быть
+     * заданы либо в диапазоне [0..1], либо в [0..255]. Если указаны только
+     * три компонента, альфа считается равной 1 (или 255).
+     */
     /**
      * Разбирает строку вида "r,g,b" или "r,g,b,a", где компоненты могут быть
      * заданы либо в диапазоне [0..1], либо в [0..255]. Если указаны только

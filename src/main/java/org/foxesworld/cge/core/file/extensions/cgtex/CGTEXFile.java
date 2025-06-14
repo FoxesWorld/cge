@@ -10,6 +10,7 @@ import org.foxesworld.cge.core.file.definition.JsonFileStructureLoader;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.*;
 
 /**
@@ -134,8 +135,7 @@ public class CGTEXFile extends AbstractFile<CGTEXMetadata> {
         TextureEntry entry = new TextureEntry(width, height, name, format, data);
         entries.add(entry);
 
-        logger.debug("Texture[{}]: name='{}', size={}x{}, format={}",
-                index, name, width, height, format);
+        logger.debug("Texture[{}]: name='{}', size={}x{}, format={}", index, name, width, height, format);
     }
 
     /**

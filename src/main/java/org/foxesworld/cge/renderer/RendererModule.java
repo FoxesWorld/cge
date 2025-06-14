@@ -1,6 +1,15 @@
+/**
+ * RendererModule.java
+ *
+ * Part of the Calista Game Engine.
+ *
+ * @author Calista
+ */
 package org.foxesworld.cge.renderer;
 
 import com.jme3.app.Application;
+import com.jme3.renderer.Caps;
+import com.jme3.renderer.Renderer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.CalistaGameEngine;
@@ -13,43 +22,55 @@ import org.foxesworld.cge.scene.SceneModule;
 import java.util.EnumSet;
 
 /**
- * Universal RendererModule: aggregates Camera, Lighting, and PostProcessing sub-modules.
+ * RendererModule is responsible for aggregating and managing rendering-related sub-modules,
+ * including SkyBox, PostProcessing, and integration with SceneModule.
  */
 public class RendererModule extends EngineModule<RendererConfig> {
+
     private static final Logger logger = LogManager.getLogger(RendererModule.class);
     private static final String CONFIG_FILE = "render_config";
 
     private final ModuleManager subManager;
 
-
+    /**
+     * Constructs the RendererModule with a SkyBox sub-module.
+     *
+     * @param app the game engine instance
+     */
     public RendererModule(CalistaGameEngine app) {
         super("renderer", RendererConfig.class, app);
         this.subManager = new ModuleManager(app);
-    }
-    @Override
-    protected void onEnable() {
-        com.jme3.renderer.Renderer renderer = getApplication().getRenderer();
-        logger.info("Renderer initialized:");
-        EnumSet<com.jme3.renderer.Caps> caps = renderer.getCaps();
-        logRendererCapabilities(caps);
+        subManager.register(new SkyBox(this), 10);
     }
 
-    private void logRendererCapabilities(EnumSet<com.jme3.renderer.Caps> caps) {
+    @Override
+    protected void onEnable() {
+        Renderer renderer = getApplication().getRenderer();
+        logger.info("Renderer initialized:");
+        logRendererCapabilities(renderer.getCaps());
+    }
+
+    /**
+     * Logs important rendering capabilities to the console.
+     *
+     * @param caps the set of renderer capabilities
+     */
+    private void logRendererCapabilities(EnumSet<Caps> caps) {
         logger.info("Capabilities:");
-        logger.info(" - Shader Language Support: {}", caps.contains(com.jme3.renderer.Caps.GLSL100));
-        logger.info(" - FrameBuffer Support:     {}", caps.contains(com.jme3.renderer.Caps.FrameBuffer));
-        logger.info(" - Geometry Shader:          {}", caps.contains(com.jme3.renderer.Caps.GeometryShader));
-        logger.info(" - Texture Array:            {}", caps.contains(com.jme3.renderer.Caps.TextureArray));
+        logger.info(" - Shader Language Support: {}", caps.contains(Caps.GLSL100));
+        logger.info(" - FrameBuffer Support:     {}", caps.contains(Caps.FrameBuffer));
+        logger.info(" - Geometry Shader:         {}", caps.contains(Caps.GeometryShader));
+        logger.info(" - Texture Array:           {}", caps.contains(Caps.TextureArray));
     }
 
     @Override
     protected void onDisable() {
-        // Cleanup when module is disabled, if needed (No-op for now)
+        // No special logic on disable yet
     }
 
     @Override
     protected void onConfigReloaded() {
-        // No configuration handling needed
+        // No dynamic config reload handling
     }
 
     @Override
@@ -59,43 +80,21 @@ public class RendererModule extends EngineModule<RendererConfig> {
             throw new IllegalStateException("RendererConfig not loaded");
         }
 
-        // Регистрируем SkyBox (с приоритетом выше PostProcessing)
-        subManager.register(new SkyBox(this), 30);
+        if (cfg.isEnablePostEffects()) {
+            subManager.register(new PostProcessingModule(app), 30);
+        }
 
-        // Инициализация AppStates (в том числе вызов onEnable)
         subManager.initializeAll(app);
-
-        // Последовательная загрузка SkyBox
-        subManager.loadAll(app, () -> {
-            logger.info("SkyBox loaded. Checking post-processing...");
-
-            // Проверка, загружен ли SkyBox
-            SkyBox skyBox = subManager.getModule(SkyBox.class);
-            if (skyBox == null) {
-                logger.error("SkyBox not loaded properly. Cannot continue.");
-                return;
-            }
-
-            // Если эффекты включены — регистрируем и загружаем PostProcessing
-            if (cfg.isEnablePostEffects()) {
-                logger.info("PostProcessing enabled, registering...");
-                subManager.register(new PostProcessingModule(app), 10);
-
-                // Загружаем PostProcessing после SkyBox
-                subManager.loadAll(app, () -> {
-                    logger.info("PostProcessingModule loaded. All render modules are ready!");
-                });
-
-            } else {
-                logger.info("PostProcessing disabled. All render modules are ready!");
-            }
-        });
+        subManager.loadAll(app, () -> logger.info("All render modules are ready!"));
+        initializeSceneModule(app);
     }
 
-
-
+    /**
+     * Initializes scene-dependent render settings.
+     *
+     * @param app the game engine
+     */
     private void initializeSceneModule(CalistaGameEngine app) {
-        // Получаем SceneModule
         SceneModule sceneModule = app.getModuleManager().getModule(SceneModule.class);
         if (sceneModule != null) {
             sceneModule.onSceneReady(() -> {
@@ -105,19 +104,23 @@ public class RendererModule extends EngineModule<RendererConfig> {
         }
     }
 
+    /**
+     * Hook for scene-based renderer adjustments (e.g., lighting).
+     */
     private void updateRendererSettingsBasedOnScene() {
         logger.info("Updating lights on scene loaded!");
+        // Future: update light settings based on scene contents
     }
 
     @Override
     protected void updateModule(float tpf) {
-        // Sub-modules update via AppState
+        // Sub-modules are updated via their AppState implementations
     }
 
     @Override
     protected void cleanupModule(Application app) {
         logger.info("Cleaning up RendererModule and sub-modules...");
-        // Sub-modules cleanup themselves
+        // Sub-modules handle their own cleanup
         logger.info("RendererModule cleaned up.");
     }
 }

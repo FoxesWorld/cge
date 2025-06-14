@@ -1,6 +1,6 @@
 package org.foxesworld.cge.core.file.extensions.cgs.parser.types;
 /*
-import com.jme3.asset.AssetManager;
+import com.jme3.asset.AssetRepo;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;

@@ -203,7 +203,7 @@ public class Player extends Node {
                     .getModule(UIModule.class);
 
             // Load main HUD panel
-            //ui.addPanel(this, "Interface/stats_config.xml");
+            ui.addPanel(this, "Interface/stats_config.xml");
 
             // Add crosshair at screen center (optional)
             // ui.addImage(this, "Interface/crosshair.png", 5f, 5f, 32, 32);

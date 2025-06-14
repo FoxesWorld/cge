@@ -1,12 +1,10 @@
 package org.foxesworld.cge.tmp;
 
 import com.jme3.asset.AssetManager;
-import com.jme3.material.Material;
 import com.jme3.math.Vector2f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
-import com.jme3.texture.Texture;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.physics.PhysicsModule;
 
@@ -31,7 +29,8 @@ public class ShapeParty {
             AssetManager assetManager = calistaGameEngine.getAssetManager();
 
             // Загрузка модели вместо создания случайных фигур
-            Spatial model = assetManager.loadModel("meshes/furniture/bench/ParkBench01.obj");
+            Spatial model = calistaGameEngine.getAssetRepo().getModel("ParkBench01");
+
 
             // Убедимся, что модель является Geometry или Node
             if (model == null) {
