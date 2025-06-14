@@ -260,10 +260,8 @@ public class SkyBoxConfig extends ModuleConfig {
         return nightExposure;
     }
 
-    public ColorRGBA getAmbientColor() {
-        return ambientColor;
-    }
-// ----------------------------------
+
+    // ----------------------------------
     // Сеттеры (если конфиг поддерживает изменение во время работы)
     // ----------------------------------
 

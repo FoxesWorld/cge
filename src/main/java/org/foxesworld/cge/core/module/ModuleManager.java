@@ -36,10 +36,10 @@ import java.util.stream.Collectors;
  */
 public class ModuleManager {
     private static final Logger logger = LoggerFactory.getLogger(ModuleManager.class);
+    private final  CalistaGameEngine calistaGameEngine;
     private final AppStateManager stateManager;
     private final ConfigService configService;
     private final TaskScheduler taskScheduler;
-
     private final TreeMap<Integer, EngineModule<?>> manual = new TreeMap<>();
     private final Map<String, EngineModule<?>> instances = new ConcurrentHashMap<>();
     private final ExecutorService initExecutor;
@@ -51,6 +51,7 @@ public class ModuleManager {
      * @param calistaGameEngine the game engine instance
      */
     public ModuleManager(CalistaGameEngine calistaGameEngine) {
+        this.calistaGameEngine = calistaGameEngine;
         this.stateManager = calistaGameEngine.getStateManager();
         this.configService = calistaGameEngine.getConfigService();
         this.taskScheduler = calistaGameEngine.getTaskScheduler();
@@ -294,6 +295,22 @@ public class ModuleManager {
         }
         logger.warn("Module {} not found", moduleClass.getSimpleName());
         return null;
+    }
+
+    /**
+     * Retrieves all loaded modules (manual and auto-discovered) as a list.
+     *
+     * @return an unmodifiable list of all loaded module instances
+     */
+    public List<EngineModule<?>> getAllModules() {
+        List<EngineModule<?>> all = new ArrayList<>();
+        all.addAll(manual.values());
+        all.addAll(instances.values());
+        return Collections.unmodifiableList(all);
+    }
+
+    public CalistaGameEngine getCalistaGameEngine() {
+        return calistaGameEngine;
     }
 
     /**

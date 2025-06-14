@@ -18,7 +18,6 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class AssetRepo {
     private static final Logger logger = LogManager.getLogger(AssetRepo.class);
-
     private final Map<String, Texture> textureMap = new ConcurrentHashMap<>();
     private final Map<String, Spatial> modelsMap = new ConcurrentHashMap<>();
     private final CalistaGameEngine calistaGameEngine;

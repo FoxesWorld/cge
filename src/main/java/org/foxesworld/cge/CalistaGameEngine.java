@@ -3,18 +3,9 @@ package org.foxesworld.cge;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.StatsAppState;
 import com.jme3.asset.AssetManager;
-import com.jme3.bullet.collision.shapes.MeshCollisionShape;
-import com.jme3.bullet.control.RigidBodyControl;
-import com.jme3.material.Material;
-import com.jme3.math.FastMath;
-import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
-import com.jme3.renderer.queue.RenderQueue;
-import com.jme3.scene.Geometry;
-import com.jme3.scene.shape.Quad;
 import com.jme3.system.AppSettings;
-import com.jme3.texture.Texture;
-import org.foxesworld.cge.core.AssetLoader;
+import org.foxesworld.cge.core.loader.AssetLoader;
 import org.foxesworld.cge.core.AssetRepo;
 import org.foxesworld.cge.core.ConfigService;
 import org.foxesworld.cge.core.TaskScheduler;
@@ -38,6 +29,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.logging.LogManager;
 
+import static org.foxesworld.cge.tmp.Terrain.createTestTerrain;
 import static org.foxesworld.cge.tools.SceneCGSCreator.SceneCgsCreatorFrame.setupTheme;
 
 public class CalistaGameEngine extends SimpleApplication {
@@ -107,6 +99,7 @@ public class CalistaGameEngine extends SimpleApplication {
     public void simpleInitApp() {
         stateManager.getState(StatsAppState.class).setDisplayStatView(false);
         moduleManager = new ModuleManager(this);
+
         this.assetLoader = new AssetLoader(this);
         moduleManager.register(new RendererModule(this), 20);
         moduleManager.register(new PhysicsModule(this), 35);
@@ -117,8 +110,13 @@ public class CalistaGameEngine extends SimpleApplication {
             this.assetManager.registerLoader(OBJImporter.class, "obj");
             scene = moduleManager.getModule(SceneModule.class);
 
-            assetLoader.loadTextures(() -> {});
-            assetLoader.loadModels(() -> {});
+            assetLoader.loadAllAssets(() -> {
+                createTestTerrain(this, 150f, 150f);
+                ShapeParty cubeDerp = new ShapeParty(this);
+                cubeDerp.startParty();
+                Player player = new Player(this, new Vector3f(0,20,0));
+                rootNode.attachChild(player);
+            });
 
             this.moduleManager.getModule(SceneModule.class).onSceneReady(() ->{
                 PhysicsModule physicsModule = this.getModuleManager().getModule(PhysicsModule.class);
@@ -126,50 +124,13 @@ public class CalistaGameEngine extends SimpleApplication {
                 if (physicsModule != null) {
                     physicsModule.getBulletAppState().getPhysicsSpace().addCollisionListener(new CollisionParticleEmitter(this));
                 }
-                createTestTerrain();
-                ShapeParty cubeDerp = new ShapeParty(this);
-                cubeDerp.startParty();
-                flyCam.setEnabled(false);
-                Player player = new Player(this, new Vector3f(0,20,0));
-                rootNode.attachChild(player);
+
             });
 
         });
     }
 
-    private void createTestTerrain() {
-        Material mat = new Material(assetManager, "Common/MatDefs/Light/PBRLighting.j3md");
-        mat.setTexture("BaseColorMap", assetRepo.getTexture("box"));
-        //mat.setTexture("RoughnessMap", assetRepo.getTexture("calista_grid_test_normal"));
-        mat.setBoolean("BackfaceShadows", false);
-        mat.setFloat("EmissivePower", 1.0f);
-        mat.setFloat("EmissiveIntensity", 0.0f);
-        mat.setFloat("ParallaxHeight", 0.05f);
-        mat.setFloat("NormalType", -1.0f);
-        mat.setFloat("Glossiness", 0.001f);
-        mat.getTextureParam("BaseColorMap").getTextureValue().setWrap(Texture.WrapMode.Repeat);
 
-        float width = 100f, height = 100f;
-        Quad quad = new Quad(width, height);
-        Geometry terrain = new Geometry("TerrainPlane", quad);
-        terrain.getMesh().scaleTextureCoordinates(new Vector2f(8, 8));
-        terrain.setLocalTranslation(-width / 2f, 0, height / 2f);
-        terrain.rotate(-FastMath.HALF_PI, 0, 0);
-        terrain.setMaterial(mat);
-        terrain.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
-
-        enqueue(() -> {
-            rootNode.attachChild(terrain);
-            MeshCollisionShape shape = new MeshCollisionShape(quad);
-            RigidBodyControl rbc = new RigidBodyControl(shape, 0f);
-            terrain.addControl(rbc);
-            PhysicsModule phys = moduleManager.getModule(PhysicsModule.class);
-            if (phys != null) {
-                phys.getBulletAppState().getPhysicsSpace().add(rbc);
-            }
-            return null;
-        });
-    }
     public ConfigService getConfigService() {
         return configService;
     }
@@ -189,7 +150,6 @@ public class CalistaGameEngine extends SimpleApplication {
     public PopCycle getPopCycle() {
         return popCycle;
     }
-
 
     public SceneModule getScene() {
         return scene;

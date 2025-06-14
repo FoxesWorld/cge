@@ -269,6 +269,10 @@ public abstract class EngineModule<ModuleConfig> extends BaseAppState {
         return gameEngine;
     }
 
+    public void setConfig(ModuleConfig config) {
+        this.config = config;
+    }
+
     /**
      * Sets a runnable to be invoked when all engine modules have completed initialization.
      *
