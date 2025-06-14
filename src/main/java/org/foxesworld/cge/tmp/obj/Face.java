@@ -2,107 +2,179 @@ package org.foxesworld.cge.tmp.obj;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Iterator;
 import java.util.List;
 import java.util.StringTokenizer;
 
 /**
- * Представляет одну грань (Face) OBJ-модели.
- * Поддерживает произвольное число вершин (n-gon) и может триангулировать их.
+ * Represents a polygonal face in an OBJ model. A face may consist of any number of vertices (n-gon)
+ * and can be decomposed into triangles for rendering.
+ * <p>
+ * Each vertex reference may include an index to a position, a texture coordinate, and a normal.
+ * Indices follow the OBJ specification (1-based, 0 if absent).
+ * </p>
+ *
+ * @author  FoxesWorld
+ * @since   1.0
  */
-public class Face {
-    /** Список вершин (Vertex) грани в порядке обхода. */
+public class Face implements Iterable<Vertex> {
+
+    /** Ordered list of vertex references that make up this face. */
     private final List<Vertex> vertices;
 
     /**
-     * Создаёт пустую грань. Вершины можно добавить через {@link #add(int, int, int)}.
+     * Creates an empty face. Vertices can be added via {@link #add(int, int, int)}.
      */
     public Face() {
         this.vertices = new ArrayList<>();
     }
 
     /**
-     * Создаёт грань из списка вершин.
-     * @param verts список объектов Vertex
+     * Creates a face from an existing list of vertices.
+     *
+     * @param verts the list of vertex references (will be copied)
+     * @throws NullPointerException if verts is null
      */
     public Face(List<Vertex> verts) {
+        if (verts == null) {
+            throw new NullPointerException("verts must not be null");
+        }
         this.vertices = new ArrayList<>(verts);
     }
 
     /**
-     * Добавляет вершину к грани.
-     * @param vertexIndex  индекс вершины (1-based по спецификации OBJ)
-     * @param texCoordIndex индекс текстурной координаты (1-based, 0 если отсутствует)
-     * @param normalIndex индекс нормали (1-based, 0 если отсутствует)
+     * Adds a vertex reference to this face.
+     *
+     * @param vertexIndex   the 1-based index of the vertex position (OBJ spec)
+     * @param texCoordIndex the 1-based index of the texture coordinate (0 if none)
+     * @param normalIndex   the 1-based index of the vertex normal (0 if none)
      */
     public void add(int vertexIndex, int texCoordIndex, int normalIndex) {
-        this.vertices.add(new Vertex(vertexIndex, texCoordIndex, normalIndex));
+        vertices.add(new Vertex(vertexIndex, texCoordIndex, normalIndex));
     }
 
     /**
-     * Возвращает незменяемый список всех вершин грани.
+     * Returns an unmodifiable view of the vertex list for this face.
+     *
+     * @return unmodifiable list of {@link Vertex} objects
      */
     public List<Vertex> getVertices() {
         return Collections.unmodifiableList(vertices);
     }
 
     /**
-     * Возвращает количество вершин (граней может быть треугольник, квад, полигоны и т.д.).
+     * Returns the number of vertices in this face. A face must have at least three vertices.
+     *
+     * @return vertex count
      */
     public int size() {
         return vertices.size();
     }
 
     /**
-     * Триангулирует n-gon на список треугольников (Face).
-     * Алгоритм: фиксируем первую вершину и создаём треугольники (0,i,i+1).
-     * @return список Face-треугольников
+     * Decomposes this n-gon face into a list of triangular faces using a fan algorithm.
+     * The first vertex is used as a pivot: triangles are (0, i, i+1) for i in [1 .. n-2].
+     *
+     * @return list of triangular {@link Face} instances
      */
     public List<Face> triangulate() {
-        List<Face> tris = new ArrayList<>();
+        List<Face> triangles = new ArrayList<>();
         for (int i = 1; i + 1 < vertices.size(); i++) {
             Face tri = new Face();
             tri.vertices.add(vertices.get(0));
             tri.vertices.add(vertices.get(i));
             tri.vertices.add(vertices.get(i + 1));
-            tris.add(tri);
+            triangles.add(tri);
         }
-        return tris;
+        return triangles;
     }
 
     /**
-     * Парсит строку OBJ-грани типа "f 1/2/3 4/5/6 7/8/9" и возвращает Face.
-     * @param line строка из OBJ-файла
-     * @throws IllegalArgumentException если формат неверный
+     * Parses a face definition from an OBJ file line, e.g. "f 1/2/3 4/5/6 7/8/9".
+     * Texture or normal indices may be omitted (e.g. "1//3" or "1/2").
+     *
+     * @param line the OBJ face line
+     * @return a new {@link Face} instance
+     * @throws IllegalArgumentException if the line is invalid or has fewer than 3 vertices
      */
     public static Face parse(String line) {
-        Face face = new Face();
-        StringTokenizer tok = new StringTokenizer(line, " \t");
-        if (!tok.hasMoreTokens() || !tok.nextToken().equals("f")) {
-            throw new IllegalArgumentException("Invalid face line: " + line);
+        if (line == null) {
+            throw new IllegalArgumentException("Face line must not be null");
         }
-        while (tok.hasMoreTokens()) {
-            String part = tok.nextToken();
-            String[] refs = part.split("/");
+        StringTokenizer tokenizer = new StringTokenizer(line, " \t");
+        if (!tokenizer.hasMoreTokens() || !"f".equals(tokenizer.nextToken())) {
+            throw new IllegalArgumentException("Invalid face definition: " + line);
+        }
+
+        Face face = new Face();
+        while (tokenizer.hasMoreTokens()) {
+            String token = tokenizer.nextToken();
+            String[] parts = token.split("/");
             try {
-                int vi = Integer.parseInt(refs[0]);
-                int ti = refs.length > 1 && !refs[1].isEmpty() ? Integer.parseInt(refs[1]) : 0;
-                int ni = refs.length > 2 && !refs[2].isEmpty() ? Integer.parseInt(refs[2]) : 0;
+                int vi = Integer.parseInt(parts[0]);
+                int ti = (parts.length > 1 && !parts[1].isEmpty()) ? Integer.parseInt(parts[1]) : 0;
+                int ni = (parts.length > 2 && !parts[2].isEmpty()) ? Integer.parseInt(parts[2]) : 0;
                 face.add(vi, ti, ni);
             } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("Invalid index in face: " + part, e);
+                throw new IllegalArgumentException("Invalid index in face token: " + token, e);
             }
         }
-        if (face.vertices.size() < 3) {
-            throw new IllegalArgumentException("Face must have at least 3 vertices: " + line);
+
+        if (face.size() < 3) {
+            throw new IllegalArgumentException("A face must contain at least 3 vertices: " + line);
         }
         return face;
     }
 
+    /**
+     * Returns an iterator over the vertices in this face.
+     *
+     * @return iterator of {@link Vertex}
+     */
+    @Override
+    public Iterator<Vertex> iterator() {
+        return getVertices().iterator();
+    }
+
+    /**
+     * Returns a string representation of the face and its vertices.
+     *
+     * @return string in the form "Face{v1, v2, ...}" where vi is a {@link Vertex}
+     */
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder("Face{");
-        vertices.forEach(v -> sb.append(v).append(", "));
-        if (!vertices.isEmpty()) sb.setLength(sb.length() - 2);
-        return sb.append('}').toString();
+        for (Vertex v : vertices) {
+            sb.append(v).append(", ");
+        }
+        if (!vertices.isEmpty()) {
+            sb.setLength(sb.length() - 2);
+        }
+        sb.append('}');
+        return sb.toString();
+    }
+
+    /**
+     * Two faces are equal if their vertex lists are equal.
+     *
+     * @param obj the other object
+     * @return true if obj is a Face with the same vertices in the same order
+     */
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof Face)) return false;
+        Face other = (Face) obj;
+        return vertices.equals(other.vertices);
+    }
+
+    /**
+     * Hash code based on the vertex list.
+     *
+     * @return hash code
+     */
+    @Override
+    public int hashCode() {
+        return vertices.hashCode();
     }
 }

@@ -15,6 +15,9 @@ import java.io.File;
 import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Concrete loader for CGTEX textures defined by JSON list.
@@ -37,29 +40,39 @@ public class TextureLoader extends AbstractAssetLoader<CgtexEntry> {
     }
 
     @Override
-    protected int loadEntry(CgtexEntry entry) throws Exception {
-        String path = entry.getPath();
-        boolean flipY = entry.isFlipY();
-        boolean genMipMaps = entry.isGenerateMipmaps();
-        File file = new File(path);
-        if (!file.exists()) {
-            throw new IllegalArgumentException("CGTEX file not found: " + path);
-        }
-        CGTEXFile cgtex = new CGTEXFile(file, "r");
-        cgtex.readFileNew();
-        int count = 0;
-        for (TextureEntry te : cgtex.getEntries()) {
-            BufferedImage img = DDSDecoder.decode(
-                    te.getWidth(), te.getHeight(), te.getFormat(), te.getCompressedData()
-            );
-            ByteBuffer buf = toByteBuffer(img, flipY);
-            Image jmeImage = new Image(Image.Format.RGBA8, te.getWidth(), te.getHeight(), buf, ColorSpace.sRGB);
-            Texture2D tex = new Texture2D(jmeImage);
-            tex.setName(te.getName());
-            engine.getAssetRepo().addTexture(te.getName(), tex);
-            count++;
-        }
-        return count;
+    protected CompletableFuture<Integer> loadEntryAsync(CgtexEntry entry) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                String path = entry.getPath();
+                boolean flipY = entry.isFlipY();
+                boolean genMipMaps = entry.isGenerateMipmaps();
+                File file = new File(path);
+                if (!file.exists()) {
+                    throw new IllegalArgumentException("CGTEX file not found: " + path);
+                }
+                CGTEXFile cgtex = new CGTEXFile(file, "r");
+                cgtex.readFileNew();
+                int count = 0;
+                for (TextureEntry te : cgtex.getEntries()) {
+                    BufferedImage img = DDSDecoder.decode(
+                            te.getWidth(), te.getHeight(), te.getFormat(), te.getCompressedData()
+                    );
+                    ByteBuffer buf = toByteBuffer(img, flipY);
+                    Image jmeImage = new Image(Image.Format.RGBA8, te.getWidth(), te.getHeight(), buf, ColorSpace.sRGB);
+                    Texture2D tex = new Texture2D(jmeImage);
+                    tex.setName(te.getName());
+                    engine.getAssetRepo().addTexture(te.getName(), tex);
+                    count++;
+                }
+                return count;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }, executor).whenComplete((res, ex) -> {
+            executor.shutdown();
+        });
     }
 
     private static ByteBuffer toByteBuffer(BufferedImage img, boolean flipY) {

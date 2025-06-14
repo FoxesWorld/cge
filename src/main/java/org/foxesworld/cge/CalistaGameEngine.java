@@ -5,6 +5,8 @@ import com.jme3.app.StatsAppState;
 import com.jme3.asset.AssetManager;
 import com.jme3.math.Vector3f;
 import com.jme3.system.AppSettings;
+import org.foxesworld.cge.core.file.extensions.ydd.DrawableEntry;
+import org.foxesworld.cge.core.file.extensions.ydd.YDDFile;
 import org.foxesworld.cge.core.loader.AssetLoader;
 import org.foxesworld.cge.core.AssetRepo;
 import org.foxesworld.cge.core.ConfigService;
@@ -25,6 +27,7 @@ import org.foxesworld.cge.ui.UIModule;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.awt.image.BufferedImage;
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.logging.LogManager;
@@ -74,6 +77,7 @@ public class CalistaGameEngine extends SimpleApplication {
         LogManager.getLogManager().reset();
         SLF4JBridgeHandler.install();
         this.assetRepo = new AssetRepo(this);
+        //this.yddTest();
 
         this.popCycle = new PopCycle(this);
         this.configService = new ConfigService();
@@ -93,6 +97,18 @@ public class CalistaGameEngine extends SimpleApplication {
                 true,
                 0
         );
+    }
+
+    private void yddTest(){
+        YDDFile yddFile = new YDDFile(new File("data/skydome.ydd"), "r");
+        try {
+            yddFile.readFileNew();
+            for(DrawableEntry entry: yddFile.getDrawables()) {
+                System.out.println(entry.name);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
     @Override

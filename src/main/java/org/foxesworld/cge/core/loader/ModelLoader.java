@@ -8,6 +8,9 @@ import org.foxesworld.cge.CalistaGameEngine;
 import java.lang.reflect.Type;
 import java.nio.file.Paths;
 import java.util.List;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Asynchronous model loader with loading statistics.
@@ -32,13 +35,23 @@ public class ModelLoader extends AbstractAssetLoader<String> {
     }
 
     @Override
-    protected int loadEntry(String path) throws Exception {
-        Spatial model = assetManager.loadModel(path);
-        String key = extractModelName(path);
-        synchronized (engine.getAssetRepo().getModelsMap()) {
-            engine.getAssetRepo().addModel(key, model);
-        }
-        return 1;
+    protected CompletableFuture<Integer> loadEntryAsync(String path) {
+        ExecutorService executor = Executors.newSingleThreadExecutor();
+
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                Spatial model = assetManager.loadModel(path);
+                String key = extractModelName(path);
+                synchronized (engine.getAssetRepo().getModelsMap()) {
+                    engine.getAssetRepo().addModel(key, model);
+                }
+                return 1;
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }, executor).whenComplete((res, ex) -> {
+            executor.shutdown();
+        });
     }
 
     private String extractModelName(String path) {

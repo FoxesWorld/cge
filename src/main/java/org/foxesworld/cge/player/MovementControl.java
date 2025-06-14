@@ -5,165 +5,155 @@ import com.jme3.bullet.control.CharacterControl;
 import com.jme3.input.InputManager;
 import com.jme3.input.KeyInput;
 import com.jme3.input.controls.*;
+import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
-import com.jme3.renderer.Camera;
 import com.jme3.scene.control.AbstractControl;
 
+import static java.lang.Math.max;
+
 /**
- * Handles player movement with smooth acceleration/deceleration and jump callbacks.
- * Now uses BetterCharacterControl instead of CharacterControl.
+ * MovementControl handles first-person character motion with smooth
+ * acceleration, deceleration, and jump/landing callbacks. It relies on
+ * BetterCharacterControl for robust physics and collision handling.
  */
 public class MovementControl extends AbstractControl implements ActionListener {
 
+    /** Listener for jump start and landing events. */
     public interface JumpListener {
+        /** Called when a jump is initiated. */
         void onJumpStart();
+        /** Called when the character lands, with the peak height relative to takeoff. */
         void onLanding(float peakHeight);
     }
 
-    private static final String MAPPING_FORWARD  = "MoveForward";
-    private static final String MAPPING_BACKWARD = "MoveBackward";
-    private static final String MAPPING_LEFT     = "MoveLeft";
-    private static final String MAPPING_RIGHT    = "MoveRight";
-    private static final String MAPPING_JUMP     = "Jump";
-    private static final String MAPPING_SPRINT   = "Sprint";
+    private static final String MAP_FORWARD   = "MoveForward";
+    private static final String MAP_BACKWARD  = "MoveBackward";
+    private static final String MAP_LEFT      = "MoveLeft";
+    private static final String MAP_RIGHT     = "MoveRight";
+    private static final String MAP_JUMP      = "Jump";
+    private static final String MAP_SPRINT    = "Sprint";
 
     private final Player player;
     private final CharacterControl character;
     private final InputManager input;
-    private final Camera cam;
-    private JumpListener jumpListener;
 
     private final float walkSpeed;
     private final float sprintSpeed;
     private final float acceleration;
     private final float deceleration;
+    private final float smoothFactor;
 
     private boolean forward, backward, left, right, sprint;
+    private JumpListener jumpListener;
 
     private final Vector3f currentVel = new Vector3f();
     private final Vector3f desiredVel = new Vector3f();
-    private final Vector3f camForward  = new Vector3f();
+    private final Vector3f camDir      = new Vector3f();
     private final Vector3f camLeft     = new Vector3f();
-    private final Vector3f moveDir     = new Vector3f();
-    private final Vector3f delta       = new Vector3f();
-    private final Vector3f faceDir     = new Vector3f();
+    private final Vector3f tempDir     = new Vector3f();
 
-    private boolean wasInAir = false;
-    private float lastY      = 0f;
-    private float jumpPeak   = 0f;
+    private boolean wasInAir;
+    private float lastY;
+    private float peakY;
 
     /**
-     * @param player       Player instance containing BetterCharacterControl, InputManager, Camera, and HUD
-     * @param walkSpeed    walking speed (m/s)
-     * @param sprintSpeed  sprint speed (m/s)
-     * @param acceleration acceleration rate (m/s²)
-     * @param deceleration deceleration rate (m/s²)
+     * @param player        Player node providing camera and input
+     * @param walkSpeed     Movement speed when walking
+     * @param sprintSpeed   Movement speed when sprinting
+     * @param acceleration  Rate of speed increase (units/s²)
+     * @param deceleration  Rate of speed decrease (units/s²)
+     * @param smoothFactor  Interpolation factor for velocity smoothing (0=no smoothing, 1=instant)
      */
     public MovementControl(Player player,
                            float walkSpeed,
                            float sprintSpeed,
                            float acceleration,
-                           float deceleration) {
-        this.player       = player;
-        this.walkSpeed    = walkSpeed;
-        this.sprintSpeed  = sprintSpeed;
-        this.acceleration = acceleration;
-        this.deceleration = deceleration;
+                           float deceleration,
+                           float smoothFactor) {
+        this.player        = player;
+        this.character     = player.getCharacter();
+        this.input         = player.getInput();
+        this.walkSpeed     = walkSpeed;
+        this.sprintSpeed   = sprintSpeed;
+        this.acceleration  = acceleration;
+        this.deceleration  = deceleration;
+        this.smoothFactor  = FastMath.clamp(smoothFactor, 0f, 1f);
 
-        this.character = player.getCharacter();
-        this.input     = player.getInput();
-        this.cam       = player.getCam();
-
-        initInputMappings();
+        registerInput();
     }
 
-    private void initInputMappings() {
-        input.addMapping(MAPPING_FORWARD,  new KeyTrigger(KeyInput.KEY_W));
-        input.addMapping(MAPPING_BACKWARD, new KeyTrigger(KeyInput.KEY_S));
-        input.addMapping(MAPPING_LEFT,     new KeyTrigger(KeyInput.KEY_A));
-        input.addMapping(MAPPING_RIGHT,    new KeyTrigger(KeyInput.KEY_D));
-        input.addMapping(MAPPING_JUMP,     new KeyTrigger(KeyInput.KEY_SPACE));
-        input.addMapping(MAPPING_SPRINT,   new KeyTrigger(KeyInput.KEY_LSHIFT));
+    private void registerInput() {
+        input.addMapping(MAP_FORWARD,  new KeyTrigger(KeyInput.KEY_W));
+        input.addMapping(MAP_BACKWARD, new KeyTrigger(KeyInput.KEY_S));
+        input.addMapping(MAP_LEFT,     new KeyTrigger(KeyInput.KEY_A));
+        input.addMapping(MAP_RIGHT,    new KeyTrigger(KeyInput.KEY_D));
+        input.addMapping(MAP_JUMP,     new KeyTrigger(KeyInput.KEY_SPACE));
+        input.addMapping(MAP_SPRINT,   new KeyTrigger(KeyInput.KEY_LSHIFT));
         input.addListener(this,
-                MAPPING_FORWARD, MAPPING_BACKWARD, MAPPING_LEFT,
-                MAPPING_RIGHT, MAPPING_JUMP, MAPPING_SPRINT
-        );
+                MAP_FORWARD, MAP_BACKWARD, MAP_LEFT,
+                MAP_RIGHT, MAP_JUMP, MAP_SPRINT);
     }
 
     @Override
     protected void controlUpdate(float tpf) {
-        moveDir.set(0, 0, 0);
-        if (forward)  moveDir.z += 1f;
-        if (backward) moveDir.z -= 1f;
-        if (left)     moveDir.x += 1f;
-        if (right)    moveDir.x -= 1f;
+        // Determine desired direction based on input
+        tempDir.set(0, 0, 0);
+        if (forward)  tempDir.z += 1f;
+        if (backward) tempDir.z -= 1f;
+        if (left)     tempDir.x += 1f;
+        if (right)    tempDir.x -= 1f;
 
-        if (!moveDir.equals(Vector3f.ZERO)) {
-            moveDir.normalizeLocal();
-            cam.getDirection(camForward).setY(0).normalizeLocal();
-            cam.getLeft(camLeft).setY(0).normalizeLocal();
-            desiredVel.set(camForward).multLocal(moveDir.z).addLocal(camLeft.mult(moveDir.x));
-
-            float maxSpeed = sprint ? sprintSpeed : walkSpeed;
-            desiredVel.multLocal(maxSpeed);
-
-            delta.set(desiredVel).subtractLocal(currentVel);
-            float accelRate = ((desiredVel.lengthSquared() > currentVel.lengthSquared())
-                    ? acceleration : deceleration) * tpf;
-            if (delta.lengthSquared() > accelRate * accelRate) {
-                delta.normalizeLocal().multLocal(accelRate);
-            }
-            currentVel.addLocal(delta);
-
-            character.setWalkDirection(currentVel);
-
-            faceDir.set(currentVel.x, 0, currentVel.z);
-            if (faceDir.lengthSquared() > 1e-4f) {
-                character.setViewDirection(faceDir.normalizeLocal());
-            }
+        if (!tempDir.equals(Vector3f.ZERO)) {
+            tempDir.normalizeLocal();
+            player.getCam().getDirection(camDir).setY(0).normalizeLocal();
+            player.getCam().getLeft(camLeft).setY(0).normalizeLocal();
+            desiredVel.set(camDir).multLocal(tempDir.z)
+                    .addLocal(camLeft.multLocal(tempDir.x));
+            desiredVel.multLocal(sprint ? sprintSpeed : walkSpeed);
         } else {
-            if (currentVel.lengthSquared() > 1e-4f) {
-                delta.set(currentVel).normalizeLocal().negateLocal().multLocal(deceleration * tpf);
-                if (delta.lengthSquared() > currentVel.lengthSquared()) {
-                    currentVel.set(0, 0, 0);
-                } else {
-                    currentVel.addLocal(delta);
-                }
-                character.setWalkDirection(currentVel);
-            } else {
-                currentVel.set(0, 0, 0);
-                character.setWalkDirection(Vector3f.ZERO);
-            }
+            desiredVel.set(0, 0, 0);
         }
 
-        float currentY = player.getLocalTranslation().y;
+        // Smoothly interpolate current velocity toward desired
+        float alpha = 1f - FastMath.pow(1f - smoothFactor, tpf * 60f);
+        currentVel.interpolateLocal(desiredVel, alpha);
+        character.setWalkDirection(currentVel);
+
+        // Update facing direction if moving
+        if (currentVel.lengthSquared() > 1e-4f) {
+            Vector3f viewDir = currentVel.normalize();
+            character.setViewDirection(new Vector3f(viewDir.x, 0, viewDir.z));
+        }
+
+        // Jump and landing detection
         boolean inAir = !character.onGround();
+        float posY = spatial.getWorldTranslation().y;
+
         if (inAir) {
-            float deltaY = currentY - lastY;
-            if (deltaY > 0) {
-                jumpPeak = Math.max(jumpPeak, currentY);
+            if (posY > lastY) {
+                peakY = max(peakY, posY);
             }
         }
         if (wasInAir && !inAir && jumpListener != null) {
-            float peakHeight = jumpPeak - lastY;
-            jumpListener.onLanding(peakHeight);
-            jumpPeak = 0f;
+            jumpListener.onLanding(peakY - lastY);
+            peakY = 0f;
         }
         wasInAir = inAir;
-        lastY   = currentY;
+        lastY    = posY;
 
-        player.getPlayerHud().setPlayerSpeed(getCurrentSpeed());
+        // Update HUD speed display
+        player.getPlayerHud().setPlayerSpeed(currentVel.length());
     }
 
     @Override
     public void onAction(String name, boolean isPressed, float tpf) {
         switch (name) {
-            case MAPPING_FORWARD  -> forward  = isPressed;
-            case MAPPING_BACKWARD -> backward = isPressed;
-            case MAPPING_LEFT     -> left     = isPressed;
-            case MAPPING_RIGHT    -> right    = isPressed;
-            case MAPPING_SPRINT   -> sprint   = isPressed;
-            case MAPPING_JUMP -> {
+            case MAP_FORWARD   -> forward  = isPressed;
+            case MAP_BACKWARD  -> backward = isPressed;
+            case MAP_LEFT      -> left     = isPressed;
+            case MAP_RIGHT     -> right    = isPressed;
+            case MAP_SPRINT    -> sprint   = isPressed;
+            case MAP_JUMP      -> {
                 if (isPressed && character.onGround()) {
                     character.jump();
                     if (jumpListener != null) {
@@ -179,15 +169,18 @@ public class MovementControl extends AbstractControl implements ActionListener {
         // Not used
     }
 
+    /** Registers a listener for jump start and landing events. */
     public void setJumpListener(JumpListener listener) {
         this.jumpListener = listener;
     }
 
+    /** @return current horizontal speed in world units per second. */
     public float getCurrentSpeed() {
-        return (float) Math.sqrt(currentVel.x * currentVel.x + currentVel.z * currentVel.z);
+        return currentVel.length();
     }
 
+    /** @return true if the character is currently moving. */
     public boolean isMoving() {
-        return currentVel.x * currentVel.x + currentVel.z * currentVel.z > 1e-4f;
+        return getCurrentSpeed() > 1e-4f;
     }
 }

@@ -13,10 +13,10 @@ import com.jme3.scene.control.AbstractControl;
 import com.jme3.scene.control.Control;
 
 /**
- * CameraEffectsControl отвечает за визуальные эффекты камеры при движении персонажа:
- *  - «боб» при ходьбе/беге;
- *  - плавный подъём при старте прыжка;
- *  - сглаженный «удар» и затухание при приземлении.
+ * CameraEffectsControl handles first-person camera motion effects such as:
+ * - bobbing while walking or running;
+ * - smooth rising during jump start;
+ * - smooth landing bump effect.
  */
 public class CameraEffectsControl extends AbstractControl {
 
@@ -26,7 +26,7 @@ public class CameraEffectsControl extends AbstractControl {
     private final CharacterControl characterCtrl;
     private final float characterHeight;
 
-    private float verticalOffset;
+    private float verticalOffsetSmoothed;
     private float bobbingPhase = 0f;
     private float bobbingAmplitude;
     private float bobbingFrequency;
@@ -38,6 +38,8 @@ public class CameraEffectsControl extends AbstractControl {
     private float landingShakeDuration;
     private float landingShakeTimer = 0f;
 
+    private final Vector3f tempCamPos = new Vector3f();
+
     public CameraEffectsControl(Player player) {
         this.player = player;
         this.cam = player.getCam();
@@ -46,7 +48,7 @@ public class CameraEffectsControl extends AbstractControl {
 
         CollisionShape shape = characterCtrl.getCharacter().getCollisionShape();
         if (!(shape instanceof CapsuleCollisionShape)) {
-            throw new IllegalStateException("CameraEffectsControl ожидает CapsuleCollisionShape");
+            throw new IllegalStateException("CameraEffectsControl expects CapsuleCollisionShape");
         }
         CapsuleCollisionShape capsule = (CapsuleCollisionShape) shape;
         this.characterHeight = capsule.getHeight() + 2f * capsule.getRadius();
@@ -55,7 +57,7 @@ public class CameraEffectsControl extends AbstractControl {
     }
 
     private void initParameters() {
-        verticalOffset = characterHeight / 2f;
+        verticalOffsetSmoothed = characterHeight / 2f;
         bobbingAmplitude = 0.03f;
         bobbingFrequency = 6.0f;
         landingShakeDuration = 0.3f;
@@ -80,41 +82,42 @@ public class CameraEffectsControl extends AbstractControl {
         Vector3f charPos = characterCtrl.getPhysicsLocation();
         float halfHeight = characterHeight / 2f;
 
+        float targetOffset;
+
         if (isJumping) {
-            float currentY = charPos.y;
-            float targetOffset = (currentY - jumpStartHeight) + halfHeight;
-            verticalOffset = FastMath.interpolateLinear(tpf * 4f, verticalOffset, targetOffset);
+            float jumpOffset = (charPos.y - jumpStartHeight) + halfHeight;
+            targetOffset = jumpOffset;
 
         } else if (landingShakeTimer > 0f) {
             float shake = computeLandingShake();
             landingShakeTimer = Math.max(landingShakeTimer - tpf, 0f);
-            float targetOffset = halfHeight - shake;
-            verticalOffset = FastMath.interpolateLinear(tpf * 8f, verticalOffset, targetOffset);
+            targetOffset = halfHeight - shake;
 
         } else if (moveCtrl.isMoving() && characterCtrl.onGround()) {
-            float walkSpeed = player.getWalkSpeed();
-            float sprintSpeed = player.getSprintSpeed();
-            float totalSpeed = walkSpeed + sprintSpeed;
-            if (totalSpeed <= 0f) totalSpeed = 0.0001f; // предохранитель от деления на 0
+            float speedFactor = FastMath.clamp(
+                    moveCtrl.getCurrentSpeed() / (player.getWalkSpeed() + player.getSprintSpeed()),
+                    0f, 1f
+            );
 
-            float speedFactor = moveCtrl.getCurrentSpeed() / totalSpeed;
             bobbingPhase = (bobbingPhase + FastMath.TWO_PI * bobbingFrequency * tpf * speedFactor) % FastMath.TWO_PI;
-
-            float bobOffset = FastMath.sin(bobbingPhase) * bobbingAmplitude;
-            float targetOffset = halfHeight + bobOffset;
-            verticalOffset = FastMath.interpolateLinear(tpf * 5f, verticalOffset, targetOffset);
+            float bobOffset = FastMath.sin(bobbingPhase) * bobbingAmplitude * speedFactor;
+            targetOffset = halfHeight + bobOffset;
 
         } else {
-            verticalOffset = FastMath.interpolateLinear(tpf * 5f, verticalOffset, halfHeight);
+            targetOffset = halfHeight;
             bobbingPhase = 0f;
         }
 
-        cam.setLocation(new Vector3f(charPos.x, charPos.y + verticalOffset, charPos.z));
+        // Smooth vertical movement (low-pass filter)
+        verticalOffsetSmoothed = FastMath.interpolateLinear(tpf * 6f, verticalOffsetSmoothed, targetOffset);
+
+        // Apply camera movement
+        cam.getLocation().set(charPos).addLocal(0, verticalOffsetSmoothed, 0);
     }
 
     @Override
     protected void controlRender(RenderManager rm, ViewPort vp) {
-        // не используется
+        // Not used
     }
 
     @Override

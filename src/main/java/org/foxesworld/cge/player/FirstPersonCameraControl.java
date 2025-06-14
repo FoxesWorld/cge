@@ -10,85 +10,110 @@ import com.jme3.renderer.Camera;
 import com.jme3.scene.control.AbstractControl;
 
 /**
- * FirstPersonCameraControl обеспечивает «реал‐тайм» mouse‐look без артефактов
- * и «мигания» прошлого кадра. Камера привязывается напрямую к объекту Player:
- * каждый кадр мы устанавливаем положение камеры на (worldX, worldY+eyeHeight, worldZ)
- * и поворачиваем её по yaw/pitch, без использования CameraNode.
+ * FirstPersonCameraControl provides a smooth, artifact-free first-person
+ * mouse look by decoupling raw input processing from camera updates.
+ * It applies configurable smoothing and sensitivity and ensures the camera
+ * stays at the correct eye height relative to the player spatial each frame.
  */
 public class FirstPersonCameraControl extends AbstractControl implements AnalogListener {
 
-    private final Camera       cam;
+    private final Camera cam;
     private final InputManager input;
-    private final float        eyeHeight;
-    private float              yaw       = 0f;
-    private float              pitch     = 0f;
-    private final float        hSensitivity;
-    private final float        vSensitivity;
+    private final float eyeHeight;
+    private final float hSensitivity;
+    private final float vSensitivity;
+    private final float smoothingFactor;
 
-    private static final String MOUSE_LEFT  = "FP_Mouse_Left";
-    private static final String MOUSE_RIGHT = "FP_Mouse_Right";
-    private static final String MOUSE_UP    = "FP_Mouse_Up";
-    private static final String MOUSE_DOWN  = "FP_Mouse_Down";
+    private float targetYaw   = 0f;
+    private float targetPitch = 0f;
+    private float yaw         = 0f;
+    private float pitch       = 0f;
+
+    private static final String MAPPING_LEFT   = "FP_Mouse_Left";
+    private static final String MAPPING_RIGHT  = "FP_Mouse_Right";
+    private static final String MAPPING_UP     = "FP_Mouse_Up";
+    private static final String MAPPING_DOWN   = "FP_Mouse_Down";
 
     /**
-     * @param player        ссылка на Player (даёт доступ к getInput() и getCam())
-     * @param eyeHeight     высота камеры над головой игрока (например, 1.6f)
-     * @param hSensitivity  чувствительность горизонтального поворота
-     * @param vSensitivity  чувствительность вертикального поворота
+     * Constructs a new FirstPersonCameraControl.
+     *
+     * @param player        Reference to the Player node used to get camera and input
+     * @param eyeHeight     Vertical offset of the camera above the player origin, in world units
+     * @param hSensitivity  Horizontal mouse sensitivity multiplier
+     * @param vSensitivity  Vertical mouse sensitivity multiplier
+     * @param smoothing     How quickly the camera interpolates to the target rotation (0=no smoothing, 1=instant)
      */
-    public FirstPersonCameraControl(Player player, float eyeHeight, float hSensitivity, float vSensitivity) {
-        this.cam           = player.getCam();
-        this.input         = player.getInput();
-        this.eyeHeight     = eyeHeight;
-        this.hSensitivity  = hSensitivity;
-        this.vSensitivity  = vSensitivity;
+    public FirstPersonCameraControl(Player player,
+                                    float eyeHeight,
+                                    float hSensitivity,
+                                    float vSensitivity,
+                                    float smoothing) {
+        this.cam            = player.getCam();
+        this.input          = player.getInput();
+        this.eyeHeight      = eyeHeight;
+        this.hSensitivity   = hSensitivity;
+        this.vSensitivity   = vSensitivity;
+        this.smoothingFactor = FastMath.clamp(smoothing, 0f, 1f);
 
-        initMouseMappings();
+        setupMouseMappings();
         input.setCursorVisible(false);
-        // Если в вашей JME‐версии доступно захватить курсор, допишите:
-        // input.setCursorCaptured(true);
+        // Enable raw cursor capture if supported:
+        try {
+            //input.setCursorCaptured(true);
+        } catch (UnsupportedOperationException ignored) {
+        }
     }
 
-    private void initMouseMappings() {
-        // Четыре маппинга: влево/вправо по оси X, вверх/вниз по оси Y
-        input.addMapping(MOUSE_LEFT,  new MouseAxisTrigger(MouseInput.AXIS_X, true));
-        input.addMapping(MOUSE_RIGHT, new MouseAxisTrigger(MouseInput.AXIS_X, false));
-        input.addMapping(MOUSE_UP,    new MouseAxisTrigger(MouseInput.AXIS_Y, true));
-        input.addMapping(MOUSE_DOWN,  new MouseAxisTrigger(MouseInput.AXIS_Y, false));
-        input.addListener(this, MOUSE_LEFT, MOUSE_RIGHT, MOUSE_UP, MOUSE_DOWN);
+    private void setupMouseMappings() {
+        input.addMapping(MAPPING_LEFT,  new MouseAxisTrigger(MouseInput.AXIS_X, true));
+        input.addMapping(MAPPING_RIGHT, new MouseAxisTrigger(MouseInput.AXIS_X, false));
+        input.addMapping(MAPPING_UP,    new MouseAxisTrigger(MouseInput.AXIS_Y, true));
+        input.addMapping(MAPPING_DOWN,  new MouseAxisTrigger(MouseInput.AXIS_Y, false));
+        input.addListener(this, MAPPING_LEFT, MAPPING_RIGHT, MAPPING_UP, MAPPING_DOWN);
     }
 
     @Override
     protected void controlUpdate(float tpf) {
-        // 1) Применяем yaw/pitch к камере
-        float maxPitch = FastMath.HALF_PI - 0.01f;
-        if (pitch > maxPitch)  pitch = maxPitch;
-        if (pitch < -maxPitch) pitch = -maxPitch;
-        Quaternion rot = new Quaternion().fromAngles(pitch, yaw, 0);
-        cam.setRotation(rot);
+        // Smoothly interpolate yaw/pitch towards target
+        float alpha = 1f - FastMath.pow(1f - smoothingFactor, tpf * 60f);
+        yaw   = FastMath.interpolateLinear(alpha, yaw, targetYaw);
+        pitch = FastMath.interpolateLinear(alpha, pitch, targetPitch);
 
-        // 2) Устанавливаем положение камеры:
-        //    берём мировую позицию объекта (spatial) и добавляем eyeHeight по Y
-        Vector3f worldPos = spatial.getWorldTranslation();
-        cam.setLocation(new Vector3f(
-                worldPos.x,
-                worldPos.y + eyeHeight,
-                worldPos.z));
+        // Clamp pitch to avoid flipping
+        float maxPitch = FastMath.HALF_PI - 0.01f;
+        pitch = FastMath.clamp(pitch, -maxPitch, maxPitch);
+
+        // Apply rotation
+        Quaternion rotation = new Quaternion().fromAngles(pitch, yaw, 0f);
+        cam.setRotation(rotation);
+
+        // Update camera position to follow spatial + eyeHeight
+        Vector3f pos = spatial.getWorldTranslation();
+        cam.setLocation(pos.add(0, eyeHeight, 0));
     }
 
     @Override
-    protected void controlRender(com.jme3.renderer.RenderManager rm, com.jme3.renderer.ViewPort vp) {
-        // Не используется
+    protected void controlRender(com.jme3.renderer.RenderManager rm,
+                                 com.jme3.renderer.ViewPort vp) {
+        // Not used
     }
 
     @Override
     public void onAnalog(String name, float value, float tpf) {
         switch (name) {
-            case MOUSE_LEFT  -> yaw   += value * hSensitivity;
-            case MOUSE_RIGHT -> yaw   -= value * hSensitivity;
-            case MOUSE_UP    -> pitch += value * vSensitivity;
-            case MOUSE_DOWN  -> pitch -= value * vSensitivity;
+            case MAPPING_LEFT  -> targetYaw   += value * hSensitivity;
+            case MAPPING_RIGHT -> targetYaw   -= value * hSensitivity;
+            case MAPPING_UP    -> targetPitch += value * vSensitivity;
+            case MAPPING_DOWN  -> targetPitch -= value * vSensitivity;
         }
-        // Обновление поворота произойдёт в controlUpdate(), избегая «мигания»
+        // We update actual cam rotation in controlUpdate to avoid artifacts
+    }
+
+    @Override
+    public void setSpatial(com.jme3.scene.Spatial spatial) {
+        super.setSpatial(spatial);
+        // Reset rotation targets when attaching
+        targetYaw = yaw = 0f;
+        targetPitch = pitch = 0f;
     }
 }

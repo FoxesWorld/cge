@@ -20,23 +20,10 @@ public class CGMATFile extends AbstractFile<CGMATMetadata> {
     private final List<MaterialEntry> entries = new ArrayList<>();
 
     public CGMATFile(File file, String mode) throws IOException {
-        super(file, mode);
+        super(file, mode, "CGMAT");
         setMAGIC("CGMT");
         setVERSION(1);
-        loadFormatDefinition();
         readFileNew();
-    }
-
-    private void loadFormatDefinition() {
-        try {
-            FileStructureLoader loader = new JsonFileStructureLoader(
-                    CGMATFile.class.getClassLoader().getResourceAsStream("cgmat.json")
-            );
-            FileFormatDefinition format = loader.loadFormatDefinition("CGMAT");
-            setFormatDefinition(format);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to load CGMAT format", e);
-        }
     }
 
     @Override

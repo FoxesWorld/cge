@@ -35,6 +35,7 @@ public class Player extends Node {
     private final float maxStamina = 1.0f;
     private final float staminaDrainRate = 0.3f;
     private final float staminaRegenRate = 0.05f;
+    private final float smoothFactor = 2f;
 
     /**
      * Creates a new Player instance.
@@ -69,11 +70,11 @@ public class Player extends Node {
         input.setCursorVisible(false);
 
         FirstPersonCameraControl fpCamControl = new FirstPersonCameraControl(
-                this, eyeHeight, 0.2f, 0.2f
+                this, eyeHeight, 0.2f, 0.2f, smoothFactor
         );
         addControl(fpCamControl);
 
-        this.movementControl = new MovementControl(this, walkSpeed, sprintSpeed, acceleration, deceleration);
+        this.movementControl = new MovementControl(this, walkSpeed, sprintSpeed, acceleration, deceleration, smoothFactor);
         addControl(movementControl);
 
         this.camEffectsControl = new CameraEffectsControl(this);
@@ -206,7 +207,7 @@ public class Player extends Node {
             ui.addPanel(this, "Interface/stats_config.xml");
 
             // Add crosshair at screen center (optional)
-            // ui.addImage(this, "Interface/crosshair.png", 5f, 5f, 32, 32);
+            //ui.addImage(this, "Interface/crosshair.png", 5f, 5f, 32, 32);
         }
 
         public void setPlayerSpeed(float speed) {

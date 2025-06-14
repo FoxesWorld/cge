@@ -4,11 +4,15 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.core.file.definition.FieldDefinition;
 import org.foxesworld.cge.core.file.definition.FileFormatDefinition;
+import org.foxesworld.cge.core.file.definition.FileStructureLoader;
+import org.foxesworld.cge.core.file.definition.JsonFileStructureLoader;
+import org.foxesworld.cge.core.file.extensions.cgs.CGSFile;
 import org.foxesworld.cge.core.io.RawByteParser;
 
 import java.io.File;
 import java.io.IOException;
 import java.io.RandomAccessFile;
+import java.math.BigInteger;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
@@ -40,10 +44,22 @@ public abstract class AbstractFile<M extends Metadata> {
      * @param file the file to open
      * @param mode the access mode (e.g., "r", "rw")
      */
-    protected AbstractFile(File file, String mode) {
+    protected AbstractFile(File file, String mode, String formatDefinition) {
         this.file = file;
         this.fileReader = new FileReader(this, mode);
         this.raf = this.fileReader.getRaf();
+        this.loadFormatDefinition(formatDefinition);
+    }
+
+    private void loadFormatDefinition(String definition) {
+        try {
+            FileStructureLoader loader = new JsonFileStructureLoader(
+                    CGSFile.class.getClassLoader().getResourceAsStream(definition.toLowerCase() + ".json")
+            );
+            setFormatDefinition(loader.loadFormatDefinition(definition));
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to load "+ definition + "format", e);
+        }
     }
 
     /**
@@ -69,13 +85,25 @@ public abstract class AbstractFile<M extends Metadata> {
      * @throws IOException if an I/O error occurs
      */
     protected Object readField(FieldDefinition field, Map<String, Object> context) throws IOException {
+        BYTE_ORDER = field.getByteOrder();
         return switch (field.getType()) {
-            case "byte" -> raf.readByte();
-            case "ushort" -> raf.readUnsignedShort();
-            case "int" -> readInt(field);
-            case "long" -> readLong();
-            case "length" -> raf.length();
-            case "string" -> {
+            case "byte"      -> raf.readByte();
+            case "ushort"    -> raf.readUnsignedShort();
+            case "int", "int32"    -> readInt(field);
+            case "uint32"    -> this.readInt(field) & 0xFFFFFFFFL;
+            case "long", "int64"   -> readLong();
+            case "uint64"    -> {
+                long signed = readLong();
+                BigInteger ui64 = BigInteger.valueOf(signed);
+                if (signed < 0) {
+                    ui64 = ui64.add(BigInteger.ONE.shiftLeft(64));
+                }
+                yield ui64;
+            }
+            case "float"     -> raf.readFloat();
+            case "double"    -> raf.readDouble();
+            case "length"    -> raf.length();
+            case "string"    -> {
                 int length = field.getLength() != null
                         ? field.getLength()
                         : (int) context.get(field.getLengthField());
@@ -91,13 +119,12 @@ public abstract class AbstractFile<M extends Metadata> {
                 raf.readFully(bytes);
                 yield bytes;
             }
-            case "array" -> {
+            case "array"     -> {
                 int count = (int) context.get(field.getCountField());
                 List<Map<String, Object>> elements = new ArrayList<>();
                 for (int i = 0; i < count; i++) {
                     Map<String, Object> elementContext = new HashMap<>();
-                    List<FieldDefinition> fields = field.getElement().getFields();
-                    for (FieldDefinition subField : fields) {
+                    for (FieldDefinition subField : field.getElement().getFields()) {
                         Object value = readField(subField, elementContext);
                         elementContext.put(subField.getName(), value);
                     }
@@ -177,13 +204,15 @@ public abstract class AbstractFile<M extends Metadata> {
      * @throws IOException if an I/O error occurs
      */
     public int readInt(FieldDefinition field) throws IOException {
+        byte[] bytes = new byte[4];
+        raf.readFully(bytes);
         if (field.getSeek() != null && field.getSeek().contains("->")) {
             String[] seekOption = field.getSeek().split("->");
             if (seekOption[0].equals("header")) {
                 raf.seek(metadata.getTableOffset());
             }
         }
-        return raf.readInt();
+        return ByteBuffer.wrap(bytes).order(BYTE_ORDER).getInt();
     }
 
     /**
@@ -203,7 +232,9 @@ public abstract class AbstractFile<M extends Metadata> {
      * @throws IOException if an I/O error occurs
      */
     public long readLong() throws IOException {
-        return raf.readLong();
+        byte[] bytes = new byte[8];
+        raf.readFully(bytes);
+        return ByteBuffer.wrap(bytes).order(BYTE_ORDER).getLong();
     }
 
     /**

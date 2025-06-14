@@ -28,10 +28,10 @@ public class CGTEXFile extends AbstractFile<CGTEXMetadata> {
      * @param mode the mode to open the file in (e.g., "r", "rw")
      */
     public CGTEXFile(File file, String mode) {
-        super(file, mode);
+        super(file, mode, "CGTEX");
         setMAGIC("CGTX");
         setVERSION(1);
-        loadFormatDefinition();
+        //loadFormatDefinition();
     }
 
     /**

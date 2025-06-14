@@ -4,6 +4,9 @@ import com.jme3.asset.AssetInfo;
 import com.jme3.asset.AssetLoader;
 import com.jme3.asset.AssetManager;
 import com.jme3.asset.ModelKey;
+import com.jme3.bullet.collision.shapes.CollisionShape;
+import com.jme3.bullet.control.RigidBodyControl;
+import com.jme3.bullet.util.CollisionShapeFactory;
 import com.jme3.material.Material;
 import com.jme3.material.RenderState;
 import com.jme3.math.ColorRGBA;
@@ -19,6 +22,7 @@ import com.jme3.scene.Spatial;
 import com.jme3.scene.VertexBuffer;
 import com.jme3.texture.Texture;
 import com.jme3.util.BufferUtils;
+import org.foxesworld.cge.physics.PhysicsModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.foxesworld.cge.tmp.obj.utils.MeshUtils;
@@ -140,6 +144,14 @@ public class OBJImporter implements AssetLoader {
                     case "map_Bump"-> current.setNormalMap(p[1]);
                     case "uvscale" -> applyUVScale(p, current);
                     case "size" -> applyScale(p, current);
+                    case "mass" -> {
+                        try {
+                            float m = Float.parseFloat(p[1]);
+                            current.setMass(m);
+                        } catch(NumberFormatException e) {
+                            logger.warn("Invalid mass '{}', defaulting to 1", p[1]);
+                        }
+                    }
                     default -> logger.trace("Ignored MTL token: {}", p[0]);
                 }
             }
@@ -168,27 +180,49 @@ public class OBJImporter implements AssetLoader {
 
         // unified buffer builder
         mesh.setBuffer(VertexBuffer.Type.Position, 3,
-                buildBuffer(vCount, i-> toArray(data.vertices.get(i)), "position", assetInfo));
+                buildBuffer(vCount, i -> toArray(data.vertices.get(i)), "position", assetInfo));
         mesh.setBuffer(VertexBuffer.Type.Normal,   3,
-                buildBuffer(vCount, i-> hasNorm? toArray(data.normals.get(i)): new float[]{0,1,0}, "normal", assetInfo));
+                buildBuffer(vCount, i -> hasNorm ? toArray(data.normals.get(i)) : new float[]{0,1,0},
+                        "normal", assetInfo));
         mesh.setBuffer(VertexBuffer.Type.TexCoord, 2,
-                buildBuffer(vCount, i-> hasUV? toArray(data.uvs.get(i)): new float[]{0,0}, "texcoord", assetInfo));
+                buildBuffer(vCount, i -> hasUV   ? toArray(data.uvs.get(i))     : new float[]{0,0},
+                        "texcoord", assetInfo));
         mesh.setBuffer(VertexBuffer.Type.Index,   3,
                 buildIndex(data.faces, assetInfo));
 
-        if (hasNorm && hasUV) MeshUtils.computeTangentBinormal(mesh);
+        if (hasNorm && hasUV) {
+            MeshUtils.computeTangentBinormal(mesh);
+        }
 
         Geometry geom = new Geometry("OBJGeom", mesh);
         geom.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
 
-        if (data.material!=null) {
+        // Apply material, UVs, and scale if present
+        if (data.material != null) {
             Material mat = createMaterial(assetInfo.getManager(), data.material);
             geom.setMaterial(mat);
             applyAutoUV(mesh, data.vertices, data.material, assetInfo.getManager());
-            if (data.material.getScale()!=null) geom.setLocalScale(data.material.getScale());
+            if (data.material.getScale() != null) {
+                geom.setLocalScale(data.material.getScale());
+            }
         }
+
+        // --- NEW: Physics setup with mass from MaterialData ---
+        float mass = Optional.ofNullable(data.material)
+                .map(MaterialData::getMass)
+                .orElse(1f);
+
+        // Create a collision shape from the mesh
+        CollisionShape shape =
+                CollisionShapeFactory.createDynamicMeshShape(geom);
+
+        // Attach a rigid body control with that mass
+        RigidBodyControl rbc = new RigidBodyControl(shape, mass);
+        geom.addControl(rbc);
+
         return geom;
     }
+
     private float[] toArray(Vector3f v) { return new float[]{v.x,v.y,v.z}; }
     private float[] toArray(Vector2f v) { return new float[]{v.x,v.y}; }
 
@@ -205,8 +239,8 @@ public class OBJImporter implements AssetLoader {
         int tris = faces.stream().mapToInt(f->Math.max(1, f.size()-2)).sum();
         IntBuffer ib = BufferUtils.createIntBuffer(tris*3);
         faces.forEach(f->{
-            if (f.size()==3) f.getVertices().forEach(v-> ib.put(v.getVertexIndex()-1));
-            else f.triangulate().forEach(t-> t.getVertices().forEach(v-> ib.put(v.getVertexIndex()-1)));
+            if (f.size()==3) f.getVertices().forEach(v-> ib.put(v.vertexIndex()-1));
+            else f.triangulate().forEach(t-> t.getVertices().forEach(v-> ib.put(v.vertexIndex()-1)));
         });
         ib.flip(); if (!ib.hasRemaining()) throw new RendererException("Empty index for " + info.getKey());
         return ib;

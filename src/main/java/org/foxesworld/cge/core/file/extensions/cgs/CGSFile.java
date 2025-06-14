@@ -28,26 +28,13 @@ public class CGSFile extends AbstractFile<CGSMetadata> {
      * @param mode the mode in which to open the file (e.g., "r" or "rw")
      */
     public CGSFile(File file, String mode) {
-        super(file, mode);
+        super(file, mode, "CGS");
         setMAGIC("CGS0");
         setVERSION(1);
         setBYTE_ORDER(ByteOrder.LITTLE_ENDIAN);
-        loadFormatDefinition();
     }
 
-    /**
-     * Loads the file format definition from the JSON descriptor.
-     */
-    private void loadFormatDefinition() {
-        try {
-            FileStructureLoader loader = new JsonFileStructureLoader(
-                    CGSFile.class.getClassLoader().getResourceAsStream("cgs.json")
-            );
-            setFormatDefinition(loader.loadFormatDefinition("CGS"));
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to load CGS format", e);
-        }
-    }
+
 
     /**
      * Called when a chunk entry has been parsed. Populates the chunk table.

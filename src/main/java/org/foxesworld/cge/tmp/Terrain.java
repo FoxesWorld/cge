@@ -34,7 +34,7 @@ public class Terrain {
 
         Quad quad = new Quad(width, height);
         Geometry terrain = new Geometry("TerrainPlane", quad);
-        terrain.getMesh().scaleTextureCoordinates(new Vector2f(8, 8));
+        terrain.getMesh().scaleTextureCoordinates(new Vector2f(32, 32));
         terrain.setLocalTranslation(-width / 2f, 0, height / 2f);
         terrain.rotate(-FastMath.HALF_PI, 0, 0);
         terrain.setMaterial(mat);

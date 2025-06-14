@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.core.utils.CallbackLatch;
+import org.foxesworld.cge.tmp.CgtexEntry;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -15,7 +16,7 @@ import java.util.concurrent.Executors;
 
 /**
  * A generic asynchronous JSON list loader that reads a list of entries of type {@code E}
- * from a JSON resource and processes each entry using the {@link #loadEntry(Object)} method.
+ * from a JSON resource and processes each entry using the {@link #loadAllAsync()} method.
  * <p>
  * Subclasses must specify the JSON resource location, the GSON list type, and the logic to
  * load each entry. Supports both standalone asynchronous loading via {@link #loadAllAsync()}
@@ -57,13 +58,12 @@ abstract class AbstractAssetLoader<E> {
      *
      * @param entry the entry parsed from JSON
      * @return the number of successfully loaded items (>=0)
-     * @throws Exception if loading fails for this entry
      */
-    protected abstract int loadEntry(E entry) throws Exception;
+    protected abstract CompletableFuture<Integer> loadEntryAsync(E entry);
 
     /**
      * Asynchronously loads all entries defined in the JSON resource,
-     * invoking {@link #loadEntry(Object)} for each and returning a
+     * invoking {@link #loadEntryAsync(Object)} for each and returning a
      * {@link CompletableFuture} that completes with the total count of loaded items.
      *
      * @return future with total number of loaded items
@@ -81,7 +81,7 @@ abstract class AbstractAssetLoader<E> {
                 List<E> entries = gson.fromJson(reader, getListType());
                 for (E entry : entries) {
                     try {
-                        total += loadEntry(entry);
+                        total += loadEntryAsync(entry).get();
                     } catch (Exception ex) {
                         logger.warn("Failed to load entry {}: {}", entry, ex.getMessage());
                     }

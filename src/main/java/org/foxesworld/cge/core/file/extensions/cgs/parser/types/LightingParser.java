@@ -64,7 +64,7 @@ public class LightingParser extends ChunkParser {
                 // Добавляем свет в rootNode в главном потоке
                 //TODO
                 engine.enqueue(() ->{
-                    engine.getRootNode().addLight(light);
+                    //engine.getRootNode().addLight(light);
                 });
                 //*********************8********************
                 //logger.debug("Added light '{}' to {}", light.getName(), engine.getScene().getCgsMetadata().getSceneName());

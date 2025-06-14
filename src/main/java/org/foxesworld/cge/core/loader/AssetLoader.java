@@ -11,7 +11,6 @@ import org.foxesworld.cge.core.utils.CallbackLatch;
  */
 public class AssetLoader {
     private static final Logger logger = LogManager.getLogger(AssetLoader.class);
-
     private final TextureLoader textureLoader;
     private final ModelLoader modelLoader;
 

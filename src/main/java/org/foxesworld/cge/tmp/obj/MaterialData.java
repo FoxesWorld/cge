@@ -35,6 +35,7 @@ public class MaterialData {
     private String diffuseMap;
     private String normalMap;
     private String emissiveMap;
+    private float mass;
 
     // === Transparency ===
     private boolean transparent = false;
@@ -160,6 +161,14 @@ public class MaterialData {
 
     public void setTransparent(boolean transparent) {
         this.transparent = transparent;
+    }
+
+    public void setMass(float mass) {
+        this.mass = mass;
+    }
+
+    public float getMass() {
+        return mass;
     }
 
     @Override
