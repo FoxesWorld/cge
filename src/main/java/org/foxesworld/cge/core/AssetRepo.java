@@ -11,15 +11,18 @@ import org.foxesworld.cge.CalistaGameEngine;
 import java.util.Collections;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 /**
  * Thread-safe repository for game assets (textures and models).
- * Supports concurrent access and modification.
+ * Uses generic helper methods to avoid duplication.
  */
 public class AssetRepo {
     private static final Logger logger = LogManager.getLogger(AssetRepo.class);
+
     private final Map<String, Texture> textureMap = new ConcurrentHashMap<>();
-    private final Map<String, Spatial> modelsMap = new ConcurrentHashMap<>();
+    private final Map<String, Spatial> modelMap   = new ConcurrentHashMap<>();
+
     private final CalistaGameEngine calistaGameEngine;
 
     public AssetRepo(CalistaGameEngine calistaGameEngine) {
@@ -27,58 +30,61 @@ public class AssetRepo {
     }
 
     /**
-     * Retrieves a texture by name. Returns a default texture if not found.
+     * Retrieves a texture by name. Returns a default Texture2D if not found.
      */
     public Texture getTexture(String name) {
-        Texture tex = textureMap.get(name);
-        if (tex == null) {
-            logger.warn("Texture '{}' not found!", name);
-            return new Texture2D();
-        }
-        return tex;
+        return getAsset(
+                name,
+                textureMap,
+                Texture2D::new,
+                "texture");
     }
 
     /**
      * Adds or replaces a texture in the repository.
-     * If an entry with the same name exists, it will be overwritten.
      */
     public void addTexture(String name, Texture texture) {
-        textureMap.put(name, texture);
-        logger.debug("Added texture '{}' to repository", name);
+        putAsset(
+                name,
+                texture,
+                textureMap,
+                "texture");
     }
 
     /**
-     * Retrieves a model by name. Returns a new empty Node if not found.
+     * Retrieves a model by name. Returns an empty Node if not found.
      */
     public Spatial getModel(String name) {
-        Spatial model = modelsMap.get(name);
-        if (model == null) {
-            logger.warn("Model '{}' not found!", name);
-            return new Node();
-        }
-        return model;
+        return getAsset(
+                name,
+                modelMap,
+                Node::new,
+                "model");
     }
 
     /**
      * Adds or replaces a model in the repository.
      */
     public void addModel(String name, Spatial model) {
-        modelsMap.put(name, model);
-        logger.debug("Added model '{}' to repository", name);
+        putAsset(
+                name,
+                model,
+                modelMap,
+                "model");
     }
 
     /**
-     * Provides an unmodifiable view of the texture map for safe iteration.
+     * Unmodifiable view of all textures.
      */
     public Map<String, Texture> getTextureMap() {
         return Collections.unmodifiableMap(textureMap);
     }
 
     /**
-     * Provides an unmodifiable view of the models map for safe iteration.
+     * Unmodifiable view of all models.
      */
-    public Map<String, Spatial> getModelsMap() {
-        return Collections.unmodifiableMap(modelsMap);
+    public Map<String, Spatial> getModelMap() {
+        return Collections.unmodifiableMap(modelMap);
     }
 
     /**
@@ -86,7 +92,59 @@ public class AssetRepo {
      */
     public void clearAll() {
         textureMap.clear();
-        modelsMap.clear();
+        modelMap.clear();
         logger.info("Cleared all assets from repository");
+    }
+
+    // ────────────────────────────────────────────────────────────────────────────
+    // Generic helpers to eliminate duplication
+    // ────────────────────────────────────────────────────────────────────────────
+
+    /**
+     * Generic retrieval: lookup in map, log warning if absent, return default.
+     *
+     * @param name            key to look up
+     * @param map             concurrent map of assets
+     * @param defaultSupplier supplier for default instance when missing
+     * @param assetType       textual type for logging ("texture" or "model")
+     * @param <T>             asset type
+     * @return existing asset or default instance
+     */
+    private <T> T getAsset(String name,
+                           Map<String, T> map,
+                           Supplier<T> defaultSupplier,
+                           String assetType) {
+        T asset = map.get(name);
+        if (asset == null) {
+            logger.warn("{} '{}' not found!", capitalize(assetType), name);
+            return defaultSupplier.get();
+        }
+        return asset;
+    }
+
+    /**
+     * Generic insertion: put into map, log debug message.
+     *
+     * @param name      key under which to store
+     * @param asset     the asset instance
+     * @param map       concurrent map of assets
+     * @param assetType textual type for logging ("texture" or "model")
+     * @param <T>       asset type
+     */
+    private <T> void putAsset(String name, T asset, Map<String, T> map, String assetType) {
+        boolean replaced = map.containsKey(name);
+        map.put(name, asset);
+        if (replaced) {
+            logger.info("Replaced {} '{}' in repository", assetType, name);
+        } else {
+            logger.debug("Added {} '{}' to repository", assetType, name);
+        }
+    }
+    /**
+     * Capitalizes the first letter of a string.
+     */
+    private String capitalize(String s) {
+        if (s == null || s.isEmpty()) return s;
+        return Character.toUpperCase(s.charAt(0)) + s.substring(1);
     }
 }

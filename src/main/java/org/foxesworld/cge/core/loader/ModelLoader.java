@@ -42,7 +42,7 @@ public class ModelLoader extends AbstractAssetLoader<String> {
             try {
                 Spatial model = assetManager.loadModel(path);
                 String key = extractModelName(path);
-                synchronized (engine.getAssetRepo().getModelsMap()) {
+                synchronized (engine.getAssetRepo().getModelMap()) {
                     engine.getAssetRepo().addModel(key, model);
                 }
                 return 1;

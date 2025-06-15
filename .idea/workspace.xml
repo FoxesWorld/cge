@@ -4,18 +4,11 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="283ff897-4432-4079-9530-7bc3ea1cccef" name="Changes" comment="OBJ Importer">
-      <change afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/PlayerCameraControl.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/java/test/Game.java" afterDir="false" />
-      <change afterPath="$PROJECT_DIR$/src/main/resources/meshes/YBot.j3o" afterDir="false" />
+    <list default="true" id="283ff897-4432-4079-9530-7bc3ea1cccef" name="Changes" comment="Player Updates">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/data/road.cgtex" beforeDir="false" afterPath="$PROJECT_DIR$/data/road.cgtex" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/logs/lastlog.log" beforeDir="false" afterPath="$PROJECT_DIR$/logs/lastlog.log" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/CalistaGameEngine.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/CalistaGameEngine.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/FirstPersonCameraControl.java" beforeDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/Player.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/player/Player.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/skyBox/SkyBox.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/skyBox/SkyBox.java" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/skyBox/SkyBoxConfig.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/renderer/skyBox/SkyBoxConfig.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/AssetRepo.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/AssetRepo.java" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/loader/ModelLoader.java" beforeDir="false" afterPath="$PROJECT_DIR$/src/main/java/org/foxesworld/cge/core/loader/ModelLoader.java" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -213,7 +206,7 @@
       <workItem from="1749194541284" duration="667000" />
       <workItem from="1749900972410" duration="8086000" />
       <workItem from="1749919472868" duration="1675000" />
-      <workItem from="1749958506194" duration="5934000" />
+      <workItem from="1749958506194" duration="6912000" />
     </task>
     <task id="LOCAL-00001" summary="initial">
       <option name="closed" value="true" />
@@ -484,7 +477,14 @@
       <option name="project" value="LOCAL" />
       <updated>1749364647865</updated>
     </task>
-    <option name="localTasksCounter" value="35" />
+    <task id="LOCAL-00035" summary="Player Updates">
+      <created>1749966941436</created>
+      <option name="number" value="00035" />
+      <option name="presentableId" value="LOCAL-00035" />
+      <option name="project" value="LOCAL" />
+      <updated>1749966941436</updated>
+    </task>
+    <option name="localTasksCounter" value="36" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -492,7 +492,6 @@
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
-    <MESSAGE value="CGTEX + CGTEX creator tool" />
     <MESSAGE value="CGTEX + CGS refactor" />
     <MESSAGE value="Clean" />
     <MESSAGE value="CGTEX Fixes" />
@@ -517,7 +516,8 @@
     <MESSAGE value="FileDefinition Гзвфеу + NovaUI Fixes" />
     <MESSAGE value="UI fixes" />
     <MESSAGE value="OBJ Importer" />
-    <option name="LAST_COMMIT_MESSAGE" value="OBJ Importer" />
+    <MESSAGE value="Player Updates" />
+    <option name="LAST_COMMIT_MESSAGE" value="Player Updates" />
   </component>
   <component name="XDebuggerManager">
     <breakpoint-manager>
