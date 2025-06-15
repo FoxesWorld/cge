@@ -29,7 +29,7 @@ public class SoftBodyModule extends EngineModule<PhysicsConfig> {
     private PhysicsConfig defaultConfig;
 
     public SoftBodyModule(PhysicsModule physicsModule) {
-        super("physics", PhysicsConfig.class, physicsModule.getCalistaGameEngine());
+        super("physics", PhysicsConfig.class, physicsModule.getApp());
         //initialize(physicsModule.getCalistaGameEngine());
     }
 

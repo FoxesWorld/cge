@@ -4,6 +4,7 @@ import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.collision.shapes.CapsuleCollisionShape;
 import com.jme3.bullet.control.CharacterControl;
 import com.jme3.input.InputManager;
+import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
 import com.jme3.renderer.queue.RenderQueue;
@@ -35,11 +36,22 @@ public class Player extends Node {
 
     // Movement and physics parameters
     private static final float EYE_HEIGHT   = 1.6f;
-    private static final float WALK_SPEED   = 0.1f;
+    private static final float PLAYER_RADIUS = 0.45f;
+    private static final float PLAYER_HEIGHT = 1.7f;
+    private static final float WALK_SPEED   = 0.13f;
     private static final float SPRINT_SPEED = 0.25f;
-    private static final float ACCEL        = 0.6f;
-    private static final float DECEL        = 0.8f;
-    private static final float SMOOTH       = 2f;
+    private static final float ACCEL        = 0.75f;
+    private static final float DECEL        = 0.92f;
+    private static final float SMOOTH       = 2.2f;
+
+    private boolean isCrouching = false;
+    private float crouchAmount = 0f;
+    private float targetEyeHeight = EYE_HEIGHT;
+    private float interpEyeHeight = EYE_HEIGHT;
+
+    // For optimization: reuse vectors
+    private final Vector3f reuseVec1 = new Vector3f();
+    private final Vector3f reuseVec2 = new Vector3f();
 
     /**
      * Constructs the player, initializing physics, movement, camera and HUD.
@@ -56,16 +68,16 @@ public class Player extends Node {
 
         setLocalTranslation(spawnPos);
 
-        // Initialize physics character
+        // Initialize physics character with configurable shape
         this.bullet = engine.getModuleManager()
                 .getModule(PhysicsModule.class)
                 .getBulletAppState();
-        CapsuleCollisionShape shape = new CapsuleCollisionShape(0.5f, 1.0f);
+        CapsuleCollisionShape shape = new CapsuleCollisionShape(PLAYER_RADIUS, PLAYER_HEIGHT - 2 * PLAYER_RADIUS, 1);
         this.character = new CharacterControl(shape, 0.05f);
         character.setPhysicsLocation(spawnPos);
-        character.setJumpSpeed(4f);
-        character.setFallSpeed(9.8f);
-        character.setGravity(9.8f);
+        character.setJumpSpeed(5.2f);
+        character.setFallSpeed(16.5f);
+        character.setGravity(13.8f);
         addControl(character);
         bullet.getPhysicsSpace().add(character);
 
@@ -74,7 +86,7 @@ public class Player extends Node {
         input.setCursorVisible(false);
 
         // Attach camera and movement controls
-        PlayerCameraControl camControl = new PlayerCameraControl(this, EYE_HEIGHT, 0.2f, SMOOTH, engine.getRootNode());
+        PlayerCameraControl camControl = new PlayerCameraControl(this, EYE_HEIGHT, 0.18f, SMOOTH, engine.getRootNode());
         addControl(camControl);
         this.movementControl = new MovementControl(this, WALK_SPEED, SPRINT_SPEED, ACCEL, DECEL, SMOOTH);
         addControl(movementControl);
@@ -86,51 +98,90 @@ public class Player extends Node {
             @Override public void onLanding(float peak) { camEffectsControl.notifyLanding(peak); }
         });
 
-        synchronize();
+        synchronize(true);
         loadPlayerModel();
     }
 
     /**
-     * Loads and configures the player model (YBot) for third-person view.
+     * Loads and configures the player model for third-person view, if needed.
      */
     private void loadPlayerModel() {
         playerModel = engine.getAssetManager().loadModel("meshes/YBot.j3o");
-        playerModel.setShadowMode(RenderQueue.ShadowMode.Cast);
+        playerModel.setLocalScale(0.011f);
+        playerModel.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
         playerModel.setCullHint(Spatial.CullHint.Never);
-        playerModel.setLocalScale(0.01f);
         attachChild(playerModel);
     }
 
     /**
      * Synchronizes the scene node and camera position with the physics character.
+     * @param instant true = no interpolation (e.g. on spawn/teleport)
      */
-    private void synchronize() {
+    private void synchronize(boolean instant) {
         Vector3f pos = character.getPhysicsLocation();
         setLocalTranslation(pos);
-        cam.setLocation(pos.add(0, EYE_HEIGHT, 0));
+
+        // Interpolated eye height for smooth crouch transitions
+        if (instant) {
+            interpEyeHeight = targetEyeHeight;
+        } else {
+            interpEyeHeight += (targetEyeHeight - interpEyeHeight) * 0.12f;
+        }
+        cam.setLocation(pos.add(0, interpEyeHeight, 0));
     }
 
     /**
-     * Updates player each frame: physics sync, model positioning, and HUD.
+     * Updates player each frame: physics sync, model positioning, crouch, and HUD.
      *
      * @param tpf time per frame
      */
     public void update(float tpf) {
-        synchronize();
+        // Smooth crouch (could be improved with animation curves)
+        float desiredCrouch = isCrouching ? 0.7f : 1.0f;
+        crouchAmount += (desiredCrouch - crouchAmount) * 0.15f;
+        targetEyeHeight = EYE_HEIGHT * crouchAmount;
+
+        synchronize(false);
         updateModelPosition();
+        checkGrounded();
         playerHud.update(tpf);
     }
 
     /**
-     * Positions and orients the player model behind the camera.
+     * Checks if the player is on the ground using physics, allows for future extensions.
+     */
+    public boolean isGrounded() {
+        // Optionally add a ray downwards for more robust ground detection
+        return character.onGround();
+    }
+
+    private void checkGrounded() {
+        // Example: highlight HUD or play sound if landed, etc.
+        if (isGrounded()) {
+            // Could trigger landing effect/sound
+        }
+    }
+
+    /**
+     * Positions and orients the player model behind the camera for third-person.
      */
     private void updateModelPosition() {
         Vector3f camPos = cam.getLocation();
-        Vector3f camDir = cam.getDirection().normalize();
-        Vector3f offset = camDir.mult(-MODEL_BACK_OFFSET).add(0, MODEL_DOWN_OFFSET, 0);
-        playerModel.setLocalTranslation(camPos.add(offset));
+        Vector3f camDir = cam.getDirection(reuseVec1).normalizeLocal();
+        Vector3f offset = camDir.multLocal(-MODEL_BACK_OFFSET).addLocal(0, MODEL_DOWN_OFFSET, 0);
+        playerModel.setLocalTranslation(camPos.add(reuseVec2.set(offset)));
         Vector3f lookTarget = camPos.add(camDir);
         playerModel.lookAt(lookTarget, Vector3f.UNIT_Y);
+    }
+
+    /**
+     * Allows toggling crouch state.
+     */
+    public void setCrouching(boolean crouch) {
+        if (this.isCrouching != crouch) {
+            this.isCrouching = crouch;
+            // Optionally: adjust collision shape (advanced, not always supported in JME runtime)
+        }
     }
 
     /**
@@ -150,6 +201,14 @@ public class Player extends Node {
     public MovementControl getMovementControl() { return movementControl; }
     public Camera getCam() { return cam; }
     public CalistaGameEngine getEngine() { return engine; }
+    public boolean isCrouching() { return isCrouching; }
+    public float getInterpEyeHeight() { return interpEyeHeight; }
+
+    public InputManager getInput() { return input; }
+    public CameraEffectsControl getCamEffectsControl() { return camEffectsControl; }
+    public float getWalkSpeed() { return WALK_SPEED; }
+    public float getSprintSpeed() { return SPRINT_SPEED; }
+    public PlayerHud getPlayerHud() { return playerHud; }
 
     /**
      * Inner HUD class for managing on-screen player stats.
@@ -158,6 +217,7 @@ public class Player extends Node {
         private float speed;
         private float armor = 0.6f;
         private float ability = 0.4f;
+        private float prevSpeed, prevArmor, prevAbility;
         private final UIModule ui;
 
         /**
@@ -175,16 +235,14 @@ public class Player extends Node {
         public void setAbilityBar(float a)  { ability = a; }
 
         /**
-         * Updates HUD elements each frame.
+         * Updates HUD elements only if changed.
          *
          * @param tpf time per frame
          */
-        public void update(float tpf) { /* update HUD elements */ }
+        public void update(float tpf) {
+            if (speed != prevSpeed) { /* update speed bar */ prevSpeed = speed; }
+            if (armor != prevArmor) { /* update armor bar */ prevArmor = armor; }
+            if (ability != prevAbility) { /* update ability bar */ prevAbility = ability; }
+        }
     }
-
-    public InputManager getInput() { return input; }
-    public CameraEffectsControl getCamEffectsControl() { return camEffectsControl; }
-    public float getWalkSpeed() { return WALK_SPEED; }
-    public float getSprintSpeed() { return SPRINT_SPEED; }
-    public PlayerHud getPlayerHud() { return playerHud; }
 }

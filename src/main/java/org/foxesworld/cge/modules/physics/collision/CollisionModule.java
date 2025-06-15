@@ -30,7 +30,7 @@ public class CollisionModule extends EngineModule<PhysicsConfig> implements Phys
     private final Set<CollisionPair> activePairs = Collections.synchronizedSet(new HashSet<>());
 
     public CollisionModule(PhysicsModule physicsModule) {
-        super("physics", PhysicsConfig.class, physicsModule.getCalistaGameEngine());
+        super("physics", PhysicsConfig.class, physicsModule.getApp());
         this.physicsModule = physicsModule;
         bulletState = physicsModule.getBulletAppState();
     }

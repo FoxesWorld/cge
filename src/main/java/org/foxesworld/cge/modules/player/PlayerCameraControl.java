@@ -18,8 +18,12 @@ import com.jme3.renderer.ViewPort;
 import com.jme3.scene.control.AbstractControl;
 import com.jme3.scene.Spatial;
 
+import java.util.ArrayList;
+import java.util.List;
+
 /**
  * Camera control with collision: prevents the camera from clipping through scene geometry.
+ * Now with Easing (smooth camera switching) and spherical raycast for solid AAA-feel.
  */
 public class PlayerCameraControl extends AbstractControl implements AnalogListener, ActionListener {
 
@@ -38,11 +42,22 @@ public class PlayerCameraControl extends AbstractControl implements AnalogListen
 
     private float yaw = 0, pitch = 0;
     private float targetYaw = 0, targetPitch = 0;
+
     private boolean thirdPerson = false;
 
-    private float distance = 5f;              // third-person distance
-    private float minDistance = 1.2f;         // minimum distance to avoid inside
-    private float wallOffset = 0.3f;          // offset from collision surface
+    // Camera distance settings
+    private final float distance = 5.0f;         // third-person target distance
+    private final float minDistance = 1.2f;      // minimum allowed distance
+    private final float wallOffset = 0.36f;      // offset from collision surface
+    private final float easingSpeed = 5.5f;      // how fast camera switches (higher = faster)
+    private float currentDistance = 0.01f;       // current camera distance, eases on switch
+    private float desiredDistance = 0.01f;
+
+    // Spherical raycast settings
+    private final int SPHERE_RAYS = 7; // 1 center, 6 around (hexagon)
+    private final float SPHERE_RADIUS = 0.28f; // "near clip" radius for cast
+
+    private final Vector3f tempVec = new Vector3f();
 
     public PlayerCameraControl(Player player, float eyeHeight, float sensitivity, float smoothing, Spatial sceneRoot) {
         this.cam = player.getCam();
@@ -79,39 +94,72 @@ public class PlayerCameraControl extends AbstractControl implements AnalogListen
         Quaternion rot = new Quaternion().fromAngles(pitch, yaw, 0);
         Vector3f playerPos = spatial.getWorldTranslation().add(0, eyeHeight, 0);
 
-        if (thirdPerson) {
+        // Camera mode switch with easing
+        desiredDistance = thirdPerson ? distance : 0.01f;
+        float spring = FastMath.clamp(1f - FastMath.exp(-easingSpeed * tpf), 0f, 1f);
+        currentDistance += (desiredDistance - currentDistance) * spring;
+
+        if (currentDistance > minDistance * 1.01f) {
             Vector3f backDir = rot.mult(Vector3f.UNIT_Z).negateLocal();
-            Vector3f desiredPos = playerPos.add(backDir.mult(distance));
+            Vector3f desiredPos = playerPos.add(backDir.mult(currentDistance));
 
-            // Ray-cast from player head toward desired camera position
-            Vector3f dir = desiredPos.subtract(playerPos).normalizeLocal();
-            Ray ray = new Ray(playerPos, dir);
-            CollisionResults results = new CollisionResults();
-            try {
-                ((Collidable) sceneRoot).collideWith(ray, results);
-            } catch (UnsupportedCollisionException ignored) {
-                // no collision support
-            }
+            // --- Spherical raycast for robust collision ---
+            float closestDist = currentDistance;
+            List<Vector3f> offsets = getSphereOffsets(backDir, rot);
+            for (Vector3f offset : offsets) {
+                Vector3f rayStart = playerPos.add(offset);
+                Vector3f rayEnd   = desiredPos.add(offset);
+                Vector3f dir = rayEnd.subtract(rayStart).normalizeLocal();
+                float maxDist = rayEnd.distance(rayStart);
 
-            Vector3f camPos = desiredPos;
-            if (results.size() > 0) {
-                CollisionResult closest = results.getClosestCollision();
-                float dist = closest.getDistance() - wallOffset;
-                dist = FastMath.clamp(dist, minDistance, distance);
-                camPos = playerPos.add(dir.mult(dist));
-            } else {
-                // ensure minimum distance from player
-                if (camPos.distance(playerPos) < minDistance) {
-                    camPos = playerPos.add(backDir.mult(minDistance));
+                Ray ray = new Ray(rayStart, dir);
+                ray.setLimit(maxDist + wallOffset);
+
+                CollisionResults results = new CollisionResults();
+                try {
+                    ((Collidable) sceneRoot).collideWith(ray, results);
+                } catch (UnsupportedCollisionException ignored) {}
+
+                if (results.size() > 0) {
+                    CollisionResult closest = results.getClosestCollision();
+                    float dist = closest.getDistance() - wallOffset;
+                    dist = FastMath.clamp(dist, minDistance, closestDist);
+                    if (dist < closestDist) closestDist = dist;
                 }
             }
-
+            Vector3f camPos = playerPos.add(backDir.mult(closestDist));
             cam.setLocation(camPos);
             cam.lookAt(playerPos, Vector3f.UNIT_Y);
+
         } else {
+            // First person
             cam.setRotation(rot);
             cam.setLocation(playerPos);
         }
+    }
+
+    /**
+     * Computes offsets for spherical raycast: center and points around a circle perpendicular to backDir.
+     */
+    private List<Vector3f> getSphereOffsets(Vector3f backDir, Quaternion rot) {
+        List<Vector3f> offsets = new ArrayList<>(SPHERE_RAYS);
+        offsets.add(Vector3f.ZERO.clone()); // center
+
+        // Build a circle perpendicular to backDir
+        Vector3f up   = Vector3f.UNIT_Y;
+        Vector3f side = backDir.cross(up).normalize();
+        if (side.length() < 1e-3f) side = Vector3f.UNIT_X; // fallback if looking straight up/down
+
+        for (int i = 0; i < SPHERE_RAYS - 1; i++) {
+            float angle = i * FastMath.TWO_PI / (SPHERE_RAYS - 1);
+            Vector3f offset = rot.mult(
+                    side.mult(FastMath.cos(angle) * SPHERE_RADIUS)
+            ).addLocal(
+                    up.mult(FastMath.sin(angle) * SPHERE_RADIUS)
+            );
+            offsets.add(offset);
+        }
+        return offsets;
     }
 
     @Override
@@ -141,6 +189,8 @@ public class PlayerCameraControl extends AbstractControl implements AnalogListen
         super.setSpatial(spatial);
         this.yaw = this.targetYaw = 0f;
         this.pitch = this.targetPitch = 0f;
+        this.currentDistance = 0.01f;
+        this.desiredDistance = 0.01f;
     }
 
     public boolean isThirdPerson() {

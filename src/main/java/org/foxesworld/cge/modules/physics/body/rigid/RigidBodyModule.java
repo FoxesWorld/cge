@@ -24,7 +24,7 @@ public class RigidBodyModule extends EngineModule<PhysicsConfig> {
     private final PhysicsModule physicsModule;
 
     public RigidBodyModule(PhysicsModule physicsModule) {
-        super("physics", PhysicsConfig.class, physicsModule.getCalistaGameEngine());
+        super("physics", PhysicsConfig.class, physicsModule.getApp());
         this.physicsModule = physicsModule;
     }
 
@@ -67,7 +67,7 @@ public class RigidBodyModule extends EngineModule<PhysicsConfig> {
     }
 
     public void onDisable() {
-        cleanupModule(physicsModule.getCalistaGameEngine());
+        cleanupModule(physicsModule.getApp());
     }
 
     /**
@@ -104,7 +104,7 @@ public class RigidBodyModule extends EngineModule<PhysicsConfig> {
             spatial.setLocalTranslation(new Vector3f(0, 5, 0));  // Example position
 
             // Register the object with the BulletAppState and add it to the rootNode if necessary
-            this.physicsModule.getCalistaGameEngine().getRootNode().attachChild(spatial);
+            this.physicsModule.getApp().getRootNode().attachChild(spatial);
             logger.debug("Physics object '{}' added to the scene with mass {}", spatial.getName(), mass);
         } else {
             logger.warn("Failed to add physics object: spatial is null.");

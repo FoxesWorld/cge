@@ -1,5 +1,6 @@
-package org.foxesworld.cge;
+package org.foxesworld.cge.modules;
 
+import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.module.EngineModule;
 
 import java.util.function.Function;

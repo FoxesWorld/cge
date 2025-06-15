@@ -13,6 +13,7 @@ import org.foxesworld.cge.core.streaming.StreamingManager;
 import org.foxesworld.cge.core.streaming.StreamingParserLoader;
 import org.foxesworld.cge.importers.fbx.FBXImporter;
 import org.foxesworld.cge.importers.obj.OBJImporter;
+import org.foxesworld.cge.modules.ModuleConfig;
 import org.foxesworld.cge.modules.popcycle.PopCycle;
 import org.foxesworld.cge.modules.scene.SceneModule;
 import org.foxesworld.cge.tmp.ShapeParty;

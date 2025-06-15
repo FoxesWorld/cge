@@ -3,7 +3,7 @@ package test;
 import com.jme3.system.AppSettings;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.ICOParser;
-import org.foxesworld.cge.ModuleConfig;
+import org.foxesworld.cge.modules.ModuleConfig;
 import org.foxesworld.cge.modules.physics.PhysicsModule;
 import org.foxesworld.cge.modules.player.PlayerModule;
 import org.foxesworld.cge.modules.renderer.RendererModule;

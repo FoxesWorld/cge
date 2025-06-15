@@ -17,136 +17,112 @@ import org.foxesworld.cge.modules.physics.body.soft.SoftBodyModule;
 import org.foxesworld.cge.modules.physics.collision.CollisionModule;
 
 /**
- * Main physics module aggregating collision, rigid, and soft body sub-modules.
+ * Aggregates physics subsystems: collision, rigid and soft bodies, and debug.
  */
 public class PhysicsModule extends EngineModule<PhysicsConfig> {
     private static final Logger logger = LogManager.getLogger(PhysicsModule.class);
-    protected final CalistaGameEngine calistaGameEngine;
+    private final CalistaGameEngine app;
     private final ModuleManager subManager;
-    protected BulletAppState bulletAppState;
-    private BulletDebugAppState bulletDebugAppState;
+    private BulletAppState bulletAppState;
+    private BulletDebugAppState debugAppState;
 
-    public PhysicsModule(CalistaGameEngine calistaGameEngine) {
-        super("physics", PhysicsConfig.class, calistaGameEngine);
-        this.calistaGameEngine = calistaGameEngine;
-        this.subManager = new ModuleManager(calistaGameEngine);
+    public PhysicsModule(CalistaGameEngine app) {
+        super("physics", PhysicsConfig.class, app);
+        this.app = app;
+        this.subManager = new ModuleManager(app);
     }
 
     @Override
     protected void initModule(CalistaGameEngine app) throws Exception {
-        logger.info("initializing physics...");
-
-        // Initialize BulletAppState and attach to the AppStateManager if not already present
-        if (app.getStateManager().getState(BulletAppState.class) == null) {
+        logger.info("Initializing PhysicsModule...");
+        // Attach or reuse BulletAppState
+        bulletAppState = app.getStateManager().getState(BulletAppState.class);
+        if (bulletAppState == null) {
             bulletAppState = new BulletAppState();
             app.getStateManager().attach(bulletAppState);
             logger.debug("BulletAppState attached");
         } else {
-            bulletAppState = app.getStateManager().getState(BulletAppState.class);
             logger.debug("BulletAppState already present");
         }
 
-        // Register and initialize sub-modules
-        registerSubModules(app);
+        // Register and init sub-modules
+        registerSubModules();
         subManager.initializeAll(app);
-        logger.info("{}: physics sub-modules initialized", getName());
+        applyConfig();
 
-        // Optionally adjust physics settings from config
-        applyConfigSettings();
-
-        // Enable debug if enabled in config
+        // Setup debug if enabled
         if (getConfig().debug) {
-            DebugConfiguration debugConfig = new DebugConfiguration();
-            debugConfig.setEnabled(true);
-            bulletDebugAppState = new BulletDebugAppState(debugConfig);
-            app.getStateManager().attach(bulletDebugAppState);
-            logger.info("BulletDebugAppState attached: Collision shapes and debug visuals will be shown.");
+            DebugConfiguration cfg = new DebugConfiguration();
+            cfg.setEnabled(true);
+            debugAppState = new BulletDebugAppState(cfg);
+            // Ensure debug node renders in scene
+            debugAppState.setEnabled(true);//setDebugRootNode(app.getRootNode());
+            app.getStateManager().attach(debugAppState);
+            logger.info("BulletDebugAppState attached and enabled");
         }
     }
 
-    private void registerSubModules(CalistaGameEngine app) {
-        subManager.register(new RigidBodyModule(this), 20);
+    private void registerSubModules() {
         subManager.register(new CollisionModule(this), 10);
+        subManager.register(new RigidBodyModule(this), 20);
         subManager.register(new SoftBodyModule(this), 30);
-        // Add any additional sub-modules here as needed
     }
 
-    private void applyConfigSettings() {
+    private void applyConfig() {
         PhysicsConfig cfg = getConfig();
         PhysicsSpace space = bulletAppState.getPhysicsSpace();
         space.setGravity(cfg.gravity);
-        logger.info("Physics gravity set to {}", cfg.gravity);
+        logger.info("Gravity set to {}", cfg.gravity);
     }
 
     @Override
     protected void updateModule(float tpf) throws Exception {
-        // BulletAppState automatically handles the physics steps in the background
+        // Physics stepping is handled by BulletAppState internally
     }
 
     @Override
     protected void cleanupModule(Application app) throws Exception {
-        logger.info("{}: cleaning up physics...");
-
-        // Shutdown all sub-modules
+        logger.info("Cleaning up PhysicsModule...");
         subManager.shutdown(app);
-
-        // Detach BulletAppState and BulletDebugAppState if they were attached
+        if (debugAppState != null) {
+            app.getStateManager().detach(debugAppState);
+            logger.debug("BulletDebugAppState detached");
+        }
         if (bulletAppState != null) {
             app.getStateManager().detach(bulletAppState);
             logger.debug("BulletAppState detached");
-        }
-
-        if (bulletDebugAppState != null) {
-            app.getStateManager().detach(bulletDebugAppState);
-            logger.debug("BulletDebugAppState detached");
         }
     }
 
     @Override
     protected void onConfigReloaded() throws Exception {
-        // Update gravity on config reload
         PhysicsConfig cfg = getConfig();
-        if (bulletAppState != null) {
-            bulletAppState.getPhysicsSpace().setGravity(cfg.gravity);
-            logger.info("{}: gravity reloaded to {}", getName(), cfg.gravity);
-        }
+        bulletAppState.getPhysicsSpace().setGravity(cfg.gravity);
+        logger.info("Gravity reloaded: {}", cfg.gravity);
     }
 
-    @Override
-    protected void onEnable() {
-        // Optionally handle enable logic here
-    }
-
-    @Override
-    protected void onDisable() {
-        // Optionally handle disable logic here
-    }
+    @Override protected void onEnable() {}
+    @Override protected void onDisable() {}
 
     public BulletAppState getBulletAppState() {
         return bulletAppState;
     }
 
-    public CalistaGameEngine getCalistaGameEngine() {
-        return calistaGameEngine;
-    }
-
-    public ModuleManager getSubManager() {
-        return subManager;
-    }
-
     /**
-     * Оборачивает Spatial в RigidBodyControl и добавляет в физический мир.
-     * @param spat  любой узел или модель
-     * @param mass  масса тела (0 — статический, >0 — динамический)
+     * Adds a rigid body control to the spatial and registers it.
      */
     public void addRigidBody(Spatial spat, float mass) {
         if (bulletAppState == null) {
-            logger.warn("BulletAppState not initialized – cannot add physics body for {}", spat.getName());
+            logger.warn("Cannot add rigid body, BulletAppState is null");
             return;
         }
-        RigidBodyControl control = new RigidBodyControl(mass);
-        spat.addControl(control);
-        bulletAppState.getPhysicsSpace().add(control);
-        logger.debug("Added RigidBodyControl (mass={}) to {}", mass, spat.getName());
+        RigidBodyControl ctrl = new RigidBodyControl(mass);
+        spat.addControl(ctrl);
+        bulletAppState.getPhysicsSpace().add(ctrl);
+        logger.debug("RigidBodyControl (mass={}) added to {}", mass, spat.getName());
+    }
+
+    public CalistaGameEngine getApp() {
+        return app;
     }
 }
