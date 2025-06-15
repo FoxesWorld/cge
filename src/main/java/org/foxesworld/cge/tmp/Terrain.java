@@ -10,7 +10,7 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.shape.Quad;
 import com.jme3.texture.Texture;
 import org.foxesworld.cge.CalistaGameEngine;
-import org.foxesworld.cge.physics.PhysicsModule;
+import org.foxesworld.cge.modules.physics.PhysicsModule;
 
 public class Terrain {
 

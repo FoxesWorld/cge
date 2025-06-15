@@ -24,7 +24,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public abstract class EngineModule<ModuleConfig> extends BaseAppState {
     protected final Logger logger = LoggerFactory.getLogger(getClass());
     private AtomicBoolean isLoaded = new AtomicBoolean(false);
-    protected final CalistaGameEngine gameEngine;
+    protected CalistaGameEngine gameEngine;
     protected final ConfigService configService;
     protected final TaskScheduler taskScheduler;
     private volatile ModuleConfig config;
@@ -267,6 +267,10 @@ public abstract class EngineModule<ModuleConfig> extends BaseAppState {
 
     public CalistaGameEngine getGameEngine() {
         return gameEngine;
+    }
+
+    public void setGameEngine(CalistaGameEngine gameEngine) {
+        this.gameEngine = gameEngine;
     }
 
     public void setConfig(ModuleConfig config) {

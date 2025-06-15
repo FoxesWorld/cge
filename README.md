@@ -9,7 +9,7 @@
 
 <p align="center">
   <img src="https://img.shields.io/static/v1?label=Powered%20by&message=Java&color=darkorange&style=for-the-badge" alt="Powered by Java"/>
-  <img src="https://img.shields.io/badge/version-1.0.0--Alpha-yellow?style=for-the-badge" alt="Version 1.0.0-Alpha"/>
+  <img src="https://img.shields.io/badge/version-1.2.0--Alpha-green?style=for-the-badge" alt="Version 1.2.0-Alpha"/>
   <img src="https://img.shields.io/github/stars/FoxesWorld/cge?style=social" alt="GitHub Stars"/>
 </p>
 

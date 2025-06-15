@@ -6,7 +6,7 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import org.foxesworld.cge.CalistaGameEngine;
-import org.foxesworld.cge.physics.PhysicsModule;
+import org.foxesworld.cge.modules.physics.PhysicsModule;
 
 import java.util.Random;
 

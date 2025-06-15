@@ -3,40 +3,33 @@ package org.foxesworld.cge;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.StatsAppState;
 import com.jme3.asset.AssetManager;
-import com.jme3.math.Vector3f;
-import org.foxesworld.cge.core.file.extensions.ydd.DrawableEntry;
-import org.foxesworld.cge.core.file.extensions.ydd.YDDFile;
-import org.foxesworld.cge.core.loader.AssetLoader;
 import org.foxesworld.cge.core.AssetRepo;
 import org.foxesworld.cge.core.ConfigService;
 import org.foxesworld.cge.core.TaskScheduler;
 import org.foxesworld.cge.core.io.GenericByteParser;
+import org.foxesworld.cge.core.loader.AssetLoader;
 import org.foxesworld.cge.core.module.ModuleManager;
 import org.foxesworld.cge.core.streaming.StreamingManager;
 import org.foxesworld.cge.core.streaming.StreamingParserLoader;
-import org.foxesworld.cge.physics.PhysicsModule;
-import org.foxesworld.cge.player.Player;
-import org.foxesworld.cge.popcycle.PopCycle;
-import org.foxesworld.cge.renderer.RendererModule;
-import org.foxesworld.cge.scene.SceneModule;
-import org.foxesworld.cge.tmp.CollisionParticleEmitter;
-import org.foxesworld.cge.tmp.ShapeParty;
 import org.foxesworld.cge.importers.fbx.FBXImporter;
 import org.foxesworld.cge.importers.obj.OBJImporter;
-import org.foxesworld.cge.ui.UIModule;
+import org.foxesworld.cge.modules.popcycle.PopCycle;
+import org.foxesworld.cge.modules.scene.SceneModule;
+import org.foxesworld.cge.tmp.ShapeParty;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
-import java.io.File;
-import java.io.IOException;
+import java.util.Comparator;
+import java.util.List;
 import java.util.logging.LogManager;
 
 import static org.foxesworld.cge.tmp.Terrain.createTestTerrain;
 
+/**
+ * Main game engine class with dynamic module loading
+ */
 public class CalistaGameEngine extends SimpleApplication {
-    //private final Map<String, Texture> textureMap = new HashMap<>();
-
+    private final List<ModuleConfig> modulesToLoad;
     private AssetRepo assetRepo;
-
     private AssetLoader assetLoader;
     private final PopCycle popCycle;
     @Deprecated
@@ -46,13 +39,14 @@ public class CalistaGameEngine extends SimpleApplication {
     private final TaskScheduler taskScheduler;
     private SceneModule scene;
 
-    public CalistaGameEngine(){
+    public CalistaGameEngine(List<ModuleConfig> modulesToLoad) {
+        this.modulesToLoad = modulesToLoad;
+
         System.setProperty("log.dir", System.getProperty("user.dir"));
         System.setProperty("log.level", "DEBUG");
         LogManager.getLogManager().reset();
         SLF4JBridgeHandler.install();
         this.assetRepo = new AssetRepo(this);
-        //this.yddTest();
 
         this.popCycle = new PopCycle(this);
         this.configService = new ConfigService();
@@ -67,34 +61,19 @@ public class CalistaGameEngine extends SimpleApplication {
         });
 
         StreamingParserLoader<Byte[]> loader = new StreamingParserLoader<>(parser);
-        this.byteStreamer = new StreamingManager<>(
-                loader::load,
-                true,
-                0
-        );
-    }
-
-    private void yddTest(){
-        YDDFile yddFile = new YDDFile(new File("data/skydome.ydd"), "r");
-        try {
-            yddFile.readFileNew();
-            for(DrawableEntry entry: yddFile.getDrawables()) {
-                System.out.println(entry.name);
-            }
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+        this.byteStreamer = new StreamingManager<>(loader::load, true, 0);
     }
 
     @Override
     public void simpleInitApp() {
         stateManager.getState(StatsAppState.class).setDisplayStatView(false);
         moduleManager = new ModuleManager(this);
-
         this.assetLoader = new AssetLoader(this);
-        moduleManager.register(new RendererModule(this), 20);
-        moduleManager.register(new PhysicsModule(this), 35);
-        moduleManager.register(new SceneModule(this), 10);
+
+        // Sort modules by priority and register them
+        modulesToLoad.stream()
+                .sorted(Comparator.comparingInt(ModuleConfig::getPriority))
+                .forEach(cfg -> moduleManager.register(cfg.create(this), cfg.getPriority()));
 
         moduleManager.initializeAll(this);
         moduleManager.loadAll(this, () -> {
@@ -103,62 +82,50 @@ public class CalistaGameEngine extends SimpleApplication {
             scene = moduleManager.getModule(SceneModule.class);
 
             assetLoader.loadAllAssets(() -> {
-                moduleManager.register(new UIModule(this), 5);
-
                 createTestTerrain(this, 250f, 250f);
-                ShapeParty cubeDerp = new ShapeParty(this);
-                cubeDerp.startParty();
-                Player player = new Player(this, new Vector3f(0,20,0));
-                rootNode.attachChild(player);
+                new ShapeParty(this).startParty();
             });
 
-            this.moduleManager.getModule(SceneModule.class).onSceneReady(() ->{
-                PhysicsModule physicsModule = this.getModuleManager().getModule(PhysicsModule.class);
-
-                if (physicsModule != null) {
-                    physicsModule.getBulletAppState().getPhysicsSpace().addCollisionListener(new CollisionParticleEmitter(this));
-                }
-            });
-
+            /*
+            if (scene != null) {
+                scene.onSceneReady(() -> {
+                    PhysicsModule physicsModule = getModuleManager().getModule(PhysicsModule.class);
+                    if (physicsModule != null) {
+                        physicsModule.getBulletAppState().getPhysicsSpace()
+                                .addCollisionListener(new CollisionParticleEmitter(this));
+                    }
+                });
+            } */
         });
     }
 
-
-    public ConfigService getConfigService() {
-        return configService;
-    }
-
-    public TaskScheduler getTaskScheduler() {
-        return taskScheduler;
-    }
-
-    public ModuleManager getModuleManager() {
-        return moduleManager;
-    }
-
-    public StreamingManager<String, Byte[]> getByteStreamer() {
-        return byteStreamer;
-    }
-
-    public PopCycle getPopCycle() {
-        return popCycle;
-    }
-
-    public SceneModule getScene() {
-        return scene;
-    }
+    public ConfigService getConfigService() { return configService; }
+    public TaskScheduler getTaskScheduler() { return taskScheduler; }
+    public ModuleManager getModuleManager() { return moduleManager; }
+    public StreamingManager<String, Byte[]> getByteStreamer() { return byteStreamer; }
+    public PopCycle getPopCycle() { return popCycle; }
+    public SceneModule getScene() { return scene; }
 
     @Override
-    public AssetManager getAssetManager() {
-        return assetManager;
-    }
-
-    public AssetRepo getAssetRepo() {
-        return assetRepo;
-    }
+    public AssetManager getAssetManager() { return assetManager; }
+    public AssetRepo getAssetRepo() { return assetRepo; }
 
     @Override
     public void simpleUpdate(float tpf) {
         this.moduleManager.update(tpf);
     }
+
+    public AssetLoader getAssetLoader() {
+        return assetLoader;
+    }
 }
+
+// Example of creation and startup:
+// List<ModuleConfig> cfg = List.of(
+//     new ModuleConfig(engine -> new RendererModule(engine), 20),
+//     new ModuleConfig(engine -> new PhysicsModule(engine), 35),
+//     new ModuleConfig(engine -> new SceneModule(engine),   10),
+//     new ModuleConfig(engine -> new UIModule(engine),        5)
+// );
+// CalistaGameEngine engine = new CalistaGameEngine(cfg);
+// engine.start();

@@ -7,7 +7,7 @@ import com.jme3.scene.Spatial;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.cgs.SceneChunk;
 import org.foxesworld.cge.core.cgs.parser.ChunkParser;
-import org.foxesworld.cge.physics.PhysicsModule;
+import org.foxesworld.cge.modules.physics.PhysicsModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

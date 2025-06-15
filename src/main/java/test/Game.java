@@ -3,16 +3,32 @@ package test;
 import com.jme3.system.AppSettings;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.ICOParser;
+import org.foxesworld.cge.ModuleConfig;
+import org.foxesworld.cge.modules.physics.PhysicsModule;
+import org.foxesworld.cge.modules.player.PlayerModule;
+import org.foxesworld.cge.modules.renderer.RendererModule;
+import org.foxesworld.cge.modules.scene.SceneModule;
+import org.foxesworld.cge.modules.ui.UIModule;
 
 import java.awt.image.BufferedImage;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 import static org.foxesworld.cge.tools.SceneCGSCreator.SceneCgsCreatorFrame.setupTheme;
 
 public class Game {
     public static void main(String args[]){
-        CalistaGameEngine app = new CalistaGameEngine();
+
+        List<ModuleConfig> cfg = List.of(
+             new ModuleConfig(RendererModule::new, 20),
+             new ModuleConfig(PhysicsModule::new, 35),
+             new ModuleConfig(SceneModule::new,   10),
+             new ModuleConfig(UIModule::new,        5),
+             new ModuleConfig(PlayerModule::new, 40)
+         );
+
+        CalistaGameEngine app = new CalistaGameEngine(cfg);
         setupTheme("assets/theme/calista.properties");
 
         AppSettings settings = new AppSettings(false);
