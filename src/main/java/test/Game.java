@@ -11,20 +11,15 @@ import java.io.InputStream;
 import static org.foxesworld.cge.tools.SceneCGSCreator.SceneCgsCreatorFrame.setupTheme;
 
 public class Game {
-    private final  CalistaGameEngine calistaGameEngine;
-    public Game(CalistaGameEngine calistaGameEngine){
-        this.calistaGameEngine = calistaGameEngine;
-    }
-
     public static void main(String args[]){
         CalistaGameEngine app = new CalistaGameEngine();
-        setupTheme("theme/calista.properties");
+        setupTheme("assets/theme/calista.properties");
 
         AppSettings settings = new AppSettings(false);
         settings.setTitle("Calista Game Engine");
-        settings.setSettingsDialogImage("/theme/logo.png");
+        settings.setSettingsDialogImage("assets/theme/logo.png");
         settings.setFrameRate(-1);
-        try (InputStream icoStream = CalistaGameEngine.class.getClassLoader().getResourceAsStream("theme/icon/engineLogo.ico")) {
+        try (InputStream icoStream = CalistaGameEngine.class.getClassLoader().getResourceAsStream("assets/theme/icon/engineLogo.ico")) {
             ICOParser icoParser = new ICOParser();
             BufferedImage bestIcon = icoParser.getBestIcon(icoParser.parse(icoStream));
             settings.setIcons(new BufferedImage[]{bestIcon});

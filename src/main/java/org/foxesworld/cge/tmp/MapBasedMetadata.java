@@ -1,4 +1,6 @@
-package org.foxesworld.cge.core.file;
+package org.foxesworld.cge.tmp;
+
+import org.foxesworld.cge.core.file.Metadata;
 
 import java.util.HashMap;
 import java.util.Map;

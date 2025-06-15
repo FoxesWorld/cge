@@ -144,8 +144,8 @@ public class AWTErrorDialog extends JDialog {
 
         // Animated alert icon label
         alertIcons = new Icon[] {
-                loadIcon("Interface/Icons/error_icon_highlight.png", 24),
-                loadIcon("Interface/Icons/bug.png", 32)
+                loadIcon("assets/Interface/Icons/error_icon_highlight.png", 24),
+                loadIcon("assets/Interface/Icons/bug.png", 32)
         };
         alertLabel = new JLabel(alertIcons[0]);
         alertLabel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));

@@ -8,14 +8,13 @@ import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
+import java.nio.ByteBuffer;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.StandardOpenOption;
 import java.util.*;
 
-/**
- * Расширили хранение: теперь вместе с байтами и метаданными сохраняем
- * и Map<String,Object> с аргументами чанка, чтобы потом показывать их в getChunkSpec.
- */
 public class CGSFileWriter extends CGSFile {
     private static final Logger logger = LogManager.getLogger(CGSFileWriter.class);
 
@@ -26,9 +25,24 @@ public class CGSFileWriter extends CGSFile {
     private final List<Map<String, Object>> chunkArgs = new ArrayList<>();
     private long headerTableOffsetPos;
 
+    // Для записи в mmap файл
+    private FileChannel channel;
+    private MappedByteBuffer mmapBuffer;
+    private long mmapLimit = 64 * 1024 * 1024L; // 64MB — можно увеличить под ваши нужды
+
     public CGSFileWriter(File file) {
         super(file, "rw");
         this.file = file;
+    }
+
+    private void ensureBuffer(long minSize) throws IOException {
+        if (channel == null || mmapBuffer == null || mmapLimit < minSize) {
+            if (channel != null) channel.close();
+            channel = FileChannel.open(file.toPath(), StandardOpenOption.READ, StandardOpenOption.WRITE, StandardOpenOption.CREATE);
+            channel.truncate(minSize); // расширяем файл
+            mmapLimit = Math.max(minSize, mmapLimit);
+            mmapBuffer = channel.map(FileChannel.MapMode.READ_WRITE, 0, mmapLimit);
+        }
     }
 
     public void setSceneName(String sceneName) {
@@ -87,59 +101,73 @@ public class CGSFileWriter extends CGSFile {
     }
 
     public void writeToFile() throws IOException {
-        RandomAccessFile raf = getFileReader().getRaf();
-        raf.setLength(0);
-        logger.info("Writing CGS: {}", file.getAbsolutePath());
+        // Предварительно оцениваем размер (header + все чанки + таблица)
+        long estimatedSize = estimateFileSize();
+        ensureBuffer(estimatedSize);
 
+        mmapBuffer.position(0);
         headerTableOffsetPos = writeHeader(sceneName);
 
         for (int i = 0; i < chunkEntries.size(); i++) {
             ChunkEntry entry = chunkEntries.get(i);
             byte[] data = chunkData.get(i);
-            long offset = raf.getFilePointer();
+            long offset = mmapBuffer.position();
 
             logByteData(data, entry.id());
 
-            raf.write(data);
+            mmapBuffer.put(data);
             chunkEntries.set(i, new ChunkEntry(entry.id(), offset, data.length, entry.type()));
             logger.debug("Wrote chunk id={} at offset={}, len={}", entry.id(), offset, data.length);
         }
 
-        long tableOffset = raf.getFilePointer();
-        raf.writeInt(chunkEntries.size());
+        long tableOffset = mmapBuffer.position();
+        mmapBuffer.putInt(chunkEntries.size());
         for (ChunkEntry entry : chunkEntries) {
-            raf.writeInt(entry.id());
-            raf.writeLong(entry.offset());
-            raf.writeInt(entry.length());
-            raf.writeInt(entry.type().ordinal());
+            mmapBuffer.putInt(entry.id());
+            mmapBuffer.putLong(entry.offset());
+            mmapBuffer.putInt(entry.length());
+            mmapBuffer.putInt(entry.type().ordinal());
         }
         updateHeaderOffset(headerTableOffsetPos, tableOffset);
+
+        channel.truncate(mmapBuffer.position()); // обрезаем файл до актуального размера
         logger.info("Finished CGS write, tableOffset={}", tableOffset);
+        channel.force(true);
+    }
+
+    private long estimateFileSize() {
+        long size = getMAGIC().length() + Integer.BYTES; // MAGIC + version
+        size += Integer.BYTES + sceneName.getBytes(StandardCharsets.UTF_8).length; // sceneName (len + bytes)
+        size += Long.BYTES; // table offset placeholder
+        for (byte[] data : chunkData) size += data.length;
+        size += Integer.BYTES; // chunk count
+        size += (long) chunkEntries.size() * (Integer.BYTES + Long.BYTES + Integer.BYTES + Integer.BYTES); // table
+        return size + 1024; // небольшой запас
     }
 
     public long writeHeader(String sceneName) throws IOException {
-        RandomAccessFile raf = getFileReader().getRaf();
-        raf.seek(0);
+        mmapBuffer.position(0);
 
-        raf.write(getMAGIC().getBytes(StandardCharsets.US_ASCII));
-        raf.writeInt(getVERSION());
-        writeString(raf, sceneName);
+        mmapBuffer.put(getMAGIC().getBytes(StandardCharsets.US_ASCII));
+        mmapBuffer.putInt(getVERSION());
+        writeString(mmapBuffer, sceneName);
 
-        long placeholder = raf.getFilePointer();
-        raf.writeLong(0L);  // placeholder for table offset
+        long placeholder = mmapBuffer.position();
+        mmapBuffer.putLong(0L);  // placeholder for table offset
         return placeholder;
     }
 
     public void updateHeaderOffset(long placeholderPos, long offset) throws IOException {
-        RandomAccessFile raf = getFileReader().getRaf();
-        raf.seek(placeholderPos);
-        raf.writeLong(offset);
+        int curPos = mmapBuffer.position();
+        mmapBuffer.position((int) placeholderPos);
+        mmapBuffer.putLong(offset);
+        mmapBuffer.position(curPos);
     }
 
-    private void writeString(RandomAccessFile raf, String str) throws IOException {
+    private void writeString(ByteBuffer buffer, String str) {
         byte[] strBytes = str.getBytes(StandardCharsets.UTF_8);
-        raf.writeInt(strBytes.length);
-        raf.write(strBytes);
+        buffer.putInt(strBytes.length);
+        buffer.put(strBytes);
     }
 
     private void logByteData(byte[] data, int chunkId) {
@@ -150,5 +178,10 @@ public class CGSFileWriter extends CGSFile {
 
     public File getFile() {
         return file;
+    }
+
+    @Override
+    public void close() throws IOException {
+        if (channel != null) channel.close();
     }
 }

@@ -123,16 +123,16 @@ public class CalistaGameEngine extends SimpleApplication {
         moduleManager.register(new RendererModule(this), 20);
         moduleManager.register(new PhysicsModule(this), 35);
         moduleManager.register(new SceneModule(this), 10);
-        moduleManager.register(new UIModule(this), 5);
+
         moduleManager.initializeAll(this);
         moduleManager.loadAll(this, () -> {
             this.assetManager.registerLoader(OBJImporter.class, "obj");
             scene = moduleManager.getModule(SceneModule.class);
 
             assetLoader.loadAllAssets(() -> {
+                moduleManager.register(new UIModule(this), 5);
 
-
-                createTestTerrain(this, 150f, 150f);
+                createTestTerrain(this, 250f, 250f);
                 ShapeParty cubeDerp = new ShapeParty(this);
                 cubeDerp.startParty();
                 Player player = new Player(this, new Vector3f(0,20,0));

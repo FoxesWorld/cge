@@ -1,50 +1,50 @@
 package org.foxesworld.cge.core.file.extensions.cgmat;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonSyntaxException;
 import org.foxesworld.cge.core.file.Metadata;
 
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+
 public class CGMATMetadata extends Metadata {
-    private final String magic;
-    private final int version;
-    private final int materialCount;
-    private final long dataOffset;
-    private final long fileSize;
+    private final String name;
+    private final Map<String,Object> properties;
+    private final List<String> texturePaths;
 
-    public CGMATMetadata(String magic, int version, int materialCount, long dataOffset, long fileSize) {
-        this.magic = magic;
-        this.version = version;
-        this.materialCount = materialCount;
-        this.dataOffset = dataOffset;
-        this.fileSize = fileSize;
+    private static final Gson GSON = new Gson();
+
+    public CGMATMetadata(String headerJson,
+                         Map<String, Object> properties,
+                         List<String> texturePaths) {
+        this.name = parseNameFromJson(headerJson);
+        this.properties = Collections.unmodifiableMap(properties);
+        this.texturePaths = Collections.unmodifiableList(texturePaths);
     }
 
-    public String getMagic() {
-        return magic;
+    private static String parseNameFromJson(String headerJson) {
+        try {
+            JsonObject root = GSON.fromJson(headerJson, JsonObject.class);
+            if (root != null && root.has("name") && !root.get("name").isJsonNull()) {
+                return root.get("name").getAsString();
+            }
+            return "";
+        } catch (JsonSyntaxException e) {
+            throw new IllegalArgumentException("Invalid header JSON: " + e.getMessage(), e);
+        }
     }
 
-    public int getVersion() {
-        return version;
+    public String getName() {
+        return name;
     }
 
-    public int getMaterialCount() {
-        return materialCount;
+    public Map<String,Object> getProperties() {
+        return properties;
     }
 
-    public long getDataOffset() {
-        return dataOffset;
-    }
-
-    public long getFileSize() {
-        return fileSize;
-    }
-
-    @Override
-    public String toString() {
-        return "CGMATMetadata{" +
-                "magic='" + magic + '\'' +
-                ", version=" + version +
-                ", materialCount=" + materialCount +
-                ", dataOffset=" + dataOffset +
-                ", fileSize=" + fileSize +
-                '}';
+    public List<String> getTexturePaths() {
+        return texturePaths;
     }
 }

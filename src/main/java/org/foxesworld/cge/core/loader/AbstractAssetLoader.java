@@ -9,6 +9,7 @@ import org.foxesworld.cge.tmp.CgtexEntry;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
@@ -76,21 +77,29 @@ abstract class AbstractAssetLoader<E> {
         }
 
         return CompletableFuture.supplyAsync(() -> {
-            int total = 0;
             try (InputStreamReader reader = new InputStreamReader(is)) {
                 List<E> entries = gson.fromJson(reader, getListType());
-                for (E entry : entries) {
-                    try {
-                        total += loadEntryAsync(entry).get();
-                    } catch (Exception ex) {
-                        logger.warn("Failed to load entry {}: {}", entry, ex.getMessage());
-                    }
+                if (entries == null || entries.isEmpty()) {
+                    return CompletableFuture.completedFuture(0);
                 }
+                // Each entry deserves it's own thread
+                List<CompletableFuture<Integer>> tasks = new ArrayList<>(entries.size());
+                for (E entry : entries) {
+                    tasks.add(
+                            loadEntryAsync(entry)
+                                    .exceptionally(ex -> {
+                                        logger.warn("Failed to load entry {}: {}", entry, ex.getMessage());
+                                        return 0;
+                                    })
+                    );
+                }
+                return CompletableFuture.allOf(tasks.toArray(new CompletableFuture[0]))
+                        .thenApply(v -> tasks.stream().mapToInt(f -> f.join()).sum());
             } catch (Exception ex) {
                 logger.error("Error parsing JSON '{}': {}", getJsonResourcePath(), ex.getMessage());
+                return CompletableFuture.completedFuture(0);
             }
-            return total;
-        }, executor);
+        }, executor).thenCompose(f -> f); // разворачиваем future внутри future
     }
 
     /**

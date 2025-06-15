@@ -26,7 +26,7 @@ public class ModelLoader extends AbstractAssetLoader<String> {
 
     @Override
     protected String getJsonResourcePath() {
-        return "models.json";
+        return "data/models.json";
     }
 
     @Override

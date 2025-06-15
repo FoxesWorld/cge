@@ -142,9 +142,9 @@ public class Player extends Node {
         private final UIModule ui;
         public PlayerHud(Player p) {
             this.ui = p.engine.getModuleManager().getModule(UIModule.class);
-            ui.addPanel(this, "Interface/stats_config.xml");
+            ui.addPanel(this, "assets/Interface/stats_config.xml");
         }
-        public void setPlayerSpeed(float s) { speed = s * 10; }
+        public void setPlayerSpeed(float s) { speed = s; }
         public void setArmorBar(float a)    { armor = a; }
         public void setAbilityBar(float a)  { ability = a; }
         public void update(float tpf) { /* update HUD elements */ }

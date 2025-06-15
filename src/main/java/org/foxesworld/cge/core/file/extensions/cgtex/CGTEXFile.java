@@ -10,7 +10,6 @@ import org.foxesworld.cge.core.file.definition.JsonFileStructureLoader;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.*;
 
 /**
@@ -31,22 +30,6 @@ public class CGTEXFile extends AbstractFile<CGTEXMetadata> {
         super(file, mode, "CGTEX");
         setMAGIC("CGTX");
         setVERSION(1);
-        //loadFormatDefinition();
-    }
-
-    /**
-     * Loads the file format definition from the JSON descriptor.
-     */
-    private void loadFormatDefinition() {
-        try {
-            FileStructureLoader loader = new JsonFileStructureLoader(
-                    CGTEXFile.class.getClassLoader().getResourceAsStream("cgtex.json")
-            );
-            FileFormatDefinition format = loader.loadFormatDefinition("CGTEX");
-            setFormatDefinition(format);
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to load CGTEX format", e);
-        }
     }
 
     /**
@@ -69,7 +52,6 @@ public class CGTEXFile extends AbstractFile<CGTEXMetadata> {
         if (formatDefinition == null) {
             throw new IllegalStateException("Format definition not loaded");
         }
-
         logger.debug("Reading CGTEX file using format: {}", formatDefinition);
 
         Map<String, Object> headerMap = new LinkedHashMap<>();
@@ -82,8 +64,9 @@ public class CGTEXFile extends AbstractFile<CGTEXMetadata> {
         String magic = (String) headerMap.get("magic");
         int version = (Integer) headerMap.get("version");
         int textureCount = (Integer) headerMap.get("textureCount");
-        long dataOffset = getFileReader().getRaf().getFilePointer();
-        long fileSize = getFile().length();
+        // Получаем текущую позицию в mmap-буфере (аналог getFilePointer)
+        long dataOffset = fileReader.getMappedBuffer().position();
+        long fileSize = file.length();
 
         metadata = new CGTEXMetadata(magic, version, textureCount, dataOffset, fileSize);
 

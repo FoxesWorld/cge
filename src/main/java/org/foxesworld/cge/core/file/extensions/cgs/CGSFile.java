@@ -82,8 +82,9 @@ public class CGSFile extends AbstractFile<CGSMetadata> {
         String sceneName = (String) headerMap.get("sceneName");
         long tableOffset = (Long) headerMap.get("tableOffset");
 
-        raf.seek(tableOffset);
-        int chunkCount = raf.readInt();
+        // MMAP: перемещаемся к нужной позиции через buffer.position
+        getFileReader().getMappedBuffer().position(Math.toIntExact(tableOffset));
+        int chunkCount = getFileReader().getMappedBuffer().getInt();
 
         metadata = new CGSMetadata(magic, sceneName, version, tableOffset, chunkCount);
 
@@ -105,22 +106,30 @@ public class CGSFile extends AbstractFile<CGSMetadata> {
      * @return a SceneChunk instance
      * @throws IOException if reading fails or chunk ID is invalid
      */
-    public SceneChunk readChunk(int id) throws IOException {
+    public SceneChunk readChunk(int id) {
         ChunkEntry entry = chunkTable.get(id);
         if (entry == null) {
             logger.error("Chunk id not found: {}", id);
             throw new IllegalArgumentException("Chunk id not found: " + id);
         }
 
-        raf.seek(entry.offset());
+        // Перемещаемся к нужной позиции
+        getFileReader().getMappedBuffer().position((int) entry.offset());
+
+        // Создаём slice для указанного куска, чтобы избежать копирования данных
+        ByteBuffer chunkBuffer = getFileReader().getMappedBuffer().slice();
+        chunkBuffer.limit(entry.length());
+        chunkBuffer.order(getBYTE_ORDER());
+
         byte[] data = new byte[entry.length()];
-        raf.readFully(data);
+        chunkBuffer.get(data);
 
         logger.debug("Chunk {} raw data (hex): {}", id, HEX.formatHex(data));
         logger.debug("Chunk id={} Read: {} bytes", id, data.length);
 
-        ByteBuffer buffer = ByteBuffer.wrap(data).order(getBYTE_ORDER());
-        return new SceneChunk(entry, buffer);
+        // Если SceneChunk требует ByteBuffer, можно передать slice повторно:
+        chunkBuffer.position(0); // Сбросим позицию для чтения в SceneChunk, если нужно
+        return new SceneChunk(entry, chunkBuffer);
     }
 
     /**

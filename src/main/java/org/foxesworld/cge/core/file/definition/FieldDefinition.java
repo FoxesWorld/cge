@@ -1,96 +1,179 @@
 package org.foxesworld.cge.core.file.definition;
 
+import com.google.gson.annotations.SerializedName;
+
 import java.nio.ByteOrder;
 import java.util.List;
+import java.util.Objects;
 
+/**
+ * Definition of a single field within a structured binary file.
+ * Supports primitive types, arrays, byte order, length/count references, and seek directives.
+ */
 public class FieldDefinition {
 
-    private String name, type, seek;
+    @SerializedName("name")
+    private String name;
+
+    @SerializedName("type")
+    private String type;
+
+    @SerializedName("seek")
+    private String seek;
+
+    @SerializedName("length")
     private Integer length;
-    private ByteOrder byteOrder;
+
+    @SerializedName("byteOrder")
+    private ByteOrder byteOrder = ByteOrder.LITTLE_ENDIAN;
+
+    @SerializedName("lengthField")
     private String lengthField;
+
+    @SerializedName("countField")
     private String countField;
+
+    @SerializedName("element")
     private ElementDefinition element;
 
-    public FieldDefinition() {}
-
-    // === Стандартные геттеры ===
-
-    public String getName() {
-        return name;
+    public FieldDefinition() {
+        // Default constructor for JSON deserialization
     }
 
-    public String getType() {
-        return type;
+    /**
+     * Fluent builder for manual creation.
+     */
+    public static Builder builder() {
+        return new Builder();
     }
 
-    public Integer getLength() {
-        return length;
+    public String getName() { return name; }
+    public String getType() { return type; }
+    public String getSeek() { return seek; }
+    public Integer getLength() { return length; }
+    public ByteOrder getByteOrder() { return byteOrder; }
+    public String getLengthField() { return lengthField; }
+    public String getCountField() { return countField; }
+    public ElementDefinition getElement() { return element; }
+
+    @Override
+    public String toString() {
+        return "FieldDefinition{" +
+                "name='" + name + '\'' +
+                ", type='" + type + '\'' +
+                (seek != null ? ", seek='" + seek + '\'' : "") +
+                (length != null ? ", length=" + length : "") +
+                (lengthField != null ? ", lengthField='" + lengthField + '\'' : "") +
+                (countField != null ? ", countField='" + countField + '\'' : "") +
+                ", element='" + element + '}';
     }
 
-    public ByteOrder getByteOrder() {
-        return byteOrder;
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (!(o instanceof FieldDefinition)) return false;
+        FieldDefinition that = (FieldDefinition) o;
+        return Objects.equals(name, that.name) &&
+                Objects.equals(type, that.type) &&
+                Objects.equals(seek, that.seek) &&
+                Objects.equals(length, that.length) &&
+                byteOrder == that.byteOrder &&
+                Objects.equals(lengthField, that.lengthField) &&
+                Objects.equals(countField, that.countField) &&
+                Objects.equals(element, that.element);
     }
 
-    public String getLengthField() {
-        return lengthField;
+    @Override
+    public int hashCode() {
+        return Objects.hash(name, type, seek, length, byteOrder, lengthField, countField, element);
     }
 
-    public String getCountField() {
-        return countField;
+    /**
+     * Builder for FieldDefinition.
+     */
+    public static class Builder {
+        private final FieldDefinition fd = new FieldDefinition();
+
+        public Builder name(String name) {
+            fd.name = Objects.requireNonNull(name, "Field name is required");
+            return this;
+        }
+
+        public Builder type(String type) {
+            fd.type = Objects.requireNonNull(type, "Field type is required");
+            return this;
+        }
+
+        public Builder seek(String seek) {
+            fd.seek = seek;
+            return this;
+        }
+
+        public Builder length(int length) {
+            fd.length = length;
+            return this;
+        }
+
+        public Builder byteOrder(ByteOrder order) {
+            fd.byteOrder = order;
+            return this;
+        }
+
+        public Builder lengthField(String field) {
+            fd.lengthField = field;
+            return this;
+        }
+
+        public Builder countField(String field) {
+            fd.countField = field;
+            return this;
+        }
+
+        public Builder element(ElementDefinition element) {
+            fd.element = element;
+            return this;
+        }
+
+        public FieldDefinition build() {
+            // Validation
+            Objects.requireNonNull(fd.name, "Field name is required");
+            Objects.requireNonNull(fd.type, "Field type is required");
+            if ("array".equals(fd.type)) {
+                Objects.requireNonNull(fd.element, "ElementDefinition required for arrays");
+                Objects.requireNonNull(fd.countField, "countField is required for arrays");
+            }
+            return fd;
+        }
     }
 
-    public String getSeek() {
-        return seek;
-    }
-
-    public ElementDefinition getElement() {
-        return element;
-    }
-
-    // === Вложенный класс для описания структуры элемента массива ===
-
+    /**
+     * Definition of a complex element within an array.
+     */
     public static class ElementDefinition {
+        @SerializedName("fields")
         private List<FieldDefinition> fields;
 
         public ElementDefinition() {}
 
-        public List<FieldDefinition> getFields() {
-            return fields;
+        public List<FieldDefinition> getFields() { return fields; }
+        public void setFields(List<FieldDefinition> fields) { this.fields = fields; }
+
+        @Override
+        public String toString() {
+            return "ElementDefinition{fields=" + fields + '}';
         }
 
-        public void setFields(List<FieldDefinition> fields) {
-            this.fields = fields;
+        @Override
+        public boolean equals(Object o) {
+            if (this == o) return true;
+            if (!(o instanceof ElementDefinition)) return false;
+            ElementDefinition that = (ElementDefinition) o;
+            return Objects.equals(fields, that.fields);
         }
-    }
 
-    // === Сеттеры (если нужно для ручной инициализации, например при создании из кода) ===
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public void setType(String type) {
-        this.type = type;
-    }
-
-    public void setLength(Integer length) {
-        this.length = length;
-    }
-
-    public void setByteOrder(ByteOrder byteOrder) {
-        this.byteOrder = byteOrder;
-    }
-
-    public void setLengthField(String lengthField) {
-        this.lengthField = lengthField;
-    }
-
-    public void setCountField(String countField) {
-        this.countField = countField;
-    }
-
-    public void setElement(ElementDefinition element) {
-        this.element = element;
+        @Override
+        public int hashCode() {
+            return Objects.hash(fields);
+        }
     }
 }

@@ -7,119 +7,106 @@ import org.foxesworld.cge.core.file.definition.FileFormatDefinition;
 import org.foxesworld.cge.core.file.definition.FileStructureLoader;
 import org.foxesworld.cge.core.file.definition.JsonFileStructureLoader;
 import org.foxesworld.cge.core.file.extensions.cgs.CGSFile;
-import org.foxesworld.cge.core.io.RawByteParser;
 
 import java.io.File;
 import java.io.IOException;
-import java.io.RandomAccessFile;
 import java.math.BigInteger;
-import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 import static java.nio.ByteOrder.LITTLE_ENDIAN;
 
-/**
- * Provides common functionality for reading and writing structured binary files.
- *
- * @param <M> the type of metadata associated with this file
- */
-public abstract class AbstractFile<M extends Metadata> {
+public abstract class AbstractFile<M extends Metadata> implements AutoCloseable {
     private static final Logger logger = LogManager.getLogger(AbstractFile.class);
-
     protected final HexFormat HEX = HexFormat.of();
     protected M metadata;
-    protected final RandomAccessFile raf;
+    protected final File file;
+    protected FileFormatDefinition formatDefinition;
+
     private String MAGIC;
     private int VERSION;
     private ByteOrder BYTE_ORDER = LITTLE_ENDIAN;
-    private final File file;
-    private final FileReader fileReader;
-    protected FileFormatDefinition formatDefinition;
+
+    protected final FileReader fileReader;
 
     /**
      * Constructs a new AbstractFile with the given {@code File} and mode.
      *
      * @param file the file to open
      * @param mode the access mode (e.g., "r", "rw")
+     * @param formatDefinition name  of json-structure
      */
     protected AbstractFile(File file, String mode, String formatDefinition) {
         this.file = file;
         this.fileReader = new FileReader(this, mode);
-        this.raf = this.fileReader.getRaf();
         this.loadFormatDefinition(formatDefinition);
     }
 
     private void loadFormatDefinition(String definition) {
         try {
             FileStructureLoader loader = new JsonFileStructureLoader(
-                    CGSFile.class.getClassLoader().getResourceAsStream(definition.toLowerCase() + ".json")
+                    CGSFile.class.getClassLoader().getResourceAsStream("fileformats/" + definition.toLowerCase() + ".json")
             );
             setFormatDefinition(loader.loadFormatDefinition(definition));
         } catch (IOException e) {
-            throw new RuntimeException("Failed to load "+ definition + "format", e);
+            throw new RuntimeException("Failed to load " + definition + " format", e);
         }
     }
 
-    /**
-     * Parses the entire file according to the defined structure.
-     *
-     * @throws IOException if an I/O error occurs
-     */
-    protected abstract void readFileNew() throws IOException;
+    @Deprecated
+    protected void verifyHeader() {
+        fileReader.seek(0);
+        byte[] magicBytes = new byte[MAGIC.length()];
+        fileReader.readBytes(magicBytes.length);
+        System.arraycopy(fileReader.readBytes(magicBytes.length), 0, magicBytes, 0, magicBytes.length);
+        String fileMagic = new String(magicBytes, StandardCharsets.US_ASCII);
+        if (!fileMagic.equals(MAGIC)) {
+            throw new RuntimeException("Invalid file magic: expected '" + MAGIC + "', got '" + fileMagic + "'");
+        }
+        int ver = Short.toUnsignedInt(fileReader.readShort());
+        if (ver != VERSION) {
+            throw new RuntimeException("Unsupported version: expected " + VERSION + ", got " + ver);
+        }
+        fileReader.seek(fileReader.position() + 2); // skip 2 bytes
+    }
 
-    /**
-     * Called for each parsed entry in the file.
-     *
-     * @param entry a map of field names to values for the current entry
-     */
+    protected abstract void readFileNew() throws IOException;
     protected abstract void onEntryRead(Map<String, Object> entry);
 
-    /**
-     * Reads a single field from the file according to the provided definition.
-     *
-     * @param field   the definition of the field to read
-     * @param context a map of previously read field values in the current scope
-     * @return the parsed field value
-     * @throws IOException if an I/O error occurs
-     */
     protected Object readField(FieldDefinition field, Map<String, Object> context) throws IOException {
         BYTE_ORDER = field.getByteOrder();
+        fileReader.setByteOrder(BYTE_ORDER);
         return switch (field.getType()) {
-            case "byte"      -> raf.readByte();
-            case "ushort"    -> raf.readUnsignedShort();
-            case "int", "int32"    -> readInt(field);
-            case "uint32"    -> this.readInt(field) & 0xFFFFFFFFL;
-            case "long", "int64"   -> readLong();
-            case "uint64"    -> {
-                long signed = readLong();
+            case "byte" -> fileReader.readByte();
+            case "ushort" -> Short.toUnsignedInt(fileReader.readShort());
+            case "int", "int32" -> readInt(field);
+            case "uint32" -> Integer.toUnsignedLong(readInt(field));
+            case "long", "int64" -> fileReader.readLong();
+            case "uint64" -> {
+                long signed = fileReader.readLong();
                 BigInteger ui64 = BigInteger.valueOf(signed);
                 if (signed < 0) {
                     ui64 = ui64.add(BigInteger.ONE.shiftLeft(64));
                 }
                 yield ui64;
             }
-            case "float"     -> raf.readFloat();
-            case "double"    -> raf.readDouble();
-            case "length"    -> raf.length();
-            case "string"    -> {
+            case "float" -> fileReader.readFloat();
+            case "double" -> fileReader.readDouble();
+            case "length" -> fileReader.size();
+            case "string" -> {
                 int length = field.getLength() != null
                         ? field.getLength()
                         : (int) context.get(field.getLengthField());
-                byte[] strBytes = new byte[length];
-                raf.readFully(strBytes);
-                yield new String(strBytes, StandardCharsets.UTF_8);
+                yield fileReader.readString(length);
             }
             case "byteArray" -> {
                 int arrLen = field.getLength() != null
                         ? field.getLength()
                         : (int) context.get(field.getLengthField());
-                byte[] bytes = new byte[arrLen];
-                raf.readFully(bytes);
-                yield bytes;
+                yield fileReader.readBytes(arrLen);
             }
-            case "array"     -> {
+            case "array" -> {
                 int count = (int) context.get(field.getCountField());
                 List<Map<String, Object>> elements = new ArrayList<>();
                 for (int i = 0; i < count; i++) {
@@ -136,214 +123,81 @@ public abstract class AbstractFile<M extends Metadata> {
         };
     }
 
-    /**
-     * Writes a variable-length UTF-8 string to the file.
-     *
-     * @param value the string to write
-     * @throws IOException if an I/O error occurs
-     */
-    public void writeVariableLengthString(String value) throws IOException {
+    public void writeVariableLengthString(String value) {
         byte[] valueBytes = value.getBytes(StandardCharsets.UTF_8);
-        int length = valueBytes.length;
-        raf.writeInt(length);
-        raf.write(valueBytes);
+        fileReader.getMappedBuffer().putInt(valueBytes.length);
+        fileReader.getMappedBuffer().put(valueBytes);
     }
 
-    /**
-     * Positions the file pointer at the given absolute byte offset.
-     *
-     * @param position the position to seek to
-     * @throws IOException if an I/O error occurs
-     */
-    public void seek(long position) throws IOException {
-        raf.seek(position);
+    public void seek(int position) {
+        fileReader.seek(position);
     }
 
-    /**
-     * Reads a byte array of the specified length from the current file position.
-     *
-     * @param length the number of bytes to read
-     * @return the byte array read
-     * @throws IOException if an I/O error occurs
-     */
-    public byte[] readBytes(int length) throws IOException {
-        byte[] data = new byte[length];
-        raf.readFully(data);
-        return data;
+    public byte[] readBytes(int length) {
+        return fileReader.readBytes(length);
     }
 
-    /**
-     * Writes the given byte array to the file at the current position.
-     *
-     * @param data the data to write
-     * @throws IOException if an I/O error occurs
-     */
-    protected void writeBytes(byte[] data) throws IOException {
-        raf.write(data);
+    protected void writeBytes(byte[] data) {
+        fileReader.getMappedBuffer().put(data);
     }
 
-    /**
-     * Reads a 16-bit signed integer from the file using the given byte order.
-     *
-     * @param order the byte order to use
-     * @return the short value read
-     * @throws IOException if an I/O error occurs
-     */
-    private short readShort(ByteOrder order) throws IOException {
-        byte[] buf = new byte[2];
-        raf.readFully(buf);
-        ByteBuffer bb = ByteBuffer.wrap(buf).order(order);
-        return bb.getShort();
-    }
-
-    /**
-     * Reads a 32-bit signed integer from the file using the given field definition.
-     *
-     * @param field the field definition that may contain a seek directive
-     * @return the integer value read
-     * @throws IOException if an I/O error occurs
-     */
-    public int readInt(FieldDefinition field) throws IOException {
-        byte[] bytes = new byte[4];
-        raf.readFully(bytes);
+    public int readInt(FieldDefinition field) {
         if (field.getSeek() != null && field.getSeek().contains("->")) {
             String[] seekOption = field.getSeek().split("->");
             if (seekOption[0].equals("header")) {
-                raf.seek(metadata.getTableOffset());
+                fileReader.seek((int) metadata.getTableOffset());
             }
         }
-        return ByteBuffer.wrap(bytes).order(BYTE_ORDER).getInt();
+        return fileReader.readInt();
     }
 
-    /**
-     * Writes a 32-bit signed integer to the file.
-     *
-     * @param value the integer value to write
-     * @throws IOException if an I/O error occurs
-     */
-    protected void writeInt(int value) throws IOException {
-        raf.writeInt(value);
+    protected void writeInt(int value) {
+        fileReader.getMappedBuffer().putInt(value);
     }
 
-    /**
-     * Reads a 64-bit signed integer from the file.
-     *
-     * @return the long value read
-     * @throws IOException if an I/O error occurs
-     */
-    public long readLong() throws IOException {
-        byte[] bytes = new byte[8];
-        raf.readFully(bytes);
-        return ByteBuffer.wrap(bytes).order(BYTE_ORDER).getLong();
-    }
-
-    /**
-     * Writes a 64-bit signed integer to the file.
-     *
-     * @param value the long value to write
-     * @throws IOException if an I/O error occurs
-     */
-    protected void writeLong(long value) throws IOException {
-        raf.writeLong(value);
-    }
-
-    /**
-     * Reads a UTF-8 string prefixed by its length (32-bit int).
-     *
-     * @param maxLength the maximum allowed string length
-     * @return the string read
-     * @throws IOException if an I/O error occurs or the length is invalid
-     */
-    public String readString(int maxLength) throws IOException {
-        int len = raf.readInt();
+    public String readString(int maxLength) {
+        int len = fileReader.readInt();
         if (len < 0 || len > maxLength) {
-            throw new IOException("Invalid string length: " + len);
+            throw new RuntimeException("Invalid string length: " + len);
         }
-        byte[] data = new byte[len];
-        raf.readFully(data);
-        return new String(data, StandardCharsets.UTF_8);
+        return fileReader.readString(len);
     }
 
-    /**
-     * Writes a UTF-8 string prefixed by its length (32-bit int).
-     *
-     * @param s the string to write
-     * @throws IOException if an I/O error occurs
-     */
-    protected void writeString(String s) throws IOException {
+    protected void writeString(String s) {
         byte[] data = s.getBytes(StandardCharsets.UTF_8);
-        raf.writeInt(data.length);
-        raf.write(data);
+        fileReader.getMappedBuffer().putInt(data.length);
+        fileReader.getMappedBuffer().put(data);
     }
 
-    /**
-     * Returns the underlying {@link File} object.
-     *
-     * @return the file
-     */
     public File getFile() {
         return file;
     }
 
-    /**
-     * Sets the expected magic identifier for this file type.
-     *
-     * @param MAGIC the magic string to set
-     */
     public void setMAGIC(String MAGIC) {
         this.MAGIC = MAGIC;
     }
 
-    /**
-     * Sets the expected version number for this file type.
-     *
-     * @param VERSION the version number to set
-     */
     public void setVERSION(int VERSION) {
         this.VERSION = VERSION;
     }
 
-    /**
-     * Sets the byte order used for multi-byte reads and writes.
-     *
-     * @param BYTE_ORDER the byte order to use
-     */
     public void setBYTE_ORDER(ByteOrder BYTE_ORDER) {
         this.BYTE_ORDER = BYTE_ORDER;
+        fileReader.setByteOrder(BYTE_ORDER);
     }
 
-    /**
-     * Returns the magic identifier for this file.
-     *
-     * @return the magic string
-     */
     public String getMAGIC() {
         return MAGIC;
     }
 
-    /**
-     * Returns the version number for this file.
-     *
-     * @return the version number
-     */
     public int getVERSION() {
         return VERSION;
     }
 
-    /**
-     * Returns the byte order used for multi-byte operations.
-     *
-     * @return the byte order
-     */
     public ByteOrder getBYTE_ORDER() {
         return BYTE_ORDER;
     }
 
-    /**
-     * Sets the format definition describing header and entry structures.
-     *
-     * @param formatDefinition the format definition to set
-     */
     public void setFormatDefinition(FileFormatDefinition formatDefinition) {
         this.formatDefinition = formatDefinition;
     }
@@ -352,21 +206,20 @@ public abstract class AbstractFile<M extends Metadata> {
         return formatDefinition;
     }
 
-    /**
-     * Returns the metadata associated with this file.
-     *
-     * @return the metadata object
-     */
     public M getMetadata() {
         return metadata;
     }
 
-    /**
-     * Returns the {@link FileReader} used to access the file bytes.
-     *
-     * @return the FileReader
-     */
+    public long size() {
+        return fileReader.size();
+    }
+
     public FileReader getFileReader() {
         return fileReader;
+    }
+
+    @Override
+    public void close() throws IOException {
+        fileReader.close();
     }
 }

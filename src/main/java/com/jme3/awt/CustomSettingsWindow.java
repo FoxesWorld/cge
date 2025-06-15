@@ -14,6 +14,7 @@ import java.awt.*;
 import java.awt.geom.RoundRectangle2D;
 import java.io.IOException;
 
+@Deprecated
 public class CustomSettingsWindow extends JFrame {
 
     private FlatComboBox<String> resolutionComboBox;

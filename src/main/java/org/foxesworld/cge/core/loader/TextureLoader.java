@@ -31,7 +31,7 @@ public class TextureLoader extends AbstractAssetLoader<CgtexEntry> {
 
     @Override
     protected String getJsonResourcePath() {
-        return "textures.json";
+        return "data/textures.json";
     }
 
     @Override
