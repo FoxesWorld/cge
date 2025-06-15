@@ -6,15 +6,16 @@ import com.jme3.bullet.control.CharacterControl;
 import com.jme3.input.InputManager;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
+import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.physics.PhysicsModule;
 import org.foxesworld.cge.ui.UIModule;
 
 /**
- * Represents the player character with physics, movement, and camera effects.
- * Relies on CharacterControl for collision, MovementControl for input-based movement,
- * and CameraEffectsControl for camera bobbing, jump, and landing effects.
+ * Represents the player character with physics, movement, camera effects,
+ * and a visible third-person model that follows behind the camera.
  */
 public class Player extends Node {
 
@@ -27,41 +28,37 @@ public class Player extends Node {
     private final CameraEffectsControl camEffectsControl;
     private final PlayerHud playerHud;
 
-    private final float eyeHeight = 1.6f;
-    private final float walkSpeed = 0.1f;
-    private final float sprintSpeed = 0.25f;
-    private final float acceleration = 0.6f;
-    private final float deceleration = 0.8f;
-    private final float maxStamina = 1.0f;
-    private final float staminaDrainRate = 0.3f;
-    private final float staminaRegenRate = 0.05f;
-    private final float smoothFactor = 2f;
+    // Visible player model (third-person)
+    private Spatial playerModel;
+    private final float modelBackOffset = 0.3f;
+    private final float modelDownOffset = -1.6f;
 
-    /**
-     * Creates a new Player instance.
-     *
-     * @param engine   reference to the game engine (provides InputManager, Camera, BulletAppState, etc.)
-     * @param spawnPos initial spawn position of the character's capsule center
-     */
+    private final float eyeHeight   = 1.6f;
+    private final float walkSpeed   = 0.1f;
+    private final float sprintSpeed = 0.25f;
+    private final float accel       = 0.6f;
+    private final float decel       = 0.8f;
+    private final float smooth      = 2f;
+
     public Player(CalistaGameEngine engine, Vector3f spawnPos) {
         super("Player");
+        this.engine = engine;
+        this.input  = engine.getInputManager();
+        this.cam    = engine.getCamera();
+        this.playerHud = new PlayerHud(this);
 
         setLocalTranslation(spawnPos);
-        this.engine = engine;
-        this.input = engine.getInputManager();
-        this.cam = engine.getCamera();
-        this.playerHud = new PlayerHud(this);
 
         this.bullet = engine.getModuleManager()
                 .getModule(PhysicsModule.class)
                 .getBulletAppState();
 
-        CapsuleCollisionShape shape = new CapsuleCollisionShape(0.5f, 1.8f, 1);
+        CapsuleCollisionShape shape = new CapsuleCollisionShape(0.5f, 1.0f);
         this.character = new CharacterControl(shape, 0.05f);
+        character.setPhysicsLocation(spawnPos);
         character.setJumpSpeed(4f);
         character.setFallSpeed(9.8f);
         character.setGravity(9.8f);
-        character.setPhysicsLocation(spawnPos);
 
         addControl(character);
         bullet.getPhysicsSpace().add(character);
@@ -69,57 +66,59 @@ public class Player extends Node {
         engine.getFlyByCamera().setEnabled(false);
         input.setCursorVisible(false);
 
-        FirstPersonCameraControl fpCamControl = new FirstPersonCameraControl(
-                this, eyeHeight, 0.2f, 0.2f, smoothFactor
-        );
-        addControl(fpCamControl);
+        PlayerCameraControl camControl = new PlayerCameraControl(this, eyeHeight, 0.2f, smooth);
+        addControl(camControl);
 
-        this.movementControl = new MovementControl(this, walkSpeed, sprintSpeed, acceleration, deceleration, smoothFactor);
+        this.movementControl = new MovementControl(this, walkSpeed, sprintSpeed, accel, decel, smooth);
         addControl(movementControl);
-
         this.camEffectsControl = new CameraEffectsControl(this);
         addControl(camEffectsControl);
 
         movementControl.setJumpListener(new MovementControl.JumpListener() {
-            @Override
-            public void onJumpStart() {
-                camEffectsControl.notifyJumpStart();
-            }
-
-            @Override
-            public void onLanding(float peak) {
-                camEffectsControl.notifyLanding(peak);
-            }
+            @Override public void onJumpStart()  { camEffectsControl.notifyJumpStart(); }
+            @Override public void onLanding(float peak) { camEffectsControl.notifyLanding(peak); }
         });
 
-        synchronizeCamera();
+        synchronize();
+        loadPlayerModel();
+    }
+
+    private void loadPlayerModel() {
+        playerModel = engine.getAssetManager().loadModel("meshes/YBot.j3o");
+        playerModel.setShadowMode(RenderQueue.ShadowMode.Cast);
+        playerModel.setCullHint(Spatial.CullHint.Never);
+        playerModel.setLocalScale(.01f);
+        attachChild(playerModel);
+    }
+
+    private void synchronize() {
+        Vector3f pos = character.getPhysicsLocation();
+        setLocalTranslation(pos);
+        cam.setLocation(pos.add(0, eyeHeight, 0));
     }
 
     /**
-     * Aligns the Node and camera position with the CharacterControl.
-     */
-    private void synchronizeCamera() {
-        Vector3f charPos = character.getPhysicsLocation();
-        setLocalTranslation(charPos);
-        cam.setLocation(charPos.add(0, eyeHeight, 0));
-    }
-
-    /**
-     * Updates the player each frame.
-     *
-     * Note: This method must be called manually from the main application loop,
-     * or you can wrap it in an AppState or Control for automatic updates.
-     *
-     * @param tpf time per frame in seconds
+     * Called each frame to update the player and model positions.
      */
     public void update(float tpf) {
-        synchronizeCamera();
+        synchronize();
+        updateModelPosition();
         playerHud.update(tpf);
-        // MovementControl and CameraEffectsControl are updated automatically as Controls.
+    }
+
+    private void updateModelPosition() {
+        Vector3f camPos = cam.getLocation();
+        Vector3f camDir = cam.getDirection().normalize();
+
+        Vector3f offset = camDir.mult(-modelBackOffset).add(0, modelDownOffset, 0);
+        playerModel.setLocalTranslation(camPos.add(offset));
+
+        Vector3f lookTarget = camPos.add(camDir);
+        playerModel.lookAt(lookTarget, Vector3f.UNIT_Y);
     }
 
     /**
-     * Cleans up resources when unloading the player.
+     * Cleanup controls and physics when unloading.
      */
     public void cleanup() {
         removeControl(movementControl);
@@ -129,32 +128,34 @@ public class Player extends Node {
         input.setCursorVisible(true);
     }
 
-    public CharacterControl getCharacter() {
-        return character;
-    }
+    // --- Getters for controls and camera ---
+    public CharacterControl getCharacter() { return character; }
+    public MovementControl getMovementControl() { return movementControl; }
+    public Camera getCam() { return cam; }
+    public CalistaGameEngine getEngine() { return engine; }
 
-    public MovementControl getMovementControl() {
-        return movementControl;
+    /**
+     * HUD inner class for updating on-screen stats.
+     */
+    public static class PlayerHud {
+        private float speed, armor = 0.6f, ability = 0.4f;
+        private final UIModule ui;
+        public PlayerHud(Player p) {
+            this.ui = p.engine.getModuleManager().getModule(UIModule.class);
+            ui.addPanel(this, "Interface/stats_config.xml");
+        }
+        public void setPlayerSpeed(float s) { speed = s * 10; }
+        public void setArmorBar(float a)    { armor = a; }
+        public void setAbilityBar(float a)  { ability = a; }
+        public void update(float tpf) { /* update HUD elements */ }
     }
 
     public InputManager getInput() {
         return input;
     }
 
-    public Camera getCam() {
-        return cam;
-    }
-
-    public CalistaGameEngine getCalistaGameEngine() {
-        return engine;
-    }
-
-    public PlayerHud getPlayerHud() {
-        return playerHud;
-    }
-
-    public float getEyeHeight() {
-        return eyeHeight;
+    public CameraEffectsControl getCamEffectsControl() {
+        return camEffectsControl;
     }
 
     public float getWalkSpeed() {
@@ -165,70 +166,7 @@ public class Player extends Node {
         return sprintSpeed;
     }
 
-    public float getAcceleration() {
-        return acceleration;
-    }
-
-    public float getDeceleration() {
-        return deceleration;
-    }
-
-    public float getMaxStamina() {
-        return maxStamina;
-    }
-
-    public float getStaminaDrainRate() {
-        return staminaDrainRate;
-    }
-
-    public float getStaminaRegenRate() {
-        return staminaRegenRate;
-    }
-
-    /**
-     * Displays HUD elements such as speed, armor, and abilities.
-     */
-    @SuppressWarnings("unused")
-    public static class PlayerHud {
-        private float playerSpeed;
-        private float armorBar = 0.6f;
-        private float abilityBar = 0.4f;
-        private final UIModule ui;
-
-        /**
-         * @param player reference to the Player to obtain the UIModule
-         */
-        public PlayerHud(Player player) {
-            this.ui = player.engine
-                    .getModuleManager()
-                    .getModule(UIModule.class);
-
-            // Load main HUD panel
-            ui.addPanel(this, "Interface/stats_config.xml");
-
-            // Add crosshair at screen center (optional)
-            //ui.addImage(this, "Interface/crosshair.png", 5f, 5f, 32, 32);
-        }
-
-        public void setPlayerSpeed(float speed) {
-            this.playerSpeed = speed * 10;
-        }
-
-        public void setArmorBar(float armor) {
-            this.armorBar = armor;
-        }
-
-        public void setAbilityBar(float ability) {
-            this.abilityBar = ability;
-        }
-
-        /**
-         * Called each frame to update HUD values.
-         *
-         * @param tpf time per frame in seconds
-         */
-        public void update(float tpf) {
-
-        }
+    public PlayerHud getPlayerHud() {
+        return playerHud;
     }
 }

@@ -5,6 +5,8 @@ import com.jme3.app.StatsAppState;
 import com.jme3.asset.AssetManager;
 import com.jme3.math.Vector3f;
 import com.jme3.system.AppSettings;
+import jme3utilities.debug.AxesVisualizer;
+import jme3utilities.debug.Dumper;
 import org.foxesworld.cge.core.file.extensions.ydd.DrawableEntry;
 import org.foxesworld.cge.core.file.extensions.ydd.YDDFile;
 import org.foxesworld.cge.core.loader.AssetLoader;
@@ -50,6 +52,7 @@ public class CalistaGameEngine extends SimpleApplication {
     private SceneModule scene;
 
 
+    /*
     public static void main(String[] args) {
         CalistaGameEngine app = new CalistaGameEngine();
         setupTheme("theme/calista.properties");
@@ -69,7 +72,7 @@ public class CalistaGameEngine extends SimpleApplication {
 
         app.setSettings(settings);
         app.start();
-    }
+    } */
 
     public CalistaGameEngine(){
         System.setProperty("log.dir", System.getProperty("user.dir"));
@@ -127,6 +130,8 @@ public class CalistaGameEngine extends SimpleApplication {
             scene = moduleManager.getModule(SceneModule.class);
 
             assetLoader.loadAllAssets(() -> {
+
+
                 createTestTerrain(this, 150f, 150f);
                 ShapeParty cubeDerp = new ShapeParty(this);
                 cubeDerp.startParty();
@@ -140,7 +145,6 @@ public class CalistaGameEngine extends SimpleApplication {
                 if (physicsModule != null) {
                     physicsModule.getBulletAppState().getPhysicsSpace().addCollisionListener(new CollisionParticleEmitter(this));
                 }
-
             });
 
         });

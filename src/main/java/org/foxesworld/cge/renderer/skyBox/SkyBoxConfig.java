@@ -4,141 +4,138 @@ import com.jme3.math.ColorRGBA;
 import org.foxesworld.cge.core.module.ModuleConfig;
 
 /**
- * Конфигурация для SkyBox-модуля: задаёт параметры неба, облаков, света и теней.
+ * Configuration class for the SkyBox module: defines parameters for sky, clouds, lighting, and shadows.
  */
 public class SkyBoxConfig extends ModuleConfig {
-    /** Имя ресурса кубической текстуры неба (например, "cubemap_0"). */
+
+    // ----------------------------------
+    // Sky & Environment
+    // ----------------------------------
+
+    /** Name of the cube map texture resource (e.g., "cubemap_0"). */
     private String skyBoxTexture = "cubemap_0";
 
-    /**
-     * Режим теней:
-     * Options:
-     *   Off,
-     *   Cast,
-     *   Receive,
-     *   CastAndReceive,
-     *   Inherit
-     */
-    private String shadowMode = "CastAndReceive";
-
-    /**
-     * Тип окружения для SkyFactory:
-     * Options:
-     *   CubeMap,
-     *   TopDome,
-     *   TwoDomes
-     */
+    /** Environment type for the SkyFactory. Options: CubeMap, TopDome, TwoDomes. */
     private String envMap = "CubeMap";
 
-    /**
-     * Тип отображения звёзд и луны:
-     * Options:
-     * Cube,
-     * TopDome,
-     * TwoDomes;
-     */
+    /** Option for rendering stars and the moon. Options: Cube, TopDome, TwoDomes. */
     private String starsOption = "Cube";
 
-    /** Интенсивность «плющения» облаков (0.0 … 1.0). */
-    private float cloudFlattering = 0.5f;
-
-    /** Включение нижнего полушария неба. */
+    /** Enables rendering of the bottom hemisphere. */
     private boolean bottomDome = true;
 
-    /** Размер карты теней для DirectionalLightShadowRenderer (например, 2048). */
-    private int shadowMapSize = 2048;
+    // ----------------------------------
+    // Clouds
+    // ----------------------------------
 
-    /** Количество фрустумов (каскадов) для DirectionalLightShadowRenderer (например, 3). */
-    private int shadowFrustumCount = 3;
+    /** Flattening effect of the clouds (0.0 to 1.0). */
+    private float cloudFlattering = 0.5f;
 
-    /**
-     * Режим фильтрации краёв теней:
-     * Options:
-     *   Nearest,
-     *   Bilinear,
-     *   PCF4,
-     *   PCF8,
-     *   PCFPOISSON
-     */
-    private String edgeFilteringMode = "PCF4";
-
-    /** Максимальное расстояние по Z для теней (например, 1000.0). */
-    private float shadowZExtend = 1000f;
-
-    /** Интенсивность направленного света солнца (1.0 = стандартный белый). */
-    private float sunLightIntensity = 1.2f;
-
-    /** Интенсивность направленного света луны (1.0 = стандартный белый). */
-    private float moonLightIntensity = 0.4f;
+    /** Cloud density (0.0 to 1.0). */
     private float cloudiness = 0.5f;
+
+    /** Vertical offset of the clouds. */
     private float cloudYOffset = 0.4f;
+
+    /** Sky dome top angle. */
     private float topAngle = 1.78f;
-    /** Продолжительность полного виртуального дня в секундах (например, 600.0f для 10 минут). */
-    private float dayLengthSec = 600f;
 
-    /** Включает блюм (световые ореолы) через FilterPostProcessor. */
-    private boolean bloomEnabled = true;
-
-    /** Яркость экспозиции для небесного бокса (обычно 1.0). */
-    private float skyExposure = 1.0f;
-
-    /** Включает отображение облаков (SkyControl). */
+    /** Enables rendering of clouds. */
     private boolean cloudsEnabled = true;
 
-    /** Включает отображение звёзд. */
-    private boolean starsEnabled = true;
+    // ----------------------------------
+    // Lighting
+    // ----------------------------------
 
-    /** Включает включение DirectionalLightShadowRenderer (генерация теней). */
+    /** Shadow mode. Options: Off, Cast, Receive, CastAndReceive, Inherit. */
+    private String shadowMode = "CastAndReceive";
+
+    /** Size of the shadow map texture (e.g., 2048). */
+    private int shadowMapSize = 2048;
+
+    /** Number of frustums (cascades) for DirectionalLightShadowRenderer. */
+    private int shadowFrustumCount = 3;
+
+    /** Edge filtering mode. Options: Nearest, Bilinear, PCF4, PCF8, PCFPOISSON. */
+    private String edgeFilteringMode = "PCF4";
+
+    /** Maximum Z extent for shadows. */
+    private float shadowZExtend = 1000f;
+
+    /** Enables shadows via DirectionalLightShadowRenderer. */
     private boolean enableShadows = true;
 
-    /** Включает динамическое направление солнца (анимация). */
-    private boolean animatedSun = true;
+    /** Directional sunlight intensity. */
+    private float sunLightIntensity = 1.2f;
 
-    /** Включает динамическое направление луны (анимация). */
-    private boolean animatedMoon = true;
+    /** Directional moonlight intensity. */
+    private float moonLightIntensity = 0.4f;
 
-    /** Цвет фонового (окружающего) освещения — AmbientLight. */
+    /** Ambient light color. */
     private ColorRGBA ambientColor = new ColorRGBA(0.2f, 0.2f, 0.2f, 1.0f);
 
-    /** Интенсивность блюма (например, 1.2f). */
-    private float bloomIntensity = 1.2f;
+    /** Enables animated sun direction. */
+    private boolean animatedSun = true;
 
-    /** Параметр экспозиции для блюма (например, 2.0f). */
-    private float bloomExposure = 2.0f;
+    /** Enables animated moon direction. */
+    private boolean animatedMoon = true;
 
-    /** Цвет солнца (RGB), применяется к направленному свету днём. */
+    /** Color of sunlight. */
     private ColorRGBA sunColor = ColorRGBA.White.clone();
 
-    /** Цвет луны (обычно серовато-голубой, RGB). */
+    /** Color of moonlight. */
     private ColorRGBA moonColor = new ColorRGBA(0.6f, 0.7f, 1.0f, 1.0f);
 
-    /** Интенсивность солнечного света днём. */
+    /** Daytime light intensity. */
     private float dayIntensity = 1.5f;
 
-    /** Интенсивность освещения ночью. */
+    /** Nighttime ambient intensity. */
     private float nightIntensity = 0.1f;
 
-    /** Интенсивность лунного света. */
+    /** Moonlight intensity. */
     private float moonIntensity = 0.3f;
 
-    /** Экспозиция HDR в дневное время. */
+    // ----------------------------------
+    // Time
+    // ----------------------------------
+
+    /** Length of a full virtual day in seconds (e.g., 600.0f for 10 minutes). */
+    private float dayLengthSec = 600f;
+
+    private float verticalAngle = 64f;
+
+    // ----------------------------------
+    // Post-Processing
+    // ----------------------------------
+
+    /** Enables bloom (glow) effect via FilterPostProcessor. */
+    private boolean bloomEnabled = true;
+
+    /** Overall exposure for the sky. */
+    private float skyExposure = 1.0f;
+
+    /** Bloom intensity. */
+    private float bloomIntensity = 1.2f;
+
+    /** Bloom exposure. */
+    private float bloomExposure = 2.0f;
+
+    /** Daytime HDR exposure. */
     private float dayExposure = 1.2f;
 
-    /** Экспозиция HDR в ночное время. */
+    /** Nighttime HDR exposure. */
     private float nightExposure = 0.3f;
 
-
+    /** Enables star rendering. */
+    private boolean starsEnabled = true;
 
     // ----------------------------------
-    // Геттеры
+    // Getters & Setters
     // ----------------------------------
+
 
     public String getSkyBoxTexture() {
         return skyBoxTexture;
-    }
-
-    public String getShadowMode() {
-        return shadowMode;
     }
 
     public String getEnvMap() {
@@ -149,12 +146,32 @@ public class SkyBoxConfig extends ModuleConfig {
         return starsOption;
     }
 
+    public boolean isBottomDome() {
+        return bottomDome;
+    }
+
     public float getCloudFlattering() {
         return cloudFlattering;
     }
 
-    public boolean isBottomDome() {
-        return bottomDome;
+    public float getCloudiness() {
+        return cloudiness;
+    }
+
+    public float getCloudYOffset() {
+        return cloudYOffset;
+    }
+
+    public float getTopAngle() {
+        return topAngle;
+    }
+
+    public boolean isCloudsEnabled() {
+        return cloudsEnabled;
+    }
+
+    public String getShadowMode() {
+        return shadowMode;
     }
 
     public int getShadowMapSize() {
@@ -173,6 +190,10 @@ public class SkyBoxConfig extends ModuleConfig {
         return shadowZExtend;
     }
 
+    public boolean isEnableShadows() {
+        return enableShadows;
+    }
+
     public float getSunLightIntensity() {
         return sunLightIntensity;
     }
@@ -181,39 +202,8 @@ public class SkyBoxConfig extends ModuleConfig {
         return moonLightIntensity;
     }
 
-    public float getCloudiness() {
-        return cloudiness;
-    }
-
-    public float getCloudYOffset() {
-        return cloudYOffset;
-    }
-
-    public float getTopAngle() {
-        return topAngle;
-    }
-    public float getDayLengthSec() {
-        return dayLengthSec;
-    }
-
-    public boolean isBloomEnabled() {
-        return bloomEnabled;
-    }
-
-    public float getSkyExposure() {
-        return skyExposure;
-    }
-
-    public boolean isCloudsEnabled() {
-        return cloudsEnabled;
-    }
-
-    public boolean isStarsEnabled() {
-        return starsEnabled;
-    }
-
-    public boolean isEnableShadows() {
-        return enableShadows;
+    public ColorRGBA getAmbientColor() {
+        return ambientColor;
     }
 
     public boolean isAnimatedSun() {
@@ -222,14 +212,6 @@ public class SkyBoxConfig extends ModuleConfig {
 
     public boolean isAnimatedMoon() {
         return animatedMoon;
-    }
-
-    public float getBloomIntensity() {
-        return bloomIntensity;
-    }
-
-    public float getBloomExposure() {
-        return bloomExposure;
     }
 
     public ColorRGBA getSunColor() {
@@ -252,6 +234,26 @@ public class SkyBoxConfig extends ModuleConfig {
         return moonIntensity;
     }
 
+    public float getDayLengthSec() {
+        return dayLengthSec;
+    }
+
+    public boolean isBloomEnabled() {
+        return bloomEnabled;
+    }
+
+    public float getSkyExposure() {
+        return skyExposure;
+    }
+
+    public float getBloomIntensity() {
+        return bloomIntensity;
+    }
+
+    public float getBloomExposure() {
+        return bloomExposure;
+    }
+
     public float getDayExposure() {
         return dayExposure;
     }
@@ -260,100 +262,11 @@ public class SkyBoxConfig extends ModuleConfig {
         return nightExposure;
     }
 
-
-    // ----------------------------------
-    // Сеттеры (если конфиг поддерживает изменение во время работы)
-    // ----------------------------------
-
-    public void setSkyBoxTexture(String skyBoxTexture) {
-        this.skyBoxTexture = skyBoxTexture;
+    public boolean isStarsEnabled() {
+        return starsEnabled;
     }
 
-    public void setShadowMode(String shadowMode) {
-        this.shadowMode = shadowMode;
+    public float getVerticalAngle() {
+        return verticalAngle;
     }
-
-    public void setEnvMap(String envMap) {
-        this.envMap = envMap;
-    }
-
-    public void setStarsOption(String starsOption) {
-        this.starsOption = starsOption;
-    }
-
-    public void setCloudFlattering(float cloudFlattering) {
-        this.cloudFlattering = cloudFlattering;
-    }
-
-    public void setBottomDome(boolean bottomDome) {
-        this.bottomDome = bottomDome;
-    }
-
-    public void setShadowMapSize(int shadowMapSize) {
-        this.shadowMapSize = shadowMapSize;
-    }
-
-    public void setShadowFrustumCount(int shadowFrustumCount) {
-        this.shadowFrustumCount = shadowFrustumCount;
-    }
-
-    public void setEdgeFilteringMode(String edgeFilteringMode) {
-        this.edgeFilteringMode = edgeFilteringMode;
-    }
-
-    public void setShadowZExtend(float shadowZExtend) {
-        this.shadowZExtend = shadowZExtend;
-    }
-
-    public void setSunLightIntensity(float sunLightIntensity) {
-        this.sunLightIntensity = sunLightIntensity;
-    }
-
-    public void setMoonLightIntensity(float moonLightIntensity) {
-        this.moonLightIntensity = moonLightIntensity;
-    }
-
-    public void setCloudiness(float cloudiness) {
-        this.cloudiness = cloudiness;
-    }
-
-    public void setCloudYOffset(float cloudYOffset) {
-        this.cloudYOffset = cloudYOffset;
-    }
-
-    public void setTopAngle(float topAngle) {
-        this.topAngle = topAngle;
-    }
-    public void setDayLengthSec(float dayLengthSec) {
-        this.dayLengthSec = dayLengthSec;
-    }
-
-    public void setBloomEnabled(boolean bloomEnabled) {
-        this.bloomEnabled = bloomEnabled;
-    }
-
-    public void setSkyExposure(float skyExposure) {
-        this.skyExposure = skyExposure;
-    }
-
-    public void setCloudsEnabled(boolean cloudsEnabled) {
-        this.cloudsEnabled = cloudsEnabled;
-    }
-
-    public void setStarsEnabled(boolean starsEnabled) {
-        this.starsEnabled = starsEnabled;
-    }
-
-    public void setEnableShadows(boolean enableShadows) {
-        this.enableShadows = enableShadows;
-    }
-
-    public void setAnimatedSun(boolean animatedSun) {
-        this.animatedSun = animatedSun;
-    }
-
-    public void setAnimatedMoon(boolean animatedMoon) {
-        this.animatedMoon = animatedMoon;
-    }
-
 }
