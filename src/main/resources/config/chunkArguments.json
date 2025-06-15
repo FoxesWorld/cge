@@ -1,0 +1,33 @@
+{
+  "TERRAIN": {
+    "general": {
+      "width": "Int",
+      "height": "Int",
+      "pos": "Vector3f"
+    },
+    "FLAT": {
+      "heightMap": "String",
+      "detailLevel": "Int"
+    }
+  },
+  "LIGHTING": {
+    "general": {
+      "pos": "Vector3f",
+      "color": "Color",
+      "intensity": "Float"
+    },
+    "SKY": {
+      "castShadows": "Boolean"
+    },
+    "SPOT": {
+      "radius": "Float",
+      "dir": "Vector3f"
+    },
+    "DIRECTIONAL": {
+      "dir": "Vector3f"
+    },
+    "POINT": {
+      "radius": "Float"
+    }
+  }
+}

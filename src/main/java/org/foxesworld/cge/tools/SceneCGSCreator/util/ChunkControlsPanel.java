@@ -35,7 +35,7 @@ public class ChunkControlsPanel extends JPanel {
         // Загружаем конфиг единожды
         try {
             config = new ChunkFieldTypeConfigLoader(
-                    getClass().getClassLoader().getResourceAsStream("chunkArguments.json")
+                    getClass().getClassLoader().getResourceAsStream("config/chunkArguments.json")
             );
         } catch (IOException e) {
             throw new UncheckedIOException(e);

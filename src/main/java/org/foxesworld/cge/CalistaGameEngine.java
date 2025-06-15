@@ -4,9 +4,6 @@ import com.jme3.app.SimpleApplication;
 import com.jme3.app.StatsAppState;
 import com.jme3.asset.AssetManager;
 import com.jme3.math.Vector3f;
-import com.jme3.system.AppSettings;
-import jme3utilities.debug.AxesVisualizer;
-import jme3utilities.debug.Dumper;
 import org.foxesworld.cge.core.file.extensions.ydd.DrawableEntry;
 import org.foxesworld.cge.core.file.extensions.ydd.YDDFile;
 import org.foxesworld.cge.core.loader.AssetLoader;
@@ -24,18 +21,16 @@ import org.foxesworld.cge.renderer.RendererModule;
 import org.foxesworld.cge.scene.SceneModule;
 import org.foxesworld.cge.tmp.CollisionParticleEmitter;
 import org.foxesworld.cge.tmp.ShapeParty;
-import org.foxesworld.cge.tmp.obj.OBJImporter;
+import org.foxesworld.cge.importers.fbx.FBXImporter;
+import org.foxesworld.cge.importers.obj.OBJImporter;
 import org.foxesworld.cge.ui.UIModule;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
-import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.logging.LogManager;
 
 import static org.foxesworld.cge.tmp.Terrain.createTestTerrain;
-import static org.foxesworld.cge.tools.SceneCGSCreator.SceneCgsCreatorFrame.setupTheme;
 
 public class CalistaGameEngine extends SimpleApplication {
     //private final Map<String, Texture> textureMap = new HashMap<>();
@@ -50,29 +45,6 @@ public class CalistaGameEngine extends SimpleApplication {
     private final ConfigService configService;
     private final TaskScheduler taskScheduler;
     private SceneModule scene;
-
-
-    /*
-    public static void main(String[] args) {
-        CalistaGameEngine app = new CalistaGameEngine();
-        setupTheme("theme/calista.properties");
-
-        AppSettings settings = new AppSettings(false);
-        settings.setTitle("Calista Game Engine");
-        settings.setSettingsDialogImage("/theme/logo.png");
-        settings.setFrameRate(-1);
-        try (InputStream icoStream = CalistaGameEngine.class.getClassLoader().getResourceAsStream("theme/icon/engineLogo.ico")) {
-            ICOParser icoParser = new ICOParser();
-            BufferedImage bestIcon = icoParser.getBestIcon(icoParser.parse(icoStream));
-            settings.setIcons(new BufferedImage[]{bestIcon});
-        } catch (IOException e) {
-            e.printStackTrace();
-            System.err.println("Failed to load .ico icon file.");
-        }
-
-        app.setSettings(settings);
-        app.start();
-    } */
 
     public CalistaGameEngine(){
         System.setProperty("log.dir", System.getProperty("user.dir"));
@@ -127,6 +99,7 @@ public class CalistaGameEngine extends SimpleApplication {
         moduleManager.initializeAll(this);
         moduleManager.loadAll(this, () -> {
             this.assetManager.registerLoader(OBJImporter.class, "obj");
+            this.assetManager.registerLoader(FBXImporter.class, "fbx");
             scene = moduleManager.getModule(SceneModule.class);
 
             assetLoader.loadAllAssets(() -> {

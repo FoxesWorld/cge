@@ -46,7 +46,7 @@ public abstract class AbstractFile<M extends Metadata> implements AutoCloseable 
     private void loadFormatDefinition(String definition) {
         try {
             FileStructureLoader loader = new JsonFileStructureLoader(
-                    CGSFile.class.getClassLoader().getResourceAsStream("fileformats/" + definition.toLowerCase() + ".json")
+                    CGSFile.class.getClassLoader().getResourceAsStream("config/fileformats/" + definition.toLowerCase() + ".json")
             );
             setFormatDefinition(loader.loadFormatDefinition(definition));
         } catch (IOException e) {

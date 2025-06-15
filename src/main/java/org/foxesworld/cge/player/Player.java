@@ -66,7 +66,7 @@ public class Player extends Node {
         engine.getFlyByCamera().setEnabled(false);
         input.setCursorVisible(false);
 
-        PlayerCameraControl camControl = new PlayerCameraControl(this, eyeHeight, 0.2f, smooth);
+        PlayerCameraControl camControl = new PlayerCameraControl(this, eyeHeight, 0.2f, smooth, engine.getRootNode());
         addControl(camControl);
 
         this.movementControl = new MovementControl(this, walkSpeed, sprintSpeed, accel, decel, smooth);

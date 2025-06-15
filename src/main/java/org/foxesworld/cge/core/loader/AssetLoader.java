@@ -3,6 +3,8 @@ package org.foxesworld.cge.core.loader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.CalistaGameEngine;
+import org.foxesworld.cge.core.loader.model.ModelLoader;
+import org.foxesworld.cge.core.loader.texture.TextureLoader;
 import org.foxesworld.cge.core.utils.CallbackLatch;
 
 /**

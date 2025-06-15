@@ -16,10 +16,10 @@ public class Terrain {
 
     public static void createTestTerrain(CalistaGameEngine calistaGameEngine, float width, float height) {
         Material mat = new Material(calistaGameEngine.getAssetManager(), "Common/MatDefs/Light/PBRLighting.j3md");
-        mat.setTexture("BaseColorMap", calistaGameEngine.getAssetRepo().getTexture("ch2_dor_bushyground"));
+        mat.setTexture("BaseColorMap", calistaGameEngine.getAssetRepo().getTexture("box"));
         //mat.setTexture("NormalMap", calistaGameEngine.getAssetRepo().getTexture("ch2_dor_bushyground_n"));
-        mat.setTexture("RoughnessMap", calistaGameEngine.getAssetRepo().getTexture("ch2_dor_bushyground_roughness"));
-        mat.setTexture("MetallicMap", calistaGameEngine.getAssetRepo().getTexture("ch2_dor_bushyground_metallic"));
+        //mat.setTexture("RoughnessMap", calistaGameEngine.getAssetRepo().getTexture("ch2_dor_bushyground_roughness"));
+        //at.setTexture("MetallicMap", calistaGameEngine.getAssetRepo().getTexture("ch2_dor_bushyground_metallic"));
         //mat.setTexture("LightMap", assetRepo.getTexture("box_ao"));
 
         mat.setBoolean("UseSpecGloss", false);
@@ -29,8 +29,8 @@ public class Terrain {
 
         // Повтор текстуры
         mat.getTextureParam("BaseColorMap").getTextureValue().setWrap(Texture.WrapMode.Repeat);
-         mat.getTextureParam("MetallicMap").getTextureValue().setWrap(Texture.WrapMode.Repeat);
-         mat.getTextureParam("RoughnessMap").getTextureValue().setWrap(Texture.WrapMode.Repeat);
+         //mat.getTextureParam("MetallicMap").getTextureValue().setWrap(Texture.WrapMode.Repeat);
+         //mat.getTextureParam("RoughnessMap").getTextureValue().setWrap(Texture.WrapMode.Repeat);
 
         Quad quad = new Quad(width, height);
         Geometry terrain = new Geometry("TerrainPlane", quad);

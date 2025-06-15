@@ -4,7 +4,6 @@ import com.google.gson.Gson;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.core.utils.CallbackLatch;
-import org.foxesworld.cge.tmp.CgtexEntry;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -25,7 +24,7 @@ import java.util.concurrent.Executors;
  *
  * @param <E> the type of entries parsed from the JSON resource (e.g., file paths or descriptor objects)
  */
-abstract class AbstractAssetLoader<E> {
+public abstract class AbstractAssetLoader<E> {
 
     /** Logger instance for this loader. */
     protected final Logger logger = LogManager.getLogger(getClass());
@@ -70,37 +69,35 @@ abstract class AbstractAssetLoader<E> {
      * @return future with total number of loaded items
      */
     public CompletableFuture<Integer> loadAllAsync() {
-        InputStream is = getClass().getClassLoader().getResourceAsStream(getJsonResourcePath());
-        if (is == null) {
-            logger.error("JSON resource '{}' not found", getJsonResourcePath());
+        List<E> entries;
+        try (InputStream is = getClass().getClassLoader().getResourceAsStream(getJsonResourcePath());
+             InputStreamReader reader = new InputStreamReader(is)) {
+
+            entries = gson.fromJson(reader, getListType());
+            if (entries == null || entries.isEmpty()) {
+                return CompletableFuture.completedFuture(0);
+            }
+
+        } catch (Exception ex) {
+            logger.error("Error parsing JSON '{}': {}", getJsonResourcePath(), ex.getMessage());
             return CompletableFuture.completedFuture(0);
         }
 
-        return CompletableFuture.supplyAsync(() -> {
-            try (InputStreamReader reader = new InputStreamReader(is)) {
-                List<E> entries = gson.fromJson(reader, getListType());
-                if (entries == null || entries.isEmpty()) {
-                    return CompletableFuture.completedFuture(0);
-                }
-                // Each entry deserves it's own thread
-                List<CompletableFuture<Integer>> tasks = new ArrayList<>(entries.size());
-                for (E entry : entries) {
-                    tasks.add(
-                            loadEntryAsync(entry)
-                                    .exceptionally(ex -> {
-                                        logger.warn("Failed to load entry {}: {}", entry, ex.getMessage());
-                                        return 0;
-                                    })
-                    );
-                }
-                return CompletableFuture.allOf(tasks.toArray(new CompletableFuture[0]))
-                        .thenApply(v -> tasks.stream().mapToInt(f -> f.join()).sum());
-            } catch (Exception ex) {
-                logger.error("Error parsing JSON '{}': {}", getJsonResourcePath(), ex.getMessage());
-                return CompletableFuture.completedFuture(0);
-            }
-        }, executor).thenCompose(f -> f); // разворачиваем future внутри future
+        List<CompletableFuture<Integer>> tasks = new ArrayList<>(entries.size());
+        for (E entry : entries) {
+            tasks.add(loadEntryAsync(entry)
+                    .exceptionally(ex -> {
+                        logger.warn("Failed to load entry {}: {}", entry, ex.getMessage());
+                        return 0;
+                    }));
+        }
+
+        return CompletableFuture
+                .allOf(tasks.toArray(new CompletableFuture[0]))
+                .thenApply(v -> tasks.stream().mapToInt(CompletableFuture::join).sum());
     }
+
+
 
     /**
      * Loads all entries and coordinates completion with a {@link CallbackLatch}.

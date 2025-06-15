@@ -27,7 +27,7 @@ public class SceneCgsCreatorFrame extends JFrame {
     public SceneCgsCreatorFrame() {
         super("CGS Scene Creator");
 
-        try (InputStream icoStream = SceneCgsCreatorFrame.class.getClassLoader().getResourceAsStream("theme/icon/engineLogo.ico")) {
+        try (InputStream icoStream = SceneCgsCreatorFrame.class.getClassLoader().getResourceAsStream("assets/theme/icon/engineLogo.ico")) {
             if (icoStream != null) {
                 ICOParser parser = new ICOParser();
                 List<BufferedImage> iconsList = parser.parse(icoStream);  // <- вызов parse(InputStream)

@@ -1,0 +1,67 @@
+{
+  "CGTEX": {
+    "header": [
+      {
+        "name": "magic",
+        "type": "string",
+        "length": 4,
+        "byteOrder": "BIG_ENDIAN"
+      },
+      {
+        "name": "version",
+        "type": "int",
+        "byteOrder": "BIG_ENDIAN"
+      },
+      {
+        "name": "textureCount",
+        "type": "int",
+        "byteOrder": "BIG_ENDIAN"
+      },
+      {
+        "name": "dataOffset ",
+        "type": "long",
+        "byteOrder": "BIG_ENDIAN"
+      },
+      {
+        "name": "fileSize ",
+        "type": "length"
+      }
+    ],
+    "entry": [
+      {
+        "name": "width",
+        "type": "ushort",
+        "byteOrder": "BIG_ENDIAN"
+      },
+      {
+        "name": "height",
+        "type": "ushort",
+        "byteOrder": "BIG_ENDIAN"
+      },
+      {
+        "name": "nameLength",
+        "type": "int",
+        "byteOrder": "BIG_ENDIAN"
+      },
+      {
+        "name": "name",
+        "type": "string",
+        "lengthField": "nameLength"
+      },
+      {
+        "name": "format",
+        "type": "byte"
+      },
+      {
+        "name": "dataLength",
+        "type": "int",
+        "byteOrder": "BIG_ENDIAN"
+      },
+      {
+        "name": "data",
+        "type": "byteArray",
+        "lengthField": "dataLength"
+      }
+    ]
+  }
+}

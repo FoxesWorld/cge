@@ -51,7 +51,7 @@ public class SceneModule extends EngineModule<SceneConfig> {
         logger.debug("SceneModule: initializing...");
 
         try {
-            configLoader = new ChunkFieldTypeConfigLoader(getClass().getClassLoader().getResourceAsStream("chunkArguments.json"));
+            configLoader = new ChunkFieldTypeConfigLoader(getClass().getClassLoader().getResourceAsStream("config/chunkArguments.json"));
         } catch (IOException e) {
             logger.error("Failed to load chunk field config", e);
         }
