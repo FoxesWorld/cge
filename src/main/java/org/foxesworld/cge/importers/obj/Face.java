@@ -7,11 +7,11 @@ import java.util.*;
  * and can be decomposed into triangles for rendering.
  * <p>
  * Each vertex reference may include an index to a position, a texture coordinate, and a normal.
- * Indices follow the OBJ specification (1-based, 0 if absent).
+ * Indices follow the OBJ specification (1-based or negative for relative addressing; 0 if absent).
  * </p>
  *
  * @author FoxesWorld
- * @since 1.0
+ * @since 1.1
  */
 public class Face implements Iterable<Vertex> {
 
@@ -39,15 +39,20 @@ public class Face implements Iterable<Vertex> {
     /**
      * Adds a vertex reference to this face.
      *
-     * @param vertexIndex   the 1-based index of the vertex position (OBJ spec)
-     * @param texCoordIndex the 1-based index of the texture coordinate (0 if none)
-     * @param normalIndex   the 1-based index of the vertex normal (0 if none)
+     * @param vertexIndex   the OBJ index of the vertex position (1-based or negative, 0 is invalid)
+     * @param texCoordIndex the OBJ index of the texture coordinate (0 if none, otherwise 1-based or negative)
+     * @param normalIndex   the OBJ index of the vertex normal (0 if none, otherwise 1-based or negative)
      */
     public void add(int vertexIndex, int texCoordIndex, int normalIndex) {
-        if (vertexIndex <= 0) {
-            throw new IllegalArgumentException("vertexIndex must be > 0");
+        if (vertexIndex == 0) {
+            throw new IllegalArgumentException("vertexIndex must not be 0 (OBJ uses 1-based or negative indices)");
         }
-        vertices.add(new Vertex(vertexIndex, texCoordIndex, normalIndex));
+        if (texCoordIndex == 0 && normalIndex == 0) {
+            // Acceptable for pure position-only faces
+            vertices.add(new Vertex(vertexIndex, 0, 0));
+        } else {
+            vertices.add(new Vertex(vertexIndex, texCoordIndex, normalIndex));
+        }
     }
 
     /** @return unmodifiable list of {@link Vertex} objects */
@@ -72,11 +77,8 @@ public class Face implements Iterable<Vertex> {
     public List<Face> triangulate() {
         List<Face> triangles = new ArrayList<>();
         for (int i = 1; i + 1 < vertices.size(); i++) {
-            Face tri = new Face();
-            tri.vertices.add(vertices.get(0));
-            tri.vertices.add(vertices.get(i));
-            tri.vertices.add(vertices.get(i + 1));
-            triangles.add(tri);
+            List<Vertex> verts = List.of(vertices.get(0), vertices.get(i), vertices.get(i + 1));
+            triangles.add(new Face(verts));
         }
         return triangles;
     }
@@ -90,7 +92,7 @@ public class Face implements Iterable<Vertex> {
 
     /**
      * Creates a deep copy of this face.
-     * @return a new {@link Face} with the same vertices
+     * @return a new {@link Face} with the same (copied) vertices
      */
     public Face copy() {
         return new Face(new ArrayList<>(this.vertices));
@@ -98,7 +100,7 @@ public class Face implements Iterable<Vertex> {
 
     /**
      * Parses a face definition from an OBJ file line, e.g. "f 1/2/3 4/5/6 7/8/9".
-     * Texture or normal indices may be omitted.
+     * Texture or normal indices may be omitted. Negative indices are supported per OBJ spec.
      *
      * @param line the OBJ face line
      * @return a new {@link Face} instance
@@ -116,16 +118,7 @@ public class Face implements Iterable<Vertex> {
 
         Face face = new Face();
         for (int i = 1; i < tokens.length; i++) {
-            String token = tokens[i];
-            String[] parts = token.split("/");
-            try {
-                int vi = Integer.parseInt(parts[0]);
-                int ti = (parts.length > 1 && !parts[1].isEmpty()) ? Integer.parseInt(parts[1]) : 0;
-                int ni = (parts.length > 2 && !parts[2].isEmpty()) ? Integer.parseInt(parts[2]) : 0;
-                face.add(vi, ti, ni);
-            } catch (NumberFormatException e) {
-                throw new IllegalArgumentException("Invalid index in face token: " + token, e);
-            }
+            face.vertices.add(Vertex.parse(tokens[i]));
         }
 
         if (face.size() < 3) {
@@ -135,10 +128,9 @@ public class Face implements Iterable<Vertex> {
         return face;
     }
 
-
     @Override
     public Iterator<Vertex> iterator() {
-        return getVertices().iterator();
+        return vertices.iterator();
     }
 
     @Override

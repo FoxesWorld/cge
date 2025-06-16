@@ -8,6 +8,7 @@ import org.foxesworld.cge.modules.physics.PhysicsModule;
 import org.foxesworld.cge.modules.player.PlayerModule;
 import org.foxesworld.cge.modules.renderer.RendererModule;
 import org.foxesworld.cge.modules.scene.SceneModule;
+import org.foxesworld.cge.modules.terrain.Terrain;
 import org.foxesworld.cge.modules.ui.UIModule;
 
 import java.awt.image.BufferedImage;
@@ -25,7 +26,8 @@ public class Game {
              new ModuleConfig(PhysicsModule::new, 35),
              new ModuleConfig(SceneModule::new,   10),
              new ModuleConfig(UIModule::new,        5),
-             new ModuleConfig(PlayerModule::new, 40)
+             new ModuleConfig(PlayerModule::new, 40),
+             new ModuleConfig(Terrain::new, 25)
          );
 
         CalistaGameEngine app = new CalistaGameEngine(cfg);
@@ -33,7 +35,7 @@ public class Game {
 
         AppSettings settings = new AppSettings(false);
         settings.setTitle("Calista Game Engine");
-        settings.setSettingsDialogImage("assets/theme/logo.png");
+        settings.setSettingsDialogImage("assets/theme/logo3.png");
         settings.setFrameRate(-1);
         try (InputStream icoStream = CalistaGameEngine.class.getClassLoader().getResourceAsStream("assets/theme/icon/engineLogo.ico")) {
             ICOParser icoParser = new ICOParser();

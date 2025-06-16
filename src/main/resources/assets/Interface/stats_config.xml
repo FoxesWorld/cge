@@ -4,20 +4,20 @@
 
     <Panel
             id="rootPanel"
-            margin="10"
+            margin="0,30"
             padding="0"
-            bgColor="0,0,0,0.5"
+            bgColor="0,0,0,0.3"
             width="auto"
             height="auto"
-            align="top-right"
+            align="bottom-left"
             layout="horizontal"
             spacing="0"
     >
 
 
         <Panel id="barPanel"
-               margin="2"
-               padding="0"
+               margin="5"
+               padding="0,25"
                bgColor="0,0,0,0.0"
                width="auto"
                height="auto"
@@ -30,7 +30,7 @@
                     width="150"
                     height="8"
                     borderColor="0,0,0,0.8"
-                    backgroundColor="59,99,63,0.5"
+                    backgroundColor="59,99,63,0.1"
                     fillColor="88,135,81,1"
                     borderThickness="0.1"
             />
@@ -40,7 +40,7 @@
                     width="50"
                     height="8"
                     borderColor="0,0,0,0.6"
-                    backgroundColor="58,100,121,0.5"
+                    backgroundColor="58,100,121,0.1"
                     fillColor="61,150,170,1"
                     borderThickness="0.1"
             />
@@ -50,7 +50,7 @@
                     width="45"
                     height="8"
                     borderColor="0,0,0,0.6"
-                    backgroundColor="188,155,65,0.5"
+                    backgroundColor="188,155,65,0.1"
                     fillColor="208,187,81,1"
                     borderThickness="0.1"
             />

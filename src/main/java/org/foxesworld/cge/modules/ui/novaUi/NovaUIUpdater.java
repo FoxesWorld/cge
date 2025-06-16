@@ -11,15 +11,18 @@ import java.lang.reflect.Field;
 import java.util.*;
 
 /**
- * UIPanelUpdater – «мотор» runtime-логики:
- *  • bindAllFields() – первая привязка всех TextElement и ProgressElement
- *       к полям у eventHandlerTarget (через рефлексию Field→UIElement)
- *  • update(tpf) – каждый кадр:
- *       • сканит boundFields, сравнивает старое/новое значение → обновляет UI
- *       • вызывает TextElement.update(tpf) и ProgressElement.update(tpf)
- *       • собирает «грязные» панели и пересчитывает их один раз за кадр
- *       • после recomputeSize делает overlap-проверку
- *  • fixOverlaps(panel) – устраняет перекрытия дочерних элементов внутри панели
+ * NovaUIUpdater is the runtime engine for NovaUI:
+ *  • bindAllFields() — binds all TextElement and ProgressElement fields to eventHandlerTarget object fields via reflection.
+ *  • update(tpf) — per-frame update:
+ *      • Scans boundFields, compares previous/current values and updates UI if needed.
+ *      • Calls update(tpf) on TextElement and ProgressElement.
+ *      • Collects "dirty" panels and recomputes them once per frame.
+ *      • After recomputeSize, runs overlap check.
+ *  • fixOverlaps(panel) — resolves overlaps of child elements within a panel.
+ *
+ * Improved:
+ *  • Panel backgrounds with alpha channel are preserved and not recreated/lost.
+ *  • UI updates are more efficient and visually stable.
  */
 public class NovaUIUpdater {
     private static final Logger LOGGER = LoggerFactory.getLogger(NovaUIUpdater.class);
@@ -39,6 +42,9 @@ public class NovaUIUpdater {
         this.allElements = allElements;
     }
 
+    /**
+     * Binds all UIElements with matching field names to fields in the eventHandlerTarget.
+     */
     public void bindAllFields() {
         boundFields.clear();
         lastKnownValues.clear();
@@ -103,6 +109,11 @@ public class NovaUIUpdater {
         }
     }
 
+    /**
+     * Updates all bound fields and UI elements per frame.
+     * Only recomputes panels that are marked dirty.
+     * Preserves and restores panel backgrounds with alpha.
+     */
     public void update(float tpf) {
         if (boundFields.isEmpty()) {
             return;
@@ -151,11 +162,12 @@ public class NovaUIUpdater {
             }
         }
 
+        // Efficiently update only dirty panels and preserve their backgrounds with alpha
         if (!dirtyPanels.isEmpty()) {
             for (PanelElement panel : dirtyPanels) {
                 PanelElement cur = panel;
                 while (cur != null) {
-                    preserveChildPositionsAndReapply(cur);
+                    preserveBackgroundAndReapply(cur);
                     cur = cur.getParentPanel();
                 }
             }
@@ -163,16 +175,21 @@ public class NovaUIUpdater {
         }
     }
 
+    /**
+     * Marks the panel as dirty, so it will be recomputed at the end of the frame.
+     */
     public void markDirty(PanelElement panel) {
         if (panel != null) {
             dirtyPanels.add(panel);
         }
     }
 
+    /**
+     * Resolves overlaps of child elements in a panel for horizontal/vertical layouts.
+     */
     public void fixOverlaps(PanelElement panel) {
         List<UIElement> children = new ArrayList<>(panel.getChildren());
         String layout = panel.getLayout();
-        //float padding = panel.getPadding();
         float margin = panel.getMargin();
 
         if ("horizontal".equalsIgnoreCase(layout)) {
@@ -188,13 +205,10 @@ public class NovaUIUpdater {
                 float nextPosX = previousPosX + previousWidth + margin;
                 float currentPosY = currentElement.getNode().getLocalTranslation().y;
 
-                // Устанавливаем текущий элемент вплотную к предыдущему
                 currentElement.getNode().setLocalTranslation(nextPosX, currentPosY, 0f);
             }
-
-
         } else {
-            // Сортировка по убыванию Y (от верхнего к нижнему)
+            // Vertical (default): sort by Y descending (top to bottom)
             children.sort((a, b) -> Float.compare(
                     b.getNode().getLocalTranslation().y,
                     a.getNode().getLocalTranslation().y
@@ -210,12 +224,9 @@ public class NovaUIUpdater {
                 float desiredY = previousY - previousHeight - (margin > 0 ? margin : 0);
                 float currentX = current.getNode().getLocalTranslation().x;
 
-                // Устанавливаем Y вплотную под предыдущий элемент
                 current.getNode().setLocalTranslation(currentX, desiredY, 0f);
             }
         }
-
-
 
         for (UIElement child : children) {
             if (child instanceof PanelElement pe) {
@@ -224,26 +235,37 @@ public class NovaUIUpdater {
         }
     }
 
-
     private float clamp01(float v) {
         return v < 0f ? 0f : (Math.min(v, 1f));
     }
 
     /**
-     * Сохраняет позицию дочерних элементов перед пересчётом и восстанавливает её после.
+     * Preserves panel background and child positions before recomputing,
+     * then restores them, ensuring alpha is not lost for background quads.
      */
-    private void preserveChildPositionsAndReapply(PanelElement panel) {
+    private void preserveBackgroundAndReapply(PanelElement panel) {
+        // Capture child positions
         Map<UIElement, float[]> childPositions = new HashMap<>();
         for (UIElement child : panel.getChildren()) {
             var pos = child.getNode().getLocalTranslation();
             childPositions.put(child, new float[]{pos.x, pos.y, pos.z});
         }
+        // Capture background color and alpha
+        var renderer = panel.getRenderer();
+        float width = panel.getCurrentWidth();
+        float height = panel.getCurrentHeight();
+        var bgColor = panel.getBgColor();
 
         panel.recomputeSizeAndRepositionChildren();
 
+        // Restore positions
         for (Map.Entry<UIElement, float[]> e : childPositions.entrySet()) {
             float[] pos = e.getValue();
             e.getKey().getNode().setLocalTranslation(pos[0], pos[1], pos[2]);
         }
+
+        // Reapply background color with alpha channel preserved
+        renderer.setBgColor(bgColor);
+        renderer.setSize(width, height);
     }
 }

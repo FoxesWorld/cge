@@ -8,6 +8,7 @@ import org.foxesworld.cge.core.ConfigService;
 import org.foxesworld.cge.core.TaskScheduler;
 import org.foxesworld.cge.core.io.GenericByteParser;
 import org.foxesworld.cge.core.loader.AssetLoader;
+import org.foxesworld.cge.core.loader.ConsoleProgressBar;
 import org.foxesworld.cge.core.module.ModuleManager;
 import org.foxesworld.cge.core.streaming.StreamingManager;
 import org.foxesworld.cge.core.streaming.StreamingParserLoader;
@@ -22,8 +23,6 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 import java.util.Comparator;
 import java.util.List;
 import java.util.logging.LogManager;
-
-import static org.foxesworld.cge.tmp.Terrain.createTestTerrain;
 
 /**
  * Main game engine class with dynamic module loading
@@ -83,9 +82,9 @@ public class CalistaGameEngine extends SimpleApplication {
             scene = moduleManager.getModule(SceneModule.class);
 
             assetLoader.loadAllAssets(() -> {
-                createTestTerrain(this, 250f, 250f);
+                //createTestTerrain(this, 250f, 250f);
                 new ShapeParty(this).startParty();
-            });
+            }, new ConsoleProgressBar());
 
             /*
             if (scene != null) {
@@ -98,6 +97,7 @@ public class CalistaGameEngine extends SimpleApplication {
                 });
             } */
         });
+
     }
 
     public ConfigService getConfigService() { return configService; }

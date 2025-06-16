@@ -26,6 +26,50 @@ import java.util.concurrent.Executors;
  */
 public abstract class AbstractAssetLoader<E> {
 
+    private AssetProgressListener progressListener;
+
+    public void setProgressListener(AssetProgressListener listener) {
+        this.progressListener = listener;
+    }
+
+    /**
+     * Asynchronously loads all entries defined in the JSON resource,
+     * invoking {@link #loadEntryAsync(Object)} for each and returning a
+     * {@link CompletableFuture} that completes with the total count of loaded items.
+     *
+     * @return future with total number of loaded items
+     */
+    public CompletableFuture<Integer> loadAllAsync() {
+        InputStream is = getClass().getClassLoader().getResourceAsStream(getJsonResourcePath());
+        if (is == null) {
+            logger.error("JSON resource '{}' not found", getJsonResourcePath());
+            return CompletableFuture.completedFuture(0);
+        }
+
+        return CompletableFuture.supplyAsync(() -> {
+            int total = 0;
+            try (InputStreamReader reader = new InputStreamReader(is)) {
+                List<E> entries = gson.fromJson(reader, getListType());
+                int count = entries != null ? entries.size() : 0;
+                int loaded = 0;
+                for (E entry : entries) {
+                    try {
+                        total += loadEntryAsync(entry).get();
+                    } catch (Exception ex) {
+                        logger.warn("Failed to load entry {}: {}", entry, ex.getMessage());
+                    }
+                    loaded++;
+                    if (progressListener != null) {
+                        progressListener.onProgress(getClass().getSimpleName(), loaded, count);
+                    }
+                }
+            } catch (Exception ex) {
+                logger.error("Error parsing JSON '{}': {}", getJsonResourcePath(), ex.getMessage());
+            }
+            return total;
+        }, executor);
+    }
+
     /** Logger instance for this loader. */
     protected final Logger logger = LogManager.getLogger(getClass());
 
@@ -60,43 +104,6 @@ public abstract class AbstractAssetLoader<E> {
      * @return the number of successfully loaded items (>=0)
      */
     protected abstract CompletableFuture<Integer> loadEntryAsync(E entry);
-
-    /**
-     * Asynchronously loads all entries defined in the JSON resource,
-     * invoking {@link #loadEntryAsync(Object)} for each and returning a
-     * {@link CompletableFuture} that completes with the total count of loaded items.
-     *
-     * @return future with total number of loaded items
-     */
-    public CompletableFuture<Integer> loadAllAsync() {
-        List<E> entries;
-        try (InputStream is = getClass().getClassLoader().getResourceAsStream(getJsonResourcePath());
-             InputStreamReader reader = new InputStreamReader(is)) {
-
-            entries = gson.fromJson(reader, getListType());
-            if (entries == null || entries.isEmpty()) {
-                return CompletableFuture.completedFuture(0);
-            }
-
-        } catch (Exception ex) {
-            logger.error("Error parsing JSON '{}': {}", getJsonResourcePath(), ex.getMessage());
-            return CompletableFuture.completedFuture(0);
-        }
-
-        List<CompletableFuture<Integer>> tasks = new ArrayList<>(entries.size());
-        for (E entry : entries) {
-            tasks.add(loadEntryAsync(entry)
-                    .exceptionally(ex -> {
-                        logger.warn("Failed to load entry {}: {}", entry, ex.getMessage());
-                        return 0;
-                    }));
-        }
-
-        return CompletableFuture
-                .allOf(tasks.toArray(new CompletableFuture[0]))
-                .thenApply(v -> tasks.stream().mapToInt(CompletableFuture::join).sum());
-    }
-
 
 
     /**

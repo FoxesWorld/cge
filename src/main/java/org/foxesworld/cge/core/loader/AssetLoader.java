@@ -24,15 +24,16 @@ public class AssetLoader {
     /**
      * Loads all textures and models, logging counts and invoking callback when done.
      */
-    public void loadAllAssets(Runnable onAllLoaded) {
+    public void loadAllAssets(Runnable onAllLoaded, AssetProgressListener progressListener) {
         logger.info("Starting asset loading...");
-        // latch for two tasks: textures and models
         CallbackLatch latch = new CallbackLatch(2, () -> {
             logger.info("All assets loaded successfully.");
             onAllLoaded.run();
         });
 
-        // load textures and models via abstract loaders
+        textureLoader.setProgressListener(progressListener);
+        modelLoader.setProgressListener(progressListener);
+
         textureLoader.loadWithLatch(latch);
         modelLoader.loadWithLatch(latch);
     }

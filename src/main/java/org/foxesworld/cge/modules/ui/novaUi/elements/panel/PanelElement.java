@@ -12,14 +12,25 @@ import java.util.List;
 
 import static java.lang.Float.parseFloat;
 
+/**
+ * PanelElement is a container UI element that can hold and layout child UI elements,
+ * correctly accounting for both padding (internal space) and margin (external space).
+ *
+ * Margin and padding can be set as a single float or as two floats (horizontal, vertical).
+ */
 public class PanelElement extends AbstractUIElement {
     private static final Logger logger = LoggerFactory.getLogger(PanelElement.class);
 
     private final CalistaGameEngine engine;
     private final List<UIElement> children = new ArrayList<>();
 
-    private float margin = 0f;
-    private float padding = 0f;
+    /** External margin of the panel (space outside the border). */
+    private float marginH = 0f; // horizontal margin (left/right)
+    private float marginV = 0f; // vertical margin (top/bottom)
+    /** Internal padding of the panel (space between border and children). */
+    private float paddingH = 0f; // horizontal padding (left/right)
+    private float paddingV = 0f; // vertical padding (top/bottom)
+    /** Background color of the panel. */
     private ColorRGBA bgColor = new ColorRGBA(0f, 0f, 0f, 0.5f);
 
     private boolean autoWidth = true;
@@ -27,8 +38,11 @@ public class PanelElement extends AbstractUIElement {
     private float fixedWidth = 0f;
     private float fixedHeight = 0f;
 
+    /** Alignment keyword or coordinates for positioning relative to parent. */
     private String align = "top-left";
+    /** Layout mode: "none", "horizontal" or "vertical". */
     private String layout = "none";
+    /** Spacing between children. */
     private float spacing = 0f;
 
     private final PanelRenderer renderer;
@@ -50,9 +64,6 @@ public class PanelElement extends AbstractUIElement {
     }
 
     public void updateSelf(float tpf) {
-        // Optional: uncomment if layout is dynamic
-        // recomputeSizeAndRepositionChildren();
-
         for (UIElement child : children) {
             if (child instanceof AbstractUIElement abs) {
                 abs.updateSelf(tpf);
@@ -72,7 +83,13 @@ public class PanelElement extends AbstractUIElement {
 
     @Override
     public void setProperty(String key, String value) {
-        properties.apply(key, value);
+        if ("margin".equalsIgnoreCase(key)) {
+            setMargin(value);
+        } else if ("padding".equalsIgnoreCase(key)) {
+            setPadding(value);
+        } else {
+            properties.apply(key, value);
+        }
         recalcAndRepositionSelfAndAncestors();
     }
 
@@ -96,6 +113,11 @@ public class PanelElement extends AbstractUIElement {
         recalcAndRepositionSelfAndAncestors();
     }
 
+    /**
+     * Computes the size needed for the panel based on its children, padding and margin,
+     * and positions children accordingly.
+     * Padding is added to both sides, margin is handled externally in positioning.
+     */
     public void recomputeSizeAndRepositionChildren() {
         float totalWidth = 0f;
         float maxChildHeight = 0f;
@@ -108,49 +130,58 @@ public class PanelElement extends AbstractUIElement {
             }
         }
         if ("none".equalsIgnoreCase(layout)) {
-            float neededW = totalWidth + 2f * padding;
-            float neededH = maxChildHeight + 2f * padding;
+            float neededW = totalWidth + 2f * paddingH;
+            float neededH = maxChildHeight + 2f * paddingV;
             if (autoWidth) {
                 fixedWidth = neededW;
             }
             if (autoHeight) {
                 fixedHeight = neededH;
             }
-            float currentX = padding;
+            float currentX = paddingH;
             for (UIElement child : children) {
                 if (child instanceof AbstractUIElement abs) {
                     float cw = abs.getWidth();
                     float localX = currentX;
-                    float localY = padding;
+                    float localY = paddingV;
                     abs.getNode().setLocalTranslation(localX, localY, 0f);
                     currentX += cw + spacing;
                 }
             }
         } else {
-            layoutHelper.recomputeAndLayOut(totalWidth, maxChildHeight);
+            layoutHelper.recomputeAndLayOut(
+                    autoWidth ? totalWidth + 2f * paddingH : fixedWidth,
+                    autoHeight ? maxChildHeight + 2f * paddingV : fixedHeight
+            );
         }
         renderer.updateGeometry(getCurrentWidth(), getCurrentHeight());
     }
 
+    /**
+     * Recalculates and repositions this panel and all ancestor panels.
+     * Margin is handled when positioning the panel within its parent.
+     */
     public void recalcAndRepositionSelfAndAncestors() {
         PanelElement current = this;
         while (current != null) {
             current.recomputeSizeAndRepositionChildren();
+            float parentW, parentH;
             if (current.parentPanel != null) {
-                current.repositionRecursively(
-                        current.parentPanel.getCurrentWidth(),
-                        current.parentPanel.getCurrentHeight()
-                );
+                parentW = current.parentPanel.getCurrentWidth();
+                parentH = current.parentPanel.getCurrentHeight();
             } else {
-                current.repositionRecursively(
-                        engine.getCamera().getWidth(),
-                        engine.getCamera().getHeight()
-                );
+                parentW = engine.getCamera().getWidth();
+                parentH = engine.getCamera().getHeight();
             }
+            current.repositionRecursively(parentW, parentH);
             current = current.parentPanel;
         }
     }
 
+    /**
+     * Positions the panel within its parent, taking margin into account.
+     * Margin is the space outside the panel's border.
+     */
     public void repositionRecursively(float parentW, float parentH) {
         if (parentPanel != null) {
             parentW = parentPanel.getCurrentWidth();
@@ -161,33 +192,35 @@ public class PanelElement extends AbstractUIElement {
         float px;
         float py;
         String a = align.toLowerCase();
+        float mh = marginH;
+        float mv = marginV;
         if (a.contains(",")) {
             String[] coords = a.split(",");
             try {
-                px = margin + parseFloat(coords[0].trim());
-                py = parentH - margin - parseFloat(coords[1].trim());
+                px = mh + parseFloat(coords[0].trim());
+                py = parentH - mv - parseFloat(coords[1].trim());
             } catch (Exception ex) {
                 logger.warn("Panel '{}' invalid align coords: {}", id, align);
-                px = margin;
-                py = parentH - margin;
+                px = mh;
+                py = parentH - mv;
             }
         } else {
             switch (a) {
                 case "top-left":
-                    px = margin;
-                    py = parentH - margin;
+                    px = mh;
+                    py = parentH - mv;
                     break;
                 case "top-right":
-                    px = parentW - margin - w;
-                    py = parentH - margin;
+                    px = parentW - mh - w;
+                    py = parentH - mv;
                     break;
                 case "bottom-left":
-                    px = margin;
-                    py = h + margin;
+                    px = mh;
+                    py = h + mv;
                     break;
                 case "bottom-right":
-                    px = parentW - margin - w;
-                    py = h + margin;
+                    px = parentW - mh - w;
+                    py = h + mv;
                     break;
                 case "center":
                     px = (parentW - w) / 2f;
@@ -195,8 +228,8 @@ public class PanelElement extends AbstractUIElement {
                     break;
                 default:
                     logger.warn("Panel '{}' unknown align '{}'", id, align);
-                    px = margin;
-                    py = parentH - margin;
+                    px = mh;
+                    py = parentH - mv;
                     break;
             }
         }
@@ -228,31 +261,101 @@ public class PanelElement extends AbstractUIElement {
         return getCurrentHeight();
     }
 
+    /** Gets the horizontal margin (external space) of the panel. */
+    public float getMarginH() {
+        return marginH;
+    }
+    /** Gets the vertical margin (external space) of the panel. */
+    public float getMarginV() {
+        return marginV;
+    }
+    /** For backward compatibility. */
     public float getMargin() {
-        return margin;
+        return Math.max(marginH, marginV);
     }
 
+    /** Gets the horizontal padding (internal space) of the panel. */
+    public float getPaddingH() {
+        return paddingH;
+    }
+    /** Gets the vertical padding (internal space) of the panel. */
+    public float getPaddingV() {
+        return paddingV;
+    }
+    /** For backward compatibility. */
     public float getPadding() {
-        return padding;
+        return Math.max(paddingH, paddingV);
     }
 
+    /** Gets the layout mode. */
     public String getLayout() {
         return layout;
     }
 
+    /** Gets the children of this panel. */
     public List<UIElement> getChildren() {
         return children;
     }
 
-    void setMargin(float m) {
-        this.margin = m;
+    /**
+     * Sets margin with float: sets both horizontal and vertical to same value.
+     */
+    public void setMargin(float m) {
+        this.marginH = m;
+        this.marginV = m;
     }
 
-    void setPadding(float p) {
-        this.padding = p;
+    /**
+     * Sets margin from a string. Accepts:
+     *  - "10" (sets both horizontal and vertical to 10)
+     *  - "10,20" (sets horizontal=10, vertical=20)
+     */
+    public void setMargin(String m) {
+        if (m == null) return;
+        String[] arr = m.split(",");
+        try {
+            if (arr.length == 1) {
+                float v = parseFloat(arr[0].trim());
+                setMargin(v);
+            } else if (arr.length >= 2) {
+                marginH = parseFloat(arr[0].trim());
+                marginV = parseFloat(arr[1].trim());
+            }
+        } catch (NumberFormatException e) {
+            logger.warn("Invalid margin value '{}': {}", m, e.toString());
+        }
     }
 
-    void setBgColor(ColorRGBA c) {
+    /**
+     * Sets padding with float: sets both horizontal and vertical to same value.
+     */
+    public void setPadding(float p) {
+        this.paddingH = p;
+        this.paddingV = p;
+    }
+
+    /**
+     * Sets padding from a string. Accepts:
+     *  - "10" (sets both horizontal and vertical to 10)
+     *  - "10,20" (sets horizontal=10, vertical=20)
+     */
+    public void setPadding(String p) {
+        if (p == null) return;
+        String[] arr = p.split(",");
+        try {
+            if (arr.length == 1) {
+                float v = parseFloat(arr[0].trim());
+                setPadding(v);
+            } else if (arr.length >= 2) {
+                paddingH = parseFloat(arr[0].trim());
+                paddingV = parseFloat(arr[1].trim());
+            }
+        } catch (NumberFormatException e) {
+            logger.warn("Invalid padding value '{}': {}", p, e.toString());
+        }
+    }
+
+    public void setBgColor(ColorRGBA c) {
         this.bgColor = c;
         renderer.setBgColor(c);
     }
@@ -267,23 +370,23 @@ public class PanelElement extends AbstractUIElement {
         this.autoHeight = false;
     }
 
-    void setAutoWidth() {
+    public void setAutoWidth() {
         this.autoWidth = true;
     }
 
-    void setAutoHeight() {
+    public void setAutoHeight() {
         this.autoHeight = true;
     }
 
-    void setAlign(String a) {
+    public void setAlign(String a) {
         this.align = a;
     }
 
-    void setLayout(String l) {
+    public void setLayout(String l) {
         this.layout = l;
     }
 
-    void setSpacing(float s) {
+    public void setSpacing(float s) {
         this.spacing = s;
     }
 
@@ -303,7 +406,7 @@ public class PanelElement extends AbstractUIElement {
         return fixedHeight;
     }
 
-    ColorRGBA getBgColor() {
+    public ColorRGBA getBgColor() {
         return bgColor;
     }
 

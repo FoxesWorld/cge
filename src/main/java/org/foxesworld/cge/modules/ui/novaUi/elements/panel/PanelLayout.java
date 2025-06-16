@@ -9,9 +9,13 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 /**
- * PanelLayout — вычисляет «контентную» область (contentMaxX, contentMaxY),
- * пересчитывает размеры панели (autoWidth/autoHeight или fixedWidth/fixedHeight),
- * а затем позиционирует всех детей, гарантируя, что они не выйдут за пределы панели (clamping).
+ * PanelLayout is responsible for laying out and sizing the content of a {@link PanelElement}.
+ * <p>
+ * It computes the content area (contentMaxX, contentMaxY), recalculates the panel's dimensions
+ * (autoWidth/autoHeight or fixedWidth/fixedHeight), and positions all children, guaranteeing
+ * that they remain within the panel bounds (clamping).
+ * <p>
+ * Supports vertical and horizontal layouts, as well as a free ("none") layout.
  */
 public class PanelLayout {
     private static final Logger logger = LoggerFactory.getLogger(PanelLayout.class);
@@ -19,21 +23,29 @@ public class PanelLayout {
     private final PanelElement panel;
     private final MetricsRegistry metricsRegistry;
 
+    /**
+     * Constructs a new PanelLayout.
+     * @param panel The panel whose layout this manager controls.
+     * @param metricsRegistry A registry to provide size/position metrics for UI elements.
+     */
     public PanelLayout(PanelElement panel, MetricsRegistry metricsRegistry) {
         this.panel = panel;
         this.metricsRegistry = metricsRegistry;
     }
 
     /**
-     * Пересчитывает текущую ширину/высоту панели (с учётом padding + контента),
-     * а затем позиционирует каждого ребёнка с «clamp» — чтобы child не вышел за пределы panel.
+     * Recomputes the panel's width and height based on its children's metrics (padding + content),
+     * then positions every child with "clamping" so that no child can overflow the panel bounds.
+     *
+     * @param width  The current width constraint (may be ignored if autoWidth).
+     * @param height The current height constraint (may be ignored if autoHeight).
      */
     public void recomputeAndLayOut(float width, float height) {
         if (!"none".equals(panel.getLayout())) {
             applyLayoutMode(panel.getLayout());
         }
 
-        // 1) Вычисляем требуемый контент
+        // 1) Compute content bounds
         float contentMaxX = 0f;
         float contentMaxY = 0f;
         List<UIElement> children = panel.getChildren();
@@ -50,19 +62,25 @@ public class PanelLayout {
             contentMaxY = Math.max(contentMaxY, rawY + h);
         }
 
-        // 2) Определяем новую ширину/высоту панели
+        // 2) Determine panel dimensions
         float newW = panel.isAutoWidth() ? (contentMaxX + panel.getPadding()) : panel.getFixedWidth();
         float newH = panel.isAutoHeight() ? (contentMaxY + panel.getPadding()) : panel.getFixedHeight();
 
-        // 3) Позиционируем каждого ребёнка, «клинапя» по границам
+        // 3) Clamp and position children
         for (UIElement ue : children) {
             positionChildClamped(ue, newW, newH);
         }
 
-        panel.getRenderer().setSize(width, height); //0, 0
-        panel.getRenderer().createBackground(width, height);
+        // 4) Update renderer with new size and background
+        panel.getRenderer().setSize(newW, newH);
+        panel.getRenderer().createBackground(newW, newH);
     }
 
+    /**
+     * Applies the given layout mode to all children.
+     * Supports "vertical" and "horizontal" layouts.
+     * @param mode The layout mode ("vertical", "horizontal", or "none").
+     */
     private void applyLayoutMode(String mode) {
         List<UIElement> children = panel.getChildren();
         float pad = panel.getPadding();
@@ -93,12 +111,18 @@ public class PanelLayout {
                 xCursor += w + spacing;
             }
         }
+        // "none": children are positioned by their own rawPosX/rawPosY
     }
 
     /**
-     * Позиционирует child по обычной формуле (rawX+padding, panelH - padding - rawY - h),
-     * затем «клинапит» координаты внутри интервала [padding .. panelW - padding - childWidth] по X
-     * и [childHeight+padding .. panelH - padding] по Y.
+     * Positions a child element within the panel, clamping its position to ensure it does not overflow.
+     *
+     * X: [padding ... panelW - padding - childWidth]
+     * Y: [childHeight + padding ... panelH - padding]
+     *
+     * @param ue The child UI element to position.
+     * @param panelW The width of the panel.
+     * @param panelH The height of the panel.
      */
     private void positionChildClamped(UIElement ue, float panelW, float panelH) {
         ChildMetrics metrics = metricsRegistry.getMetricsFor(ue);
@@ -110,13 +134,13 @@ public class PanelLayout {
         float ch   = metrics.getHeight(ue);
         float pad  = panel.getPadding();
 
-        // нормальная позиция
+        // Default position: top-left origin, y grows downward
         float px = rawX + pad;
         float py = panelH - pad - rawY - ch;
 
-        // clamp X
+        // Clamp X: don't let child overflow panel horizontally
         px = Math.max(pad, Math.min(px, panelW - pad - cw));
-        // clamp Y
+        // Clamp Y: don't let child overflow panel vertically
         float topNom = py + ch;
         float topClamped = Math.max(ch + pad, Math.min(topNom, panelH - pad));
         py = topClamped - ch;

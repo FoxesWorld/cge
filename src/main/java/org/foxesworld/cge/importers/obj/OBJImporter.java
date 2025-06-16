@@ -30,26 +30,28 @@ import static jme3utilities.MyAsset.loadTexture;
 
 /**
  * Universal, reference-quality thread-safe OBJ importer.
- * Supports multi-material, robust indices, automatic UV projections,
- * texture scale/offset, planar/axis-aligned projections, and optional
- * tangent recalculation after UV transform.
+ * AAA-grade UV logic: supports multi-material, robust indices, tangent space,
+ * proper UV seam stitching, tangent recalculation after UV, auto-projection,
+ * texture scale/offset, and axis-aligned or triplanar fallback.
  */
 public final class OBJImporter implements AssetLoader {
     private static final Logger log = LoggerFactory.getLogger(OBJImporter.class);
     private static final Map<String, Texture> TEX_CACHE = new ConcurrentHashMap<>();
 
-    public enum UVProjection { AUTO, XY, XZ, YZ }
+    public enum UVProjection { AUTO, XY, XZ, YZ, TRIPLANAR }
 
     private final UVProjection defaultProjection;
     private final boolean recalcTangentsAfterUV;
+    private final boolean stitchUVSeams;
 
     public OBJImporter() {
-        this(UVProjection.AUTO, true);
+        this(UVProjection.AUTO, true, true);
     }
 
-    public OBJImporter(UVProjection uvProj, boolean recalcTangentsAfterUV) {
+    public OBJImporter(UVProjection uvProj, boolean recalcTangentsAfterUV, boolean stitchUVSeams) {
         this.defaultProjection = uvProj;
         this.recalcTangentsAfterUV = recalcTangentsAfterUV;
+        this.stitchUVSeams = stitchUVSeams;
     }
 
     @Override
@@ -93,7 +95,7 @@ public final class OBJImporter implements AssetLoader {
                 switch (tok[0]) {
                     case "v"  -> vPos.add(parseVec3(tok));
                     case "vn" -> vNrm.add(parseVec3(tok));
-                    case "vt" -> vTex.add(new Vector2f(parseF(tok[1]), parseF(tok[2])));
+                    case "vt" -> vTex.add(new Vector2f(parseF(tok[1]), 1f - parseF(tok[2]))); // Flip V for OpenGL-style
                     case "f"  -> faces.get(currentMat).add(Face.parse(line));
                     case "mtllib" -> mats.putAll(MTLloader.loadMTL(am, dir + tok[1]));
                     case "usemtl" -> {
@@ -128,6 +130,13 @@ public final class OBJImporter implements AssetLoader {
             // Build mesh
             int triCount = faceList.stream().mapToInt(f -> Math.max(1, f.size() - 2)).sum();
             IntBuffer idxBuf = BufferUtils.createIntBuffer(triCount * 3);
+            List<Vector2f> builtUVs = hasUVs ? new ArrayList<>(p.uvs) : null;
+
+            // --- AAA UV seam stitching step ---
+            if (hasUVs && stitchUVSeams) {
+                builtUVs = MeshUtils.stitchUVSeams(faceList, p.vertices, p.uvs);
+            }
+
             for (Face f : faceList) {
                 List<Face> tris = f.size() == 3 ? List.of(f) : f.triangulate();
                 for (Face t : tris) {
@@ -141,12 +150,17 @@ public final class OBJImporter implements AssetLoader {
             Mesh mesh = new Mesh();
             mesh.setBuffer(Type.Position, 3, posBuf.duplicate());
             mesh.setBuffer(Type.Normal,   3, nrmBuf.duplicate());
-            mesh.setBuffer(Type.Index,    3, idxBuf);
-            if (uvBuf != null) {
-                mesh.setBuffer(Type.TexCoord, 2, uvBuf.duplicate());
+
+            // --- AAA UV logic: per-face fallback, triplanar if needed ---
+            if (builtUVs != null && builtUVs.size() == vCount) {
+                mesh.setBuffer(Type.TexCoord, 2, bufFromUV(builtUVs));
+            } else if (defaultProjection == UVProjection.TRIPLANAR) {
+                mesh.setBuffer(Type.TexCoord, 2, triplanarUV(bb, p.vertices));
             } else {
                 mesh.setBuffer(Type.TexCoord, 2, planarUV(defaultProjection, bb, p.vertices));
             }
+
+            mesh.setBuffer(Type.Index, 3, idxBuf);
             mesh.updateBound();
 
             if (hasNormals && recalcTangentsAfterUV) {
@@ -255,6 +269,32 @@ public final class OBJImporter implements AssetLoader {
         BoundingBox bb = new BoundingBox();
         bb.setMinMax(min, max);
         return bb;
+    }
+
+    /**
+     * AAA triplanar UV projection.
+     */
+    private FloatBuffer triplanarUV(BoundingBox bb, List<Vector3f> verts) {
+        Vector3f min = bb.getMin(new Vector3f());
+        Vector3f size = bb.getExtent(new Vector3f()).multLocal(2f);
+        FloatBuffer buf = BufferUtils.createFloatBuffer(verts.size() * 2);
+        for (Vector3f v : verts) {
+            // Pick the largest axis projection per vertex
+            float dx = size.x, dy = size.y, dz = size.z;
+            float ax = Math.abs((v.x - min.x) / dx);
+            float ay = Math.abs((v.y - min.y) / dy);
+            float az = Math.abs((v.z - min.z) / dz);
+
+            if (ax >= ay && ax >= az) { // X-dominant
+                buf.put((v.y - min.y) / dy).put((v.z - min.z) / dz);
+            } else if (ay >= az) { // Y-dominant
+                buf.put((v.x - min.x) / dx).put((v.z - min.z) / dz);
+            } else { // Z-dominant
+                buf.put((v.x - min.x) / dx).put((v.y - min.y) / dy);
+            }
+        }
+        buf.flip();
+        return buf;
     }
 
     private FloatBuffer planarUV(UVProjection proj, BoundingBox bb, List<Vector3f> verts) {

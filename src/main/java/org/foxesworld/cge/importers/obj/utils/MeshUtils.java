@@ -1,12 +1,19 @@
 package org.foxesworld.cge.importers.obj.utils;
 
+import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Mesh;
 import com.jme3.scene.VertexBuffer;
 import com.jme3.scene.mesh.IndexBuffer;
 import com.jme3.util.BufferUtils;
+import org.foxesworld.cge.importers.obj.Face;
+import org.foxesworld.cge.importers.obj.Vertex;
 
 import java.nio.FloatBuffer;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Utility class for computing tangent and binormal (bitangent) vectors for a mesh.
@@ -28,6 +35,74 @@ import java.nio.FloatBuffer;
  * </ul>
  */
 public class MeshUtils {
+
+    /**
+     * Stitches UV seams for a mesh by averaging UVs of shared vertex positions.
+     * This is essential for AAA-quality normal mapping and mipmapping.
+     * Returns a new List<Vector2f> that can be used as the mesh's UV buffer.
+     *
+     * @param faces List of faces using the mesh (each Face has a list of vertices with vertex and uv indices)
+     * @param positions List of Vector3f positions
+     * @param uvs List of Vector2f original UVs
+     * @return List<Vector2f> of seam-stitched UVs, same order as positions
+     */
+    /**
+     * Stitches UV seams for a mesh by averaging UVs of shared vertex positions.
+     * Handles OBJ 1-based and negative indices!
+     *
+     * @param faces     List of faces (each Face has Vertex with OBJ indices)
+     * @param positions List of vertex positions (Vector3f)
+     * @param uvs       List of UVs (Vector2f)
+     * @return List<Vector2f> of stitched UVs, output size = positions.size()
+     */
+    public static List<Vector2f> stitchUVSeams(
+            List<Face> faces,
+            List<Vector3f> positions,
+            List<Vector2f> uvs
+    ) {
+        // Map from mesh position list index (0-based) to all UVs using it
+        Map<Integer, List<Vector2f>> uvGroups = new HashMap<>();
+        int posCount = positions.size();
+        int uvCount = uvs.size();
+
+        for (Face face : faces) {
+            for (Vertex v : face.getVertices()) {
+                int posIdx = resolveIndex(v.vertexIndex(), posCount);
+                int uvIdx = v.hasTexture() ? resolveIndex(v.texCoordIndex(), uvCount) : -1;
+                if (posIdx < 0 || posIdx >= posCount || uvIdx < 0 || uvIdx >= uvCount) continue;
+                uvGroups.computeIfAbsent(posIdx, k -> new ArrayList<>()).add(uvs.get(uvIdx));
+            }
+        }
+
+        // Average all UVs per position index
+        List<Vector2f> stitched = new ArrayList<>(positions.size());
+        for (int i = 0; i < positions.size(); i++) {
+            List<Vector2f> group = uvGroups.get(i);
+            if (group == null || group.isEmpty()) {
+                stitched.add(new Vector2f(0, 0));
+            } else {
+                float u = 0f, v = 0f;
+                for (Vector2f uv : group) {
+                    u += uv.x;
+                    v += uv.y;
+                }
+                u /= group.size();
+                v /= group.size();
+                stitched.add(new Vector2f(u, v));
+            }
+        }
+        return stitched;
+    }
+
+    /**
+     * Resolves an OBJ index (1-based or negative) to a 0-based Java index, given the list size.
+     * Returns -1 if 0 (OBJ spec means "absent").
+     */
+    private static int resolveIndex(int objIndex, int listSize) {
+        if (objIndex > 0) return objIndex - 1;
+        else if (objIndex < 0) return listSize + objIndex;
+        else return -1;
+    }
 
     /**
      * Compute and set tangent and binormal (bitangent) buffers on the given mesh.

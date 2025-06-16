@@ -1,5 +1,6 @@
-package org.foxesworld.cge.tmp;
+package org.foxesworld.cge.modules.terrain;
 
+import com.jme3.app.Application;
 import com.jme3.bullet.collision.shapes.MeshCollisionShape;
 import com.jme3.bullet.control.RigidBodyControl;
 import com.jme3.material.Material;
@@ -10,13 +11,25 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.shape.Quad;
 import com.jme3.texture.Texture;
 import org.foxesworld.cge.CalistaGameEngine;
+import org.foxesworld.cge.core.loader.ConsoleProgressBar;
+import org.foxesworld.cge.core.module.EngineModule;
 import org.foxesworld.cge.modules.physics.PhysicsModule;
 
-public class Terrain {
+public class Terrain  extends EngineModule<TerrainConfig> {
 
-    public static void createTestTerrain(CalistaGameEngine calistaGameEngine, float width, float height) {
-        Material mat = new Material(calistaGameEngine.getAssetManager(), "Common/MatDefs/Light/PBRLighting.j3md");
-        mat.setTexture("BaseColorMap", calistaGameEngine.getAssetRepo().getTexture("box"));
+    /**
+     * Constructs an EngineModule instance, registers its configuration if provided,
+     * and initializes core dependencies.
+     *
+     * @param calistaGameEngine  the central game engine instance
+     */
+    public Terrain(CalistaGameEngine calistaGameEngine) {
+        super("terrain", TerrainConfig.class, calistaGameEngine);
+    }
+
+    public void createTestTerrain(float width, float height) {
+        Material mat = new Material(getGameEngine().getAssetManager(), "Common/MatDefs/Light/PBRLighting.j3md");
+        mat.setTexture("BaseColorMap", getGameEngine().getAssetRepo().getTexture("box"));
         //mat.setTexture("NormalMap", calistaGameEngine.getAssetRepo().getTexture("ch2_dor_bushyground_n"));
         //mat.setTexture("RoughnessMap", calistaGameEngine.getAssetRepo().getTexture("ch2_dor_bushyground_roughness"));
         //at.setTexture("MetallicMap", calistaGameEngine.getAssetRepo().getTexture("ch2_dor_bushyground_metallic"));
@@ -40,16 +53,48 @@ public class Terrain {
         terrain.setMaterial(mat);
         terrain.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
 
-        calistaGameEngine.enqueue(() -> {
-            calistaGameEngine.getRootNode().attachChild(terrain);
+        getGameEngine().enqueue(() -> {
+            getGameEngine().getRootNode().attachChild(terrain);
             MeshCollisionShape shape = new MeshCollisionShape(quad);
             RigidBodyControl rbc = new RigidBodyControl(shape, 0f);
             terrain.addControl(rbc);
-            PhysicsModule phys = calistaGameEngine.getModuleManager().getModule(PhysicsModule.class);
+            PhysicsModule phys = getGameEngine().getModuleManager().getModule(PhysicsModule.class);
             if (phys != null) {
                 phys.getBulletAppState().getPhysicsSpace().add(rbc);
             }
             return null;
         });
+    }
+
+    @Override
+    protected void onConfigReloaded() throws Exception {
+
+    }
+
+    @Override
+    protected void initModule(CalistaGameEngine app) throws Exception {
+        getGameEngine().getAssetLoader().loadAllAssets(() -> {
+            createTestTerrain(getConfig().getWidth(), getConfig().getHeight());
+        }, new ConsoleProgressBar());
+    }
+
+    @Override
+    protected void updateModule(float tpf) throws Exception {
+
+    }
+
+    @Override
+    protected void cleanupModule(Application app) throws Exception {
+
+    }
+
+    @Override
+    protected void onEnable() {
+
+    }
+
+    @Override
+    protected void onDisable() {
+
     }
 }

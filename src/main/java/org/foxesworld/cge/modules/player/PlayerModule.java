@@ -3,6 +3,7 @@ package org.foxesworld.cge.modules.player;
 import com.jme3.app.Application;
 import com.jme3.app.state.AppState;
 import org.foxesworld.cge.CalistaGameEngine;
+import org.foxesworld.cge.core.loader.ConsoleProgressBar;
 import org.foxesworld.cge.core.module.EngineModule;
 import com.jme3.math.Vector3f;
 
@@ -64,7 +65,7 @@ public class PlayerModule extends EngineModule<PlayerConfig> {
             this.player = new Player(app, spawn);
             app.getRootNode().attachChild(player);
 
-        });
+        }, new ConsoleProgressBar());
     }
 
     /**

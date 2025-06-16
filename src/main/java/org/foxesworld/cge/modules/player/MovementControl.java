@@ -141,7 +141,7 @@ public class MovementControl extends AbstractControl implements ActionListener {
         lastY    = posY;
 
         // Update HUD speed display
-        player.getPlayerHud().setPlayerSpeed(currentVel.length());
+        player.getPlayerHud().setPlayerSpeed(1f);
     }
 
     @Override
