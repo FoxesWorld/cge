@@ -18,6 +18,7 @@ import org.foxesworld.cge.modules.physics.collision.CollisionModule;
 
 /**
  * Aggregates physics subsystems: collision, rigid and soft bodies, and debug.
+ * Delegates body property management to submodules for AAA extensibility.
  */
 public class PhysicsModule extends EngineModule<PhysicsConfig> {
     private static final Logger logger = LogManager.getLogger(PhysicsModule.class);
@@ -25,6 +26,11 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
     private final ModuleManager subManager;
     private BulletAppState bulletAppState;
     private BulletDebugAppState debugAppState;
+
+    // Exposed submodules for property delegation
+    private RigidBodyModule rigidBodyModule;
+    private SoftBodyModule softBodyModule;
+    private CollisionModule collisionModule;
 
     public PhysicsModule(CalistaGameEngine app) {
         super("physics", PhysicsConfig.class, app);
@@ -55,17 +61,20 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
             DebugConfiguration cfg = new DebugConfiguration();
             cfg.setEnabled(true);
             debugAppState = new BulletDebugAppState(cfg);
-            // Ensure debug node renders in scene
-            debugAppState.setEnabled(true);//setDebugRootNode(app.getRootNode());
+            debugAppState.setEnabled(true);
             app.getStateManager().attach(debugAppState);
             logger.info("BulletDebugAppState attached and enabled");
         }
     }
 
     private void registerSubModules() {
-        subManager.register(new CollisionModule(this), 10);
-        subManager.register(new RigidBodyModule(this), 20);
-        subManager.register(new SoftBodyModule(this), 30);
+        collisionModule = new CollisionModule(this);
+        rigidBodyModule = new RigidBodyModule(this);
+        softBodyModule = new SoftBodyModule(this);
+
+        subManager.register(collisionModule, 10);
+        subManager.register(rigidBodyModule, 20);
+        subManager.register(softBodyModule, 30);
     }
 
     private void applyConfig() {
@@ -99,6 +108,10 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
         PhysicsConfig cfg = getConfig();
         bulletAppState.getPhysicsSpace().setGravity(cfg.gravity);
         logger.info("Gravity reloaded: {}", cfg.gravity);
+        // Delegate config reloads to submodules if needed
+        if (rigidBodyModule != null) rigidBodyModule.onConfigReloaded();
+        if (softBodyModule != null) softBodyModule.onConfigReloaded();
+        if (collisionModule != null) collisionModule.onConfigReloaded();
     }
 
     @Override protected void onEnable() {}
@@ -108,21 +121,81 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
         return bulletAppState;
     }
 
-    /**
-     * Adds a rigid body control to the spatial and registers it.
-     */
-    public void addRigidBody(Spatial spat, float mass) {
-        if (bulletAppState == null) {
-            logger.warn("Cannot add rigid body, BulletAppState is null");
-            return;
-        }
-        RigidBodyControl ctrl = new RigidBodyControl(mass);
-        spat.addControl(ctrl);
-        bulletAppState.getPhysicsSpace().add(ctrl);
-        logger.debug("RigidBodyControl (mass={}) added to {}", mass, spat.getName());
-    }
-
     public CalistaGameEngine getApp() {
         return app;
+    }
+
+    // Delegation methods for RigidBodyModule
+    public RigidBodyModule getRigidBodyModule() {
+        return rigidBodyModule;
+    }
+
+    public void addRigidBody(Spatial spat, float mass) {
+        if (rigidBodyModule != null) {
+            rigidBodyModule.addRigidBody(spat, mass);
+        } else {
+            logger.warn("RigidBodyModule is not initialized.");
+        }
+    }
+
+    public void removeRigidBody(Spatial spat) {
+        if (rigidBodyModule != null) {
+            rigidBodyModule.removeRigidBody(spat);
+        } else {
+            logger.warn("RigidBodyModule is not initialized.");
+        }
+    }
+
+    public void setRigidBodyFriction(Spatial spat, float friction) {
+        if (rigidBodyModule != null && rigidBodyModule.hasRigidBody(spat)) {
+            RigidBodyControl ctrl = rigidBodyModule.getRigidBodyControl(spat);
+            // Проверка: control и его native object ещё валидны!
+            if (ctrl != null && ctrl.getPhysicsSpace() != null) {
+                ctrl.setFriction(friction);
+            } else {
+                logger.warn("Attempt to set friction on invalid or removed body '{}'", spat.getName());
+            }
+        }
+    }
+
+    public void setRigidBodyRestitution(Spatial spat, float restitution) {
+        if (rigidBodyModule != null && rigidBodyModule.hasRigidBody(spat)) {
+            rigidBodyModule.getRigidBodyControl(spat).setRestitution(restitution);
+            logger.debug("Set restitution={} for rigid body '{}'", restitution, spat.getName());
+        }
+    }
+
+    public void setRigidBodyDamping(Spatial spat, float linear, float angular) {
+        if (rigidBodyModule != null && rigidBodyModule.hasRigidBody(spat)) {
+            rigidBodyModule.getRigidBodyControl(spat).setDamping(linear, angular);
+            logger.debug("Set damping l={} a={} for rigid body '{}'", linear, angular, spat.getName());
+        }
+    }
+
+    // Delegation methods for SoftBodyModule
+    public SoftBodyModule getSoftBodyModule() {
+        return softBodyModule;
+    }
+
+    public void addSoftBody(Spatial spat) {
+        if (softBodyModule != null) {
+            softBodyModule.addSoftBody(spat);
+        } else {
+            logger.warn("SoftBodyModule is not initialized.");
+        }
+    }
+
+    public void removeSoftBody(Spatial spat) {
+        if (softBodyModule != null) {
+            softBodyModule.removeSoftBody(spat);
+        } else {
+            logger.warn("SoftBodyModule is not initialized.");
+        }
+    }
+
+    // ... Add more delegation methods as needed for other properties (pressure, stiffness, anchors, etc.)
+
+    public CollisionModule getCollisionModule() {
+        return collisionModule;
     }
 }

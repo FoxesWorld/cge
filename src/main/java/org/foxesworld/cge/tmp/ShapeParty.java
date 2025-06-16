@@ -1,7 +1,12 @@
 package org.foxesworld.cge.tmp;
 
 import com.jme3.asset.AssetManager;
+import com.jme3.effect.ParticleEmitter;
+import com.jme3.effect.ParticleMesh;
+import com.jme3.material.Material;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
+import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
@@ -24,46 +29,58 @@ public class ShapeParty {
         float areaRadius = 4f;
         float baseHeight = 2f;
 
+        // Заранее создаем шаблон эффекта частиц
+        ParticleEmitter particleTemplate = new ParticleEmitter("my particle effect", ParticleMesh.Type.Triangle, 60);
+        Material pmMat = new Material(calistaGameEngine.getAssetManager(), "Common/MatDefs/Misc/Particle.j3md");
+        pmMat.setTexture("Texture", calistaGameEngine.getAssetManager().loadTexture("Textures/explosion.png"));
+        particleTemplate.setMaterial(pmMat);
+        particleTemplate.setImagesX(1);
+        particleTemplate.setImagesY(1);
+        particleTemplate.setStartColor(ColorRGBA.Orange);
+        particleTemplate.setEndColor(ColorRGBA.Red);
+        particleTemplate.getParticleInfluencer().setInitialVelocity(new Vector3f(0, 2, 0));
+        particleTemplate.setStartSize(0.5f);
+        particleTemplate.setEndSize(0.1f);
+        particleTemplate.setGravity(0, 0, 0);
+        particleTemplate.setLowLife(1f);
+        particleTemplate.setHighLife(2f);
+
         calistaGameEngine.enqueue(() -> {
             PhysicsModule physicsModule = calistaGameEngine.getModuleManager().getModule(PhysicsModule.class);
             AssetManager assetManager = calistaGameEngine.getAssetManager();
 
-            // Загрузка модели вместо создания случайных фигур
+            // Загрузка модели
             Spatial model = calistaGameEngine.getAssetRepo().getModel("ParkBench01");
-
-
-            // Убедимся, что модель является Geometry или Node
             if (model == null) {
                 throw new RuntimeException("Не удалось загрузить модель");
             }
 
             for (int i = 0; i < count; i++) {
-                // Создаем клон загруженной модели
                 Spatial instance = model.clone();
                 instance.setName("ModelInstance_" + i);
 
-                //caleTextureCoordinates(instance, new Vector2f(2, 2));
-
-                // Случайная позиция
                 float x = (random.nextFloat() * 2 - 1) * areaRadius;
                 float z = (random.nextFloat() * 2 - 1) * areaRadius;
                 float y = baseHeight + random.nextFloat() * 5f;
                 instance.setLocalTranslation(x, y, z);
 
-                // Прикрепляем к сцене
+                // Добавляем эффект частиц как дочерний элемент к объекту
+                ParticleEmitter emitter = particleTemplate.clone();
+                emitter.setLocalTranslation(0, 1.5f, 0); // немного над объектом
+                ((Node) instance).attachChild(emitter);
+                emitter.emitAllParticles(); // запускаем эффект
+
                 calistaGameEngine.getRootNode().attachChild(instance);
 
-                // Добавляем физику для всех Geometry в иерархии
                 if (physicsModule != null && instance instanceof Geometry) {
-                    physicsModule.addRigidBody((Geometry) instance, 1.0f);
+                    physicsModule.addRigidBody(instance, 1.0f);
                 } else if (physicsModule != null && instance instanceof Node) {
                     processNodePhysics((Node) instance, physicsModule);
                 }
-
-                //System.out.printf("Created ModelInstance_%d at (%.2f, %.2f, %.2f)%n", i, x, y, z);
             }
         });
     }
+
 
     // Рекурсивное масштабирование текстурных координат
     private void scaleTextureCoordinates(Spatial spatial, Vector2f scale) {

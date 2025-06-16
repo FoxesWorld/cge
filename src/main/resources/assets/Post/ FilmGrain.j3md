@@ -1,0 +1,15 @@
+MaterialDef FilmGrain {
+    MaterialParameters {
+        Texture2D NoiseMap
+        Float GrainIntensity
+        Float GrainScale
+        Float Time
+    }
+    Technique {
+        VertexShader GLSL150: Common/MatDefs/Post/Post.vert
+        FragmentShader GLSL150: MatDefs/Post/FilmGrain.frag
+        WorldParameters {
+            WorldViewProjectionMatrix
+        }
+    }
+}

@@ -58,7 +58,7 @@ public class CollisionModule extends EngineModule<PhysicsConfig> implements Phys
     }
 
     @Override
-    protected void onConfigReloaded() {
+    public void onConfigReloaded() {
         // Config can adjust filtering in future
         LOGGER.info("CollisionModule config reloaded");
     }

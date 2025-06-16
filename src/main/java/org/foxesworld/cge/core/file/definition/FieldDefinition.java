@@ -12,28 +12,13 @@ import java.util.Objects;
  */
 public class FieldDefinition {
 
-    @SerializedName("name")
     private String name;
-
-    @SerializedName("type")
     private String type;
-
-    @SerializedName("seek")
-    private String seek;
-
-    @SerializedName("length")
-    private Integer length;
-
-    @SerializedName("byteOrder")
-    private ByteOrder byteOrder = ByteOrder.LITTLE_ENDIAN;
-
-    @SerializedName("lengthField")
-    private String lengthField;
-
-    @SerializedName("countField")
+   private String seek;
+   private Integer length;
+   private ByteOrder byteOrder = ByteOrder.LITTLE_ENDIAN;
+   private String lengthField;
     private String countField;
-
-    @SerializedName("element")
     private ElementDefinition element;
 
     public FieldDefinition() {

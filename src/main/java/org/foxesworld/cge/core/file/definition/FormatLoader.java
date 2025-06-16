@@ -17,7 +17,6 @@ public class FormatLoader {
      *
      * @param jsonPath путь к JSON-файлу (например, "resources/cgtdef.json")
      * @return объект FileFormatDefinition
-     * @throws IOException если файл не найден или не удалось прочитать
      */
     public static FileFormatDefinition loadFromJson(String jsonPath) {
         try (Reader reader = new FileReader(jsonPath)) {

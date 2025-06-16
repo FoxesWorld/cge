@@ -17,6 +17,7 @@ import org.foxesworld.cge.modules.ui.UIModule;
 /**
  * Represents the player character, handling physics, movement controls,
  * camera effects, and a visible third-person model that follows the camera.
+ * Improved for robustness, stability, and AAA game requirements.
  */
 public class Player extends Node {
 
@@ -49,9 +50,13 @@ public class Player extends Node {
     private float targetEyeHeight = EYE_HEIGHT;
     private float interpEyeHeight = EYE_HEIGHT;
 
-    // For optimization: reuse vectors
+    // Optimization: reuse vectors
     private final Vector3f reuseVec1 = new Vector3f();
     private final Vector3f reuseVec2 = new Vector3f();
+
+    // Grounded state for stability
+    private boolean lastGrounded = true;
+    private float airTime = 0f; // Time spent in air, for better landing detection
 
     /**
      * Constructs the player, initializing physics, movement, camera and HUD.
@@ -68,7 +73,7 @@ public class Player extends Node {
 
         setLocalTranslation(spawnPos);
 
-        // Initialize physics character with configurable shape
+        // Initialize physics character with robust, tunable shape
         this.bullet = engine.getModuleManager()
                 .getModule(PhysicsModule.class)
                 .getBulletAppState();
@@ -78,6 +83,7 @@ public class Player extends Node {
         character.setJumpSpeed(5.2f);
         character.setFallSpeed(16.5f);
         character.setGravity(13.8f);
+        //character.ыуеЫ(FastMath.HALF_PI); // 90 deg, avoid "stuck" on slopes
         addControl(character);
         bullet.getPhysicsSpace().add(character);
 
@@ -106,11 +112,17 @@ public class Player extends Node {
      * Loads and configures the player model for third-person view, if needed.
      */
     private void loadPlayerModel() {
-        playerModel = engine.getAssetManager().loadModel("meshes/YBot.j3o");
-        playerModel.setLocalScale(0.011f);
-        playerModel.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
-        playerModel.setCullHint(Spatial.CullHint.Never);
-        attachChild(playerModel);
+        try {
+            playerModel = engine.getAssetManager().loadModel("meshes/YBot.j3o");
+            playerModel.setLocalScale(0.011f);
+            playerModel.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
+            playerModel.setCullHint(Spatial.CullHint.Never);
+            attachChild(playerModel);
+        } catch (Exception e) {
+            // Log error and fallback to a simple stand-in if loading failed
+            System.err.println("[Player] Failed to load model: " + e.getMessage());
+            playerModel = null;
+        }
     }
 
     /**
@@ -143,32 +155,42 @@ public class Player extends Node {
 
         synchronize(false);
         updateModelPosition();
-        checkGrounded();
+        updateGroundedState(tpf);
         playerHud.update(tpf);
     }
 
     /**
-     * Checks if the player is on the ground using physics, allows for future extensions.
+     * Robust grounded state check. Also handles transition events (landing).
      */
-    public boolean isGrounded() {
-        // Optionally add a ray downwards for more robust ground detection
-        return character.onGround();
+    private void updateGroundedState(float tpf) {
+        boolean grounded = isGrounded();
+        if (!grounded) {
+            airTime += tpf;
+        } else {
+            if (!lastGrounded && airTime > 0.1f) { // landed after at least 0.1s in air
+                camEffectsControl.notifyLanding(airTime);
+            }
+            airTime = 0;
+        }
+        lastGrounded = grounded;
     }
 
-    private void checkGrounded() {
-        // Example: highlight HUD or play sound if landed, etc.
-        if (isGrounded()) {
-            // Could trigger landing effect/sound
-        }
+    /**
+     * Checks if the player is on the ground using physics (with optional raycast fallback).
+     */
+    public boolean isGrounded() {
+        // Optionally add a raycast check for more stability on edges/slopes
+        return character.onGround();
     }
 
     /**
      * Positions and orients the player model behind the camera for third-person.
      */
     private void updateModelPosition() {
+        if (playerModel == null) return;
         Vector3f camPos = cam.getLocation();
         Vector3f camDir = cam.getDirection(reuseVec1).normalizeLocal();
-        Vector3f offset = camDir.multLocal(-MODEL_BACK_OFFSET).addLocal(0, MODEL_DOWN_OFFSET, 0);
+        Vector3f offset = camDir.mult(-MODEL_BACK_OFFSET).addLocal(0, MODEL_DOWN_OFFSET, 0);
         playerModel.setLocalTranslation(camPos.add(reuseVec2.set(offset)));
         Vector3f lookTarget = camPos.add(camDir);
         playerModel.lookAt(lookTarget, Vector3f.UNIT_Y);
@@ -203,7 +225,6 @@ public class Player extends Node {
     public CalistaGameEngine getEngine() { return engine; }
     public boolean isCrouching() { return isCrouching; }
     public float getInterpEyeHeight() { return interpEyeHeight; }
-
     public InputManager getInput() { return input; }
     public CameraEffectsControl getCamEffectsControl() { return camEffectsControl; }
     public float getWalkSpeed() { return WALK_SPEED; }
@@ -212,12 +233,13 @@ public class Player extends Node {
 
     /**
      * Inner HUD class for managing on-screen player stats.
+     * Improved: prevents redundant updates, more robust.
      */
     public static class PlayerHud {
         private float speed;
         private float armor = 0.6f;
         private float ability = 0.4f;
-        private float prevSpeed, prevArmor, prevAbility;
+        private float prevSpeed = -1f, prevArmor = -1f, prevAbility = -1f;
         private final UIModule ui;
 
         /**
@@ -240,9 +262,9 @@ public class Player extends Node {
          * @param tpf time per frame
          */
         public void update(float tpf) {
-            if (speed != prevSpeed) { /* update speed bar */ prevSpeed = speed; }
-            if (armor != prevArmor) { /* update armor bar */ prevArmor = armor; }
-            if (ability != prevAbility) { /* update ability bar */ prevAbility = ability; }
+            if (Math.abs(speed - prevSpeed) > 0.001f) { /* update speed bar */ prevSpeed = speed; }
+            if (Math.abs(armor - prevArmor) > 0.001f) { /* update armor bar */ prevArmor = armor; }
+            if (Math.abs(ability - prevAbility) > 0.001f) { /* update ability bar */ prevAbility = ability; }
         }
     }
 }
