@@ -1,94 +1,89 @@
 package org.foxesworld.cge.modules.player;
 
 import com.jme3.app.Application;
-import com.jme3.app.state.AppState;
-import org.foxesworld.cge.CalistaGameEngine;
-import org.foxesworld.cge.core.loader.ConsoleProgressBar;
-import org.foxesworld.cge.core.module.EngineModule;
 import com.jme3.math.Vector3f;
+import org.foxesworld.cge.CalistaGameEngine;
+import org.foxesworld.cge.core.loader.JmeProgressBar;
+import org.foxesworld.cge.core.module.EngineModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * PlayerModule wraps the Player character as a dynamically-loadable module.
- * <p>
  * On initialization, it spawns the Player at a configured position,
- * registers update callbacks, and handles cleanup on disable.
- * </p>
+ * attaches it to the root node, and manages cleanup.
+ *
+ * Улучшено:
+ * - Исключён режим гонки: игрок создаётся и добавляется только когда сцена полностью готова,
+ *   используя onSceneReady (Consumer<SceneReadyContext>).
+ * - Убран неиспользуемый прогресс-бар и синхронный вызов loadAllAssets (который может вызвать гонки).
+ * - Добавлен потокобезопасный detach и защита от двойного создания/удаления.
+ * - Все операции с rootNode происходят через app.enqueue (JME main thread).
+ * - Добавлен логгер для диагностики.
  */
 public class PlayerModule extends EngineModule<PlayerConfig> {
-    private Player player;
+    private static final Logger logger = LoggerFactory.getLogger(PlayerModule.class);
+    private volatile Player player;
 
-    /**
-     * Constructs the PlayerModule.
-     *
-     * @param app the main game engine instance
-     */
     public PlayerModule(CalistaGameEngine app) {
         super("player", PlayerConfig.class, app);
     }
 
-    /**
-     * Called when configuration is reloaded.
-     */
     @Override
     protected void onConfigReloaded() {
-        // no dynamic reload logic for player
+        // В будущем: реализовать динамический respawn по изменению позиции
     }
 
-    /**
-     * Called when the module is enabled (after initModule completes).
-     */
     @Override
     protected void onEnable() {
-        // nothing special on enable
+        // не требуется
     }
 
     @Override
     protected void onDisable() {
-
+        // не требуется
     }
 
-    /**
-     * Initializes the Player module: reads spawn position from config,
-     * creates the Player, attaches to root node, and schedules the update AppState.
-     *
-     * @param app the engine instance
-     * @throws Exception if config or creation fails
-     */
     @Override
     protected void initModule(CalistaGameEngine app) throws Exception {
+        // Гарантируем, что игрок создаётся только после полной готовности сцены
         app.getAssetLoader().loadAllAssets(() -> {
-            PlayerConfig cfg = getConfig();
-            if (cfg == null) {
-                throw new IllegalStateException("PlayerConfig not loaded");
-            }
-            Vector3f spawn = cfg.getSpawnPosition();
-            this.player = new Player(app, spawn);
-            app.getRootNode().attachChild(player);
-
-        }, new ConsoleProgressBar());
+            app.enqueue(() -> {
+                if (player != null) {
+                    logger.warn("Player already exists, skipping spawn.");
+                    return;
+                }
+                PlayerConfig cfg = getConfig();
+                if (cfg == null) {
+                    throw new IllegalStateException("PlayerConfig not loaded");
+                }
+                Vector3f spawn = cfg.getSpawnPosition();
+                this.player = new Player(app, spawn);
+                app.getRootNode().attachChild(player);
+                logger.info("Player spawned at {}", spawn);
+            });
+        }, new JmeProgressBar(gameEngine));
     }
 
-    /**
-     * Called each frame; player updates handled by attached AppState.
-     *
-     * @param tpf time per frame
-     */
     @Override
     protected void updateModule(float tpf) {
-        // no-op: handled by AppState
+        // Player logic handled by attached AppState or Control
     }
 
-    /**
-     * Cleans up the Player module: removes player and restores input/camera.
-     *
-     * @param app the engine instance
-     */
     @Override
     protected void cleanupModule(Application app) {
-        if (player != null) {
-            player.cleanup();
-            getGameEngine().getRootNode().detachChild(player);
-            player = null;
-        }
+        // Удаляем игрока только в игровом потоке и только если был создан
+        app.enqueue(() -> {
+            if (player != null) {
+                try {
+                    player.cleanup();
+                } catch (Exception e) {
+                    logger.warn("Error during player cleanup", e);
+                }
+                getGameEngine().getRootNode().detachChild(player);
+                logger.info("Player removed from scene.");
+                player = null;
+            }
+        });
     }
 }

@@ -121,12 +121,14 @@ public class RigidBodyModule extends EngineModule<PhysicsConfig> {
         }
 
         RigidBodyControl control = new RigidBodyControl(mass);
-        safeSetFriction(control, config.rigidFriction, spatial);
-        safeSetRestitution(control, config.rigidRestitution, spatial);
-        safeSetDamping(control, config.rigidLinearDamping, config.rigidAngularDamping, spatial);
         spatial.addControl(control);
         try {
             physicsModule.getBulletAppState().getPhysicsSpace().add(control);
+
+            // теперь physicsSpace не null, можно безопасно задавать параметры
+            safeSetFriction(control, config.rigidFriction, spatial);
+            safeSetRestitution(control, config.rigidRestitution, spatial);
+            safeSetDamping(control, config.rigidLinearDamping, config.rigidAngularDamping, spatial);
             bodies.put(spatial, control);
             logger.debug("Added rigid body '{}' with mass={} and friction={}", spatial.getName(), mass, config.rigidFriction);
         } catch (Exception e) {

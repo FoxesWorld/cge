@@ -9,6 +9,7 @@ import org.foxesworld.cge.core.TaskScheduler;
 import org.foxesworld.cge.core.io.GenericByteParser;
 import org.foxesworld.cge.core.loader.AssetLoader;
 import org.foxesworld.cge.core.loader.ConsoleProgressBar;
+import org.foxesworld.cge.core.loader.JmeProgressBar;
 import org.foxesworld.cge.core.module.ModuleManager;
 import org.foxesworld.cge.core.streaming.StreamingManager;
 import org.foxesworld.cge.core.streaming.StreamingParserLoader;
@@ -84,7 +85,7 @@ public class CalistaGameEngine extends SimpleApplication {
             assetLoader.loadAllAssets(() -> {
                 //createTestTerrain(this, 250f, 250f);
                 new ShapeParty(this).startParty();
-            }, new ConsoleProgressBar());
+            }, new JmeProgressBar(this));
 
             /*
             if (scene != null) {

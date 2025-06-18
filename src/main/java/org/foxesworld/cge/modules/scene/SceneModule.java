@@ -17,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import java.io.File;
 import java.io.IOException;
 import java.util.*;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Consumer;
 
@@ -25,12 +26,13 @@ import java.util.function.Consumer;
  * into the engine. It handles terrain, lighting, and other scene data in chunks,
  * streamed asynchronously via {@link StreamingManager}.
  *
+ * Улучшено: потокобезопасность, информативные калбэки, прямой Consumer<SceneReadyContext>, повторный вызов для уже готовой сцены.
+ *
  * @author Calista
  */
 public class SceneModule extends EngineModule<SceneConfig> {
     private static final Logger logger = LoggerFactory.getLogger(SceneModule.class);
 
-    // scene-specific
     private CGSMetadata cgsMetadata;
     private CGSFile sceneFile;
     private List<ChunkEntry> entries;
@@ -39,7 +41,13 @@ public class SceneModule extends EngineModule<SceneConfig> {
     private final CalistaGameEngine app;
     private ChunkFieldTypeConfigLoader configLoader;
     private final AtomicInteger chunksRemaining = new AtomicInteger(0);
-    private final List<Runnable> onSceneReadyCallbacks = new ArrayList<>();
+
+    // Потокобезопасный список, чтобы калбэки можно было добавлять в любом потоке
+    private final List<Consumer<SceneReadyContext>> onSceneReadyCallbacks = new CopyOnWriteArrayList<>();
+    // Состояние готовности
+    private volatile boolean sceneReady = false;
+    // Контекст готовности сцены
+    private volatile SceneReadyContext readyContext = null;
 
     public SceneModule(CalistaGameEngine app) {
         super("scene", SceneConfig.class, app);
@@ -60,11 +68,12 @@ public class SceneModule extends EngineModule<SceneConfig> {
             throw new IllegalStateException("SceneConfig or scenePath is null");
         }
 
+        sceneReady = false;
+        readyContext = null;
         app.getByteStreamer().streamAsync(cfg.getScenePath(),
                 bytes -> {
                     try {
                         this.sceneFile = new CGSFile(new File(cfg.getScenePath()), "r");
-                        //CGSFileReader reader = this.sceneFile.readFile();
                         this.sceneFile.readFileNew();
                         this.cgsMetadata = sceneFile.getMetadata();
                         this.entries = new ArrayList<>(sceneFile.getChunkTable());
@@ -87,15 +96,11 @@ public class SceneModule extends EngineModule<SceneConfig> {
         this.sceneRoot = new Node(cgsMetadata.getSceneName());
         chunksRemaining.set(entries.size());
         logger.debug("SceneModule: {} chunks to stream", entries.size());
-        // Функция для обработки загруженных чанков
-        Consumer<SceneChunk> onChunk = chunk -> {
-            // Парсим чанк в Spatial
-            Spatial spat = parseChunk(app, chunk);
 
-            // Добавляем в sceneRoot
+        Consumer<SceneChunk> onChunk = chunk -> {
+            Spatial spat = parseChunk(app, chunk);
             app.enqueue(() -> {
-                app.getRootNode().attachChild(spat);
-                // Если все чанки загружены, прикрепляем sceneRoot к главному RootNode
+                sceneRoot.attachChild(spat);
                 if (chunksRemaining.decrementAndGet() == 0) {
                     attachSceneRoot();
                 }
@@ -103,17 +108,13 @@ public class SceneModule extends EngineModule<SceneConfig> {
             });
         };
 
-        // Функция обработки ошибки при загрузке чанка
         Consumer<Throwable> onError = err -> {
             logger.error("Failed to stream chunk: {}", err.getMessage(), err);
-
-            // Даже если произошла ошибка, продолжаем процесс
             if (chunksRemaining.decrementAndGet() == 0) {
                 attachSceneRoot();
             }
         };
 
-        // Стримим каждый чанк
         for (ChunkEntry e : entries) {
             if (streamingManager != null) {
                 streamingManager.streamAsync(e.id(), onChunk, onError);
@@ -123,20 +124,36 @@ public class SceneModule extends EngineModule<SceneConfig> {
 
     private void attachSceneRoot() {
         app.enqueue(() -> {
-            // Добавляем sceneRoot в главный RootNode
             app.getRootNode().attachChild(sceneRoot);
-            logger.info("All chunks streamed sceneRoot attached.");
-            // Уведомляем систему, что сцена готова
+            logger.info("All chunks streamed, sceneRoot attached.");
             ModuleHealthMonitor.getInstance().reportState(getName(), ModuleState.RUNNING);
-            // Запускаем все отложенные callback-методы
-            onSceneReadyCallbacks.forEach(cb -> {
-                try {
-                    cb.run();
-                } catch (Exception ex) {
-                    logger.warn("onSceneReady failed", ex);
-                }
-            });
+
+            sceneReady = true;
+            readyContext = new SceneReadyContext(sceneRoot, cgsMetadata, entries);
+
+            // Вызываем все калбэки, даже если добавились после attach
+            onSceneReadyCallbacks.forEach(cb -> safeCallback(cb, readyContext));
         });
+    }
+
+    private void safeCallback(Consumer<SceneReadyContext> cb, SceneReadyContext ctx) {
+        try {
+            cb.accept(ctx);
+        } catch (Exception ex) {
+            logger.warn("onSceneReady callback failed", ex);
+        }
+    }
+
+    /**
+     * Регистрирует калбэк на готовность сцены.
+     * Если сцена уже готова, калбэк вызовется немедленно в игровом потоке.
+     */
+    public void onSceneReady(Consumer<SceneReadyContext> callback) {
+        Objects.requireNonNull(callback, "callback must not be null");
+        onSceneReadyCallbacks.add(callback);
+        if (sceneReady && readyContext != null) {
+            app.enqueue(() -> safeCallback(callback, readyContext));
+        }
     }
 
     private Spatial parseChunk(CalistaGameEngine app, SceneChunk chunk) {
@@ -169,6 +186,9 @@ public class SceneModule extends EngineModule<SceneConfig> {
             streamingManager.shutdown();
             streamingManager = null;
         }
+        sceneReady = false;
+        readyContext = null;
+        onSceneReadyCallbacks.clear();
     }
 
     @Override
@@ -178,15 +198,24 @@ public class SceneModule extends EngineModule<SceneConfig> {
         initModule(app);
     }
 
-    public void onSceneReady(Runnable callback) {
-        onSceneReadyCallbacks.add(Objects.requireNonNull(callback));
-    }
+    @Override
+    protected void onEnable() { }
 
     @Override
-    protected void onEnable() {
-    }
+    protected void onDisable() { }
 
-    @Override
-    protected void onDisable() {
+    /**
+     * Контекст для калбэка о готовности сцены.
+     */
+    public static class SceneReadyContext {
+        public final Node sceneRoot;
+        public final CGSMetadata metadata;
+        public final List<ChunkEntry> chunkEntries;
+
+        public SceneReadyContext(Node sceneRoot, CGSMetadata metadata, List<ChunkEntry> chunkEntries) {
+            this.sceneRoot = sceneRoot;
+            this.metadata = metadata;
+            this.chunkEntries = chunkEntries;
+        }
     }
 }

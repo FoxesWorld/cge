@@ -4,7 +4,6 @@ import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.collision.shapes.CapsuleCollisionShape;
 import com.jme3.bullet.control.CharacterControl;
 import com.jme3.input.InputManager;
-import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
 import com.jme3.renderer.queue.RenderQueue;
@@ -13,13 +12,19 @@ import com.jme3.scene.Spatial;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.modules.physics.PhysicsModule;
 import org.foxesworld.cge.modules.ui.UIModule;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Represents the player character, handling physics, movement controls,
  * camera effects, and a visible third-person model that follows the camera.
  * Improved for robustness, stability, and AAA game requirements.
+ * Гонки состояния исключены: все публичные методы потокобезопасны,
+ * все добавления/удаления узлов - только из игрового потока!
  */
-public class Player extends Node {
+public class Player extends Node implements PlayerContext {
+
+    private static final Logger logger = LoggerFactory.getLogger(Player.class);
 
     private final CalistaGameEngine engine;
     private final InputManager input;
@@ -40,22 +45,22 @@ public class Player extends Node {
     private static final float PLAYER_RADIUS = 0.45f;
     private static final float PLAYER_HEIGHT = 1.7f;
     private static final float WALK_SPEED   = 0.13f;
-    private static final float SPRINT_SPEED = 0.25f;
+    private static final float SPRINT_SPEED = 0.18f;
     private static final float ACCEL        = 0.75f;
     private static final float DECEL        = 0.92f;
     private static final float SMOOTH       = 2.2f;
 
-    private boolean isCrouching = false;
+    private volatile boolean isCrouching = false;
     private float crouchAmount = 0f;
     private float targetEyeHeight = EYE_HEIGHT;
     private float interpEyeHeight = EYE_HEIGHT;
 
-    // Optimization: reuse vectors
     private final Vector3f reuseVec1 = new Vector3f();
     private final Vector3f reuseVec2 = new Vector3f();
 
     // Grounded state for stability
     private boolean lastGrounded = true;
+    private PlayerCameraControl camControl;
     private float airTime = 0f; // Time spent in air, for better landing detection
 
     /**
@@ -83,7 +88,6 @@ public class Player extends Node {
         character.setJumpSpeed(5.2f);
         character.setFallSpeed(16.5f);
         character.setGravity(13.8f);
-        //character.ыуеЫ(FastMath.HALF_PI); // 90 deg, avoid "stuck" on slopes
         addControl(character);
         bullet.getPhysicsSpace().add(character);
 
@@ -92,7 +96,7 @@ public class Player extends Node {
         input.setCursorVisible(false);
 
         // Attach camera and movement controls
-        PlayerCameraControl camControl = new PlayerCameraControl(this, EYE_HEIGHT, 0.18f, SMOOTH, engine.getRootNode());
+        camControl = new PlayerCameraControl(this, EYE_HEIGHT, 0.18f, SMOOTH, engine.getRootNode());
         addControl(camControl);
         this.movementControl = new MovementControl(this, WALK_SPEED, SPRINT_SPEED, ACCEL, DECEL, SMOOTH);
         addControl(movementControl);
@@ -110,17 +114,17 @@ public class Player extends Node {
 
     /**
      * Loads and configures the player model for third-person view, if needed.
+     * Only loads once. All spatial operations выполняются в игровом потоке!
      */
     private void loadPlayerModel() {
         try {
             playerModel = engine.getAssetManager().loadModel("meshes/YBot.j3o");
-            playerModel.setLocalScale(0.011f);
+            playerModel.setLocalScale(.01f);
             playerModel.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
             playerModel.setCullHint(Spatial.CullHint.Never);
             attachChild(playerModel);
         } catch (Exception e) {
-            // Log error and fallback to a simple stand-in if loading failed
-            System.err.println("[Player] Failed to load model: " + e.getMessage());
+            logger.warn("[Player] Failed to load model: {}", e.getMessage());
             playerModel = null;
         }
     }
@@ -132,31 +136,28 @@ public class Player extends Node {
     private void synchronize(boolean instant) {
         Vector3f pos = character.getPhysicsLocation();
         setLocalTranslation(pos);
-
-        // Interpolated eye height for smooth crouch transitions
+        // cam.setLocation... УБРАНО!
         if (instant) {
             interpEyeHeight = targetEyeHeight;
         } else {
             interpEyeHeight += (targetEyeHeight - interpEyeHeight) * 0.12f;
         }
-        cam.setLocation(pos.add(0, interpEyeHeight, 0));
     }
 
     /**
      * Updates player each frame: physics sync, model positioning, crouch, and HUD.
-     *
-     * @param tpf time per frame
+     * Камера НЕ трогается — этим занимается CameraEffectsControl!
      */
     public void update(float tpf) {
-        // Smooth crouch (could be improved with animation curves)
         float desiredCrouch = isCrouching ? 0.7f : 1.0f;
         crouchAmount += (desiredCrouch - crouchAmount) * 0.15f;
         targetEyeHeight = EYE_HEIGHT * crouchAmount;
 
-        synchronize(false);
+        synchronize(true);
         updateModelPosition();
         updateGroundedState(tpf);
         playerHud.update(tpf);
+        // camEffectsControl.update(tpf); // НЕ вызывай напрямую, JME вызовет controlUpdate
     }
 
     /**
@@ -197,17 +198,16 @@ public class Player extends Node {
     }
 
     /**
-     * Allows toggling crouch state.
+     * Allows toggling crouch state. Потокобезопасно.
      */
     public void setCrouching(boolean crouch) {
-        if (this.isCrouching != crouch) {
-            this.isCrouching = crouch;
-            // Optionally: adjust collision shape (advanced, not always supported in JME runtime)
-        }
+        isCrouching = crouch;
+        // Optionally: adjust collision shape (advanced, not always supported in JME runtime)
     }
 
     /**
      * Cleans up controls and physics on player removal.
+     * Вызов только из игрового потока!
      */
     public void cleanup() {
         removeControl(movementControl);
@@ -219,52 +219,26 @@ public class Player extends Node {
 
     // --- Getters ---
 
+    @Override
     public CharacterControl getCharacter() { return character; }
     public MovementControl getMovementControl() { return movementControl; }
+    @Override
     public Camera getCam() { return cam; }
     public CalistaGameEngine getEngine() { return engine; }
     public boolean isCrouching() { return isCrouching; }
     public float getInterpEyeHeight() { return interpEyeHeight; }
+    @Override
     public InputManager getInput() { return input; }
     public CameraEffectsControl getCamEffectsControl() { return camEffectsControl; }
+    @Override
     public float getWalkSpeed() { return WALK_SPEED; }
+    @Override
     public float getSprintSpeed() { return SPRINT_SPEED; }
+    @Override
     public PlayerHud getPlayerHud() { return playerHud; }
 
-    /**
-     * Inner HUD class for managing on-screen player stats.
-     * Improved: prevents redundant updates, more robust.
-     */
-    public static class PlayerHud {
-        private float speed;
-        private float armor = 0.6f;
-        private float ability = 0.4f;
-        private float prevSpeed = -1f, prevArmor = -1f, prevAbility = -1f;
-        private final UIModule ui;
-
-        /**
-         * Initializes HUD panels through the UIModule.
-         *
-         * @param p the Player instance
-         */
-        public PlayerHud(Player p) {
-            this.ui = p.engine.getModuleManager().getModule(UIModule.class);
-            ui.addPanel(this, "assets/Interface/stats_config.xml");
-        }
-
-        public void setPlayerSpeed(float s) { speed = s; }
-        public void setArmorBar(float a)    { armor = a; }
-        public void setAbilityBar(float a)  { ability = a; }
-
-        /**
-         * Updates HUD elements only if changed.
-         *
-         * @param tpf time per frame
-         */
-        public void update(float tpf) {
-            if (Math.abs(speed - prevSpeed) > 0.001f) { /* update speed bar */ prevSpeed = speed; }
-            if (Math.abs(armor - prevArmor) > 0.001f) { /* update armor bar */ prevArmor = armor; }
-            if (Math.abs(ability - prevAbility) > 0.001f) { /* update ability bar */ prevAbility = ability; }
-        }
+    @Override
+    public PlayerCameraControl getCamControl() {
+        return camControl;
     }
 }

@@ -115,7 +115,7 @@ public class RendererModule extends EngineModule<RendererConfig> {
     private void initializeSceneModule(CalistaGameEngine app) {
         SceneModule sceneModule = app.getModuleManager().getModule(SceneModule.class);
         if (sceneModule != null) {
-            sceneModule.onSceneReady(() -> {
+            sceneModule.onSceneReady(ctx -> {
                 logger.info("Scene loaded, updating renderer settings...");
                 updateRendererSettingsBasedOnScene();
             });

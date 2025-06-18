@@ -3,25 +3,27 @@ package org.foxesworld.cge.modules.player;
 import com.jme3.bullet.control.CharacterControl;
 import com.jme3.input.InputManager;
 import com.jme3.input.KeyInput;
+import com.jme3.input.event.KeyInputEvent;
+import com.jme3.input.RawInputListener;
 import com.jme3.input.controls.*;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.control.AbstractControl;
+import com.jme3.scene.Spatial;
 
 import static java.lang.Math.max;
 
 /**
  * MovementControl handles first-person character motion with smooth
  * acceleration, deceleration, and jump/landing callbacks. It relies on
- * BetterCharacterControl for robust physics and collision handling.
+ * CharacterControl for robust physics and collision handling.
+ * Исправлено: корректная регистрация/сброс, фикс прыжков, инициализация состояний.
+ * + Гарантированный захват клавиш через RawInputListener.
  */
 public class MovementControl extends AbstractControl implements ActionListener {
 
-    /** Listener for jump start and landing events. */
     public interface JumpListener {
-        /** Called when a jump is initiated. */
         void onJumpStart();
-        /** Called when the character lands, with the peak height relative to takeoff. */
         void onLanding(float peakHeight);
     }
 
@@ -32,7 +34,7 @@ public class MovementControl extends AbstractControl implements ActionListener {
     private static final String MAP_JUMP      = "Jump";
     private static final String MAP_SPRINT    = "Sprint";
 
-    private final Player player;
+    private final PlayerContext player;
     private final CharacterControl character;
     private final InputManager input;
 
@@ -47,23 +49,20 @@ public class MovementControl extends AbstractControl implements ActionListener {
 
     private final Vector3f currentVel = new Vector3f();
     private final Vector3f desiredVel = new Vector3f();
-    private final Vector3f camDir      = new Vector3f();
-    private final Vector3f camLeft     = new Vector3f();
-    private final Vector3f tempDir     = new Vector3f();
+    private final Vector3f camDir     = new Vector3f();
+    private final Vector3f camLeft    = new Vector3f();
+    private final Vector3f tempDir    = new Vector3f();
 
-    private boolean wasInAir;
-    private float lastY;
-    private float peakY;
+    private boolean wasInAir = false;
+    private float lastY = 0f;
+    private float peakY = 0f;
+    private boolean inputRegistered = false;
 
-    /**
-     * @param player        Player node providing camera and input
-     * @param walkSpeed     Movement speed when walking
-     * @param sprintSpeed   Movement speed when sprinting
-     * @param acceleration  Rate of speed increase (units/s²)
-     * @param deceleration  Rate of speed decrease (units/s²)
-     * @param smoothFactor  Interpolation factor for velocity smoothing (0=no smoothing, 1=instant)
-     */
-    public MovementControl(Player player,
+    // Raw input гарантирует захват всех клавиш, даже если GUI или другие контролы их "съедают"
+    private boolean rawRegistered = false;
+    private RawInputListener rawListener;
+
+    public MovementControl(PlayerContext player,
                            float walkSpeed,
                            float sprintSpeed,
                            float acceleration,
@@ -79,69 +78,120 @@ public class MovementControl extends AbstractControl implements ActionListener {
         this.smoothFactor  = FastMath.clamp(smoothFactor, 0f, 1f);
 
         registerInput();
+        registerRawInput();
     }
 
     private void registerInput() {
-        input.addMapping(MAP_FORWARD,  new KeyTrigger(KeyInput.KEY_W));
-        input.addMapping(MAP_BACKWARD, new KeyTrigger(KeyInput.KEY_S));
-        input.addMapping(MAP_LEFT,     new KeyTrigger(KeyInput.KEY_A));
-        input.addMapping(MAP_RIGHT,    new KeyTrigger(KeyInput.KEY_D));
-        input.addMapping(MAP_JUMP,     new KeyTrigger(KeyInput.KEY_SPACE));
-        input.addMapping(MAP_SPRINT,   new KeyTrigger(KeyInput.KEY_LSHIFT));
+        if (inputRegistered) return;
+        inputRegistered = true;
+        if (!input.hasMapping(MAP_FORWARD))  input.addMapping(MAP_FORWARD,  new KeyTrigger(KeyInput.KEY_W));
+        if (!input.hasMapping(MAP_BACKWARD)) input.addMapping(MAP_BACKWARD, new KeyTrigger(KeyInput.KEY_S));
+        if (!input.hasMapping(MAP_LEFT))     input.addMapping(MAP_LEFT,     new KeyTrigger(KeyInput.KEY_A));
+        if (!input.hasMapping(MAP_RIGHT))    input.addMapping(MAP_RIGHT,    new KeyTrigger(KeyInput.KEY_D));
+        if (!input.hasMapping(MAP_JUMP))     input.addMapping(MAP_JUMP,     new KeyTrigger(KeyInput.KEY_SPACE));
+        if (!input.hasMapping(MAP_SPRINT))   input.addMapping(MAP_SPRINT,   new KeyTrigger(KeyInput.KEY_LSHIFT));
+        input.removeListener(this); // гарантируем, что нет дубля
         input.addListener(this,
                 MAP_FORWARD, MAP_BACKWARD, MAP_LEFT,
                 MAP_RIGHT, MAP_JUMP, MAP_SPRINT);
     }
 
+    private void registerRawInput() {
+        if (rawRegistered) return;
+        rawListener = new RawInputListener() {
+            @Override public void beginInput() {}
+            @Override public void endInput() {}
+            @Override public void onJoyAxisEvent(com.jme3.input.event.JoyAxisEvent evt) {}
+            @Override public void onJoyButtonEvent(com.jme3.input.event.JoyButtonEvent evt) {}
+            @Override public void onMouseMotionEvent(com.jme3.input.event.MouseMotionEvent evt) {}
+            @Override public void onMouseButtonEvent(com.jme3.input.event.MouseButtonEvent evt) {}
+            @Override public void onTouchEvent(com.jme3.input.event.TouchEvent evt) {}
+
+            @Override
+            public void onKeyEvent(KeyInputEvent evt) {
+                // пример: захватить всегда клавишу R для респауна (или любую другую)
+                if (evt.getKeyCode() == KeyInput.KEY_R && evt.isPressed()) {
+                    onRawKeyR();
+                    evt.setConsumed(); // если не хотите, чтобы другие ловили R
+                }
+                if (evt.getKeyCode() == KeyInput.KEY_C && evt.isPressed()) {
+                    player.getCamControl().toggleThirdPerson();
+                    evt.setConsumed(); // если не хотите, чтобы другие ловили R
+                }
+                // можно добавить обработку других клавиш по желанию
+            }
+        };
+        input.addRawInputListener(rawListener);
+        rawRegistered = true;
+    }
+
+    private void unregisterInput() {
+        if (!inputRegistered) return;
+        inputRegistered = false;
+        input.removeListener(this);
+    }
+
+    private void unregisterRawInput() {
+        if (!rawRegistered) return;
+        input.removeRawInputListener(rawListener);
+        rawRegistered = false;
+    }
+
+    @Override
+    public void setSpatial(Spatial spatial) {
+        super.setSpatial(spatial);
+        if (spatial == null) {
+            unregisterInput();
+            unregisterRawInput();
+        }
+    }
+
     @Override
     protected void controlUpdate(float tpf) {
-        // Determine desired direction based on input
+        if (spatial == null || player == null || character == null) return;
+
         tempDir.set(0, 0, 0);
         if (forward)  tempDir.z += 1f;
         if (backward) tempDir.z -= 1f;
         if (left)     tempDir.x += 1f;
         if (right)    tempDir.x -= 1f;
 
-        if (!tempDir.equals(Vector3f.ZERO)) {
+        if (tempDir.lengthSquared() > 0f) {
             tempDir.normalizeLocal();
             player.getCam().getDirection(camDir).setY(0).normalizeLocal();
             player.getCam().getLeft(camLeft).setY(0).normalizeLocal();
             desiredVel.set(camDir).multLocal(tempDir.z)
-                    .addLocal(camLeft.multLocal(tempDir.x));
+                    .addLocal(camLeft.mult(tempDir.x)).normalizeLocal();
             desiredVel.multLocal(sprint ? sprintSpeed : walkSpeed);
         } else {
             desiredVel.set(0, 0, 0);
         }
 
-        // Smoothly interpolate current velocity toward desired
         float alpha = 1f - FastMath.pow(1f - smoothFactor, tpf * 60f);
         currentVel.interpolateLocal(desiredVel, alpha);
         character.setWalkDirection(currentVel);
 
-        // Update facing direction if moving
         if (currentVel.lengthSquared() > 1e-4f) {
-            Vector3f viewDir = currentVel.normalize();
-            character.setViewDirection(new Vector3f(viewDir.x, 0, viewDir.z));
+            Vector3f viewDir = new Vector3f(currentVel.x, 0, currentVel.z).normalizeLocal();
+            character.setViewDirection(viewDir);
         }
 
-        // Jump and landing detection
         boolean inAir = !character.onGround();
         float posY = spatial.getWorldTranslation().y;
 
-        if (inAir) {
-            if (posY > lastY) {
-                peakY = max(peakY, posY);
-            }
+        if (inAir && posY > lastY) {
+            peakY = max(peakY, posY);
         }
         if (wasInAir && !inAir && jumpListener != null) {
-            jumpListener.onLanding(peakY - lastY);
+            jumpListener.onLanding(FastMath.abs(peakY - lastY));
             peakY = 0f;
         }
         wasInAir = inAir;
         lastY    = posY;
 
-        // Update HUD speed display
-        player.getPlayerHud().setPlayerSpeed(1f);
+        if (player.getPlayerHud() != null) {
+            player.getPlayerHud().setPlayerSpeed(getCurrentSpeed());
+        }
     }
 
     @Override
@@ -155,6 +205,7 @@ public class MovementControl extends AbstractControl implements ActionListener {
             case MAP_JUMP      -> {
                 if (isPressed && character.onGround()) {
                     character.jump();
+                    peakY = spatial.getWorldTranslation().y;
                     if (jumpListener != null) {
                         jumpListener.onJumpStart();
                     }
@@ -163,22 +214,25 @@ public class MovementControl extends AbstractControl implements ActionListener {
         }
     }
 
+    protected void onRawKeyR() {
+        // Пример: респаун игрока по клавише R (или любая другая логика)
+        System.out.println("RawInputListener: R was pressed! (guaranteed catch)");
+        // player.respawn(); // если реализовано
+    }
+
     @Override
     protected void controlRender(com.jme3.renderer.RenderManager rm, com.jme3.renderer.ViewPort vp) {
         // Not used
     }
 
-    /** Registers a listener for jump start and landing events. */
     public void setJumpListener(JumpListener listener) {
         this.jumpListener = listener;
     }
 
-    /** @return current horizontal speed in world units per second. */
     public float getCurrentSpeed() {
         return currentVel.length();
     }
 
-    /** @return true if the character is currently moving. */
     public boolean isMoving() {
         return getCurrentSpeed() > 1e-4f;
     }

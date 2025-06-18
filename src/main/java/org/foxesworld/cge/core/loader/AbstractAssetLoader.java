@@ -8,8 +8,9 @@ import org.foxesworld.cge.core.utils.CallbackLatch;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
-import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -50,9 +51,12 @@ public abstract class AbstractAssetLoader<E> {
             int total = 0;
             try (InputStreamReader reader = new InputStreamReader(is)) {
                 List<E> entries = gson.fromJson(reader, getListType());
-                int count = entries != null ? entries.size() : 0;
+                if (entries == null) return 0;
+                // Убираем дубли (сохраняем порядок)
+                Set<E> uniqueEntries = new LinkedHashSet<>(entries);
+                int count = uniqueEntries.size();
                 int loaded = 0;
-                for (E entry : entries) {
+                for (E entry : uniqueEntries) {
                     try {
                         total += loadEntryAsync(entry).get();
                     } catch (Exception ex) {
@@ -104,7 +108,6 @@ public abstract class AbstractAssetLoader<E> {
      * @return the number of successfully loaded items (>=0)
      */
     protected abstract CompletableFuture<Integer> loadEntryAsync(E entry);
-
 
     /**
      * Loads all entries and coordinates completion with a {@link CallbackLatch}.

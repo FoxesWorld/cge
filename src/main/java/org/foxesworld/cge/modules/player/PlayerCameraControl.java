@@ -7,6 +7,7 @@ import com.jme3.collision.UnsupportedCollisionException;
 import com.jme3.input.InputManager;
 import com.jme3.input.KeyInput;
 import com.jme3.input.MouseInput;
+import com.jme3.input.RawInputListener;
 import com.jme3.input.controls.*;
 import com.jme3.math.FastMath;
 import com.jme3.math.Ray;
@@ -20,10 +21,14 @@ import com.jme3.scene.Spatial;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Camera control with collision: prevents the camera from clipping through scene geometry.
- * Now with Easing (smooth camera switching) and spherical raycast for solid AAA-feel.
+ * Easing (smooth camera switching) and spherical raycast for solid AAA-feel.
+ * Гарантированный захват клавиши C через RawInputListener и ActionListener.
+ * Исправлено: потокобезопасная инициализация input (синхронизация с движением), нет гонки
+ * при назначении слушателей. Все изменения инпута происходят только в игровом потоке.
  */
 public class PlayerCameraControl extends AbstractControl implements AnalogListener, ActionListener {
 
@@ -59,6 +64,15 @@ public class PlayerCameraControl extends AbstractControl implements AnalogListen
 
     private final Vector3f tempVec = new Vector3f();
 
+    // Для потокобезопасного аккумулирования дельт мыши (решает проблему гонки!)
+    private volatile float pendingDeltaYaw = 0f;
+    private volatile float pendingDeltaPitch = 0f;
+
+    // Гарантированный захват C
+    private RawInputListener rawListener;
+    private final AtomicBoolean rawRegistered = new AtomicBoolean(false);
+    private final AtomicBoolean inputMappingsRegistered = new AtomicBoolean(false);
+
     public PlayerCameraControl(Player player, float eyeHeight, float sensitivity, float smoothing, Spatial sceneRoot) {
         this.cam = player.getCam();
         this.input = player.getInput();
@@ -67,22 +81,72 @@ public class PlayerCameraControl extends AbstractControl implements AnalogListen
         this.smoothingFactor = FastMath.clamp(smoothing, 0f, 1f);
         this.sceneRoot = sceneRoot;
 
-        setupMappings();
+        if (!inputMappingsRegistered.get()) setupMappings();
+        if (!rawRegistered.get()) setupRawListener();
         input.setCursorVisible(false);
     }
 
     private void setupMappings() {
-        input.addMapping(TOGGLE_VIEW, new KeyTrigger(KeyInput.KEY_C));
-        input.addMapping(MOUSE_LEFT,  new MouseAxisTrigger(MouseInput.AXIS_X, true));
-        input.addMapping(MOUSE_RIGHT, new MouseAxisTrigger(MouseInput.AXIS_X, false));
-        input.addMapping(MOUSE_UP,    new MouseAxisTrigger(MouseInput.AXIS_Y, true));
-        input.addMapping(MOUSE_DOWN,  new MouseAxisTrigger(MouseInput.AXIS_Y, false));
+        if (!inputMappingsRegistered.compareAndSet(false, true)) return;
+        if (!input.hasMapping(TOGGLE_VIEW))
+            input.addMapping(TOGGLE_VIEW, new KeyTrigger(KeyInput.KEY_C));
+        if (!input.hasMapping(MOUSE_LEFT))
+            input.addMapping(MOUSE_LEFT,  new MouseAxisTrigger(MouseInput.AXIS_X, true));
+        if (!input.hasMapping(MOUSE_RIGHT))
+            input.addMapping(MOUSE_RIGHT, new MouseAxisTrigger(MouseInput.AXIS_X, false));
+        if (!input.hasMapping(MOUSE_UP))
+            input.addMapping(MOUSE_UP,    new MouseAxisTrigger(MouseInput.AXIS_Y, true));
+        if (!input.hasMapping(MOUSE_DOWN))
+            input.addMapping(MOUSE_DOWN,  new MouseAxisTrigger(MouseInput.AXIS_Y, false));
+        input.removeListener(this);
         input.addListener(this, TOGGLE_VIEW, MOUSE_LEFT, MOUSE_RIGHT, MOUSE_UP, MOUSE_DOWN);
+    }
+
+    private void removeMappings() {
+        if (inputMappingsRegistered.compareAndSet(true, false)) {
+            input.removeListener(this);
+        }
+    }
+
+    private void setupRawListener() {
+        if (!rawRegistered.compareAndSet(false, true)) return;
+        rawListener = new RawInputListener() {
+            @Override public void beginInput() {}
+            @Override public void endInput() {}
+            @Override public void onJoyAxisEvent(com.jme3.input.event.JoyAxisEvent evt) {}
+            @Override public void onJoyButtonEvent(com.jme3.input.event.JoyButtonEvent evt) {}
+            @Override public void onMouseMotionEvent(com.jme3.input.event.MouseMotionEvent evt) {}
+            @Override public void onMouseButtonEvent(com.jme3.input.event.MouseButtonEvent evt) {}
+            @Override public void onTouchEvent(com.jme3.input.event.TouchEvent evt) {}
+            @Override
+            public void onKeyEvent(com.jme3.input.event.KeyInputEvent evt) {
+                if (evt.getKeyCode() == KeyInput.KEY_C && evt.isPressed()) {
+                    toggleThirdPerson();
+                    evt.setConsumed();
+                }
+            }
+        };
+        input.addRawInputListener(rawListener);
+    }
+
+    private void removeRawListener() {
+        if (rawRegistered.compareAndSet(true, false) && rawListener != null) {
+            input.removeRawInputListener(rawListener);
+        }
     }
 
     @Override
     protected void controlUpdate(float tpf) {
         if (spatial == null) return;
+
+        // Применяем накопленные дельты мыши (решает состояние гонки!)
+        float localDeltaYaw = pendingDeltaYaw;
+        float localDeltaPitch = pendingDeltaPitch;
+        pendingDeltaYaw = 0f;
+        pendingDeltaPitch = 0f;
+
+        targetYaw += localDeltaYaw;
+        targetPitch += localDeltaPitch;
 
         float alpha = 1f - FastMath.pow(1f - smoothingFactor, tpf * 60f);
         yaw   = FastMath.interpolateLinear(alpha, yaw, targetYaw);
@@ -170,27 +234,48 @@ public class PlayerCameraControl extends AbstractControl implements AnalogListen
     @Override
     public void onAnalog(String name, float value, float tpf) {
         switch (name) {
-            case MOUSE_LEFT  -> targetYaw   += value * sensitivity;
-            case MOUSE_RIGHT -> targetYaw   -= value * sensitivity;
-            case MOUSE_UP    -> targetPitch += value * sensitivity;
-            case MOUSE_DOWN  -> targetPitch -= value * sensitivity;
+            case MOUSE_LEFT:
+                pendingDeltaYaw += value * sensitivity;
+                break;
+            case MOUSE_RIGHT:
+                pendingDeltaYaw -= value * sensitivity;
+                break;
+            case MOUSE_UP:
+                pendingDeltaPitch += value * sensitivity;
+                break;
+            case MOUSE_DOWN:
+                pendingDeltaPitch -= value * sensitivity;
+                break;
         }
     }
 
     @Override
     public void onAction(String name, boolean isPressed, float tpf) {
         if (TOGGLE_VIEW.equals(name) && isPressed) {
-            thirdPerson = !thirdPerson;
+            toggleThirdPerson();
         }
+    }
+
+    public void toggleThirdPerson() {
+        thirdPerson = !thirdPerson;
     }
 
     @Override
     public void setSpatial(Spatial spatial) {
         super.setSpatial(spatial);
-        this.yaw = this.targetYaw = 0f;
-        this.pitch = this.targetPitch = 0f;
-        this.currentDistance = 0.01f;
-        this.desiredDistance = 0.01f;
+        if (spatial == null) {
+            removeRawListener();
+            removeMappings();
+        } else {
+            setupMappings();
+            setupRawListener();
+            this.yaw = this.targetYaw = 0f;
+            this.pitch = this.targetPitch = 0f;
+            this.currentDistance = 0.01f;
+            this.desiredDistance = 0.01f;
+            this.pendingDeltaYaw = 0f;
+            this.pendingDeltaPitch = 0f;
+        }
     }
 
     public boolean isThirdPerson() {
