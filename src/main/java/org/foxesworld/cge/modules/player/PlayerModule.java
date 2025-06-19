@@ -9,7 +9,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * PlayerModule wraps the Player character as a dynamically-loadable module.
+ * PlayerSubModule wraps the Player character as a dynamically-loadable module.
  * On initialization, it spawns the Player at a configured position,
  * attaches it to the root node, and manages cleanup.
  *
@@ -76,7 +76,7 @@ public class PlayerModule extends EngineModule<PlayerConfig> {
         app.enqueue(() -> {
             if (player != null) {
                 try {
-                    player.cleanup();
+                    //player.cleanup();
                 } catch (Exception e) {
                     logger.warn("Error during player cleanup", e);
                 }

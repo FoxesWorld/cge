@@ -16,6 +16,7 @@ import org.foxesworld.cge.core.streaming.StreamingParserLoader;
 import org.foxesworld.cge.importers.fbx.FBXImporter;
 import org.foxesworld.cge.importers.obj.OBJImporter;
 import org.foxesworld.cge.modules.ModuleConfig;
+import org.foxesworld.cge.modules.ecs.ECSModule;
 import org.foxesworld.cge.modules.popcycle.PopCycle;
 import org.foxesworld.cge.modules.scene.SceneModule;
 import org.foxesworld.cge.tmp.ShapeParty;
@@ -30,7 +31,8 @@ import java.util.logging.LogManager;
  */
 public class CalistaGameEngine extends SimpleApplication {
     private final List<ModuleConfig> modulesToLoad;
-    private AssetRepo assetRepo;
+    private final AssetRepo assetRepo;
+    private ECSModule ecsModule;
     private AssetLoader assetLoader;
     private final PopCycle popCycle;
     @Deprecated
@@ -81,6 +83,7 @@ public class CalistaGameEngine extends SimpleApplication {
             this.assetManager.registerLoader(OBJImporter.class, "obj");
             this.assetManager.registerLoader(FBXImporter.class, "fbx");
             scene = moduleManager.getModule(SceneModule.class);
+            this.ecsModule = this.getModuleManager().getModule(ECSModule.class);
 
             assetLoader.loadAllAssets(() -> {
                 //createTestTerrain(this, 250f, 250f);
@@ -119,6 +122,10 @@ public class CalistaGameEngine extends SimpleApplication {
 
     public AssetLoader getAssetLoader() {
         return assetLoader;
+    }
+
+    public ECSModule getEcsModule() {
+        return ecsModule;
     }
 }
 
