@@ -52,13 +52,13 @@ public class CGTEXFile extends AbstractFile<CGTEXMetadata> {
         if (formatDefinition == null) {
             throw new IllegalStateException("Format definition not loaded");
         }
-        logger.debug("Reading CGTEX file using format: {}", formatDefinition);
+        //logger.debug("Reading CGTEX file using format: {}", formatDefinition);
 
         Map<String, Object> headerMap = new LinkedHashMap<>();
         for (FieldDefinition field : formatDefinition.getHeader()) {
             Object value = readField(field, headerMap);
             headerMap.put(field.getName(), value);
-            logger.debug("Header field: {} = {}", field.getName(), value);
+            //logger.debug("Header field: {} = {}", field.getName(), value);
         }
 
         String magic = (String) headerMap.get("magic");
@@ -76,7 +76,7 @@ public class CGTEXFile extends AbstractFile<CGTEXMetadata> {
                 Object value = readField(field, entryMap);
                 entryMap.put(field.getName(), value);
                 if (!"data".equals(field.getName())) {
-                    logger.debug("Entry[{}] field: {} = {}", i, field.getName(), value);
+                    //logger.debug("Entry[{}] field: {} = {}", i, field.getName(), value);
                 }
             }
 
@@ -88,7 +88,7 @@ public class CGTEXFile extends AbstractFile<CGTEXMetadata> {
             }
         }
 
-        logger.debug("=========== CGTEX FILE READ COMPLETE ===========");
+        //logger.debug("=========== CGTEX FILE READ COMPLETE ===========");
     }
 
     /**

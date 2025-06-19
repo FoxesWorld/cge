@@ -11,119 +11,123 @@ import java.lang.reflect.Type;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
- * A generic asynchronous JSON list loader that reads a list of entries of type {@code E}
- * from a JSON resource and processes each entry using the {@link #loadAllAsync()} method.
- * <p>
- * Subclasses must specify the JSON resource location, the GSON list type, and the logic to
- * load each entry. Supports both standalone asynchronous loading via {@link #loadAllAsync()}
- * and latch-based synchronization via {@link #loadWithLatch(CallbackLatch)}.
+ * Generic robust asynchronous JSON list loader with improved concurrency and streamlined checks.
  *
- * @param <E> the type of entries parsed from the JSON resource (e.g., file paths or descriptor objects)
+ * @param <E> Entry type parsed from JSON (e.g. file path, descriptor)
  */
 public abstract class AbstractAssetLoader<E> {
 
-    private AssetProgressListener progressListener;
+    private static final Logger logger = LogManager.getLogger(AbstractAssetLoader.class);
 
+    /**
+     * Shared thread pool for all loaders, sized to available processors or at least 2.
+     */
+    private static final ExecutorService EXECUTOR = Executors.newFixedThreadPool(
+            Math.max(2, Runtime.getRuntime().availableProcessors())
+    );
+
+    /**
+     * Single shared GSON instance.
+     */
+    private static final Gson GSON = new Gson();
+
+    private AssetProgressListener progressListener;
+    private final AtomicBoolean loaded = new AtomicBoolean(false);
+    private CompletableFuture<Integer> loadFuture;
+
+    /**
+     * Sets a progress listener for this loader.
+     */
     public void setProgressListener(AssetProgressListener listener) {
         this.progressListener = listener;
     }
 
     /**
-     * Asynchronously loads all entries defined in the JSON resource,
-     * invoking {@link #loadEntryAsync(Object)} for each and returning a
-     * {@link CompletableFuture} that completes with the total count of loaded items.
+     * Asynchronously loads JSON resource entries exactly once per loader instance.
+     * Subsequent invocations return the same future.
      *
-     * @return future with total number of loaded items
+     * @return completable future containing the total number of loaded items
      */
     public CompletableFuture<Integer> loadAllAsync() {
-        InputStream is = getClass().getClassLoader().getResourceAsStream(getJsonResourcePath());
-        if (is == null) {
-            logger.error("JSON resource '{}' not found", getJsonResourcePath());
-            return CompletableFuture.completedFuture(0);
+        if (loaded.get()) {
+            return loadFuture != null ? loadFuture : CompletableFuture.completedFuture(0);
         }
-
-        return CompletableFuture.supplyAsync(() -> {
-            int total = 0;
-            try (InputStreamReader reader = new InputStreamReader(is)) {
-                List<E> entries = gson.fromJson(reader, getListType());
-                if (entries == null) return 0;
-                // Убираем дубли (сохраняем порядок)
-                Set<E> uniqueEntries = new LinkedHashSet<>(entries);
-                int count = uniqueEntries.size();
-                int loaded = 0;
-                for (E entry : uniqueEntries) {
-                    try {
-                        total += loadEntryAsync(entry).get();
-                    } catch (Exception ex) {
-                        logger.warn("Failed to load entry {}: {}", entry, ex.getMessage());
-                    }
-                    loaded++;
-                    if (progressListener != null) {
-                        progressListener.onProgress(getClass().getSimpleName(), loaded, count);
-                    }
-                }
-            } catch (Exception ex) {
-                logger.error("Error parsing JSON '{}': {}", getJsonResourcePath(), ex.getMessage());
+        synchronized (this) {
+            if (loaded.get()) {
+                return loadFuture != null ? loadFuture : CompletableFuture.completedFuture(0);
             }
-            return total;
-        }, executor);
+            loaded.set(true);
+            loadFuture = CompletableFuture.supplyAsync(() -> {
+                int totalLoaded = 0;
+                String resourcePath = getJsonResourcePath();
+                try (InputStream is = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
+                    if (is == null) {
+                        logger.error("JSON resource '{}' not found.", resourcePath);
+                        return 0;
+                    }
+                    try (InputStreamReader reader = new InputStreamReader(is)) {
+                        List<E> entries = GSON.fromJson(reader, getListType());
+                        if (entries == null || entries.isEmpty()) {
+                            return 0;
+                        }
+                        Set<E> uniqueEntries = new LinkedHashSet<>(entries);
+                        int entryCount = uniqueEntries.size();
+                        int loadedCount = 0;
+
+                        for (E entry : uniqueEntries) {
+                            try {
+                                totalLoaded += loadEntryAsync(entry).get();
+                            } catch (Exception ex) {
+                                logger.warn("Failed to load entry '{}': {}", entry, ex.getMessage());
+                            }
+                            loadedCount++;
+                            if (progressListener != null) {
+                                progressListener.onProgress(
+                                        getClass().getSimpleName(), loadedCount, entryCount
+                                );
+                            }
+                        }
+                    }
+                } catch (Exception ex) {
+                    logger.error("Error loading resource '{}': {}", resourcePath, ex.getMessage());
+                }
+                return totalLoaded;
+            }, EXECUTOR);
+            return loadFuture;
+        }
     }
 
-    /** Logger instance for this loader. */
-    protected final Logger logger = LogManager.getLogger(getClass());
-
-    /** Thread pool for executing asynchronous load tasks. */
-    private final ExecutorService executor = Executors.newFixedThreadPool(
-            Runtime.getRuntime().availableProcessors()
-    );
-
-    /** GSON instance for JSON parsing. */
-    private final Gson gson = new Gson();
-
     /**
-     * Returns the classpath resource path to the JSON file, e.g. "models.json" or "textures.json".
+     * Loads all entries and signals completion using the provided latch.
+     * The latch is always signaled, even if loading fails.
      *
-     * @return JSON resource path
-     */
-    protected abstract String getJsonResourcePath();
-
-    /**
-     * Returns the generic list type for GSON deserialization, e.g.
-     * {@code new TypeToken<List<E>>(){}.getType()}.
-     *
-     * @return GSON Type for list of {@code E}
-     */
-    protected abstract Type getListType();
-
-    /**
-     * Processes a single entry of type {@code E}. Implementations should
-     * load or register the entry and return the count of items loaded (typically 1).
-     *
-     * @param entry the entry parsed from JSON
-     * @return the number of successfully loaded items (>=0)
-     */
-    protected abstract CompletableFuture<Integer> loadEntryAsync(E entry);
-
-    /**
-     * Loads all entries and coordinates completion with a {@link CallbackLatch}.
-     * When loading finishes (whether successfully or not), the latch's
-     * {@link CallbackLatch#taskDone()} is invoked exactly once.
-     *
-     * @param latch the callback latch to signal on completion
+     * @param latch latch to signal on completion
      */
     public void loadWithLatch(CallbackLatch latch) {
         loadAllAsync()
                 .thenAccept(count -> logger.info("Loaded {} entries from {}", count, getJsonResourcePath()))
-                .thenRun(latch::taskDone)
-                .exceptionally(ex -> {
-                    logger.error("Error loading resource '{}': {}", getJsonResourcePath(), ex.getMessage());
-                    latch.taskDone();
-                    return null;
-                });
+                .whenComplete((result, error) -> latch.taskDone());
     }
+
+    /**
+     * @return Classpath resource path to the JSON file (e.g. "models.json").
+     */
+    protected abstract String getJsonResourcePath();
+
+    /**
+     * @return GSON Type for deserializing a List<E>.
+     */
+    protected abstract Type getListType();
+
+    /**
+     * Implementations should load or register the entry and return items loaded (commonly 1).
+     *
+     * @param entry parsed entry from JSON
+     * @return future with number of items loaded
+     */
+    protected abstract CompletableFuture<Integer> loadEntryAsync(E entry);
 }

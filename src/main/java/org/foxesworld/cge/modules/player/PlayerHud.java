@@ -8,7 +8,7 @@ import org.foxesworld.cge.modules.ui.UIModule;
  * Improved: prevents redundant updates, more robust.
  */
 public class PlayerHud {
-    private float speed;
+    private float speed = 1f;
     private float armor = 0.6f;
     private float ability = 0.4f;
     private float prevSpeed = -1f, prevArmor = -1f, prevAbility = -1f;

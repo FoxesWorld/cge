@@ -15,16 +15,14 @@ import java.lang.reflect.Type;
 import java.nio.ByteBuffer;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 /**
- * Optimized loader for CGTEX textures defined by JSON list.
+ * Optimized loader for CGTEX textures defined by a JSON list,
+ * leveraging asynchronous loading from the parent abstract loader.
  */
 public class TextureLoader extends AbstractAssetLoader<TextureEntry> {
+
     private final CalistaGameEngine engine;
-    private final ExecutorService executor = Executors.newFixedThreadPool(
-            Runtime.getRuntime().availableProcessors());
 
     public TextureLoader(CalistaGameEngine engine) {
         this.engine = engine;
@@ -42,7 +40,8 @@ public class TextureLoader extends AbstractAssetLoader<TextureEntry> {
 
     @Override
     protected CompletableFuture<Integer> loadEntryAsync(TextureEntry entry) {
-        return CompletableFuture.supplyAsync(() -> processEntry(entry), executor);
+        // Leverage the default ForkJoinPool for supplyAsync
+        return CompletableFuture.supplyAsync(() -> processEntry(entry));
     }
 
     private int processEntry(TextureEntry entry) {
@@ -59,15 +58,21 @@ public class TextureLoader extends AbstractAssetLoader<TextureEntry> {
             cgtex.readFileNew();
             int count = 0;
             for (org.foxesworld.cge.core.file.extensions.cgtex.TextureEntry te : cgtex.getEntries()) {
+                // Decode DDS data into a BufferedImage
                 BufferedImage img = DDSDecoder.decode(
                         te.getWidth(), te.getHeight(), te.getFormat(), te.getCompressedData()
                 );
+                // Convert to ByteBuffer
                 ByteBuffer buf = toByteBuffer(img, flipY);
+                // Create JME image and set properties
                 Image jmeImage = new Image(Image.Format.RGBA8, te.getWidth(), te.getHeight(), buf, ColorSpace.sRGB);
                 jmeImage.setMipmapsGenerated(genMipMaps);
+
+                // Create Texture2D and register in asset repository
                 Texture2D tex = new Texture2D(jmeImage);
                 tex.setName(te.getName());
                 engine.getAssetRepo().addTexture(te.getName(), tex);
+
                 count++;
             }
             return count;
@@ -76,28 +81,32 @@ public class TextureLoader extends AbstractAssetLoader<TextureEntry> {
         }
     }
 
+    /**
+     * Converts a BufferedImage (ARGB) to a ByteBuffer (RGBA), optionally flipping vertically.
+     *
+     * @param img   input image
+     * @param flipY whether to flip vertically
+     * @return a new, flipped/unflipped RGBA ByteBuffer
+     */
     private static ByteBuffer toByteBuffer(BufferedImage img, boolean flipY) {
-        int w = img.getWidth(), h = img.getHeight();
+        int w = img.getWidth();
+        int h = img.getHeight();
         int[] pixels = new int[w * h];
         img.getRGB(0, 0, w, h, pixels, 0, w);
 
         ByteBuffer buf = ByteBuffer.allocateDirect(w * h * 4);
         for (int y = 0; y < h; y++) {
-            int row = flipY ? h - 1 - y : y;
+            int row = flipY ? (h - 1 - y) : y;
             int offset = row * w;
             for (int x = 0; x < w; x++) {
                 int argb = pixels[offset + x];
-                buf.put((byte) ((argb >> 16) & 0xFF)); // Red
-                buf.put((byte) ((argb >> 8) & 0xFF));  // Green
-                buf.put((byte) (argb & 0xFF));         // Blue
-                buf.put((byte) ((argb >> 24) & 0xFF)); // Alpha
+                buf.put((byte) ((argb >> 16) & 0xFF)); // R
+                buf.put((byte) ((argb >> 8) & 0xFF));  // G
+                buf.put((byte) (argb & 0xFF));         // B
+                buf.put((byte) ((argb >> 24) & 0xFF)); // A
             }
         }
         buf.flip();
         return buf;
-    }
-
-    public void shutdown() {
-        executor.shutdown();
     }
 }

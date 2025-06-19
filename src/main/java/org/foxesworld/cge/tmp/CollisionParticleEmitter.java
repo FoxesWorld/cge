@@ -30,7 +30,7 @@ public class CollisionParticleEmitter implements PhysicsCollisionListener {
                 particles.emitAllParticles();
 
                 // Удаляем после проигрыша
-                engine.getTaskScheduler().getPool().execute(particles::removeFromParent);
+                engine.getTaskScheduler().getExecutor().execute(particles::removeFromParent);
             });
         }
     }
@@ -47,9 +47,9 @@ public class CollisionParticleEmitter implements PhysicsCollisionListener {
         emitter.setEndColor(new ColorRGBA(1f, 0f, 0f, 0f));
         emitter.setStartSize(0.3f);
         emitter.setEndSize(0.05f);
-        emitter.setGravity(0, 4f, 0);
-        emitter.setLowLife(0.3f);
-        emitter.setHighLife(0.8f);
+        emitter.setGravity(0, 90f, 0);
+        emitter.setLowLife(3.3f);
+        emitter.setHighLife(5.8f);
         emitter.setFacingVelocity(true);
         emitter.setLocalTranslation(location);
         emitter.getParticleInfluencer().setInitialVelocity(new Vector3f(0, 3f, 0));

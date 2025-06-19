@@ -9,80 +9,69 @@ import java.util.Objects;
  * According to the OBJ specification, indices are 1-based or negative for relative addressing; 0 means absent.
  * </p>
  *
- * @param vertexIndex   OBJ index of the vertex position (must not be 0)
- * @param texCoordIndex OBJ index of the texture coordinate (0 if none, otherwise 1-based or negative)
- * @param normalIndex   OBJ index of the vertex normal (0 if none, otherwise 1-based or negative)
- *
+ * @param vertexIndex   vertex position index (1-based or negative; 0 is invalid)
+ * @param texCoordIndex texture coordinate index (1-based or negative; 0 if none)
+ * @param normalIndex   normal vector index (1-based or negative; 0 if none)
  * @author FoxesWorld
  * @since 1.1
  */
 public record Vertex(int vertexIndex, int texCoordIndex, int normalIndex) {
 
     /**
-     * Canonical constructor with index validation.
+     * Canonical constructor with stricter index validation for improved reliability.
      *
-     * @throws IllegalArgumentException if vertexIndex == 0 or texCoordIndex/normalIndex == 0 for present attributes
+     * @throws IllegalArgumentException if vertexIndex is 0
      */
     public Vertex {
         if (vertexIndex == 0) {
-            throw new IllegalArgumentException(
-                    "vertexIndex must not be 0 (OBJ uses 1-based or negative indices)");
+            throw new IllegalArgumentException("vertexIndex must not be 0 (OBJ uses 1-based or negative indices)");
         }
-        // texCoordIndex and normalIndex can be 0 (meaning absent), or any other integer (OBJ allows negatives)
+        // texCoordIndex and normalIndex can be 0 (meaning absent) or negative/positive otherwise
     }
 
     /**
-     * Returns true if a texture coordinate index is present.
-     *
-     * @return {@code true} if texCoordIndex != 0
+     * Checks if a texture coordinate index is present (non-zero).
      */
     public boolean hasTexture() {
         return texCoordIndex != 0;
     }
 
     /**
-     * Returns true if a normal index is present.
-     *
-     * @return {@code true} if normalIndex != 0
+     * Checks if a normal index is present (non-zero).
      */
     public boolean hasNormal() {
         return normalIndex != 0;
     }
 
     /**
-     * Parses a vertex reference token from an OBJ face definition, e.g. "1/2/3", "4//5", or "6/7", including negative indices.
-     *
-     * @param token the string token from an OBJ face line
-     * @return a new {@link Vertex} instance
-     * @throws IllegalArgumentException if the token format is invalid or indices are out of range
+     * Creates a Vertex from an OBJ face definition token (e.g., "1/2/3", "-1/0/-3").
      */
     public static Vertex parse(String token) {
         Objects.requireNonNull(token, "token must not be null");
-        String[] parts = token.split("/");
+
+        String[] parts = token.split("/", -1); // Ensures empty splits are parsed
         try {
             int vi = Integer.parseInt(parts[0]);
             int ti = (parts.length > 1 && !parts[1].isEmpty()) ? Integer.parseInt(parts[1]) : 0;
             int ni = (parts.length > 2 && !parts[2].isEmpty()) ? Integer.parseInt(parts[2]) : 0;
             return new Vertex(vi, ti, ni);
         } catch (NumberFormatException e) {
-            throw new IllegalArgumentException(
-                    "Invalid vertex reference token: '" + token + "'", e);
+            throw new IllegalArgumentException("Invalid vertex reference: '" + token + "'", e);
         }
     }
 
     /**
-     * Returns the OBJ-formatted string, omitting absent fields (e.g., "1/2", "1//3", or "1").
-     *
-     * @return formatted token string
+     * Returns this vertex reference in an OBJ-compliant string form (like "1/2/3", "1//3", etc.).
      */
     @Override
     public String toString() {
-        if (hasTexture() && hasNormal())
+        if (hasTexture() && hasNormal()) {
             return vertexIndex + "/" + texCoordIndex + "/" + normalIndex;
-        if (hasTexture())
+        } else if (hasTexture()) {
             return vertexIndex + "/" + texCoordIndex;
-        if (hasNormal())
+        } else if (hasNormal()) {
             return vertexIndex + "//" + normalIndex;
+        }
         return Integer.toString(vertexIndex);
     }
 }

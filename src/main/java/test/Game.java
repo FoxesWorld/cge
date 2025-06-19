@@ -25,12 +25,12 @@ public class Game {
 
         List<ModuleConfig> cfg = List.of(
              new ModuleConfig(RendererModule::new, 20),
-             new ModuleConfig(ECSModule::new, 30),
              new ModuleConfig(PhysicsModule::new, 35),
              new ModuleConfig(SceneModule::new,   10),
              new ModuleConfig(UIModule::new,        5),
              new ModuleConfig(PlayerModule::new, 40),
-             new ModuleConfig(Terrain::new, 25)
+             new ModuleConfig(Terrain::new, 25),
+                new ModuleConfig(ECSModule::new, 60)
          );
 
         CalistaGameEngine app = new CalistaGameEngine(cfg);

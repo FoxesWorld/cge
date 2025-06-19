@@ -4,10 +4,11 @@ import java.util.*;
 
 /**
  * Represents a polygonal face in an OBJ model. A face may consist of any number of vertices (n-gon)
- * and can be decomposed into triangles for rendering.
+ * and can be decomposed into triangles for rendering. Each vertex reference may include an index to
+ * a position, a texture coordinate, and a normal (following the OBJ specification).
  * <p>
- * Each vertex reference may include an index to a position, a texture coordinate, and a normal.
- * Indices follow the OBJ specification (1-based or negative for relative addressing; 0 if absent).
+ * This class also provides additional checks, deep-copy functionality, and structure to help
+ * maintain clean, reliable usage in OBJ import pipelines.
  * </p>
  *
  * @author FoxesWorld
@@ -18,7 +19,7 @@ public class Face implements Iterable<Vertex> {
     /** Ordered list of vertex references that make up this face. */
     private final List<Vertex> vertices;
 
-    /** Creates an empty face. Vertices can be added via {@link #add(int, int, int)}. */
+    /** Creates an empty face. Vertices should be added via {@link #add(int, int, int)}. */
     public Face() {
         this.vertices = new ArrayList<>();
     }
@@ -40,39 +41,43 @@ public class Face implements Iterable<Vertex> {
      * Adds a vertex reference to this face.
      *
      * @param vertexIndex   the OBJ index of the vertex position (1-based or negative, 0 is invalid)
-     * @param texCoordIndex the OBJ index of the texture coordinate (0 if none, otherwise 1-based or negative)
-     * @param normalIndex   the OBJ index of the vertex normal (0 if none, otherwise 1-based or negative)
+     * @param texCoordIndex the OBJ index of the texture coordinate (0 if none, 1-based or negative otherwise)
+     * @param normalIndex   the OBJ index of the vertex normal (0 if none, 1-based or negative otherwise)
+     * @throws IllegalArgumentException if vertexIndex is 0
      */
     public void add(int vertexIndex, int texCoordIndex, int normalIndex) {
         if (vertexIndex == 0) {
             throw new IllegalArgumentException("vertexIndex must not be 0 (OBJ uses 1-based or negative indices)");
         }
-        if (texCoordIndex == 0 && normalIndex == 0) {
-            // Acceptable for pure position-only faces
-            vertices.add(new Vertex(vertexIndex, 0, 0));
-        } else {
-            vertices.add(new Vertex(vertexIndex, texCoordIndex, normalIndex));
-        }
+        vertices.add(new Vertex(vertexIndex, texCoordIndex, normalIndex));
     }
 
-    /** @return unmodifiable list of {@link Vertex} objects */
+    /**
+     * @return an unmodifiable list of the vertices in this face
+     */
     public List<Vertex> getVertices() {
         return Collections.unmodifiableList(vertices);
     }
 
-    /** @return number of vertices in this face */
+    /**
+     * @return the number of vertices in this face
+     */
     public int size() {
         return vertices.size();
     }
 
-    /** @return true if this face is a triangle (exactly 3 vertices) */
+    /**
+     * @return true if this face is a triangle (exactly 3 vertices)
+     */
     public boolean isTriangle() {
         return vertices.size() == 3;
     }
 
     /**
      * Decomposes this n-gon face into a list of triangles using a fan triangulation strategy.
-     * @return list of triangle {@link Face} instances
+     * Each triangle is returned as a new {@link Face}.
+     *
+     * @return list of triangular faces
      */
     public List<Face> triangulate() {
         List<Face> triangles = new ArrayList<>();
@@ -84,7 +89,7 @@ public class Face implements Iterable<Vertex> {
     }
 
     /**
-     * Reverses the winding order of this face (useful for flipping normals).
+     * Reverses the winding order of this face, useful for flipping normals.
      */
     public void reverse() {
         Collections.reverse(vertices);
@@ -92,6 +97,7 @@ public class Face implements Iterable<Vertex> {
 
     /**
      * Creates a deep copy of this face.
+     *
      * @return a new {@link Face} with the same (copied) vertices
      */
     public Face copy() {
@@ -99,8 +105,8 @@ public class Face implements Iterable<Vertex> {
     }
 
     /**
-     * Parses a face definition from an OBJ file line, e.g. "f 1/2/3 4/5/6 7/8/9".
-     * Texture or normal indices may be omitted. Negative indices are supported per OBJ spec.
+     * Parses a face definition from an OBJ file line (e.g., "f 1/2/3 4/5/6 7/8/9").
+     * Texture or normal indices may be omitted, and negative indices are supported per OBJ spec.
      *
      * @param line the OBJ face line
      * @return a new {@link Face} instance

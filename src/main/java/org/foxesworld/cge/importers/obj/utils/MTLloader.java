@@ -10,130 +10,159 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * MTL file loader with improved logging and safer IO handling.
+ *
+ * <p>Provides robust error checks, cleaner code structure,
+ * and maintains stable contracts for MaterialData population.</p>
+ */
 public class MTLloader {
+
     private static final Logger logger = LoggerFactory.getLogger(MTLloader.class);
 
     /**
-     * Загружает MTL-файл и возвращает карту материалов.
+     * Loads an MTL file from the specified path and returns a map of
+     * material names to associated MaterialData instances.
+     *
+     * @param mgr     the AssetManager to locate and open the MTL file
+     * @param mtlPath the MTL file path
+     * @return a map containing material names and their data
      */
     public static Map<String, MaterialData> loadMTL(AssetManager mgr, String mtlPath) {
-        Map<String, MaterialData> mats = new HashMap<>();
-        try (BufferedReader br = new BufferedReader(
-                new InputStreamReader(mgr.locateAsset(new ModelKey(mtlPath)).openStream()))) {
+        Map<String, MaterialData> materials = new HashMap<>();
 
-            MaterialData current = null;
-            String name = null;
+        try (InputStream in = mgr.locateAsset(new ModelKey(mtlPath)).openStream();
+             BufferedReader br = new BufferedReader(new InputStreamReader(in))) {
+
+            MaterialData currentMatData = null;
             String line;
+            String currentMatName = null;
+
             while ((line = br.readLine()) != null) {
                 line = line.trim();
                 if (line.isEmpty() || line.startsWith("#")) {
                     continue;
                 }
-                String[] p = line.split("\\s+");
-                switch (p[0]) {
+                String[] tokens = line.split("\\s+");
+                String cmd = tokens[0];
+
+                switch (cmd) {
                     case "newmtl" -> {
-                        name = p[1];
-                        current = new MaterialData();
-                        mats.put(name, current);
+                        currentMatName = (tokens.length > 1) ? tokens[1] : "unnamed";
+                        currentMatData = new MaterialData();
+                        materials.put(currentMatName, currentMatData);
                     }
                     case "Ka" -> {
-                        if (current != null) {
-                            current.setAmbient(toColor(p));
+                        if (currentMatData != null && tokens.length >= 4) {
+                            currentMatData.setAmbient(toColor(tokens));
                         }
                     }
                     case "Kd" -> {
-                        if (current != null) {
-                            current.setDiffuse(toColor(p));
+                        if (currentMatData != null && tokens.length >= 4) {
+                            currentMatData.setDiffuse(toColor(tokens));
                         }
                     }
                     case "Ks" -> {
-                        if (current != null) {
-                            current.setSpecular(toColor(p));
+                        if (currentMatData != null && tokens.length >= 4) {
+                            currentMatData.setSpecular(toColor(tokens));
                         }
                     }
                     case "Ns" -> {
-                        if (current != null) {
-                            current.setShininess(parseF(p[1]));
+                        if (currentMatData != null && tokens.length == 2) {
+                            currentMatData.setShininess(parseF(tokens[1]));
                         }
                     }
                     case "map_Kd" -> {
-                        if (current != null) {
-                            current.setDiffuseMap(p[1]);
+                        if (currentMatData != null && tokens.length == 2) {
+                            currentMatData.setDiffuseMap(tokens[1]);
                         }
                     }
                     case "map_Bump" -> {
-                        if (current != null) {
-                            current.setNormalMap(p[1]);
+                        if (currentMatData != null && tokens.length == 2) {
+                            currentMatData.setNormalMap(tokens[1]);
                         }
                     }
                     case "uvscale" -> {
-                        if (current != null) {
-                            applyUVScale(p, current);
+                        if (currentMatData != null && tokens.length >= 2) {
+                            applyUVScale(tokens, currentMatData);
                         }
                     }
                     case "size" -> {
-                        if (current != null) {
-                            applyScale(p, current);
+                        if (currentMatData != null && tokens.length >= 2) {
+                            applyScale(tokens, currentMatData);
                         }
                     }
                     case "uvoffset" -> {
-                        if (current != null) {
-                            float u = parseF(p[1]);
-                            float v = p.length > 2 ? parseF(p[2]) : 0f;
-                            current.setTextureOffset(new Vector2f(u, v));
+                        if (currentMatData != null && tokens.length >= 2) {
+                            float u = parseF(tokens[1]);
+                            float v = (tokens.length > 2) ? parseF(tokens[2]) : 0f;
+                            currentMatData.setTextureOffset(new Vector2f(u, v));
                         }
                     }
                     case "repeat" -> {
-                        if (current != null) {
-                            current.setTextureRepeat(Boolean.parseBoolean(p[1]));
+                        if (currentMatData != null && tokens.length == 2) {
+                            currentMatData.setTextureRepeat(Boolean.parseBoolean(tokens[1]));
                         }
                     }
-
                     case "mass" -> {
-                        if (current != null) {
+                        if (currentMatData != null && tokens.length == 2) {
                             try {
-                                current.setMass(Float.parseFloat(p[1]));
+                                currentMatData.setMass(Float.parseFloat(tokens[1]));
                             } catch (NumberFormatException e) {
-                                logger.warn("Invalid mass '{}', defaulting to 1", p[1]);
-                                current.setMass(1f);
+                                logger.warn("Invalid mass '{}'; defaulting to 1.0f", tokens[1], e);
+                                currentMatData.setMass(1.0f);
                             }
                         }
                     }
-                    default -> logger.trace("Ignored MTL token: {}", p[0]);
+                    default -> logger.trace("Ignored MTL token: {}", cmd);
                 }
             }
         } catch (Exception e) {
-            logger.error("Error loading MTL {}", mtlPath, e);
+            logger.error("Error loading MTL file '{}'", mtlPath, e);
         }
-        return mats;
+        return materials;
     }
 
     private static float parseF(String s) {
         try {
             return Float.parseFloat(s);
         } catch (NumberFormatException ex) {
-            return 0f;
+            logger.trace("Invalid float '{}', returning 0.0f", s);
+            return 0.0f;
         }
     }
 
+    /**
+     * Parses and applies a UV scale to the given MaterialData.
+     */
     private static void applyUVScale(String[] p, MaterialData md) {
         float u = parseF(p[1]);
-        float v = p.length > 2 ? parseF(p[2]) : u;
+        float v = (p.length > 2) ? parseF(p[2]) : u;
         md.setTextureScale(new Vector2f(u, v));
     }
 
+    /**
+     * Parses and applies a size/scale vector to the given MaterialData.
+     */
     private static void applyScale(String[] p, MaterialData md) {
         float sx = parseF(p[1]);
-        float sy = p.length > 2 ? parseF(p[2]) : sx;
-        float sz = p.length > 3 ? parseF(p[3]) : sx;
+        float sy = (p.length > 2) ? parseF(p[2]) : sx;
+        float sz = (p.length > 3) ? parseF(p[3]) : sx;
         md.setScale(new Vector3f(sx, sy, sz));
     }
 
+    /**
+     * Parses color tokens into a ColorRGBA.
+     *
+     * @param p array of tokens (e.g., "Kd r g b")
+     * @return a new ColorRGBA instance with alpha set to 1.0
+     */
     private static ColorRGBA toColor(String[] p) {
-        return new ColorRGBA(parseF(p[1]), parseF(p[2]), parseF(p[3]), 1f);
+        return new ColorRGBA(parseF(p[1]), parseF(p[2]), parseF(p[3]), 1.0f);
     }
 }

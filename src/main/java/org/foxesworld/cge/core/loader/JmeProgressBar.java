@@ -15,6 +15,7 @@ import org.foxesworld.cge.CalistaGameEngine;
  * Текст — желтый, границы полосы — синие, заполнение — зеленое.
  * Сзади — затемнённый прямоугольник (фон).
  */
+@Deprecated
 public class JmeProgressBar implements AssetProgressListener {
     private final Application app;
     private final Node guiNode;

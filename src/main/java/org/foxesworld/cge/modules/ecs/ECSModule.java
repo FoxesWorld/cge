@@ -9,6 +9,8 @@ import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.module.EngineModule;
 import org.foxesworld.cge.core.module.ModuleManager;
 
+import java.util.Arrays;
+
 /**
  * ECSModule integrates the Zay-ES 1.6.0 entity system with the Calista engine,
  * providing core ECS setup.
@@ -46,7 +48,6 @@ public class ECSModule extends EngineModule<ECSConfig> {
             throw new IllegalStateException("ECSConfig not loaded");
         }
 
-        // Zay-ES 1.6.0: DefaultEntityData now implements AutoCloseable
         this.entityData = new DefaultEntityData();
 
         logger.info("Zay-ES 1.6.0 initialized with ECS core setup");
@@ -54,7 +55,7 @@ public class ECSModule extends EngineModule<ECSConfig> {
 
     @Override
     protected void updateModule(float tpf) {
-        // Systems can be updated here in future
+        // Future: update systems here
     }
 
     @Override
@@ -78,31 +79,39 @@ public class ECSModule extends EngineModule<ECSConfig> {
      * @return The created EntityId, or null if ECS is not initialized.
      */
     public EntityId addEntityComponent(EntityComponent... components) {
-        if(isInitialized()) {
-        EntityId id = entityData.createEntity();
-        for (EntityComponent comp : components) {
-            entityData.setComponent(id, comp);
+        if (isInitialized()) {
+            EntityId id = entityData.createEntity();
+            for (EntityComponent comp : components) {
+                if (comp != null) {
+                    entityData.setComponent(id, comp);
+                } else {
+                    logger.warn("Attempted to add null component to entity {}", id);
+                }
+            }
+            logger.debug("Entity created with ID: {}", id);
+            return id;
         }
-        logger.debug("Entity created with ID: {}", id);
-        return id;
-        }
-        logger.warn("Cannot add Entity to system, ECS is not initialised!");
+        logger.warn("Cannot add Entity to system, ECS is not initialized!");
         return null;
     }
 
     /**
-     * Adds a component to an existing entity.
+     * Adds or updates a component for an existing entity.
      *
      * @param entityId Entity ID.
      * @param component Component to set.
      */
     public void setComponent(EntityId entityId, EntityComponent component) {
-        if(isInitialized()) {
-            entityData.setComponent(entityId, component);
-            logger.debug("Component {} set for entity {}", component.getClass().getSimpleName(), entityId);
-        } else {
-            logger.warn("Cannot set emtityId for - {}, ECS is not initialised!", entityId);
+        if (!isInitialized()) {
+            logger.warn("Cannot set component for entity {}, ECS is not initialized!", entityId);
+            return;
         }
+        if (entityId == null || component == null) {
+            logger.warn("EntityId or Component is null (entityId={}, component={}), skipping setComponent", entityId, component);
+            return;
+        }
+        entityData.setComponent(entityId, component);
+        logger.debug("Component {} set for entity {}", component.getClass().getSimpleName(), entityId);
     }
 
     /**
@@ -112,30 +121,32 @@ public class ECSModule extends EngineModule<ECSConfig> {
      * @param componentType Type of component to remove.
      */
     public void removeComponent(EntityId entityId, Class<? extends EntityComponent> componentType) {
-        if(isInitialized()) {
-            entityData.removeComponent(entityId, componentType);
-            logger.debug("Component {} removed from entity {}", componentType.getSimpleName(), entityId);
-        } else {
-            logger.warn("Can't remove entity {} ECS is not initialised!", entityId);
+        if (!isInitialized()) {
+            logger.warn("Cannot remove component from entity {}, ECS is not initialized!", entityId);
+            return;
         }
+        if (entityId == null || componentType == null) {
+            logger.warn("EntityId or componentType is null (entityId={}, componentType={}), skipping removeComponent", entityId, componentType);
+            return;
+        }
+        entityData.removeComponent(entityId, componentType);
+        logger.debug("Component {} removed from entity {}", componentType.getSimpleName(), entityId);
     }
 
     /**
      * Returns an EntitySet for the given component types.
      *
      * @param types Component classes to watch.
-     * @return EntitySet
+     * @return EntitySet, or null if ECS not initialized.
      */
     @SafeVarargs
     public final EntitySet addEntitySet(Class<? extends EntityComponent>... types) {
-        if(isInitialized()) {
+        if (isInitialized()) {
             EntitySet set = entityData.getEntities(types);
-            logger.debug("EntitySet created for components: {}", (Object) types);
-
-        return set;
+            logger.debug("EntitySet created for components: {}", Arrays.toString(types));
+            return set;
         }
+        logger.warn("Cannot create EntitySet, ECS is not initialized!");
         return null;
     }
-
-
 }

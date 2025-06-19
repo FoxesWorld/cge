@@ -8,7 +8,7 @@ import org.foxesworld.cge.core.module.ModuleConfig;
  * Configuration for SceneModule loaded from scene.json.
  */
 public class SceneConfig extends ModuleConfig {
-    private String scenePath = "test.cgs";
+    private String scenePath = "data/testScene.cgs";
     private Vector3f translation = new Vector3f(0, 0, 0);
     private Quaternion rotation = new Quaternion();
     private Vector3f scale = new Vector3f(1, 1, 1);

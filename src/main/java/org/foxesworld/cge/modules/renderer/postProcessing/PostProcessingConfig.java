@@ -1,46 +1,53 @@
 package org.foxesworld.cge.modules.renderer.postProcessing;
 
+import com.jme3.math.ColorRGBA;
 import org.foxesworld.cge.core.module.ModuleConfig;
 
 /**
  * Кинематографический стандарт конфигурации пост-обработки
- * для AAA-игрового визуала: агрессивный Bloom, DOF, Film Grain, хроматическая аберрация, цветокоррекция, FXAA.
+ * для AAA-игрового визуала: агрессивный Bloom, DOF, Film Grain, хроматическая аберрация, цветокоррекция, FXAA, Flare.
  */
 public class PostProcessingConfig extends ModuleConfig {
     // --- BLOOM ---
     private boolean enableBloom = true;
-    private float bloomIntensity = 0.35f;        // ярче для glow
-    private float bloomThreshold = 1.10f;        // чуть ниже порог
-    private float bloomRadius = 0.92f;           // больше размытости
+    private float bloomIntensity = 0.35f;
+    private float bloomThreshold = 1.10f;
+    private float bloomRadius = 0.92f;
     private int bloomExposurePower = 65;
 
     // --- LENS FLARE (Godrays) ---
-    private boolean enableLsf = false;            // как правило, только для особых сцен
+    private boolean enableLsf = false;
     private float[] lsfLightDir = {10f, 3f, 7f};
     private int lsfGhostCount = 0;
     private float lsfHaloWidth = 0.5f;
     private float lsfDestiny = 0.25f;
 
+    // --- FLARE ---
+    private boolean enableFlare = true;
+    private float flareIntensity = 1.0f;
+    private float flareThreshold = 1.1f;
+    private float[] flareColor = {1f, 1f, 0.95f, 1f}; // мягкий бело-жёлтый ореол
+
     // --- DEPTH OF FIELD (DOF) ---
     private boolean enableDof = true;
-    private float dofFocus = 18f;                 // ближе к кинофокусам
+    private float dofFocus = 18f;
     private float dofRange = 60f;
-    private float dofAperture = 1.8f;             // малое f-number для сильной ГРИП
+    private float dofAperture = 1.8f;
     private float dofMaxBlur = 2.2f;
 
     // --- MOTION BLUR ---
     private boolean enableMotionBlur = true;
-    private int motionBlurSampleCount = 24;       // больше сэмплов для плавности
+    private int motionBlurSampleCount = 24;
     private float motionBlurStrength = 0.7f;
 
     // --- VIGNETTE ---
     private boolean enableVignette = true;
-    private float vignetteIntensity = 0.52f;      // заметный виньет
+    private float vignetteIntensity = 0.52f;
     private float vignetteSmoothness = 0.88f;
 
     // --- FILM GRAIN ---
     private Boolean enableFilmGrain = true;
-    private Float filmGrainIntensity = 0.22f;     // чистый AAA grain
+    private Float filmGrainIntensity = 0.22f;
     private Float filmGrainScale = 1.0f;
 
     // --- CHROMATIC ABERRATION ---
@@ -57,7 +64,7 @@ public class PostProcessingConfig extends ModuleConfig {
 
     // --- FXAA ---
     private boolean enableFXAA = true;
-    private int fxaaQuality = 3;                  // максимальное качество
+    private int fxaaQuality = 3;
 
     // --- Getters ---
     public boolean isEnableBloom() { return enableBloom; }
@@ -71,6 +78,15 @@ public class PostProcessingConfig extends ModuleConfig {
     public int getLsfGhostCount() { return lsfGhostCount; }
     public float getLsfHaloWidth() { return lsfHaloWidth; }
     public float getLsfDestiny() { return lsfDestiny; }
+
+    // --- FLARE ---
+    public boolean isEnableFlare() { return enableFlare; }
+    public float getFlareIntensity() { return flareIntensity; }
+    public float getFlareThreshold() { return flareThreshold; }
+    public float[] getFlareColor() { return flareColor; }
+    public ColorRGBA getFlareColorRGBA() {
+        return new ColorRGBA(flareColor[0], flareColor[1], flareColor[2], flareColor[3]);
+    }
 
     public boolean isEnableDof() { return enableDof; }
     public float getDofFocus() { return dofFocus; }
@@ -102,4 +118,10 @@ public class PostProcessingConfig extends ModuleConfig {
 
     public boolean isEnableFXAA() { return enableFXAA; }
     public int getFxaaQuality() { return fxaaQuality; }
+
+    // --- Setters (по необходимости) ---
+    public void setEnableFlare(boolean enableFlare) { this.enableFlare = enableFlare; }
+    public void setFlareIntensity(float flareIntensity) { this.flareIntensity = flareIntensity; }
+    public void setFlareThreshold(float flareThreshold) { this.flareThreshold = flareThreshold; }
+    public void setFlareColor(float[] flareColor) { this.flareColor = flareColor; }
 }

@@ -1,6 +1,7 @@
 package org.foxesworld.cge.modules.renderer.postProcessing;
 
 import com.jme3.app.Application;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector3f;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.BloomFilter;
@@ -14,6 +15,7 @@ import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.module.EngineModule;
 import org.foxesworld.cge.modules.effects.MotionBlurFilter;
 import org.foxesworld.cge.modules.effects.VignetteFilter;
+import org.foxesworld.cge.modules.effects.FlareFilter;
 
 @SuppressWarnings("unused")
 public class PostProcessingModule extends EngineModule<PostProcessingConfig> {
@@ -28,6 +30,7 @@ public class PostProcessingModule extends EngineModule<PostProcessingConfig> {
     private MotionBlurFilter motionBlur;
     private VignetteFilter vignette;
     private ToneMapFilter toneMap;
+    private FlareFilter flare;
 
     public PostProcessingModule(CalistaGameEngine engine) {
         super(CONFIG_FILE, PostProcessingConfig.class, engine);
@@ -64,6 +67,7 @@ public class PostProcessingModule extends EngineModule<PostProcessingConfig> {
             //lsf.setDecay(cfg.getLsfHaloWidth());
             fpp.addFilter(lsf);
         }
+
 
         if (cfg.isEnableDof()) {
             dof = new DepthOfFieldFilter();
@@ -143,4 +147,5 @@ public class PostProcessingModule extends EngineModule<PostProcessingConfig> {
     public MotionBlurFilter getMotionBlur() { return motionBlur; }
     public VignetteFilter getVignette() { return vignette; }
     public ToneMapFilter getToneMap() { return toneMap; }
+    public FlareFilter getFlare() { return flare; }
 }
