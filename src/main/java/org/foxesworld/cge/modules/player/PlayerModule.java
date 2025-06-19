@@ -5,11 +5,12 @@ import com.jme3.math.Vector3f;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.loader.JmeProgressBar;
 import org.foxesworld.cge.core.module.EngineModule;
+import org.foxesworld.cge.modules.player.config.PlayerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * PlayerSubModule wraps the Player character as a dynamically-loadable module.
+ * PlayerModule wraps the Player character as a dynamically-loadable module.
  * On initialization, it spawns the Player at a configured position,
  * attaches it to the root node, and manages cleanup.
  *
@@ -26,7 +27,7 @@ public class PlayerModule extends EngineModule<PlayerConfig> {
     private volatile Player player;
 
     public PlayerModule(CalistaGameEngine app) {
-        super("player", PlayerConfig.class, app, false);
+        super("player", PlayerConfig.class, app, true);
     }
 
     @Override
@@ -58,7 +59,7 @@ public class PlayerModule extends EngineModule<PlayerConfig> {
                     throw new IllegalStateException("PlayerConfig not loaded");
                 }
                 Vector3f spawn = cfg.getSpawnPosition();
-                this.player = new Player(app, spawn);
+                this.player = new Player(this, spawn);
                 app.getRootNode().attachChild(player);
                 logger.info("Player spawned at {}", spawn);
             });
@@ -76,7 +77,7 @@ public class PlayerModule extends EngineModule<PlayerConfig> {
         app.enqueue(() -> {
             if (player != null) {
                 try {
-                    //player.cleanup();
+                    player.cleanup();
                 } catch (Exception e) {
                     logger.warn("Error during player cleanup", e);
                 }
