@@ -26,7 +26,7 @@ public class PlayerModule extends EngineModule<PlayerConfig> {
     private volatile Player player;
 
     public PlayerModule(CalistaGameEngine app) {
-        super("player", PlayerConfig.class, app);
+        super("player", PlayerConfig.class, app, false);
     }
 
     @Override

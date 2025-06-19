@@ -22,7 +22,7 @@ public class UIModule extends EngineModule<UIConfig> {
     private final List<NovaUI> novaUis = new ArrayList<>();
 
     public UIModule(CalistaGameEngine app) {
-        super(CONFIG_FILE, UIConfig.class, app);
+        super(CONFIG_FILE, UIConfig.class, app, false);
         this.calistaGameEngine = app;
         logger.info("UIModule created (config = {})", CONFIG_FILE);
     }

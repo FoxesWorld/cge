@@ -33,7 +33,7 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
     private CollisionModule collisionModule;
 
     public PhysicsModule(CalistaGameEngine app) {
-        super("physics", PhysicsConfig.class, app);
+        super("physics", PhysicsConfig.class, app, false);
         this.app = app;
         this.subManager = new ModuleManager(app);
     }

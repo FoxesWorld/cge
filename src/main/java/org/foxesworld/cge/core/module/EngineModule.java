@@ -33,23 +33,35 @@ public abstract class EngineModule<ModuleConfig> extends BaseAppState {
     private Future<?> initFuture;
     private Runnable onAllModulesLoadedRunnable;
     private static final AtomicInteger modulesLoadingCount = new AtomicInteger(0);
+    private final AtomicBoolean exportsConfig;
 
     /**
-     * Constructs an EngineModule instance, registers its configuration if provided,
-     * and initializes core dependencies.
-     *
-     * @param configFile       the path or identifier of this module's configuration file
-     * @param configClass      the class object of the configuration type
-     * @param calistaGameEngine the central game engine instance
+     * Constructs an EngineModule with default behavior (config is registered).
      */
     public EngineModule(String configFile, Class<ModuleConfig> configClass, CalistaGameEngine calistaGameEngine) {
+        this(configFile, configClass, calistaGameEngine, true);
+    }
+
+    /**
+     * Constructs an EngineModule with optional config registration.
+     *
+     * @param configFile        the path or identifier of this module's configuration file
+     * @param configClass       the class object of the configuration type
+     * @param calistaGameEngine the central game engine instance
+     * @param exportsConfig     if true, registers the config with the ConfigService
+     */
+    public EngineModule(String configFile, Class<ModuleConfig> configClass, CalistaGameEngine calistaGameEngine, boolean exportsConfig) {
         this.gameEngine = calistaGameEngine;
         this.configService = calistaGameEngine.getConfigService();
         this.taskScheduler = calistaGameEngine.getTaskScheduler();
         this.configFile = configFile;
-        logger.debug("{} constructor: configFile='{}', configClass={} ", getName(), configFile, configClass != null ? configClass.getSimpleName() : "null");
+        this.exportsConfig = new AtomicBoolean(exportsConfig);
+
+        logger.debug("{} constructor: configFile='{}', configClass={}, exportsConfig={}", getName(), configFile, configClass != null ? configClass.getSimpleName() : "null", exportsConfig);
+
         initialize(calistaGameEngine);
-        if (configFile != null && configClass != null) {
+
+        if (configClass != null) {
             try {
                 this.configService.registerConfig(configFile, configClass);
                 logger.debug("Registered config '{}' for module {}", configFile, getName());
@@ -58,6 +70,7 @@ public abstract class EngineModule<ModuleConfig> extends BaseAppState {
             }
         }
     }
+
 
     /**
      * Initializes the module by loading configuration, invoking module-specific
@@ -74,7 +87,7 @@ public abstract class EngineModule<ModuleConfig> extends BaseAppState {
             try {
                 if (configFile != null) {
                     logger.debug("{} loading config from '{}'", getName(), configFile);
-                    config = configService.getConfig(configFile);
+                    config = configService.getConfig(configFile, exportsConfig.get());
                 }
                 transitionTo(ModuleState.INITIALIZING);
                 logger.debug("{} calling initModule", getName());

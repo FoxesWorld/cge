@@ -45,10 +45,8 @@ public class ConfigService {
      * Constructs a new ConfigService with GSON support for JME's ColorRGBA.
      */
     public ConfigService() {
-        this.gson = new GsonBuilder()
-                .setPrettyPrinting()
-                .registerTypeAdapter(ColorRGBA.class, new ColorRGBAAdapter())
-                .create();
+        this.gson = new GsonBuilder().setPrettyPrinting()
+                .registerTypeAdapter(ColorRGBA.class, new ColorRGBAAdapter()).create();
         this.pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
         ensureConfigDirExists();
     }
@@ -88,10 +86,10 @@ public class ConfigService {
      * @throws IOException if loading fails
      */
     @SuppressWarnings("unchecked")
-    public <T> T getConfig(String fileName) throws IOException {
+    public <T> T getConfig(String fileName, boolean exportsConfig) throws IOException {
         return (T) cache.computeIfAbsent(fileName, key -> {
             try {
-                return loadConfig(key);
+                return loadConfig(key, exportsConfig);
             } catch (IOException e) {
                 throw new RuntimeException("Failed to load config: " + fileName, e);
             }
@@ -108,7 +106,7 @@ public class ConfigService {
      */
     @SuppressWarnings("unchecked")
     public <T> T reloadConfig(String fileName) throws IOException {
-        T cfg = loadConfig(fileName);
+        T cfg = loadConfig(fileName, true);
         cache.put(fileName, cfg);
         return cfg;
     }
@@ -121,18 +119,23 @@ public class ConfigService {
      * @return the loaded or newly created config
      * @throws IOException if deserialization or instantiation fails
      */
-    private <T> T loadConfig(String fileName) throws IOException {
+    private <T> T loadConfig(String fileName, boolean exportsConfig) throws IOException {
         Class<T> clazz = getRegisteredClass(fileName);
         Path path = CONFIG_DIR.resolve(fileName);
 
+        if (!exportsConfig) {
+            return createAndSaveDefault(fileName, clazz, false);
+        }
+
         if (Files.notExists(path)) {
-            return createAndSaveDefault(fileName, clazz);
+            return createAndSaveDefault(fileName, clazz, true);
         }
 
         try (Reader reader = Files.newBufferedReader(path, StandardCharsets.UTF_8)) {
             return gson.fromJson(reader, clazz);
         }
     }
+
 
     /**
      * Saves a configuration object to disk and updates the cache.
@@ -158,8 +161,7 @@ public class ConfigService {
      */
     private <T> void saveConfigInternal(String fileName, T config) throws IOException {
         Path path = CONFIG_DIR.resolve(fileName);
-        try (Writer writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8,
-                StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+        try (Writer writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
             gson.toJson(config, writer);
         }
     }
@@ -190,13 +192,14 @@ public class ConfigService {
      * @return the created default config
      * @throws IOException if instantiation or writing fails
      */
-    private <T> T createAndSaveDefault(String fileName, Class<T> clazz) throws IOException {
+    private <T> T createAndSaveDefault(String fileName, Class<T> clazz, boolean exports) throws IOException {
         try {
             T instance = clazz.getDeclaredConstructor().newInstance();
-            saveConfigInternal(fileName, instance);
+            if(exports) {
+                saveConfigInternal(fileName, instance);
+            }
             return instance;
-        } catch (InstantiationException | IllegalAccessException |
-                 InvocationTargetException | NoSuchMethodException e) {
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
             throw new IOException("Failed to instantiate default config: " + clazz.getName(), e);
         }
     }
@@ -209,10 +212,10 @@ public class ConfigService {
      * @param <T>      the config type
      * @return Optional of the config or empty if loading failed
      */
-    public <T> Optional<Object> preloadConfigAsync(String fileName) {
+    public <T> Optional<Object> preloadConfigAsync(String fileName, boolean exportsConfig) {
         return Optional.ofNullable(pool.submit(() -> {
             try {
-                return getConfig(fileName);
+                return getConfig(fileName, exportsConfig);
             } catch (IOException e) {
                 return null;
             }

@@ -4,6 +4,8 @@ import com.jme3.system.AppSettings;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.ICOParser;
 import org.foxesworld.cge.modules.ModuleConfig;
+import org.foxesworld.cge.modules.ecs.ECSConfig;
+import org.foxesworld.cge.modules.ecs.ECSModule;
 import org.foxesworld.cge.modules.physics.PhysicsModule;
 import org.foxesworld.cge.modules.player.PlayerModule;
 import org.foxesworld.cge.modules.renderer.RendererModule;
@@ -23,6 +25,7 @@ public class Game {
 
         List<ModuleConfig> cfg = List.of(
              new ModuleConfig(RendererModule::new, 20),
+             new ModuleConfig(ECSModule::new, 30),
              new ModuleConfig(PhysicsModule::new, 35),
              new ModuleConfig(SceneModule::new,   10),
              new ModuleConfig(UIModule::new,        5),
