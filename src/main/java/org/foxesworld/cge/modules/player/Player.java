@@ -191,6 +191,7 @@ public class Player extends Node implements PlayerContext, AnimEventListener {
         updateModelPosition();
         updateGroundedState(tpf);
         playerHud.update(tpf);
+        playerHud.setTest(getMovementControl().getPlayerState().getType());
     }
 
     /**

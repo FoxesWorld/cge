@@ -12,6 +12,9 @@ import org.foxesworld.cge.CalistaGameEngine;
  * <p>
  * It manages the geometry, color, and sizing of the panel's background in the scene graph.
  * The renderer ensures the background is always synchronized with the panel's size and color.
+ * <p>
+ * Fix: The alpha channel (transparency) is now preserved on panel updates.
+ * Hard fix: The color is never "applied over" previous color, alpha is never accumulated.
  */
 public class PanelRenderer {
     /** Reference to the game engine for asset and scene management. */
@@ -50,6 +53,8 @@ public class PanelRenderer {
         bgGeom.setLocalTranslation(0f, 0f, 0f);
         currentWidth = width;
         currentHeight = height;
+        // Always set color directly from panel with correct alpha (never chain/accumulate)
+        applyPanelBgColor();
     }
 
     /**
@@ -67,6 +72,8 @@ public class PanelRenderer {
             bgGeom.setMesh(new Quad(width, height));
         }
         bgGeom.setLocalTranslation(0f, 0f, 0f);
+        // Always set color directly from panel with correct alpha (never chain/accumulate)
+        applyPanelBgColor();
     }
 
     /**
@@ -92,8 +99,26 @@ public class PanelRenderer {
      */
     public void setBgColor(ColorRGBA color) {
         if (bgGeom != null) {
-            bgGeom.getMaterial().setColor("Color", color);
+            // Always set the color as-is, do not preserve/accumulate previous alpha!
+            bgGeom.getMaterial().setColor("Color", color.clone());
         }
+    }
+
+    /**
+     * Gets the current background color of the panel.
+     * If the background geometry does not exist, returns panel's own color.
+     * @return The background color, or panel's color if not available.
+     */
+    public ColorRGBA getBgColor() {
+        if (bgGeom != null && bgGeom.getMaterial() != null) {
+            var matParam = bgGeom.getMaterial().getParam("Color");
+            if (matParam != null) {
+                Object value = matParam.getValue();
+                if (value instanceof ColorRGBA) return (ColorRGBA) value;
+            }
+        }
+        // fallback: return panel's bgColor (might be default)
+        return panel.getBgColor();
     }
 
     /**
@@ -106,9 +131,22 @@ public class PanelRenderer {
         Quad quad = new Quad(width, height);
         bgGeom = new Geometry("BG_" + panel.getId(), quad);
         Material mat = new Material(engine.getAssetManager(), "Common/MatDefs/Gui/Gui.j3md");
-        mat.setColor("Color", panel.getBgColor());
+        ColorRGBA baseColor = panel.getBgColor() != null ? panel.getBgColor().clone() : ColorRGBA.White.clone();
+        mat.setColor("Color", baseColor);
         mat.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
         bgGeom.setMaterial(mat);
         panel.getNode().attachChild(bgGeom);
+    }
+
+    /**
+     * Always sets the background color directly from the panel's color, preserving its alpha,
+     * and never accumulating alpha from any previous material color.
+     */
+    private void applyPanelBgColor() {
+        if (bgGeom != null && bgGeom.getMaterial() != null) {
+            ColorRGBA panelColor = panel.getBgColor();
+            if (panelColor == null) panelColor = ColorRGBA.White.clone();
+            bgGeom.getMaterial().setColor("Color", panelColor.clone());
+        }
     }
 }

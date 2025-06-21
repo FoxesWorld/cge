@@ -20,6 +20,7 @@ public class UIModule extends EngineModule<UIConfig> {
     private static final Logger logger = LogManager.getLogger(UIModule.class);
     private static final String CONFIG_FILE = "ui_config";
     private final List<NovaUI> novaUis = new ArrayList<>();
+    private NovaUI novaUi;
 
     public UIModule(CalistaGameEngine app) {
         super(CONFIG_FILE, UIConfig.class, app, false);
@@ -34,7 +35,7 @@ public class UIModule extends EngineModule<UIConfig> {
 
     public void addPanel(Object handler, String xmlFile) {
         if (isLoaded()) {
-            NovaUI novaUi = new NovaUI(calistaGameEngine, xmlFile);
+            novaUi = new NovaUI(calistaGameEngine, xmlFile);
             calistaGameEngine.getStateManager().attach(novaUi);
             novaUi.registerEventHandler(handler);
             novaUis.add(novaUi);
@@ -96,6 +97,10 @@ public class UIModule extends EngineModule<UIConfig> {
             panel.setEnabled(false);
             logger.debug("UIPanel disabled.");
         }
+    }
+
+    public NovaUI getNovaUi() {
+        return novaUi;
     }
 
     @Override

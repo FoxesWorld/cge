@@ -25,7 +25,7 @@
                layout="horizontal"
                spacing="10">
             <Element
-                    id="playerSpeed"
+                    id="speed"
                     type="Progress"
                     width="150"
                     height="8"
@@ -35,7 +35,17 @@
                     borderThickness="0.1"
             />
             <Element
-                    id="armorBar"
+                    id="test"
+                    type="TextElement"
+                    fontPath="Interface/Fonts/Console.fnt"
+                    margin="0,-20,0,0"
+                    align="left"
+                    width="50"
+                    height="8"
+                    color="208,187,81,1"
+            />
+            <Element
+                    id="armor"
                     type="Progress"
                     width="50"
                     height="8"
@@ -45,7 +55,7 @@
                     borderThickness="0.1"
             />
             <Element
-                    id="abilityBar"
+                    id="ability"
                     type="Progress"
                     width="45"
                     height="8"

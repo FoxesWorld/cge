@@ -7,22 +7,16 @@ import org.foxesworld.cge.modules.ui.novaUi.elements.text.TextElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.jme3.math.ColorRGBA;
+
 import java.lang.reflect.Field;
 import java.util.*;
 
 /**
- * NovaUIUpdater is the runtime engine for NovaUI:
- *  • bindAllFields() — binds all TextElement and ProgressElement fields to eventHandlerTarget object fields via reflection.
- *  • update(tpf) — per-frame update:
- *      • Scans boundFields, compares previous/current values and updates UI if needed.
- *      • Calls update(tpf) on TextElement and ProgressElement.
- *      • Collects "dirty" panels and recomputes them once per frame.
- *      • After recomputeSize, runs overlap check.
- *  • fixOverlaps(panel) — resolves overlaps of child elements within a panel.
- *
- * Improved:
- *  • Panel backgrounds with alpha channel are preserved and not recreated/lost.
- *  • UI updates are more efficient and visually stable.
+ * NovaUIUpdater is the runtime engine for NovaUI.
+ * Now automatically collects allElements from eventHandlerTarget fields.
+ * UI updates are efficient and stable, with extended logging.
+ * Panel backgrounds' alpha channel is preserved on update.
  */
 public class NovaUIUpdater {
     private static final Logger LOGGER = LoggerFactory.getLogger(NovaUIUpdater.class);
@@ -36,21 +30,68 @@ public class NovaUIUpdater {
 
     public void setEventHandlerTarget(Object handler) {
         this.eventHandlerTarget = handler;
+        this.allElements = collectElementsFromFields(handler);
+        LOGGER.info("Event handler target set: {}, collected allElements: {}", handler != null ? handler.getClass().getName() : "null", allElements != null ? allElements.keySet() : "null");
     }
 
     public void setAllElements(Map<String, UIElement> allElements) {
         this.allElements = allElements;
+        LOGGER.info("All elements set: {} elements", allElements != null ? allElements.size() : 0);
     }
 
-    /**
-     * Binds all UIElements with matching field names to fields in the eventHandlerTarget.
-     */
+    private Map<String, UIElement> collectElementsFromFields(Object handler) {
+        if (handler == null) {
+            LOGGER.warn("collectElementsFromFields: handler is null");
+            return Collections.emptyMap();
+        }
+        Map<String, UIElement> elements = new LinkedHashMap<>();
+        int totalFields = 0, uiFields = 0, nullFields = 0, duplicateIds = 0;
+
+        for (Field field : handler.getClass().getDeclaredFields()) {
+            totalFields++;
+            field.setAccessible(true);
+            try {
+                Object value = field.get(handler);
+                if (value == null) {
+                    nullFields++;
+                    LOGGER.trace("Field '{}' is null, skipped.", field.getName());
+                    continue;
+                }
+                if (value instanceof UIElement uiElem) {
+                    uiFields++;
+                    String id = uiElem.getId();
+                    if (id == null || id.isEmpty()) {
+                        LOGGER.warn("UIElement field '{}' has null/empty id and will be skipped.", field.getName());
+                        continue;
+                    }
+                    if (elements.containsKey(id)) {
+                        duplicateIds++;
+                        LOGGER.warn("Duplicate UIElement id '{}' found in field '{}'. Previous field will be overwritten.", id, field.getName());
+                    }
+                    elements.put(id, uiElem);
+                    LOGGER.debug("Collected UIElement field: '{}', id='{}', type={}", field.getName(), id, uiElem.getClass().getSimpleName());
+                }
+            } catch (Exception e) {
+                LOGGER.error("Failed to collect UIElement from field '{}': {}", field.getName(), e.toString());
+                LOGGER.debug("Exception details:", e);
+            }
+        }
+        LOGGER.info("collectElementsFromFields: scanned {} fields, found {} UIElement(s), {} null field(s), {} duplicate id(s). Final element count: {}.",
+                totalFields, uiFields, nullFields, duplicateIds, elements.size());
+        return elements;
+    }
+
     public void bindAllFields() {
         boundFields.clear();
         lastKnownValues.clear();
 
         if (eventHandlerTarget == null) {
-            LOGGER.debug("bindAllFields: no eventHandlerTarget");
+            LOGGER.warn("bindAllFields: eventHandlerTarget is not set.");
+            return;
+        }
+
+        if (allElements == null || allElements.isEmpty()) {
+            LOGGER.warn("bindAllFields: allElements is not set or empty.");
             return;
         }
 
@@ -73,6 +114,7 @@ public class NovaUIUpdater {
                     String text = (raw != null) ? raw.toString() : "";
                     te.setText(text);
                     lastKnownValues.put(te, text);
+                    LOGGER.info("Bound TextElement '{}' to field '{}', initial value: '{}'", id, field.getName(), text);
                 } catch (Exception ex) {
                     LOGGER.warn("Cannot bind initial text for '{}'", id, ex);
                     lastKnownValues.put(te, "");
@@ -95,6 +137,7 @@ public class NovaUIUpdater {
                     val = clamp01(val);
                     pe.setProgress(val);
                     lastKnownValues.put(pe, val);
+                    LOGGER.info("Bound ProgressElement '{}' to field '{}', initial value: {}", id, field.getName(), val);
                 } catch (Exception ex) {
                     LOGGER.warn("Cannot bind initial progress for '{}'", id, ex);
                     lastKnownValues.put(pe, 0f);
@@ -107,16 +150,13 @@ public class NovaUIUpdater {
                 fixOverlaps(panel);
             }
         }
+        LOGGER.info("Binding complete: {} fields bound.", boundFields.size());
     }
 
-    /**
-     * Updates all bound fields and UI elements per frame.
-     * Only recomputes panels that are marked dirty.
-     * Preserves and restores panel backgrounds with alpha.
-     */
     public void update(float tpf) {
         if (boundFields.isEmpty()) {
-            return;
+            //LOGGER.debug("update: No bound fields to update.");
+            //return;
         }
 
         for (var entry : boundFields.entrySet()) {
@@ -133,6 +173,7 @@ public class NovaUIUpdater {
                         te.setText(newText);
                         lastKnownValues.put(te, newText);
                         markDirty(te.getParentPanel());
+                        LOGGER.debug("TextElement '{}' updated: '{}' -> '{}'", te.getId(), oldText, newText);
                     }
                     te.update(tpf);
 
@@ -153,21 +194,24 @@ public class NovaUIUpdater {
                         pe.setProgress(newVal);
                         lastKnownValues.put(pe, newVal);
                         markDirty(pe.getParentPanel());
+                        LOGGER.debug("ProgressElement '{}' updated: {} -> {}", pe.getId(), oldVal, newVal);
                     }
                     pe.updateSelf(tpf);
                 }
 
             } catch (IllegalAccessException iae) {
-                LOGGER.warn("Cannot access field '{}' for '{}'", field.getName(), ue.getId());
+                LOGGER.warn("Cannot access field '{}' for '{}'", field.getName(), ue.getId(), iae);
             }
         }
 
         // Efficiently update only dirty panels and preserve their backgrounds with alpha
         if (!dirtyPanels.isEmpty()) {
+            LOGGER.info("Recomputing {} dirty panels...", dirtyPanels.size());
             for (PanelElement panel : dirtyPanels) {
+                panel.setBgColor(new ColorRGBA(0,0,0,0));
                 PanelElement cur = panel;
                 while (cur != null) {
-                    preserveBackgroundAndReapply(cur);
+                    //preserveBackgroundAndReapplyAlpha(cur);
                     cur = cur.getParentPanel();
                 }
             }
@@ -175,18 +219,13 @@ public class NovaUIUpdater {
         }
     }
 
-    /**
-     * Marks the panel as dirty, so it will be recomputed at the end of the frame.
-     */
     public void markDirty(PanelElement panel) {
         if (panel != null) {
             dirtyPanels.add(panel);
+            LOGGER.debug("Panel '{}' marked as dirty.", panel.getId());
         }
     }
 
-    /**
-     * Resolves overlaps of child elements in a panel for horizontal/vertical layouts.
-     */
     public void fixOverlaps(PanelElement panel) {
         List<UIElement> children = new ArrayList<>(panel.getChildren());
         String layout = panel.getLayout();
@@ -206,6 +245,7 @@ public class NovaUIUpdater {
                 float currentPosY = currentElement.getNode().getLocalTranslation().y;
 
                 currentElement.getNode().setLocalTranslation(nextPosX, currentPosY, 0f);
+                LOGGER.trace("fixOverlaps: Set '{}' X to {}", currentElement.getId(), nextPosX);
             }
         } else {
             // Vertical (default): sort by Y descending (top to bottom)
@@ -225,6 +265,7 @@ public class NovaUIUpdater {
                 float currentX = current.getNode().getLocalTranslation().x;
 
                 current.getNode().setLocalTranslation(currentX, desiredY, 0f);
+                LOGGER.trace("fixOverlaps: Set '{}' Y to {}", current.getId(), desiredY);
             }
         }
 
@@ -243,7 +284,7 @@ public class NovaUIUpdater {
      * Preserves panel background and child positions before recomputing,
      * then restores them, ensuring alpha is not lost for background quads.
      */
-    private void preserveBackgroundAndReapply(PanelElement panel) {
+    private void preserveBackgroundAndReapplyAlpha(PanelElement panel) {
         // Capture child positions
         Map<UIElement, float[]> childPositions = new HashMap<>();
         for (UIElement child : panel.getChildren()) {
@@ -254,8 +295,11 @@ public class NovaUIUpdater {
         var renderer = panel.getRenderer();
         float width = panel.getCurrentWidth();
         float height = panel.getCurrentHeight();
-        var bgColor = panel.getBgColor();
+        // Always get the actual color (with alpha) from renderer
+        ColorRGBA bgColor = renderer.getBgColor();
+        float alpha = (bgColor != null) ? bgColor.a : 1f;
 
+        LOGGER.debug("Preserving background and positions for panel '{}'", panel.getId());
         panel.recomputeSizeAndRepositionChildren();
 
         // Restore positions
@@ -264,8 +308,14 @@ public class NovaUIUpdater {
             e.getKey().getNode().setLocalTranslation(pos[0], pos[1], pos[2]);
         }
 
-        // Reapply background color with alpha channel preserved
-        renderer.setBgColor(bgColor);
+        // Restore color with original alpha.
+        if (bgColor == null) {
+            bgColor = ColorRGBA.White.clone();
+        }
+        ColorRGBA restoredColor = bgColor.clone();
+        restoredColor.a = alpha;
+        renderer.setBgColor(restoredColor);
         renderer.setSize(width, height);
+        LOGGER.debug("Restored background and size (with alpha) for panel '{}'", panel.getId());
     }
 }

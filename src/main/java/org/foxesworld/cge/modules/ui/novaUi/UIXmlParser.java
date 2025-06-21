@@ -14,20 +14,20 @@ import java.io.InputStream;
 import java.util.*;
 
 /**
- * UIXmlParser — отвечает за:
- *  • загрузку и нормализацию XML
- *  • чтение глобальных параметров (шрифт)
- *  • рекурсивное построение панели и вложенных элементов
- *  • наполнение Map<id, UIElement> для UIPanel
+ * UIXmlParser is responsible for:
+ *  • loading and normalizing XML
+ *  • reading global parameters (font)
+ *  • recursive construction of panels and nested elements
+ *  • filling Map<id, UIElement> for UIPanel
  *
- * Теперь без «жёстко захардкоженных» названий атрибутов:
- * все атрибуты панели/элемента пробрасываются через setProperty(...),
- * кроме служебных: "id", "type", "onClick".
+ * Now without "hardcoded" attribute names:
+ * all panel/element attributes are passed through setProperty(...),
+ * except for service ones: "id", "type", "onClick".
  */
 public class UIXmlParser {
     private static final Logger LOGGER = LoggerFactory.getLogger(UIXmlParser.class);
 
-    // XML-теги и служебные атрибуты
+    // XML tags and service attributes
     private static final String TAG_FONT    = "Font";
     private static final String TAG_PANEL   = "Panel";
     private static final String TAG_ELEMENT = "Element";
@@ -39,7 +39,7 @@ public class UIXmlParser {
     private final CalistaGameEngine engine;
     private final String configPath;
 
-    // Глобальные значения, задаются из <Font> или остаются по умолчанию
+    // Global values set from <Font> or use defaults
     private String defaultFontPath = "Interface/Fonts/Default.fnt";
     private float  defaultFontSize = 20f;
 
@@ -49,8 +49,8 @@ public class UIXmlParser {
     }
 
     /**
-     * Выполняет разбор XML-конфигурации и возвращает корневую панель вместе
-     * со всей картой элементов (id → UIElement) и настройками шрифта.
+     * Parses the XML configuration and returns the root panel along with
+     * the map of all elements (id → UIElement) and font settings.
      */
     public ParseResult parse() throws Exception {
         LOGGER.info("UIXmlParser: loading XML '{}'", configPath);
@@ -71,7 +71,7 @@ public class UIXmlParser {
         return new ParseResult(rootPanel, allElements, defaultFontPath, defaultFontSize);
     }
 
-    /** Считывает глобальный блок <Font defaultPath="..." defaultSize="..."/> */
+    /** Reads global <Font defaultPath="..." defaultSize="..."/> block */
     private void parseFontSettings(Element root) {
         NodeList fonts = root.getElementsByTagName(TAG_FONT);
         if (fonts.getLength() == 0) {
@@ -95,36 +95,36 @@ public class UIXmlParser {
     }
 
     /**
-     * Рекурсивное построение одной панели и всех вложенных в неё элементов/панелей.
-     * Заполняет карту allElements, вызывая panel.setProperty(...) и element.setProperty(...).
+     * Recursively builds a panel and all its nested elements/panels.
+     * Fills the allElements map, calling panel.setProperty(...) and element.setProperty(...).
      */
     private PanelElement buildPanelRecursive(Element panelEl,
                                              PanelElement parent,
                                              Map<String, UIElement> allElements) {
-        // 1) Создаем PanelElement с id
+        // 1) Create PanelElement with id
         String panelId = panelEl.getAttribute(ATTR_ID);
         PanelElement panel = new PanelElement(engine, panelId, parent);
         allElements.put(panelId, panel);
 
-        // 2) Назначаем все атрибуты панели
+        // 2) Assign all panel attributes
         NamedNodeMap attrs = panelEl.getAttributes();
         for (int i = 0; i < attrs.getLength(); i++) {
             Attr attr = (Attr) attrs.item(i);
             String name = attr.getName();
             String value = attr.getValue();
 
-            // Пропускаем служебные
+            // Skip service attributes
             if (ATTR_ID.equals(name)) {
                 continue;
             }
-            // В PanelElement есть обработчики для margin, padding, bgColor, width, height, align, layout, spacing
+            // PanelElement handles margin, padding, bgColor, width, height, align, layout, spacing
             panel.setProperty(name, value);
         }
 
-        // 3) Построить фон (1×1 quad)
+        // 3) Build background (1×1 quad)
         //panel.();
 
-        // 4) Обойти дочерние узлы <Element> и <Panel>
+        // 4) Traverse child <Element> and <Panel> nodes
         ElementFactory factory = new ElementFactory(engine);
         NodeList children = panelEl.getChildNodes();
         for (int i = 0; i < children.getLength(); i++) {
@@ -135,13 +135,13 @@ public class UIXmlParser {
             Element childEl = (Element) node;
             switch (childEl.getTagName()) {
                 case TAG_ELEMENT -> {
-                    // id + type обязательны для <Element>
+                    // id + type are required for <Element>
                     String childId   = childEl.getAttribute(ATTR_ID);
                     String childType = childEl.getAttribute(ATTR_TYPE);
 
                     UIElement uiEl = factory.create(childEl, panel, defaultFontPath, defaultFontSize);
                     if (uiEl != null) {
-                        // Назначаем все атрибуты (кроме id/type/onClick) через setProperty
+                        // Assign all attributes (except id/type/onClick) via setProperty
                         NamedNodeMap elAttrs = childEl.getAttributes();
                         for (int j = 0; j < elAttrs.getLength(); j++) {
                             Attr a = (Attr) elAttrs.item(j);
@@ -151,7 +151,7 @@ public class UIXmlParser {
                                 continue;
                             }
                             if (ATTR_ONCLICK.equals(n)) {
-                                // Отдельно обрабатываем onClick
+                                // onClick handler processing (optional)
                                 //uiEl.setOnClickHandler(v, factory.getEventHandlerTarget());
                             } else {
                                 uiEl.setProperty(n, v);
@@ -165,7 +165,7 @@ public class UIXmlParser {
                     }
                 }
                 case TAG_PANEL -> {
-                    // Вложенная панель
+                    // Nested panel
                     PanelElement subPanel = buildPanelRecursive(childEl, panel, allElements);
                     panel.addChild(subPanel);
                 }
@@ -175,7 +175,7 @@ public class UIXmlParser {
             }
         }
 
-        // 5) Первый layout/позиционирование детей
+        // 5) First layout/positioning of children
         panel.recomputeSizeAndRepositionChildren();
         return panel;
     }
@@ -192,7 +192,7 @@ public class UIXmlParser {
         return doc;
     }
 
-    /** Результат парсинга: корневая панель, карта всех элементов, настройки шрифта. */
+    /** Parse result: root panel, all elements map, font settings. */
     public static class ParseResult {
         public final PanelElement rootPanel;
         public final Map<String, UIElement> allElements;

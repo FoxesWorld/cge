@@ -20,6 +20,7 @@ import static java.lang.Math.max;
  * CharacterControl for robust physics and collision handling.
  * Исправлено: корректная регистрация/сброс, фикс прыжков, инициализация состояний.
  * + Гарантированный захват клавиш через RawInputListener.
+ * Добавлено: получение состояния игрока через getPlayerState().
  */
 public class MovementControl extends AbstractControl implements ActionListener {
 
@@ -236,5 +237,18 @@ public class MovementControl extends AbstractControl implements ActionListener {
 
     public boolean isMoving() {
         return getCurrentSpeed() > 1e-4f;
+    }
+
+    /**
+     * Returns a snapshot of the current player state for UI or logic.
+     */
+    public PlayerState getPlayerState() {
+        boolean moving = isMoving();
+        boolean sprinting = sprint;
+        boolean inAir = !character.onGround();
+        float speed = getCurrentSpeed();
+        Vector3f velocity = currentVel.clone();
+        Vector3f position = spatial != null ? spatial.getWorldTranslation().clone() : new Vector3f();
+        return new PlayerState(moving, sprinting, inAir, speed, velocity, position);
     }
 }

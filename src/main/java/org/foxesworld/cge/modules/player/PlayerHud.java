@@ -8,11 +8,11 @@ import org.foxesworld.cge.modules.ui.UIModule;
  * Improved: prevents redundant updates, more robust.
  */
 public class PlayerHud {
-    private float speed = 1f;
-    private float armor = 0.6f;
-    private float ability = 0.4f;
-    private float prevSpeed = -1f, prevArmor = -1f, prevAbility = -1f;
-    private final UIModule ui;
+    private final Player player;
+    public float speed = 0f;
+    float armor = 0.6f;
+    float ability = 0.4f;
+    String test = "NovaUI";
 
     /**
      * Initializes HUD panels through the UIModule.
@@ -20,13 +20,19 @@ public class PlayerHud {
      * @param p the Player instance
      */
     public PlayerHud(Player p) {
-        this.ui = p.getEngine().getModuleManager().getModule(UIModule.class);
+        this.player = p;
+        UIModule ui = p.getEngine().getModuleManager().getModule(UIModule.class);
         ui.addPanel(this, "assets/Interface/stats_config.xml");
+        ui.getNovaUi().registerEventHandler(this);
     }
 
-    public void setPlayerSpeed(float s) { speed = s; }
+    public void setPlayerSpeed(float s) { speed = Math.abs(s) * 7f; }
     public void setArmorBar(float a)    { armor = a; }
     public void setAbilityBar(float a)  { ability = a; }
+
+    public void setTest(String test) {
+        this.test = test;
+    }
 
     /**
      * Updates HUD elements only if changed.
@@ -34,6 +40,5 @@ public class PlayerHud {
      * @param tpf time per frame
      */
     public void update(float tpf) {
-
     }
 }
