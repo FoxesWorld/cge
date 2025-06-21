@@ -8,9 +8,9 @@ import org.foxesworld.cge.core.file.extensions.cgs.*;
 import org.foxesworld.cge.core.file.extensions.cgs.parser.types.LightingParser;
 import org.foxesworld.cge.core.file.extensions.cgs.parser.types.TerrainParser;
 import org.foxesworld.cge.core.module.EngineModule;
-import org.foxesworld.cge.core.module.ModuleHealthMonitor;
+import org.foxesworld.cge.core.module.health.ModuleHealthMonitor;
 import org.foxesworld.cge.core.module.ModuleState;
-import org.foxesworld.cge.core.streaming.StreamingManager;
+import org.foxesworld.cge.core.io.streaming.StreamingManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -139,7 +139,7 @@ public class SceneModule extends EngineModule<SceneConfig> {
         logger.debug("Chunk {} data - {}", chunk.getEntry().type(), dumpBufferHex(chunk.getData()));
 
         // Создание ECS-контекста на лету для конкретного чанка
-        SceneEntityContext ctx = new SceneEntityContext(sceneRoot, cgsMetadata, entries, app.getEcsModule().getEntityData());
+        //SceneEntityContext ctx = new SceneEntityContext(sceneRoot, cgsMetadata, entries, app.getEcsModule().getEntityData());
 
         return switch (chunk.getEntry().type()) {
             case TERRAIN -> new TerrainParser().parse(app, chunk, configLoader);

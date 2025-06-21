@@ -4,7 +4,7 @@
 
     <Panel
             id="rootPanel"
-            margin="0,30"
+            margin="0,40"
             padding="0"
             bgColor="0,0,0,0.3"
             width="auto"

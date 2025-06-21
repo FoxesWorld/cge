@@ -4,11 +4,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
-import java.util.Optional;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
-import java.util.function.Consumer;
 
 /**
  * High-performance task scheduler optimized for game engine workloads.
@@ -189,12 +187,13 @@ public class TaskScheduler {
     /**
      * Schedules a task to execute periodically.
      *
-     * @param task the task to execute
+     * @param task           the task to execute
      * @param initialDelayMs initial delay in milliseconds
-     * @param periodMs interval in milliseconds
+     * @param periodMs       interval in milliseconds
+     * @param seconds
      * @return a ScheduledFuture representing the task
      */
-    public ScheduledFuture<?> scheduleAtFixedRate(Runnable task, long initialDelayMs, long periodMs) {
+    public ScheduledFuture<?> scheduleAtFixedRate(Runnable task, long initialDelayMs, long periodMs, TimeUnit seconds) {
         totalTasksSubmitted.incrementAndGet();
         String taskType = "periodic";
 
