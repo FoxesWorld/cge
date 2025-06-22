@@ -40,8 +40,6 @@
                     fontPath="assets/Interface/fonts/Aharoni.fnt"
                     margin="0,-20,0,0"
                     align="left"
-                    width="50"
-                    height="8"
                     color="208,187,81,1"
             />
             <Element

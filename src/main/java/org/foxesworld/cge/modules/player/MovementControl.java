@@ -1,5 +1,7 @@
 package org.foxesworld.cge.modules.player;
 
+import com.jme3.anim.AnimComposer;
+import com.jme3.anim.tween.action.BlendAction;
 import com.jme3.bullet.control.CharacterControl;
 import com.jme3.input.InputManager;
 import com.jme3.input.KeyInput;
@@ -11,6 +13,7 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.control.AbstractControl;
 import com.jme3.scene.Spatial;
 import org.foxesworld.cge.modules.player.config.PlayerConfig;
+import org.foxesworld.cge.modules.player.animation.AnimLayerControl;
 
 import static java.lang.Math.max;
 
@@ -18,9 +21,8 @@ import static java.lang.Math.max;
  * MovementControl handles first-person character motion with smooth
  * acceleration, deceleration, and jump/landing callbacks. It relies on
  * CharacterControl for robust physics and collision handling.
- * Исправлено: корректная регистрация/сброс, фикс прыжков, инициализация состояний.
- * + Гарантированный захват клавиш через RawInputListener.
- * Добавлено: получение состояния игрока через getPlayerState().
+ *
+ * Подготовлен к интеграции с системой анимаций через AnimComposer и AnimLayerControl.
  */
 public class MovementControl extends AbstractControl implements ActionListener {
 
@@ -64,6 +66,13 @@ public class MovementControl extends AbstractControl implements ActionListener {
     private boolean rawRegistered = false;
     private RawInputListener rawListener;
 
+    // --- Для анимации ---
+    private AnimLayerControl animLayerControl;
+    private AnimComposer animComposer;
+    private float walkRunBlend = 0f;
+    private boolean prevMoving = false;
+    private boolean prevSprinting = false;
+
     public MovementControl(PlayerContext player, PlayerConfig.MovementConfig movementConfig) {
         this.player        = player;
         this.character     = player.getCharacter();
@@ -76,6 +85,9 @@ public class MovementControl extends AbstractControl implements ActionListener {
 
         registerInput();
         registerRawInput();
+        // Готовим к анимации: ищем AnimLayerControl и AnimComposer на модели игрока
+        this.animLayerControl = player instanceof Player playerImpl ? playerImpl.getAnimLayerControl() : null;
+        this.animComposer = player instanceof Player playerImpl ? playerImpl.getAnimComposer() : null;
     }
 
     private void registerInput() {
@@ -194,6 +206,38 @@ public class MovementControl extends AbstractControl implements ActionListener {
         if (player.getPlayerHud() != null) {
             player.getPlayerHud().setPlayerSpeed(getCurrentSpeed());
         }
+
+        // --- Интеграция с анимациями ---
+        updateAnimationState();
+    }
+
+    /**
+     * Логика переключения и blending анимаций, полностью готова к AnimLayerControl/AnimComposer.
+     */
+    private void updateAnimationState() {
+        if (animLayerControl == null || animComposer == null) return;
+
+        boolean moving = isMoving();
+        boolean sprinting = isSprinting();
+
+        // Blend между walk и run
+        if (moving) {
+            walkRunBlend = sprinting ? 1f : 0f;
+            if (animComposer.action("walk->run") instanceof BlendAction blend) {
+                blend.getBlendSpace().setValue(walkRunBlend);
+            }
+        }
+
+        // Переключение слоёв
+        if (moving && !prevMoving) {
+            animLayerControl.enter("move", sprinting ? "walk->run" : "walk->run");
+        }
+        if (!moving && prevMoving) {
+            animLayerControl.exit("move");
+        }
+
+        prevMoving = moving;
+        prevSprinting = sprinting;
     }
 
     @Override
@@ -211,6 +255,8 @@ public class MovementControl extends AbstractControl implements ActionListener {
                     if (jumpListener != null) {
                         jumpListener.onJumpStart();
                     }
+                    // Анимация прыжка
+                    if (animLayerControl != null) animLayerControl.enter("jump", "jump");
                 }
             }
         }
@@ -237,6 +283,14 @@ public class MovementControl extends AbstractControl implements ActionListener {
 
     public boolean isMoving() {
         return getCurrentSpeed() > 1e-4f;
+    }
+
+    public boolean isWalking() {
+        return isMoving() && !sprint;
+    }
+
+    public boolean isSprinting() {
+        return isMoving() && sprint;
     }
 
     /**

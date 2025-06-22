@@ -10,44 +10,50 @@ import com.jme3.scene.SceneGraphIterator;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.control.Control;
 import com.simsilica.es.EntityId;
+import org.foxesworld.cge.modules.player.animation.AlertArmatureMask;
 import org.foxesworld.cge.modules.player.animation.AnimLayerControl;
 import org.foxesworld.cge.modules.player.animation.event.AnimEventListener;
 import org.foxesworld.cge.modules.player.animation.event.AnimationEvent;
 
 /**
- *
- * @author codex
+ * Конфигуратор анимаций для игрока.
  */
 public class AnimationConfig {
 
     public static void configurePlayerAnimations(EntityId entity, Spatial animated, AnimEventListener listener) {
-        // get animation fields
+        // Получаем компоненты анимации
         var anim = getControl(animated, AnimComposer.class);
         var skin = getControl(animated, SkinningControl.class);
         var layerControl = new AnimLayerControl();
         animated.addControl(layerControl);
         var prefab = AnimationEvent.createPrefab(entity, anim);
-        // configure animation layers
-        layerControl.createSet(anim, skin, mask -> mask.addAll(),
+
+        // Настройка слоёв анимаций
+        layerControl.createSet(anim, skin, AlertArmatureMask::addAll,
                 "idle", "move", "gun", "jump", "death");
+
         // freeze action
         anim.addAction("freeze", new BaseAction(anim.action("idle")));
         anim.action("freeze").setSpeed(0);
+
         // idle action
-        var idle = (ClipAction)anim.action("idle");
+        var idle = (ClipAction) anim.action("idle");
         idle.setMaxTransitionWeight(.5);
         layerControl.enter("idle", "idle");
+
         // walk/run action
         var walkRun = anim.actionBlended("walk->run", new LinearBlendSpace(0f, 1f), "walk", "sprint");
         walkRun.setMaxTransitionWeight(.5);
+
         // landing action
         anim.actionSequence("land-once",
                 anim.action("landing"),
                 Tweens.callMethod(layerControl, "exit", "jump")
         );
+
         // aiming and shooting actions
-        ((ClipAction)anim.action("aim-pistol")).setMaxTransitionWeight(.8);
-        ((ClipAction)anim.action("shoot-pistol")).setMaxTransitionWeight(.9);
+        ((ClipAction) anim.action("aim-pistol")).setMaxTransitionWeight(.8);
+        ((ClipAction) anim.action("shoot-pistol")).setMaxTransitionWeight(.9);
         anim.addAction("shoot-cycle", new BaseAction(Tweens.sequence(
                 Tweens.loopDuration(.2f, anim.action("aim-pistol")),
                 Tweens.parallel(
@@ -59,7 +65,8 @@ public class AnimationConfig {
                 )
         )));
         anim.action("shoot-cycle").setSpeed(2);
-        ((ClipAction)anim.action("draw-pistol")).setMaxTransitionWeight(.7);
+
+        ((ClipAction) anim.action("draw-pistol")).setMaxTransitionWeight(.7);
         anim.addAction("draw-pistol-once", new BaseAction(Tweens.parallel(
                 Tweens.sequence(
                         anim.action("draw-pistol"),
@@ -73,6 +80,7 @@ public class AnimationConfig {
                 )
         )));
         anim.action("draw-pistol-once").setSpeed(4);
+
         anim.addAction("holster-pistol-once", new BaseAction(Tweens.parallel(
                 Tweens.sequence(
                         Tweens.invert(anim.action("draw-pistol")),
@@ -85,6 +93,7 @@ public class AnimationConfig {
         )));
         anim.action("holster-pistol-once").setSpeed(4);
         anim.action("sneaking").setSpeed(.7);
+
         // dying action
         anim.addAction("die-impact", new BaseAction(Tweens.sequence(
                 anim.action("killed"),
@@ -95,10 +104,11 @@ public class AnimationConfig {
     public static <T extends Control> T getControl(Spatial spatial, Class<T> type) {
         var control = spatial.getControl(type);
         if (control == null) {
-            throw new NullPointerException("Spatial does not have "+type.getSimpleName()+"!");
+            throw new NullPointerException("Spatial does not have " + type.getSimpleName() + "!");
         }
         return control;
     }
+
     public static Spatial fetchAnimatedSpatial(Spatial root) {
         for (Spatial spatial : new SceneGraphIterator(root)) {
             if (spatial.getControl(AnimComposer.class) != null) {
@@ -107,5 +117,4 @@ public class AnimationConfig {
         }
         return null;
     }
-
 }

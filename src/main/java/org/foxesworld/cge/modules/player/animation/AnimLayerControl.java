@@ -5,6 +5,7 @@ import com.jme3.anim.AnimationMask;
 import com.jme3.anim.SkinningControl;
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.ViewPort;
+
 import java.util.HashMap;
 import java.util.function.Consumer;
 
@@ -34,6 +35,7 @@ public class AnimLayerControl extends SubControl<AnimComposer> {
             lc.createIfAbsent();
         }
     }
+
     @Override
     protected void onDependencyReleased() {
         for (LayerController lc : controllers.values()) {
