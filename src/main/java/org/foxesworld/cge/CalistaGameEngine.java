@@ -3,6 +3,7 @@ package org.foxesworld.cge;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.StatsAppState;
 import com.jme3.asset.AssetManager;
+import com.jme3.post.FilterPostProcessor;
 import org.foxesworld.cge.core.AssetRepo;
 import org.foxesworld.cge.core.ConfigService;
 import org.foxesworld.cge.core.TaskScheduler;
@@ -30,7 +31,7 @@ import java.util.logging.LogManager;
  * Main game engine class with dynamic module loading
  */
 public class CalistaGameEngine extends SimpleApplication {
-
+    private FilterPostProcessor filterPostProcessor;
     private final List<ModuleConfig> modulesToLoad;
     private final AssetRepo assetRepo;
     private final PopCycle popCycle;
@@ -62,6 +63,7 @@ public class CalistaGameEngine extends SimpleApplication {
         this.configService = new ConfigService();
         this.taskScheduler = new TaskScheduler();
 
+
         GenericByteParser<Byte[]> parser = new GenericByteParser<>(ByteBoxingUtils::toObject);
         StreamingParserLoader<Byte[]> loader = new StreamingParserLoader<>(parser);
         this.byteStreamer = new StreamingManager<>(loader::load, true, 0);
@@ -78,7 +80,8 @@ public class CalistaGameEngine extends SimpleApplication {
         // Initialize modules
         this.moduleManager = new ModuleManager(this);
         this.assetLoader = new AssetLoader(this);
-
+        filterPostProcessor = new FilterPostProcessor(getAssetManager());
+        
         modulesToLoad.stream()
                 .sorted(Comparator.comparingInt(ModuleConfig::getPriority))
                 .forEach(cfg -> moduleManager.register(cfg.create(this), cfg.getPriority()));
@@ -89,7 +92,7 @@ public class CalistaGameEngine extends SimpleApplication {
             // Register custom importers
             OBJImporter importer = new OBJImporter(OBJImporter.UVProjection.AUTO, true, true);
             this.assetManager.registerLoader(OBJImporter.class, "obj");
-            this.assetManager.registerLoader(FBXImporter.class, "fbx");
+            //this.assetManager.registerLoader(FBXImporter.class, "fbx");
 
             this.scene = moduleManager.getModule(SceneModule.class);
             this.ecsModule = moduleManager.getModule(ECSModule.class);
@@ -130,11 +133,6 @@ public class CalistaGameEngine extends SimpleApplication {
         return scene;
     }
 
-    @Override
-    public AssetManager getAssetManager() {
-        return assetManager;
-    }
-
     public AssetRepo getAssetRepo() {
         return assetRepo;
     }
@@ -145,5 +143,9 @@ public class CalistaGameEngine extends SimpleApplication {
 
     public ECSModule getEcsModule() {
         return ecsModule;
+    }
+
+    public FilterPostProcessor getFilterPostProcessor() {
+        return filterPostProcessor;
     }
 }

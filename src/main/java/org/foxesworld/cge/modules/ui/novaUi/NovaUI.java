@@ -11,7 +11,10 @@ import org.foxesworld.cge.modules.ui.novaUi.elements.UIElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.Objects;
 
 /**
  * NovaUI is the root UI system for NovaUI-based interfaces.
@@ -32,9 +35,9 @@ public class NovaUI extends BaseAppState {
     private final Node guiNode;
     private final String configPath;
 
-    // All access to these should be thread-safe if using from multiple threads (otherwise, standard Map is fine)
+    // Thread-safe (esp. if you add/remove UI at runtime)
     private volatile PanelElement rootPanel;
-    private volatile Map<String, UIElement> allElements;
+    private volatile Map<String, UIElement> allElements = new ConcurrentHashMap<>();
 
     private final NovaUIUpdater updater = new NovaUIUpdater();
     private volatile boolean globalDirty = false;
@@ -42,9 +45,9 @@ public class NovaUI extends BaseAppState {
     private int lastCamWidth = -1, lastCamHeight = -1;
 
     public NovaUI(CalistaGameEngine engine, String configPath) {
-        this.engine = engine;
+        this.engine = Objects.requireNonNull(engine, "engine must not be null");
         this.guiNode = engine.getGuiNode();
-        this.configPath = configPath;
+        this.configPath = Objects.requireNonNull(configPath, "configPath must not be null");
     }
 
     /**
@@ -67,7 +70,7 @@ public class NovaUI extends BaseAppState {
             guiNode.attachChild(rootPanel.getNode());
             rootPanel.getNode().setLocalTranslation(0f, 0f, 0f);
 
-            updater.setAllElements(allElements); // Explicitly bind only after successful config
+            updater.setAllElements(Collections.unmodifiableMap(allElements)); // safer: prevent mutation outside add/remove
             updater.bindAllFields();
 
             expandAndPositionRootPanel();
@@ -84,7 +87,7 @@ public class NovaUI extends BaseAppState {
             guiNode.detachChild(rootPanel.getNode());
         }
         rootPanel = null;
-        allElements = null;
+        allElements.clear();
         LOGGER.info("NovaUI cleaned up.");
     }
 
@@ -139,10 +142,7 @@ public class NovaUI extends BaseAppState {
 
             rootPanel.addChild(image);
 
-            // Defensive: check for concurrent modification
-            synchronized (this) {
-                allElements.put(id, image);
-            }
+            allElements.put(id, image);
 
             updater.fixOverlaps(rootPanel);
             updater.bindAllFields();
@@ -198,8 +198,9 @@ public class NovaUI extends BaseAppState {
         ParseResult result = parser.parse();
         if (result.rootPanel == null) throw new IllegalStateException("Parsed UI rootPanel is null!");
         rootPanel = result.rootPanel;
-        allElements = result.allElements;
-        LOGGER.info("UI configuration loaded: rootPanel id='{}', {} total elements.", rootPanel.getId(), allElements != null ? allElements.size() : 0);
+        // Defensive: always use thread-safe map
+        allElements = new ConcurrentHashMap<>(result.allElements);
+        LOGGER.info("UI configuration loaded: rootPanel id='{}', {} total elements.", rootPanel.getId(), allElements.size());
     }
 
     /**
@@ -259,7 +260,7 @@ public class NovaUI extends BaseAppState {
             guiNode.attachChild(rootPanel.getNode());
             rootPanel.getNode().setLocalTranslation(0f, 0f, 0f);
 
-            updater.setAllElements(allElements);
+            updater.setAllElements(Collections.unmodifiableMap(allElements));
             updater.bindAllFields();
 
             expandAndPositionRootPanel();

@@ -1,34 +1,45 @@
 {
-  "enableBloom": true,
-  "bloomExposurePower": 60,
-    "bloomIntensity": 0.25,
-    "bloomThreshold": 1.2,
-    "bloomRadius": 0.7,
-  "enableLsf": false,
-  "enableDof": false,
-  "enableMotionBlur": false,
-  "lsfLightDir": [
-    10.0,
-    3.0,
-    7.0
-  ],
-  "lsfGhostCount": 0,
-  "lsfHaloWidth": 0.4,
-  "lsfDestiny": 0.2,
-  "dofFocus": 12.0,
-  "dofRange": 40.0,
-  "dofAperture": 2.8,
-  "dofMaxBlur": 1.5,
-  "motionBlurSampleCount": 16,
-  "motionBlurStrength": 0.6,
-  "enableVignette": true,
-  "vignetteIntensity": 0.45,
-  "vignetteSmoothness": 0.75,
-  "enableColorGrading": true,
-  "colorGradingLUT": "Assets/LUTs/Cinematic.cube",
-  "exposure": 1.1,
-  "contrast": 1.2,
-  "saturation": 1.1,
-  "enableFXAA": true,
-  "fxaaQuality": 2
+  "bloom": {
+    "enable": true,
+    "intensity": 0.35,
+    "threshold": 1.1,
+    "radius": 0.92,
+    "exposurePower": 65
+  },
+  "lsf": {
+    "enable": false,
+    "lightDir": [
+      10.0,
+      3.0,
+      7.0
+    ],
+    "ghostCount": 0,
+    "haloWidth": 0.5,
+    "destiny": 0.25
+  },
+  "dof": {
+    "enable": true,
+    "focus": 18.0,
+    "range": 60.0,
+    "aperture": 1.8,
+    "maxBlur": 2.2
+  },
+  "colorGrading": {
+    "enable": true,
+    "lut": "Assets/LUTs/Cinematic.cube",
+    "exposure": 1.22,
+    "contrast": 1.29,
+    "saturation": 1.18
+  },
+  "fxaa": {
+    "enable": true,
+    "quality": 3
+  },
+  "ssaOfilter": {
+    "enable": true,
+    "sampleRadius": 2.9299974,
+    "intensity": 25.0,
+    "scale": 5.8100376,
+    "bias": 0.091000035
+  }
 }

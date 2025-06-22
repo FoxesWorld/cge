@@ -155,8 +155,7 @@ public class NovaUIUpdater {
 
     public void update(float tpf) {
         if (boundFields.isEmpty()) {
-            //LOGGER.debug("update: No bound fields to update.");
-            //return;
+            return;
         }
 
         for (var entry : boundFields.entrySet()) {
@@ -278,44 +277,5 @@ public class NovaUIUpdater {
 
     private float clamp01(float v) {
         return v < 0f ? 0f : (Math.min(v, 1f));
-    }
-
-    /**
-     * Preserves panel background and child positions before recomputing,
-     * then restores them, ensuring alpha is not lost for background quads.
-     */
-    private void preserveBackgroundAndReapplyAlpha(PanelElement panel) {
-        // Capture child positions
-        Map<UIElement, float[]> childPositions = new HashMap<>();
-        for (UIElement child : panel.getChildren()) {
-            var pos = child.getNode().getLocalTranslation();
-            childPositions.put(child, new float[]{pos.x, pos.y, pos.z});
-        }
-        // Capture background color and alpha
-        var renderer = panel.getRenderer();
-        float width = panel.getCurrentWidth();
-        float height = panel.getCurrentHeight();
-        // Always get the actual color (with alpha) from renderer
-        ColorRGBA bgColor = renderer.getBgColor();
-        float alpha = (bgColor != null) ? bgColor.a : 1f;
-
-        LOGGER.debug("Preserving background and positions for panel '{}'", panel.getId());
-        panel.recomputeSizeAndRepositionChildren();
-
-        // Restore positions
-        for (Map.Entry<UIElement, float[]> e : childPositions.entrySet()) {
-            float[] pos = e.getValue();
-            e.getKey().getNode().setLocalTranslation(pos[0], pos[1], pos[2]);
-        }
-
-        // Restore color with original alpha.
-        if (bgColor == null) {
-            bgColor = ColorRGBA.White.clone();
-        }
-        ColorRGBA restoredColor = bgColor.clone();
-        restoredColor.a = alpha;
-        renderer.setBgColor(restoredColor);
-        renderer.setSize(width, height);
-        LOGGER.debug("Restored background and size (with alpha) for panel '{}'", panel.getId());
     }
 }

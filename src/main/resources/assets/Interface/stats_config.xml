@@ -13,7 +13,7 @@
             layout="horizontal"
             spacing="0"
     >
-
+       <!-- <Element id="logo" type="ImageElement" imagePath="Textures/nova.png" width="128" height="128" color="1,1,1,1"/> -->
 
         <Panel id="barPanel"
                margin="5"
@@ -34,10 +34,10 @@
                     fillColor="88,135,81,1"
                     borderThickness="0.1"
             />
-            <Element
+           <Element
                     id="test"
                     type="TextElement"
-                    fontPath="Interface/Fonts/Console.fnt"
+                    fontPath="assets/Interface/fonts/Aharoni.fnt"
                     margin="0,-20,0,0"
                     align="left"
                     width="50"

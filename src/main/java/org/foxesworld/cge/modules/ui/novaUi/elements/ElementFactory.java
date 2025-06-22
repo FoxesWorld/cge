@@ -1,6 +1,7 @@
 package org.foxesworld.cge.modules.ui.novaUi.elements;
 
 import org.foxesworld.cge.CalistaGameEngine;
+import org.foxesworld.cge.modules.ui.novaUi.elements.button.ButtonElement;
 import org.foxesworld.cge.modules.ui.novaUi.elements.image.ImageElement;
 import org.foxesworld.cge.modules.ui.novaUi.elements.panel.PanelElement;
 import org.foxesworld.cge.modules.ui.novaUi.elements.progress.ProgressElement;
@@ -11,21 +12,25 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * ElementFactory — создаёт UIElement по XML-тегу <Element>.
  * Позволяет регистрировать новые типы без изменения исходного кода.
+ * Устойчивее к ошибкам, потокобезопасен, расширяем.
  */
 public class ElementFactory {
 
     private static final Logger logger = LoggerFactory.getLogger(ElementFactory.class);
     private final CalistaGameEngine calistaGameEngine;
-    private final Map<String, UIElementCreator> registry = new HashMap<>();
+    // Используем потокобезопасную карту для регистрации типов элементов
+    private final Map<String, UIElementCreator> registry = Collections.synchronizedMap(new HashMap<>());
 
     public ElementFactory(CalistaGameEngine engine) {
-        this.calistaGameEngine = engine;
+        this.calistaGameEngine = Objects.requireNonNull(engine, "CalistaGameEngine must not be null");
 
         // Регистрация базовых типов
         registerType("TextElement", (el, id, parent, fontPath, fontSize) -> {
@@ -46,28 +51,43 @@ public class ElementFactory {
             return prog;
         });
 
-        // Пример: registerType("Button", (el, id, parent, fontPath, fontSize) -> new ButtonElement(...));
+        registerType("Button", (el, id, parent, fontPath, fontSize) -> {
+            var btn = new ButtonElement(calistaGameEngine, id, parent, fontPath, fontSize);
+            applyAttributes(btn, el);
+            return btn;
+        });
     }
 
+    /**
+     * Регистрирует новый тип UI-элемента.
+     */
     public void registerType(String type, UIElementCreator creator) {
+        if (type == null || creator == null) {
+            throw new IllegalArgumentException("Type and creator must not be null");
+        }
         registry.put(type, creator);
         logger.debug("Registered '{}' UI element", type);
     }
 
+    /**
+     * Создаёт элемент по XML-описанию.
+     */
     public UIElement create(Element el, PanelElement parent, String defaultFontPath, float defaultFontSize) {
+        Objects.requireNonNull(el, "XML Element must not be null");
+        Objects.requireNonNull(parent, "Parent panel must not be null");
         String id = el.getAttribute("id");
-        if (id.isEmpty()) {
-            throw new RuntimeException("Element missing required 'id' attribute!");
+        if (id == null || id.isEmpty()) {
+            throw new IllegalArgumentException("Element missing required 'id' attribute!");
         }
 
         String type = el.getAttribute("type");
-        if (type.isEmpty()) {
-            throw new RuntimeException("Element[id=" + id + "] missing required 'type' attribute!");
+        if (type == null || type.isEmpty()) {
+            throw new IllegalArgumentException("Element[id=" + id + "] missing required 'type' attribute!");
         }
 
         UIElementCreator creator = registry.get(type);
         if (creator == null) {
-            throw new RuntimeException("Unknown Element type: " + type);
+            throw new IllegalArgumentException("Unknown Element type: " + type);
         }
 
         UIElement element = creator.create(el, id, parent, defaultFontPath, defaultFontSize);
@@ -81,12 +101,16 @@ public class ElementFactory {
         return element;
     }
 
+    /**
+     * Применяет все XML-атрибуты к UI-элементу как свойства, кроме служебных.
+     */
     private void applyAttributes(UIElement element, Element xmlElement) {
         NamedNodeMap attrs = xmlElement.getAttributes();
         for (int i = 0; i < attrs.getLength(); i++) {
             Node attr = attrs.item(i);
-            if (!"type".equals(attr.getNodeName()) && !"id".equals(attr.getNodeName())) {
-                element.setProperty(attr.getNodeName(), attr.getNodeValue());
+            String name = attr.getNodeName();
+            if (!"type".equals(name) && !"id".equals(name) && !"onClick".equals(name)) {
+                element.setProperty(name, attr.getNodeValue());
             }
         }
     }

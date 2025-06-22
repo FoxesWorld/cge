@@ -8,8 +8,24 @@ version = '1.0.0'
 
 repositories {
     mavenCentral()
+    maven { url 'https://jitpack.io' }
+    maven {
+        name = "GitHubPackages-riccardobl"
+        url = uri("https://maven.pkg.github.com/riccardobl/*")
+        credentials {
+            username = project.findProperty("gpr.user") ?: System.getenv("USERNAME_GITHUB")
+            password = project.findProperty("gpr.key") ?: System.getenv("TOKEN_GITHUB")
+        }
+    }
+    maven {
+        name = "GitHubPackages-jmePhonon"
+        url = uri("https://maven.pkg.github.com/jmePhonon/*")
+        credentials {
+            username = project.findProperty("gpr.user") ?: System.getenv("USERNAME_GITHUB")
+            password = project.findProperty("gpr.key") ?: System.getenv("TOKEN_GITHUB")
+        }
+    }
 }
-
 ext {
     jmeVersion = '3.8.1-stable'
 }
@@ -22,6 +38,13 @@ dependencies {
     implementation "org.jmonkeyengine:jme3-effects:$jmeVersion"
     implementation files("lib/SkyControl-1.1.0.jar")
     runtimeOnly    "org.jmonkeyengine:jme3-awt-dialogs:$jmeVersion"
+    implementation "org.jmonkeyengine:jme3-freetype:3.8.1-stable"
+
+
+    //implementation  'wf.frk:jme-effekseer-native:0.4'
+    implementation (group: 'com.jme3.phonon', name: 'jme_phonon', version: '0.3.7', ext: 'jar', classifier: '')
+    implementation  "wf.frk:jme3-bullet-vhacd:1.0.5"
+    implementation  "wf.frk:jme_f3b:0.92"
 
     // GSON для загрузки конфигурации из JSON
     implementation 'com.google.code.gson:gson:2.11.0'

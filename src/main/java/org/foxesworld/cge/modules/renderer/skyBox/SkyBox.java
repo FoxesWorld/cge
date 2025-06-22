@@ -23,6 +23,7 @@ import java.time.LocalTime;
 /**
  * SkyBox simulates a dynamic sky environment including sun, moon, clouds, stars, and real-time lighting.
  * Enhanced for atmospheric feeling, realistic lighting, and soft shadow fidelity.
+ * Improved: dynamic switching of shadow-casting light (sun or moon), smooth shadow blending.
  */
 public class SkyBox extends EngineModule<SkyBoxConfig> {
 
@@ -39,6 +40,10 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
     private float simulatedHour = 12.0f;
     private float smoothingSpeed = 0.1f;
     private float moonFade = 0.5f;
+
+    // Track which light is currently active for shadow casting
+    private DirectionalLight activeShadowLight = null;
+    private boolean shadowsWithSun = true; // true=sun, false=moon
 
     public SkyBox(RendererModule rendererModule) {
         super("skybox", SkyBoxConfig.class, rendererModule.getGameEngine());
@@ -80,8 +85,6 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
         skyControl.setTopVerticalAngle(getConfig().getVerticalAngle());
         skyControl.setEnabled(true);
 
-        // Atmospheric sky tint
-        //skyControl.getSunAndStars().m.setColor("Color", new ColorRGBA(0.43f, 0.53f, 0.72f, 1.0f));
         engine.getRootNode().attachChild(sky);
     }
 
@@ -109,13 +112,16 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
         int splits = getConfig().getShadowFrustumCount();
 
         shadowRenderer = new DirectionalLightShadowRenderer(engine.getAssetManager(), size, splits);
-        shadowRenderer.setLight(sunLight);
         shadowRenderer.setShadowZExtend(getConfig().getShadowZExtend());
-        // Атмосферные тени: мягкие, глубокие, без резких краёв
-        shadowRenderer.setLambda(0.60f); // Больше плавности теней вдаль
+        shadowRenderer.setLambda(0.60f); // Soft, smooth shadows
 
-        ViewPort vp = viewPort();
-        vp.addProcessor(shadowRenderer);
+        // Initially set to sun
+        shadowRenderer.setLight(sunLight);
+        activeShadowLight = sunLight;
+        shadowsWithSun = true;
+
+        //ViewPort vp = viewPort();
+        gameEngine.getViewPort().addProcessor(shadowRenderer);
     }
 
     private float getCurrentHour() {
@@ -131,35 +137,56 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
             // Smoothly interpolate simulatedHour toward targetHour
             simulatedHour += (targetHour - simulatedHour) * smoothingSpeed * tpf;
 
-            updater.setMainLight(this.sunLight);
             skyControl.getSunAndStars().setHour(simulatedHour);
 
             // Sun and moon directions (for shadows and highlights)
             Vector3f sunDirection = skyControl.getSunAndStars().sunDirection(tmpDir);
+
+            // This is the upward normal of the sun; positive when above the horizon
+            float sunDot = sunDirection.dot(Vector3f.UNIT_Y);
+
+            // Determine if it's day or night (threshold can be tuned)
+            boolean isDay = sunDot > -0.08f;
+            shadowsWithSun = isDay;
+
+            // Update light directions
             sunLight.setDirection(sunDirection.negate());
             moonLight.setDirection(sunDirection);
 
-            // Атмосферные смены света: плавный рассвет/закат, холодная ночь
-            float sunDot = sunDirection.dot(Vector3f.UNIT_Y);
+            // Atmosphere: плавный рассвет/закат, холодная ночь
             float sunIntensity = Math.max(0.13f, Math.min(1f, sunDot + 0.13f));
             float moonIntensity = Math.max(0f, 1f - sunIntensity);
 
             sunLight.setColor(ColorRGBA.White.mult(getConfig().getSunLightIntensity() * sunIntensity));
             moonLight.setColor(new ColorRGBA(0.36f, 0.39f, 0.55f, 1f).mult(getConfig().getMoonLightIntensity() * moonIntensity * moonFade));
 
-            // Атмосферная смена амбиентного цвета: закат/рассвет/ночь
+            // Ambient color transitions
             float ambientBlend = 0.18f + 0.82f * sunIntensity;
             ColorRGBA ambientDay = new ColorRGBA(0.18f, 0.25f, 0.36f, 1.0f).mult(ambientBlend)
                     .add(new ColorRGBA(0.8f, 0.6f, 0.45f, 1.0f).mult(1f - ambientBlend));
             ambient.setColor(ambientDay);
 
-            if (shadowRenderer != null) shadowRenderer.setLight(sunLight);
+            // --- SHADOW CASTING LIGHT SWITCH ---
+            DirectionalLight requiredLight = shadowsWithSun ? sunLight : moonLight;
+            if (activeShadowLight != requiredLight && shadowRenderer != null) {
+                shadowRenderer.setLight(requiredLight);
+                activeShadowLight = requiredLight;
+            }
+
+            // Optionally, allow smooth transition (blend) between sun and moon shadows if desired.
         }
+    }
+
+    /**
+     * Returns which light is currently used for shadow casting: "sun" or "moon"
+     */
+    public String getActiveShadowCaster() {
+        return (activeShadowLight == sunLight) ? "sun" : "moon";
     }
 
     @Override
     protected void updateModule(float tpf) {
-        // Reserved for atmospheric effects, weather systems, volumetric fog, god rays и т.п.
+        // Reserved for future atmospheric/weather/volumetric effects.
     }
 
     @Override

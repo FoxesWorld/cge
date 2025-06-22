@@ -6,7 +6,9 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.shape.Quad;
+import com.jme3.scene.Node;
 import org.foxesworld.cge.CalistaGameEngine;
+import org.foxesworld.cge.modules.ui.novaUi.elements.AbstractRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -14,8 +16,11 @@ import org.slf4j.LoggerFactory;
  * ProgressRenderer is an optimized progress bar rendering manager.
  * Minimizes object recreation, improves stability, performance, and flexibility.
  * Fully supports alpha channel for all geometries.
+ * <p>
+ * Inherits from {@link AbstractRenderer} for UI integration and color management.
+ * </p>
  */
-public class ProgressRenderer {
+public class ProgressRenderer extends AbstractRenderer {
     private static final Logger logger = LoggerFactory.getLogger(ProgressRenderer.class);
 
     private final CalistaGameEngine engine;
@@ -26,6 +31,69 @@ public class ProgressRenderer {
 
     public ProgressRenderer(CalistaGameEngine engine) {
         this.engine = engine;
+    }
+
+    /**
+     * Returns the root node for this progress bar (a Node containing all geometries).
+     */
+    @Override
+    public Node getNode() {
+        Node node = new Node("ProgressBarRoot");
+        if (borderGeom != null) node.attachChild(borderGeom);
+        if (bgGeom != null) node.attachChild(bgGeom);
+        if (fgGeom != null) node.attachChild(fgGeom);
+        return node;
+    }
+
+    /**
+     * Sets the color for the fill geometry (if present).
+     */
+    @Override
+    public void setColor(ColorRGBA color) {
+        if (fgMat != null) fgMat.setColor("Color", color);
+    }
+
+    /**
+     * Gets the color of the fill geometry (if present), otherwise null.
+     */
+    @Override
+    public ColorRGBA getColor() {
+        if (fgMat != null && fgMat.getParam("Color") != null) {
+            return ((ColorRGBA) fgMat.getParam("Color").getValue()).clone();
+        }
+        return null;
+    }
+
+    /**
+     * Sets the size of the progress bar (border geometry).
+     */
+    @Override
+    public void setSize(float width, float height) {
+        buildOrUpdateBorder(width, height, borderMat != null && borderMat.getParam("Color") != null
+                ? (ColorRGBA) borderMat.getParam("Color").getValue()
+                : ColorRGBA.White, 0f);
+    }
+
+    /**
+     * Returns the width of the border geometry (if present).
+     */
+    @Override
+    public float getWidth() {
+        if (borderGeom != null && borderGeom.getMesh() instanceof Quad) {
+            return ((Quad) borderGeom.getMesh()).getWidth();
+        }
+        return 0f;
+    }
+
+    /**
+     * Returns the height of the border geometry (if present).
+     */
+    @Override
+    public float getHeight() {
+        if (borderGeom != null && borderGeom.getMesh() instanceof Quad) {
+            return ((Quad) borderGeom.getMesh()).getHeight();
+        }
+        return 0f;
     }
 
     public Geometry getBorderGeom() { return borderGeom; }

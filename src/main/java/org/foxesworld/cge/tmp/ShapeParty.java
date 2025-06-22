@@ -7,10 +7,12 @@ import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
+import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import org.foxesworld.cge.CalistaGameEngine;
+import org.foxesworld.cge.core.loader.JmeProgressBar;
 import org.foxesworld.cge.modules.physics.PhysicsModule;
 
 import java.util.Random;
@@ -46,39 +48,41 @@ public class ShapeParty {
         particleTemplate.setHighLife(2f);
 
         calistaGameEngine.enqueue(() -> {
-            PhysicsModule physicsModule = calistaGameEngine.getModuleManager().getModule(PhysicsModule.class);
-            AssetManager assetManager = calistaGameEngine.getAssetManager();
+            calistaGameEngine.getAssetLoader().loadAllAssets(() -> {
+                PhysicsModule physicsModule = calistaGameEngine.getModuleManager().getModule(PhysicsModule.class);
+                AssetManager assetManager = calistaGameEngine.getAssetManager();
 
-            // Загрузка модели
-            Spatial model = calistaGameEngine.getAssetRepo().getModel("ParkBench01");
-            if (model == null) {
-                throw new RuntimeException("Не удалось загрузить модель");
-            }
-
-            for (int i = 0; i < count; i++) {
-                Spatial instance = model.clone();
-                instance.setName("ModelInstance_" + i);
-
-                float x = (random.nextFloat() * 2 - 1) * areaRadius;
-                float z = (random.nextFloat() * 2 - 1) * areaRadius;
-                float y = baseHeight + random.nextFloat() * 5f;
-                instance.setLocalTranslation(x, y, z);
-
-                // Добавляем эффект частиц как дочерний элемент к объекту
-                ParticleEmitter emitter = particleTemplate.clone();
-                emitter.setLocalTranslation(0, 1.5f, 0); // немного над объектом
-                ((Node) instance).attachChild(emitter);
-                emitter.emitAllParticles(); // запускаем эффект
-
-                calistaGameEngine.getRootNode().attachChild(instance);
-
-                if (physicsModule != null && instance instanceof Geometry) {
-                    physicsModule.addRigidBody(instance, 1.0f);
-                } else if (physicsModule != null && instance instanceof Node) {
-                    processNodePhysics((Node) instance, physicsModule);
+                // Загрузка модели
+                Spatial model = calistaGameEngine.getAssetRepo().getModel("ParkBench01");
+                if (model == null) {
+                    throw new RuntimeException("Не удалось загрузить модель");
                 }
-            }
+
+                for (int i = 0; i < count; i++) {
+                    Spatial instance = model.clone();
+                    instance.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
+                    instance.setName("ModelInstance_" + i);
+
+                    float x = (random.nextFloat() * 2 - 1) * areaRadius;
+                    float z = (random.nextFloat() * 2 - 1) * areaRadius;
+                    float y = baseHeight + random.nextFloat() * 5f;
+                    instance.setLocalTranslation(x, y, z);
+
+                    // Добавляем эффект частиц как дочерний элемент к объекту
+                    ParticleEmitter emitter = particleTemplate.clone();
+                    emitter.setLocalTranslation(0, 1.5f, 0); // немного над объектом
+                    ((Node) instance).attachChild(emitter);
+                    emitter.emitAllParticles(); // запускаем эффект
+
+                    calistaGameEngine.getRootNode().attachChild(instance);
+
+                    if (physicsModule != null && instance instanceof Node) {
+                        processNodePhysics((Node) instance, physicsModule);
+                    }
+                }
+            }, new JmeProgressBar(calistaGameEngine));
         });
+
     }
 
 
