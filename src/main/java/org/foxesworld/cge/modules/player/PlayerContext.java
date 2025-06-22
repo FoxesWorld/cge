@@ -12,6 +12,7 @@ public interface PlayerContext {
     float getSprintSpeed();
     PlayerHud getPlayerHud();
     PlayerCameraControl getCamControl();
+    PlayerAnimationController getAnimationController();
 
     CameraEffectsControl getCamEffectsControl();
     // Добавьте другие необходимые методы

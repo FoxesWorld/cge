@@ -18,7 +18,6 @@ import com.jme3.scene.control.Control;
  * Поддерживает переключение между первым и третьим лицом.
  */
 public class CameraEffectsControl extends AbstractControl {
-
     private final Camera cam;
     private final Player player;
     private final MovementControl moveCtrl;
@@ -64,10 +63,6 @@ public class CameraEffectsControl extends AbstractControl {
 
     public void setThirdPerson(boolean thirdPerson) {
         this.thirdPerson = thirdPerson;
-    }
-
-    public boolean isThirdPerson() {
-        return thirdPerson;
     }
 
     public void notifyJumpStart() {
@@ -152,7 +147,9 @@ public class CameraEffectsControl extends AbstractControl {
 
             // Сглаживание (чтобы камера не дёргалась резко)
             thirdPersonCamOffset.interpolateLocal(targetCamPos, FastMath.clamp(tpf * 4f, 0f, 1f));
-            cam.setLocation(thirdPersonCamOffset);
+            Vector3f camPos = player.getCamControl().getDesiredCameraPosition();
+            cam.setLocation(camPos);
+            //cam.setLocation(thirdPersonCamOffset);
 
             // Камера всегда "смотрит" на голову персонажа
             Vector3f lookTarget = charPos.add(0, halfHeight, 0);

@@ -31,7 +31,7 @@ public class Terrain extends EngineModule<TerrainConfig> {
      */
     public void createTestTerrain(float width, float height) {
         Material mat = new Material(getGameEngine().getAssetManager(), "Common/MatDefs/Light/PBRLighting.j3md");
-        mat.setTexture("BaseColorMap", getGameEngine().getAssetRepo().getTexture("box"));
+        mat.setTexture("BaseColorMap", getGameEngine().getAssetRepo().getTexture("calista_grid_test_diff"));
         mat.setBoolean("UseSpecGloss", false);
         mat.setFloat("Glossiness", 0.7f);
         mat.setBoolean("UseSpecularAA", false);

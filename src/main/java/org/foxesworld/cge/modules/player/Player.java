@@ -1,7 +1,6 @@
 package org.foxesworld.cge.modules.player;
 
 import com.jme3.anim.AnimComposer;
-import com.jme3.anim.SkinningControl;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.collision.shapes.CapsuleCollisionShape;
 import com.jme3.bullet.control.CharacterControl;
@@ -16,25 +15,22 @@ import com.jme3.scene.control.Control;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.modules.physics.PhysicsModule;
 import org.foxesworld.cge.modules.player.animation.AnimLayerControl;
+import org.foxesworld.cge.modules.player.PlayerAnimationController;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Collection;
+import java.util.Objects;
 
 /**
- * Player с интеграцией анимаций через AnimComposer/SkinningControl/AnimationControl и логированием анимаций.
+ * Player with animation integration via AnimComposer and animation logging.
  */
 public class Player extends Node implements PlayerContext {
 
     private static final Logger logger = LoggerFactory.getLogger(Player.class);
 
-    private enum AnimationSystemType { ANIM_COMPOSER, SKINNING_CONTROL, ANIMATION_CONTROL, NONE }
-    private AnimationSystemType animationSystemType = AnimationSystemType.NONE;
-
-    private AnimComposer animComposer;
-    private SkinningControl skinningControl;
-    private AnimComposer animationControl;
-    private AnimLayerControl animLayerControl;
+    private static final float EYE_HEIGHT = 1.6f;
+    private static final float WALK_SPEED = 0.03f;
+    private static final float SPRINT_SPEED = 0.18f;
 
     private final PlayerModule playerModule;
     private final CalistaGameEngine engine;
@@ -46,90 +42,92 @@ public class Player extends Node implements PlayerContext {
     private final CameraEffectsControl camEffectsControl;
     private final PlayerHud playerHud;
 
+    private PlayerCameraControl camControl;
     private Spatial playerModel;
-
-    // Movement and physics parameters
-    private static final float EYE_HEIGHT   = 1.6f;
-    private static final float WALK_SPEED   = 0.13f;
-    private static final float SPRINT_SPEED = 0.18f;
-
-    private volatile boolean isCrouching = false;
-    private float crouchAmount = 0f;
-    private float targetEyeHeight = EYE_HEIGHT;
-    private float interpEyeHeight = EYE_HEIGHT;
+    private AnimComposer animComposer;
+    private AnimLayerControl animLayerControl;
+    private PlayerAnimationController animationController;
 
     private final Vector3f reuseVec1 = new Vector3f();
     private final Vector3f reuseVec2 = new Vector3f();
 
+    private boolean isCrouching = false;
+    private float crouchAmount = 0f;
+    private float targetEyeHeight = EYE_HEIGHT;
+    private float interpEyeHeight = EYE_HEIGHT;
+
     private boolean lastGrounded = true;
-    private PlayerCameraControl camControl;
     private float airTime = 0f;
 
-    /**
-     * Конструктор игрока.
-     */
     public Player(PlayerModule playerModule, Vector3f spawnPos) {
         super("Player");
-        this.playerModule = playerModule;
+        this.playerModule = Objects.requireNonNull(playerModule);
         this.engine = playerModule.getGameEngine();
-        this.input  = engine.getInputManager();
-        this.cam    = engine.getCamera();
+        this.input = engine.getInputManager();
+        this.cam = engine.getCamera();
+        this.bullet = engine.getModuleManager().getModule(PhysicsModule.class).getBulletAppState();
         this.playerHud = new PlayerHud(this);
 
         setLocalTranslation(spawnPos);
-
-        // Physics
-        this.bullet = engine.getModuleManager()
-                .getModule(PhysicsModule.class)
-                .getBulletAppState();
         CapsuleCollisionShape shape = new CapsuleCollisionShape(
                 playerModule.getConfig().getPhysics().getRadius(),
                 playerModule.getConfig().getPhysics().getHeight() - 2 * playerModule.getConfig().getPhysics().getRadius(),
                 1);
-
         this.character = new CharacterControl(shape, playerModule.getConfig().getPhysics().getStepHeight());
         character.setPhysicsLocation(spawnPos);
         character.setJumpSpeed(playerModule.getConfig().getPhysics().getJumpSpeed());
         character.setFallSpeed(playerModule.getConfig().getPhysics().getFallSpeed());
         character.setGravity(playerModule.getConfig().getPhysics().getGravity());
+
         addControl(character);
         bullet.getPhysicsSpace().add(character);
 
-        // Camera / movement
         engine.getFlyByCamera().setEnabled(false);
         input.setCursorVisible(false);
 
-        camControl = new PlayerCameraControl(this, EYE_HEIGHT, 0.18f, playerModule.getConfig().getMovement().getSmoothing(), engine.getRootNode());
+        camControl = new PlayerCameraControl(this, EYE_HEIGHT, 0.18f,
+                playerModule.getConfig().getMovement().getSmoothing(),
+                engine.getRootNode());
         addControl(camControl);
-        this.movementControl = new MovementControl(this, playerModule.getConfig().getMovement());
+
+        movementControl = new MovementControl(this, playerModule.getConfig().getMovement());
         addControl(movementControl);
-        this.camEffectsControl = new CameraEffectsControl(this);
+
+        camEffectsControl = new CameraEffectsControl(this);
         addControl(camEffectsControl);
 
+        // анимация прыжка/приземления с blend
         movementControl.setJumpListener(new MovementControl.JumpListener() {
             @Override
             public void onJumpStart() {
                 camEffectsControl.notifyJumpStart();
-                setAnimation("jump");
+                if (animationController != null) animationController.setAnimation("jump", 0.18f, null, false);
             }
+
             @Override
             public void onLanding(float peak) {
                 camEffectsControl.notifyLanding(peak);
-                setAnimation("idle");
+                if (animationController != null) animationController.setAnimation("landing", 0.18f, null, false);
             }
+        });
+
+        movementControl.setMovementListener(speed -> {
+            String anim = "";
+            if(speed <= 0.03f) {
+                anim = "walk";
+            } else {
+                anim = "sprint";
+            }
+            if (animationController != null) animationController.setAnimation(anim, 0.18f, null, true);
         });
 
         loadPlayerModel(playerModule.getConfig().getModel().getModelPath());
         synchronize(true);
     }
 
-    /**
-     * Загрузка и интеграция модели игрока и анимаций.
-     * Динамически определяет тип системы анимации: AnimComposer, SkinningControl, AnimationControl.
-     */
-    private void loadPlayerModel(String model) {
+    private void loadPlayerModel(String modelPath) {
         try {
-            playerModel = engine.getAssetManager().loadModel(model);
+            playerModel = engine.getAssetManager().loadModel(modelPath);
             playerModel.setLocalScale(playerModule.getConfig().getModel().getScale());
             playerModel.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
             playerModel.setCullHint(Spatial.CullHint.Never);
@@ -138,24 +136,23 @@ public class Player extends Node implements PlayerContext {
 
             animComposer = fetchControl(playerModel, AnimComposer.class);
             if (animComposer != null) {
-                animationSystemType = AnimationSystemType.ANIM_COMPOSER;
-                logger.info("AnimComposer найден. Список анимаций:");
-                for (String n : animComposer.getAnimClipsNames()) {
-                    logger.info("  - {}", n);
-                }
+                logger.info("AnimComposer found. Animation list:");
+                animComposer.getAnimClipsNames().forEach(name -> logger.info("  - {}", name));
+
                 animLayerControl = new AnimLayerControl();
                 playerModel.addControl(animLayerControl);
+
+                animationController = new PlayerAnimationController(animComposer);
+                animationController.setAnimation("idle", 0.15f, null, true);
             } else {
-                animationSystemType = AnimationSystemType.NONE;
-                logger.warn("Анимационный контроллер AnimComposer не найден на модели игрока!");
+                logger.warn("AnimComposer not found on player model!");
             }
-            setAnimation("idle");
+
         } catch (Exception e) {
-            logger.warn("Failed to load model: {}", e.getMessage());
-            playerModel = null;
+            logger.warn("Failed to load player model '{}': {}", modelPath, e.getMessage());
         }
     }
-    /** Рекурсивный поиск контрола в иерархии */
+
     private <T extends Control> T fetchControl(Spatial spatial, Class<T> type) {
         if (spatial == null) return null;
         T control = spatial.getControl(type);
@@ -169,67 +166,12 @@ public class Player extends Node implements PlayerContext {
         return null;
     }
 
-    /**
-     * Хелпер для переключения анимации с логированием.
-     */
-    private String lastAnim = "";
-
-    private void setAnimation(String animName) {
-        if (animName == null) return;
-
-        switch (animationSystemType) {
-            case ANIM_COMPOSER:
-            case SKINNING_CONTROL:
-                if (animComposer != null && animComposer.getAnimClip(animName) != null) {
-                    if (!lastAnim.equals(animName)) {
-                        logger.info("Switching animation: {} -> {}", lastAnim, animName);
-                        animComposer.setCurrentAction(animName);
-                        lastAnim = animName;
-                    }
-                } else {
-                    if (animComposer != null && !lastAnim.equals(animName)) {
-                        logger.warn("Анимация '{}' не найдена!", animName);
-                    }
-                }
-                break;
-
-            case ANIMATION_CONTROL:
-                logger.info("GG");
-                break;
-
-            default:
-                if (!lastAnim.equals(animName)) {
-                    logger.warn("Нет подходящей системы анимации для проигрывания '{}'", animName);
-                }
-                break;
-        }
-    }
-
-    private void synchronize(boolean instant) {
-        Vector3f pos = character.getPhysicsLocation();
-        setLocalTranslation(pos);
-        if (instant) {
-            interpEyeHeight = targetEyeHeight;
-        } else {
-            interpEyeHeight += (targetEyeHeight - interpEyeHeight) * 0.12f;
-        }
-    }
-
     public void update(float tpf) {
-        float desiredCrouch = isCrouching ? 0.7f : 1.0f;
-        crouchAmount += (desiredCrouch - crouchAmount) * 0.15f;
+        crouchAmount += ((isCrouching ? 0.7f : 1.0f) - crouchAmount) * 0.15f;
         targetEyeHeight = EYE_HEIGHT * crouchAmount;
 
-        // --- Селектор анимации ---
-        String animName = "idle";
-        if (!isGrounded()) {
-            animName = "jump";
-        } else if (getMovementControl().isSprinting()) {
-            animName = "Run";
-        } else if (getMovementControl().isWalking()) {
-            animName = "move";
-        }
-        setAnimation(animName);
+        String animName = isGrounded() ? (movementControl.isSprinting() ? "sprint" : movementControl.isWalking() ? "move" : "idle") : "jump";
+        if (animationController != null) animationController.setAnimation(animName, 0.13f);
 
         synchronize(true);
         updateModelPosition();
@@ -237,15 +179,18 @@ public class Player extends Node implements PlayerContext {
         playerHud.update(tpf);
     }
 
+    private void synchronize(boolean instant) {
+        setLocalTranslation(character.getPhysicsLocation());
+        if (instant) interpEyeHeight = targetEyeHeight;
+        else interpEyeHeight += (targetEyeHeight - interpEyeHeight) * 0.12f;
+    }
+
     private void updateModelPosition() {
         if (playerModel == null) return;
-        Vector3f physicsLoc = character.getPhysicsLocation();
-        float heightOffset = playerModule.getConfig().getPhysics().getHeight() / 2.0f;
-        Vector3f modelPos = reuseVec1.set(physicsLoc).addLocal(0, -heightOffset, 0);
+        Vector3f modelPos = reuseVec1.set(character.getPhysicsLocation()).addLocal(0, -playerModule.getConfig().getPhysics().getHeight() / 2f, 0);
         playerModel.setLocalTranslation(modelPos);
 
-        Vector3f camDir = cam.getDirection(reuseVec2).normalizeLocal();
-        Vector3f lookTarget = modelPos.add(camDir);
+        Vector3f lookTarget = modelPos.add(cam.getDirection(reuseVec2).normalizeLocal());
         playerModel.lookAt(lookTarget, Vector3f.UNIT_Y);
     }
 
@@ -256,7 +201,6 @@ public class Player extends Node implements PlayerContext {
         } else {
             if (!lastGrounded && airTime > 0.1f) {
                 camEffectsControl.notifyLanding(airTime);
-                setAnimation("idle");
             }
             airTime = 0;
         }
@@ -264,24 +208,19 @@ public class Player extends Node implements PlayerContext {
     }
 
     public boolean isGrounded() {
-        if (character.onGround()) {
-            return true;
-        }
-        return checkGroundWithRaycast();
+        return character.onGround() || checkGroundWithRaycast();
     }
 
     private boolean checkGroundWithRaycast() {
         Vector3f origin = character.getPhysicsLocation().add(0, 0.1f, 0);
-        Vector3f down = new Vector3f(0, -1, 0);
-        Ray ray = new Ray(origin, down);
+        Ray ray = new Ray(origin, Vector3f.UNIT_Y.negate());
         ray.setLimit(1.5f);
-
-        // Реализуйте raycast по вашей сцене, если требуется
+        // TODO: Implement raycast if needed
         return false;
     }
 
     public void setCrouching(boolean crouch) {
-        isCrouching = crouch;
+        this.isCrouching = crouch;
     }
 
     public void cleanup() {
@@ -293,51 +232,25 @@ public class Player extends Node implements PlayerContext {
     }
 
     public void updateModelVisibility() {
-        if (playerModel == null) return;
-        boolean isThirdPerson = camControl.isThirdPerson();
-        playerModel.setCullHint(isThirdPerson ? Spatial.CullHint.Never : Spatial.CullHint.Always);
+        if (playerModel != null) {
+            playerModel.setCullHint(camControl.isThirdPerson() ? Spatial.CullHint.Never : Spatial.CullHint.Always);
+        }
     }
 
-    // --- Getters ---
-
-    @Override
-    public CharacterControl getCharacter() { return character; }
-
-    @Override
-    public float getWalkSpeed() {
-        return WALK_SPEED;
-    }
-
-    @Override
-    public float getSprintSpeed() {
-        return SPRINT_SPEED;
-    }
+    @Override public CharacterControl getCharacter() { return character; }
+    @Override public float getWalkSpeed() { return WALK_SPEED; }
+    @Override public float getSprintSpeed() { return SPRINT_SPEED; }
+    @Override public Camera getCam() { return cam; }
+    @Override public InputManager getInput() { return input; }
+    @Override public CameraEffectsControl getCamEffectsControl() { return camEffectsControl; }
+    @Override public PlayerCameraControl getCamControl() { return camControl; }
 
     public MovementControl getMovementControl() { return movementControl; }
-    @Override
-    public Camera getCam() { return cam; }
     public CalistaGameEngine getEngine() { return engine; }
     public boolean isCrouching() { return isCrouching; }
     public float getInterpEyeHeight() { return interpEyeHeight; }
-    @Override
-    public InputManager getInput() { return input; }
-    @Override
-    public CameraEffectsControl getCamEffectsControl() { return camEffectsControl; }
     public PlayerHud getPlayerHud() { return playerHud; }
-
-    @Override
-    public PlayerCameraControl getCamControl() {
-        return camControl;
-    }
-
-    public AnimComposer getAnimComposer() {
-        return animComposer;
-    }
-
-    public SkinningControl getSkinningControl() {
-        return skinningControl;
-    }
-    public AnimLayerControl getAnimLayerControl() {
-        return animLayerControl;
-    }
+    public AnimComposer getAnimComposer() { return animComposer; }
+    public AnimLayerControl getAnimLayerControl() { return animLayerControl; }
+    public PlayerAnimationController getAnimationController() { return animationController; }
 }

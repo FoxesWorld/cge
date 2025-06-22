@@ -20,6 +20,7 @@ import java.util.List;
 /**
  * Advanced player camera control with first/third person switching,
  * collision handling via spherical raycasting, and smoothing.
+ * Добавлена поддержка приближения/отдаления колесом мыши в третьем лице.
  */
 public class PlayerCameraControl extends AbstractControl implements AnalogListener, ActionListener {
 
@@ -28,6 +29,8 @@ public class PlayerCameraControl extends AbstractControl implements AnalogListen
     private static final String MOUSE_RIGHT = "Mouse_Right";
     private static final String MOUSE_UP    = "Mouse_Up";
     private static final String MOUSE_DOWN  = "Mouse_Down";
+    private static final String ZOOM_IN     = "Zoom_In";
+    private static final String ZOOM_OUT    = "Zoom_Out";
 
     private final Camera cam;
     private final InputManager input;
@@ -36,8 +39,8 @@ public class PlayerCameraControl extends AbstractControl implements AnalogListen
     private final float eyeHeight;
     private final float sensitivity;
     private final float smoothingFactor;
-    private final float distance;
     private final float minDistance;
+    private final float maxDistance;
     private final float wallOffset;
     private final float easingSpeed;
     private final int sphereRays;
@@ -47,6 +50,11 @@ public class PlayerCameraControl extends AbstractControl implements AnalogListen
     private float targetYaw, targetPitch;
     private boolean thirdPerson;
     private float currentDistance, desiredDistance;
+
+    // Настройки зума
+    private float zoomDistance;
+    private final float zoomStep = 0.8f;
+    private final float defaultDistance = 5.0f;
 
     private final Vector3f tempVec = new Vector3f();
 
@@ -59,13 +67,16 @@ public class PlayerCameraControl extends AbstractControl implements AnalogListen
         this.sensitivity = sensitivity;
         this.smoothingFactor = FastMath.clamp(smoothing, 0f, 1f);
 
-        this.distance = 5.0f;
         this.minDistance = 1.2f;
+        this.maxDistance = 16.0f;
         this.wallOffset = 0.36f;
         this.easingSpeed = 5.5f;
 
         this.sphereRays = 7;
         this.sphereRadius = 0.28f;
+
+        this.zoomDistance = defaultDistance;
+        this.currentDistance = this.desiredDistance = this.zoomDistance;
 
         setupInputMappings();
         input.setCursorVisible(false);
@@ -77,7 +88,10 @@ public class PlayerCameraControl extends AbstractControl implements AnalogListen
         input.addMapping(MOUSE_RIGHT, new MouseAxisTrigger(MouseInput.AXIS_X, false));
         input.addMapping(MOUSE_UP,    new MouseAxisTrigger(MouseInput.AXIS_Y, true));
         input.addMapping(MOUSE_DOWN,  new MouseAxisTrigger(MouseInput.AXIS_Y, false));
-        input.addListener(this, TOGGLE_VIEW, MOUSE_LEFT, MOUSE_RIGHT, MOUSE_UP, MOUSE_DOWN);
+        // Поддержка колесика мыши для зума
+        input.addMapping(ZOOM_IN,  new MouseAxisTrigger(MouseInput.AXIS_WHEEL, false)); // колесо вперед (увеличить)
+        input.addMapping(ZOOM_OUT, new MouseAxisTrigger(MouseInput.AXIS_WHEEL, true));  // колесо назад (отдалить)
+        input.addListener(this, TOGGLE_VIEW, MOUSE_LEFT, MOUSE_RIGHT, MOUSE_UP, MOUSE_DOWN, ZOOM_IN, ZOOM_OUT);
     }
 
     @Override
@@ -94,15 +108,15 @@ public class PlayerCameraControl extends AbstractControl implements AnalogListen
         Quaternion rot = new Quaternion().fromAngles(pitch, yaw, 0);
         Vector3f playerPos = spatial.getWorldTranslation().add(0, eyeHeight, 0);
 
-        desiredDistance = thirdPerson ? distance : 0.01f;
-        float spring = FastMath.clamp(1f - FastMath.exp(-easingSpeed * tpf), 0f, 1f);
+        desiredDistance = thirdPerson ? zoomDistance : 0.01f;
+        float spring = FastMath.clamp(1f - FastMath.exp(-easingSpeed * tpf), 0.2f, 1f);
         currentDistance += (desiredDistance - currentDistance) * spring;
 
-        if (currentDistance > minDistance * 1.01f) {
-            Vector3f backDir = rot.mult(Vector3f.UNIT_Z).negateLocal();
-            Vector3f desiredPos = playerPos.add(backDir.mult(currentDistance));
-            Vector3f camPos = calculateCameraPosition(playerPos, desiredPos, backDir);
+        Vector3f backDir = rot.mult(Vector3f.UNIT_Z).negateLocal();
+        Vector3f desiredPos = playerPos.add(backDir.mult(currentDistance));
+        Vector3f camPos = calculateCameraPosition(playerPos, desiredPos, backDir);
 
+        if (thirdPerson && currentDistance > minDistance) {
             cam.setLocation(camPos);
             cam.lookAt(playerPos, Vector3f.UNIT_Y);
         } else {
@@ -164,6 +178,20 @@ public class PlayerCameraControl extends AbstractControl implements AnalogListen
             case MOUSE_RIGHT -> targetYaw   -= value * sensitivity;
             case MOUSE_UP    -> targetPitch += value * sensitivity;
             case MOUSE_DOWN  -> targetPitch -= value * sensitivity;
+            case ZOOM_IN -> {
+                if (thirdPerson) {
+                    zoomDistance -= zoomStep * value * 2f;
+                    zoomDistance = FastMath.clamp(zoomDistance, minDistance, maxDistance);
+                    desiredDistance = currentDistance = zoomDistance;
+                }
+            }
+            case ZOOM_OUT -> {
+                if (thirdPerson) {
+                    zoomDistance += zoomStep * value * 2f;
+                    zoomDistance = FastMath.clamp(zoomDistance, minDistance, maxDistance);
+                    desiredDistance = currentDistance = zoomDistance;
+                }
+            }
         }
     }
 
@@ -179,7 +207,8 @@ public class PlayerCameraControl extends AbstractControl implements AnalogListen
         super.setSpatial(spatial);
         yaw = targetYaw = 0f;
         pitch = targetPitch = 0f;
-        currentDistance = desiredDistance = 0.01f;
+        // Новый "зум" сбрасывается только в третий раз
+        currentDistance = desiredDistance = zoomDistance = defaultDistance;
     }
 
     public boolean isThirdPerson() {
@@ -188,5 +217,27 @@ public class PlayerCameraControl extends AbstractControl implements AnalogListen
 
     public void setThirdPerson(boolean thirdPerson) {
         this.thirdPerson = thirdPerson;
+    }
+
+    public Vector3f getDesiredCameraPosition() {
+        if (spatial == null) return null;
+
+        float pitchRad = pitch;
+        float yawRad = yaw;
+
+        Quaternion rot = new Quaternion().fromAngles(pitchRad, yawRad, 0);
+        Vector3f playerPos = spatial.getWorldTranslation().add(0, eyeHeight, 0);
+
+        float dist = thirdPerson ? zoomDistance : 0.01f;
+        Vector3f backDir = rot.mult(Vector3f.UNIT_Z).negateLocal();
+        Vector3f desiredPos = playerPos.add(backDir.mult(dist));
+        return calculateCameraPosition(playerPos, desiredPos, backDir);
+    }
+    /** Позволяет программно задать текущий зум (например, для сохранения/восстановления состояния) */
+    public void setZoomDistance(float distance) {
+        this.zoomDistance = FastMath.clamp(distance, minDistance, maxDistance);
+    }
+    public float getZoomDistance() {
+        return zoomDistance;
     }
 }
