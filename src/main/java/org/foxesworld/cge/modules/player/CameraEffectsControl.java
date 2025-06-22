@@ -89,7 +89,7 @@ public class CameraEffectsControl extends AbstractControl {
         targetRoll = 0f;
 
         boolean moving = moveCtrl.isMoving() && characterCtrl.onGround();
-        boolean running = moving && moveCtrl.getCurrentSpeed() > (player.getWalkSpeed() + 0.01f);
+        boolean running = moving && moveCtrl.getCurrentSpeed() > (player.getPlayerConfig().getMovement().getWalkSpeed() + 0.01f);
 
         if (!thirdPerson) {
             // FIRST PERSON CAMERA EFFECTS
@@ -109,7 +109,7 @@ public class CameraEffectsControl extends AbstractControl {
                 targetYOffset = halfHeight - shake;
                 targetXOffset = shake * 0.14f * FastMath.sin(landingShakeTimer * 26f);
             } else if (moving) {
-                float speed = FastMath.clamp(moveCtrl.getCurrentSpeed() / (player.getWalkSpeed() + player.getSprintSpeed()), 0.5f, 1.0f);
+                float speed = FastMath.clamp(moveCtrl.getCurrentSpeed() / (player.getPlayerConfig().getMovement().getWalkSpeed() + player.getPlayerConfig().getMovement().getSprintSpeed()), 0.5f, 1.0f);
 
                 bobPhase += FastMath.TWO_PI * bobFrequency * tpf * speed;
                 bobPhase %= FastMath.TWO_PI;

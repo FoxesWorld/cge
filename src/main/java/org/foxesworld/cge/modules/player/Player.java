@@ -2,6 +2,8 @@ package org.foxesworld.cge.modules.player;
 
 import com.jme3.anim.AnimComposer;
 import com.jme3.bullet.BulletAppState;
+import com.jme3.bullet.PhysicsSpace;
+import com.jme3.bullet.collision.PhysicsRayTestResult;
 import com.jme3.bullet.collision.shapes.CapsuleCollisionShape;
 import com.jme3.bullet.control.CharacterControl;
 import com.jme3.input.InputManager;
@@ -15,10 +17,11 @@ import com.jme3.scene.control.Control;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.modules.physics.PhysicsModule;
 import org.foxesworld.cge.modules.player.animation.AnimLayerControl;
-import org.foxesworld.cge.modules.player.PlayerAnimationController;
+import org.foxesworld.cge.modules.player.config.PlayerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -27,11 +30,6 @@ import java.util.Objects;
 public class Player extends Node implements PlayerContext {
 
     private static final Logger logger = LoggerFactory.getLogger(Player.class);
-
-    private static final float EYE_HEIGHT = 1.6f;
-    private static final float WALK_SPEED = 0.03f;
-    private static final float SPRINT_SPEED = 0.18f;
-
     private final PlayerModule playerModule;
     private final CalistaGameEngine engine;
     private final InputManager input;
@@ -47,14 +45,13 @@ public class Player extends Node implements PlayerContext {
     private AnimComposer animComposer;
     private AnimLayerControl animLayerControl;
     private PlayerAnimationController animationController;
-
     private final Vector3f reuseVec1 = new Vector3f();
     private final Vector3f reuseVec2 = new Vector3f();
 
     private boolean isCrouching = false;
     private float crouchAmount = 0f;
-    private float targetEyeHeight = EYE_HEIGHT;
-    private float interpEyeHeight = EYE_HEIGHT;
+    private float targetEyeHeight;
+    private float interpEyeHeight;
 
     private boolean lastGrounded = true;
     private float airTime = 0f;
@@ -67,6 +64,11 @@ public class Player extends Node implements PlayerContext {
         this.cam = engine.getCamera();
         this.bullet = engine.getModuleManager().getModule(PhysicsModule.class).getBulletAppState();
         this.playerHud = new PlayerHud(this);
+
+        // Use from config
+        float configEyeHeight = playerModule.getConfig().getPhysics().getEyeHeight();
+        this.targetEyeHeight = configEyeHeight;
+        this.interpEyeHeight = configEyeHeight;
 
         setLocalTranslation(spawnPos);
         CapsuleCollisionShape shape = new CapsuleCollisionShape(
@@ -85,7 +87,7 @@ public class Player extends Node implements PlayerContext {
         engine.getFlyByCamera().setEnabled(false);
         input.setCursorVisible(false);
 
-        camControl = new PlayerCameraControl(this, EYE_HEIGHT, 0.18f,
+        camControl = new PlayerCameraControl(this, configEyeHeight, 0.18f,
                 playerModule.getConfig().getMovement().getSmoothing(),
                 engine.getRootNode());
         addControl(camControl);
@@ -97,7 +99,7 @@ public class Player extends Node implements PlayerContext {
         addControl(camEffectsControl);
 
         // анимация прыжка/приземления с blend
-        movementControl.setJumpListener(new MovementControl.JumpListener() {
+        movementControl.setMovementListener(new MovementControl.MovementListener() {
             @Override
             public void onJumpStart() {
                 camEffectsControl.notifyJumpStart();
@@ -109,17 +111,23 @@ public class Player extends Node implements PlayerContext {
                 camEffectsControl.notifyLanding(peak);
                 if (animationController != null) animationController.setAnimation("landing", 0.18f, null, false);
             }
+
+            @Override
+            public void move(float speed) {
+                String anim;
+                if (speed == 0f) {
+                    anim = "idle";
+                } else if (speed <= 0.03f) {
+                    anim = "walk";
+                } else {
+                    anim = "sprint";
+                }
+                if (animationController != null) {
+                    animationController.setAnimation(anim, 0.18f, null, true);
+                }
+            }
         });
 
-        movementControl.setMovementListener(speed -> {
-            String anim = "";
-            if(speed <= 0.03f) {
-                anim = "walk";
-            } else {
-                anim = "sprint";
-            }
-            if (animationController != null) animationController.setAnimation(anim, 0.18f, null, true);
-        });
 
         loadPlayerModel(playerModule.getConfig().getModel().getModelPath());
         synchronize(true);
@@ -167,8 +175,9 @@ public class Player extends Node implements PlayerContext {
     }
 
     public void update(float tpf) {
+        float configEyeHeight = playerModule.getConfig().getPhysics().getEyeHeight();
         crouchAmount += ((isCrouching ? 0.7f : 1.0f) - crouchAmount) * 0.15f;
-        targetEyeHeight = EYE_HEIGHT * crouchAmount;
+        targetEyeHeight = configEyeHeight * crouchAmount;
 
         String animName = isGrounded() ? (movementControl.isSprinting() ? "sprint" : movementControl.isWalking() ? "move" : "idle") : "jump";
         if (animationController != null) animationController.setAnimation(animName, 0.13f);
@@ -211,11 +220,36 @@ public class Player extends Node implements PlayerContext {
         return character.onGround() || checkGroundWithRaycast();
     }
 
+    /**
+     * Проверка наличия земли под игроком с помощью физического raycast.
+     * Возвращает true, если под игроком обнаружен коллайдер (не сам игрок) на разумной дистанции.
+     */
     private boolean checkGroundWithRaycast() {
         Vector3f origin = character.getPhysicsLocation().add(0, 0.1f, 0);
-        Ray ray = new Ray(origin, Vector3f.UNIT_Y.negate());
-        ray.setLimit(1.5f);
-        // TODO: Implement raycast if needed
+        Vector3f direction = Vector3f.UNIT_Y.negate();
+        float rayLength = 1.5f;
+
+        PhysicsSpace physicsSpace = bullet.getPhysicsSpace();
+        if (physicsSpace == null) return false;
+
+        Vector3f end = origin.add(direction.mult(rayLength));
+        List<PhysicsRayTestResult> results = physicsSpace.rayTest(origin, end);
+
+        float minFraction = Float.MAX_VALUE;
+        PhysicsRayTestResult closest = null;
+
+        for (PhysicsRayTestResult result : results) {
+            Object userObject = result.getCollisionObject().getUserObject();
+            if (userObject == character || userObject == this) continue;
+            if (result.getHitFraction() < minFraction) {
+                minFraction = result.getHitFraction();
+                closest = result;
+            }
+        }
+        if (closest != null) {
+            float hitDistance = rayLength * minFraction;
+            return hitDistance < 0.25f;
+        }
         return false;
     }
 
@@ -238,12 +272,14 @@ public class Player extends Node implements PlayerContext {
     }
 
     @Override public CharacterControl getCharacter() { return character; }
-    @Override public float getWalkSpeed() { return WALK_SPEED; }
-    @Override public float getSprintSpeed() { return SPRINT_SPEED; }
     @Override public Camera getCam() { return cam; }
     @Override public InputManager getInput() { return input; }
     @Override public CameraEffectsControl getCamEffectsControl() { return camEffectsControl; }
     @Override public PlayerCameraControl getCamControl() { return camControl; }
+
+    public PlayerConfig getPlayerConfig() {
+        return playerModule.getConfig();
+    }
 
     public MovementControl getMovementControl() { return movementControl; }
     public CalistaGameEngine getEngine() { return engine; }

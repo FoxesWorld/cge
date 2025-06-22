@@ -26,14 +26,12 @@ import static java.lang.Math.max;
  */
 public class MovementControl extends AbstractControl implements ActionListener {
 
-    public interface JumpListener {
+    public interface MovementListener {
         void onJumpStart();
         void onLanding(float peakHeight);
-    }
-
-    public interface MovementListener {
         void move(float speed);
     }
+
 
     private static final String MAP_FORWARD   = "MoveForward";
     private static final String MAP_BACKWARD  = "MoveBackward";
@@ -53,9 +51,7 @@ public class MovementControl extends AbstractControl implements ActionListener {
     private final float smoothFactor;
 
     private boolean forward, backward, left, right, sprint;
-    private JumpListener jumpListener;
     private MovementListener movementListener;
-
     private final Vector3f currentVel = new Vector3f();
     private final Vector3f desiredVel = new Vector3f();
     private final Vector3f camDir     = new Vector3f();
@@ -182,6 +178,7 @@ public class MovementControl extends AbstractControl implements ActionListener {
             desiredVel.multLocal(sprint ? sprintSpeed : walkSpeed);
             movementListener.move(sprint ? sprintSpeed : walkSpeed);
         } else {
+            movementListener.move(0f);
             desiredVel.set(0, 0, 0);
         }
 
@@ -200,8 +197,8 @@ public class MovementControl extends AbstractControl implements ActionListener {
         if (inAir && posY > lastY) {
             peakY = max(peakY, posY);
         }
-        if (wasInAir && !inAir && jumpListener != null) {
-            jumpListener.onLanding(FastMath.abs(peakY - lastY));
+        if (wasInAir && !inAir && movementListener != null) {
+            movementListener.onLanding(FastMath.abs(peakY - lastY));
             peakY = 0f;
         }
         wasInAir = inAir;
@@ -256,8 +253,8 @@ public class MovementControl extends AbstractControl implements ActionListener {
                 if (isPressed && character.onGround()) {
                     character.jump();
                     peakY = spatial.getWorldTranslation().y;
-                    if (jumpListener != null) {
-                        jumpListener.onJumpStart();
+                    if (movementListener != null) {
+                        movementListener.onJumpStart();
                     }
                 }
             }
@@ -273,10 +270,6 @@ public class MovementControl extends AbstractControl implements ActionListener {
     @Override
     protected void controlRender(com.jme3.renderer.RenderManager rm, com.jme3.renderer.ViewPort vp) {
         // Not used
-    }
-
-    public void setJumpListener(JumpListener listener) {
-        this.jumpListener = listener;
     }
 
     public float getCurrentSpeed() {

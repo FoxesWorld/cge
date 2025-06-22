@@ -38,7 +38,7 @@ public class RendererModule extends EngineModule<RendererConfig> {
         super("renderer", RendererConfig.class, app);
         this.subManager = new ModuleManager(app);
         // Register default SkyBox before config is loaded
-        subManager.register(new SkyBox(this), 10);
+        subManager.register(new SkyBox(this), 100);
     }
 
     /**

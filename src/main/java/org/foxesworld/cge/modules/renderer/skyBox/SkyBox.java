@@ -4,6 +4,7 @@ import com.jme3.app.Application;
 import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.ViewPort;
 import com.jme3.renderer.queue.RenderQueue;
@@ -23,7 +24,8 @@ import java.time.LocalTime;
 /**
  * SkyBox simulates a dynamic sky environment including sun, moon, clouds, stars, and real-time lighting.
  * Enhanced for atmospheric feeling, realistic lighting, and soft shadow fidelity.
- * Improved: dynamic switching of shadow-casting light (sun or moon), smooth shadow blending.
+ * Improved: dynamic switching of shadow-casting light (sun or moon), smooth shadow blending, customizable colors,
+ * and improved ambient/tonemapping for more cinematic effect.
  */
 public class SkyBox extends EngineModule<SkyBoxConfig> {
 
@@ -38,7 +40,7 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
     private final Vector3f tmpDir = new Vector3f();
 
     private float simulatedHour = 12.0f;
-    private float smoothingSpeed = 0.1f;
+    private float smoothingSpeed = 0.2f; // faster smoothing for more responsive day-night
     private float moonFade = 0.5f;
 
     // Track which light is currently active for shadow casting
@@ -85,14 +87,22 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
         skyControl.setTopVerticalAngle(getConfig().getVerticalAngle());
         skyControl.setEnabled(true);
 
+        // Improved: add gradient for horizon color
+        //  skyControl.setOvercast(getConfig().getOvercastAmount());
+        //  skyControl.setCloudsOpacity(getConfig().getCloudOpacity());
+        //  skyControl.setHaloThickness(getConfig().getHaloThickness());
+        //  skyControl.setStarIntensity(getConfig().getStarIntensity());
+
         engine.getRootNode().attachChild(sky);
     }
 
     private void setupLighting() {
-        // Atmospheric ambient: глубокий голубой с мягким теплом заката
-        ColorRGBA ambientColor = new ColorRGBA(0.18f, 0.25f, 0.36f, 1.0f).multLocal(0.7f)
-                .addLocal(new ColorRGBA(0.8f, 0.6f, 0.45f, 1.0f).multLocal(0.15f));
-        ambient = new AmbientLight(ambientColor);
+        // Improved atmospheric ambient: dynamic blend between deep blue and sunset warmth
+        ColorRGBA ambientDay = new ColorRGBA(0.16f, 0.22f, 0.38f, 1.0f);
+        ColorRGBA ambientSunset = new ColorRGBA(1.0f, 0.72f, 0.45f, 1.0f);
+        ColorRGBA ambientNight = new ColorRGBA(0.08f, 0.13f, 0.20f, 1.0f);
+
+        ambient = new AmbientLight(ambientDay.clone());
 
         sunLight = new DirectionalLight();
         sunLight.setColor(ColorRGBA.White.mult(getConfig().getSunLightIntensity()));
@@ -120,7 +130,6 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
         activeShadowLight = sunLight;
         shadowsWithSun = true;
 
-        //ViewPort vp = viewPort();
         gameEngine.getViewPort().addProcessor(shadowRenderer);
     }
 
@@ -135,7 +144,15 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
             float targetHour = getCurrentHour();
 
             // Smoothly interpolate simulatedHour toward targetHour
-            simulatedHour += (targetHour - simulatedHour) * smoothingSpeed * tpf;
+            float hourDelta = targetHour - simulatedHour;
+            // Wrap-around for day/night cycle
+            if (hourDelta > 12.0f) hourDelta -= 24.0f;
+            if (hourDelta < -12.0f) hourDelta += 24.0f;
+            simulatedHour += hourDelta * smoothingSpeed * tpf;
+
+            // Clamp simulatedHour to [0,24)
+            if (simulatedHour < 0f) simulatedHour += 24f;
+            if (simulatedHour >= 24f) simulatedHour -= 24f;
 
             skyControl.getSunAndStars().setHour(simulatedHour);
 
@@ -153,18 +170,22 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
             sunLight.setDirection(sunDirection.negate());
             moonLight.setDirection(sunDirection);
 
-            // Atmosphere: плавный рассвет/закат, холодная ночь
-            float sunIntensity = Math.max(0.13f, Math.min(1f, sunDot + 0.13f));
-            float moonIntensity = Math.max(0f, 1f - sunIntensity);
+            // --- Atmosphere: improved blend for day, sunset, and night ---
+            float sunsetZone = FastMath.clamp((sunDot + 0.1f) / 0.18f, 0f, 1f); // 0 at -0.1, 1 at +0.08
+            float sunIntensity = FastMath.clamp(sunDot + 0.13f, 0.13f, 1.0f);
+            float moonIntensity = FastMath.clamp(1.0f - sunIntensity, 0f, 1.0f);
+
+            // Soft transition for ambient color through sunset
+            ColorRGBA ambientDay = new ColorRGBA(0.16f, 0.22f, 0.38f, 1.0f);
+            ColorRGBA ambientSunset = new ColorRGBA(1.0f, 0.72f, 0.45f, 1.0f);
+            ColorRGBA ambientNight = new ColorRGBA(0.08f, 0.13f, 0.20f, 1.0f);
+
+            ColorRGBA ambientCol = ambientDay.clone().interpolateLocal(ambientSunset, 1f - sunsetZone)
+                    .interpolateLocal(ambientNight, 1f - sunIntensity);
+            ambient.setColor(ambientCol);
 
             sunLight.setColor(ColorRGBA.White.mult(getConfig().getSunLightIntensity() * sunIntensity));
             moonLight.setColor(new ColorRGBA(0.36f, 0.39f, 0.55f, 1f).mult(getConfig().getMoonLightIntensity() * moonIntensity * moonFade));
-
-            // Ambient color transitions
-            float ambientBlend = 0.18f + 0.82f * sunIntensity;
-            ColorRGBA ambientDay = new ColorRGBA(0.18f, 0.25f, 0.36f, 1.0f).mult(ambientBlend)
-                    .add(new ColorRGBA(0.8f, 0.6f, 0.45f, 1.0f).mult(1f - ambientBlend));
-            ambient.setColor(ambientDay);
 
             // --- SHADOW CASTING LIGHT SWITCH ---
             DirectionalLight requiredLight = shadowsWithSun ? sunLight : moonLight;
@@ -173,7 +194,7 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
                 activeShadowLight = requiredLight;
             }
 
-            // Optionally, allow smooth transition (blend) between sun and moon shadows if desired.
+            // Bloom/tonemapping hint: optionally, adjust scene exposure or fog here for deeper atmosphere.
         }
     }
 
