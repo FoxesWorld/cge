@@ -172,7 +172,7 @@ public class NovaUIUpdater {
                         te.setText(newText);
                         lastKnownValues.put(te, newText);
                         markDirty(te.getParentPanel());
-                        LOGGER.debug("TextElement '{}' updated: '{}' -> '{}'", te.getId(), oldText, newText);
+                        //LOGGER.debug("TextElement '{}' updated: '{}' -> '{}'", te.getId(), oldText, newText);
                     }
                     te.update(tpf);
 
@@ -193,7 +193,7 @@ public class NovaUIUpdater {
                         pe.setProgress(newVal);
                         lastKnownValues.put(pe, newVal);
                         markDirty(pe.getParentPanel());
-                        LOGGER.debug("ProgressElement '{}' updated: {} -> {}", pe.getId(), oldVal, newVal);
+                        //LOGGER.debug("ProgressElement '{}' updated: {} -> {}", pe.getId(), oldVal, newVal);
                     }
                     pe.updateSelf(tpf);
                 }
@@ -205,7 +205,7 @@ public class NovaUIUpdater {
 
         // Efficiently update only dirty panels and preserve their backgrounds with alpha
         if (!dirtyPanels.isEmpty()) {
-            LOGGER.info("Recomputing {} dirty panels...", dirtyPanels.size());
+            //LOGGER.info("Recomputing {} dirty panels...", dirtyPanels.size());
             for (PanelElement panel : dirtyPanels) {
                 panel.setBgColor(new ColorRGBA(0,0,0,0));
                 PanelElement cur = panel;
@@ -221,7 +221,7 @@ public class NovaUIUpdater {
     public void markDirty(PanelElement panel) {
         if (panel != null) {
             dirtyPanels.add(panel);
-            LOGGER.debug("Panel '{}' marked as dirty.", panel.getId());
+            //LOGGER.debug("Panel '{}' marked as dirty.", panel.getId());
         }
     }
 

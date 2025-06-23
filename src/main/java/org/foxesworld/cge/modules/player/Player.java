@@ -87,8 +87,7 @@ public class Player extends Node implements PlayerContext {
         engine.getFlyByCamera().setEnabled(false);
         input.setCursorVisible(false);
 
-        camControl = new PlayerCameraControl(this, configEyeHeight, 0.18f,
-                playerModule.getConfig().getMovement().getSmoothing(),
+        camControl = new PlayerCameraControl(this, configEyeHeight, playerModule.getConfig().getSensitivity(), playerModule.getConfig().getMovement().getSmoothing(),
                 engine.getRootNode());
         addControl(camControl);
 
@@ -103,13 +102,13 @@ public class Player extends Node implements PlayerContext {
             @Override
             public void onJumpStart() {
                 camEffectsControl.notifyJumpStart();
-                if (animationController != null) animationController.setAnimation("jump", 0.18f, null, false);
+                if (animationController != null) animationController.play("jump", 0.18f, null, false);
             }
 
             @Override
             public void onLanding(float peak) {
                 camEffectsControl.notifyLanding(peak);
-                if (animationController != null) animationController.setAnimation("landing", 0.18f, null, false);
+                if (animationController != null) animationController.play("landing", 0.18f, null, false);
             }
 
             @Override
@@ -123,7 +122,7 @@ public class Player extends Node implements PlayerContext {
                     anim = "sprint";
                 }
                 if (animationController != null) {
-                    animationController.setAnimation(anim, 0.18f, null, true);
+                    animationController.play(anim, 0.18f, null, true);
                 }
             }
         });
@@ -151,7 +150,7 @@ public class Player extends Node implements PlayerContext {
                 playerModel.addControl(animLayerControl);
 
                 animationController = new PlayerAnimationController(animComposer);
-                animationController.setAnimation("idle", 0.15f, null, true);
+                animationController.play("idle", 0.15f, null, true);
             } else {
                 logger.warn("AnimComposer not found on player model!");
             }
@@ -180,12 +179,13 @@ public class Player extends Node implements PlayerContext {
         targetEyeHeight = configEyeHeight * crouchAmount;
 
         String animName = isGrounded() ? (movementControl.isSprinting() ? "sprint" : movementControl.isWalking() ? "move" : "idle") : "jump";
-        if (animationController != null) animationController.setAnimation(animName, 0.13f);
+        if (animationController != null) animationController.play(animName, 0.13f, "", true);
 
         synchronize(true);
         updateModelPosition();
         updateGroundedState(tpf);
         playerHud.update(tpf);
+        animLayerControl.update(tpf);
     }
 
     private void synchronize(boolean instant) {
@@ -265,11 +265,6 @@ public class Player extends Node implements PlayerContext {
         input.setCursorVisible(true);
     }
 
-    public void updateModelVisibility() {
-        if (playerModel != null) {
-            playerModel.setCullHint(camControl.isThirdPerson() ? Spatial.CullHint.Never : Spatial.CullHint.Always);
-        }
-    }
 
     @Override public CharacterControl getCharacter() { return character; }
     @Override public Camera getCam() { return cam; }

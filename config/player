@@ -21,6 +21,7 @@
     "backOffset": 0.3,
     "downOffset": -0.85
   },
+  "sensitivity": 0.20,
   "spawnPosition": {
     "x": 0.0,
     "y": 50.0,
