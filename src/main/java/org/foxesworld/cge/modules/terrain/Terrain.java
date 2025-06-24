@@ -70,7 +70,7 @@ public class Terrain extends EngineModule<TerrainConfig> {
     }
 
     @Override
-    protected void onConfigReloaded() {
+    public void onConfigReloaded() {
         // Add dynamic reconfiguration if needed
     }
 

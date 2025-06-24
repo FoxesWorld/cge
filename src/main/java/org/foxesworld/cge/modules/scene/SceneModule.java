@@ -189,7 +189,7 @@ public class SceneModule extends EngineModule<SceneConfig> {
     }
 
     @Override
-    protected void onConfigReloaded() throws Exception {
+    public void onConfigReloaded() throws Exception {
         logger.debug("SceneModule: config reloaded, restarting...");
         cleanupModule(app);
         initModule(app);

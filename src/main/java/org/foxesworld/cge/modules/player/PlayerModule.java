@@ -32,7 +32,7 @@ public class PlayerModule extends EngineModule<PlayerConfig> {
     }
 
     @Override
-    protected void onConfigReloaded() {
+    public void onConfigReloaded() {
         // В будущем: реализовать динамический respawn по изменению позиции
     }
 

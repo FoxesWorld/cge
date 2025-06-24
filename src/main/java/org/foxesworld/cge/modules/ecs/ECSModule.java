@@ -37,7 +37,7 @@ public class ECSModule extends EngineModule<ECSConfig> {
     }
 
     @Override
-    protected void onConfigReloaded() {
+    public void onConfigReloaded() {
         logger.info("ECS config reloaded");
     }
 

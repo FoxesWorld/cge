@@ -76,7 +76,7 @@ public class RendererModule extends EngineModule<RendererConfig> {
      * Called after configuration is reloaded; can be used to apply dynamic changes.
      */
     @Override
-    protected void onConfigReloaded() {
+    public void onConfigReloaded() {
         // No dynamic config reload logic yet
     }
 

@@ -3,6 +3,7 @@ package org.foxesworld.cge.core;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.jme3.math.ColorRGBA;
+import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.utils.json.ColorRGBAAdapter;
 
 import java.io.IOException;
@@ -11,9 +12,7 @@ import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ForkJoinPool;
 
@@ -38,15 +37,16 @@ public class ConfigService {
 
     private final Gson gson;
     private final ForkJoinPool pool;
+    private final CalistaGameEngine calistaGameEngine;
     private final Map<String, Object> cache = new ConcurrentHashMap<>();
     private final Map<String, Class<?>> registry = new ConcurrentHashMap<>();
 
     /**
      * Constructs a new ConfigService with GSON support for JME's ColorRGBA.
      */
-    public ConfigService() {
-        this.gson = new GsonBuilder().setPrettyPrinting()
-                .registerTypeAdapter(ColorRGBA.class, new ColorRGBAAdapter()).create();
+    public ConfigService(CalistaGameEngine calistaGameEngine) {
+        this.calistaGameEngine = calistaGameEngine;
+        this.gson = new GsonBuilder().setPrettyPrinting().registerTypeAdapter(ColorRGBA.class, new ColorRGBAAdapter()).create();
         this.pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
         ensureConfigDirExists();
     }
@@ -74,6 +74,10 @@ public class ConfigService {
         Objects.requireNonNull(fileName, "fileName must not be null");
         Objects.requireNonNull(clazz, "clazz must not be null");
         registry.put(fileName, clazz);
+    }
+
+    public Set<String> getRegisteredConfigFiles() {
+        return Collections.unmodifiableSet(registry.keySet());
     }
 
     /**
@@ -204,6 +208,20 @@ public class ConfigService {
         }
     }
 
+       /* @param configFileName The name of the configuration file that was updated.
+            */
+    public void triggerModuleReload(String configFileName) {
+        if (configFileName == null || calistaGameEngine == null) {
+            return;
+        }
+        // Enqueue the task to the JME thread to ensure thread safety
+        calistaGameEngine.enqueue(() -> {
+            // Assumes CalistaGameEngine has a method to handle this notification
+            calistaGameEngine.onConfigReloaded(configFileName);
+        });
+    }
+
+
     /**
      * Asynchronously preloads a configuration in a background thread.
      * Useful for initializing configurations during engine startup.
@@ -220,5 +238,9 @@ public class ConfigService {
                 return null;
             }
         }).join());
+    }
+
+    public Map<String, Class<?>> getRegistry() {
+        return registry;
     }
 }

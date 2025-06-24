@@ -104,7 +104,7 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
     }
 
     @Override
-    protected void onConfigReloaded() throws Exception {
+    public void onConfigReloaded() throws Exception {
         PhysicsConfig cfg = getConfig();
         bulletAppState.getPhysicsSpace().setGravity(cfg.gravity);
         logger.info("Gravity reloaded: {}", cfg.gravity);

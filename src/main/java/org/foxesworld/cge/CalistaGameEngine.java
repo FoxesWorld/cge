@@ -5,11 +5,13 @@ import com.jme3.app.StatsAppState;
 import com.jme3.asset.AssetManager;
 import com.jme3.post.FilterPostProcessor;
 import org.foxesworld.cge.core.AssetRepo;
+import org.foxesworld.cge.core.ConfigEditorState;
 import org.foxesworld.cge.core.ConfigService;
 import org.foxesworld.cge.core.TaskScheduler;
 import org.foxesworld.cge.core.io.GenericByteParser;
 import org.foxesworld.cge.core.loader.AssetLoader;
 import org.foxesworld.cge.core.loader.JmeProgressBar;
+import org.foxesworld.cge.core.module.EngineModule;
 import org.foxesworld.cge.core.module.ModuleManager;
 import org.foxesworld.cge.core.io.streaming.ByteBoxingUtils;
 import org.foxesworld.cge.core.io.streaming.StreamingManager;
@@ -60,7 +62,7 @@ public class CalistaGameEngine extends SimpleApplication {
 
         this.assetRepo = new AssetRepo(this);
         this.popCycle = new PopCycle(this);
-        this.configService = new ConfigService();
+        this.configService = new ConfigService(this);
         this.taskScheduler = new TaskScheduler();
 
 
@@ -101,7 +103,34 @@ public class CalistaGameEngine extends SimpleApplication {
             assetLoader.loadAllAssets(() -> {
                 new ShapeParty(this).startParty();
             }, new JmeProgressBar(this));
+            stateManager.attach(new ConfigEditorState(configService));
         });
+    }
+
+    /**
+     * Called by the ConfigService when a configuration file has been updated via the UI.
+     * This method finds the corresponding module and triggers its reload mechanism.
+     *
+     * @param configFileName The name of the config file that was changed.
+     */
+    public void onConfigReloaded(String configFileName) {
+        System.out.println("Received reload request for config: " + configFileName);
+
+        // Вам нужно реализовать здесь логику поиска и перезагрузки модуля.
+        // Это просто пример, адаптируйте его под вашу архитектуру.
+
+        // Пример: если у вас есть менеджер модулей
+        EngineModule moduleToReload = moduleManager.getModuleByConfigFile(configFileName);
+        if (moduleToReload != null) {
+            System.out.println("Reloading module: " + moduleToReload.getClass().getSimpleName());
+            try {
+                moduleToReload.onConfigReloaded(); // Предполагается, что у модулей есть такой метод
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        } else {
+            System.err.println("No module found for config file: " + configFileName);
+        }
     }
 
     @Override

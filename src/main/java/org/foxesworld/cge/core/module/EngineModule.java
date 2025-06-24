@@ -472,7 +472,7 @@ public abstract class EngineModule<ModuleConfig> extends BaseAppState {
      *
      * @throws Exception if reload handling fails
      */
-    protected abstract void onConfigReloaded() throws Exception;
+    public abstract void onConfigReloaded() throws Exception;
 
     /**
      * One-time initialization logic executed after configuration loading.

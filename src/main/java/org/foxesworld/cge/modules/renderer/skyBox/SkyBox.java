@@ -233,7 +233,7 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
     }
 
     @Override
-    protected void onConfigReloaded() {
+    public void onConfigReloaded() {
         // Support dynamic reconfiguration if needed
     }
 

@@ -104,7 +104,7 @@ public class UIModule extends EngineModule<UIConfig> {
     }
 
     @Override
-    protected void onConfigReloaded() {
+    public void onConfigReloaded() {
         // TODO: implement config reload logic if needed
     }
 }

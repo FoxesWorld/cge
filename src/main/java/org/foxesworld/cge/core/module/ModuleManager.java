@@ -80,6 +80,39 @@ public class ModuleManager {
     }
 
     /**
+     * Gets all loaded modules as an unmodifiable map.
+     * Finds a module by its associated configuration file name.
+     * <p>
+     * This method iterates through all registered module instances and returns the first
+     * one whose config file name matches the provided name. This is essential for
+     * features like live-reloading from a UI editor.
+     * <p>
+     * <b>Note:</b> This requires the base {@code EngineModule} class to expose its
+     * configuration file name, for example, via a {@code getConfigFileName()} method.
+     *
+     * @return map of module names to instances
+     * @param configFileName The name of the configuration file (e.g., "postprocessing_config.json").
+     * @return The found {@link EngineModule}, or {@code null} if no module is associated with that config file.
+     */
+    public EngineModule<?> getModuleByConfigFile(String configFileName) {
+        if (configFileName == null || configFileName.isBlank()) {
+            return null;
+        }
+
+        for (EngineModule<?> module : moduleInstances.values()) {
+            // Assumes EngineModule has a method to get its config file name.
+            // Example in EngineModule: public String getConfigFileName() { return this.configFileName; }
+            if (configFileName.equalsIgnoreCase(module.getName())) {
+                return module;
+            }
+        }
+
+        logger.warn("No module found for config file: {}", configFileName);
+        return null;
+    }
+
+
+    /**
      * Constructs a new ModuleManager with a custom modules directory.
      *
      * @param gameEngine the game engine instance

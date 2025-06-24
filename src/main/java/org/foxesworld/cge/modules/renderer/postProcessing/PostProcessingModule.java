@@ -122,7 +122,7 @@ public class PostProcessingModule extends EngineModule<PostProcessingConfig> {
     }
 
     @Override
-    protected void onConfigReloaded() {
+    public void onConfigReloaded() {
         log.info("PostProcessingConfig reloaded: {}", getConfig());
         // Could reinitialize filters here
     }
