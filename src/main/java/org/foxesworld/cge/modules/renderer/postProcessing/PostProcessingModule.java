@@ -9,6 +9,9 @@ import com.jme3.post.filters.DepthOfFieldFilter;
 import com.jme3.post.filters.FXAAFilter;
 import com.jme3.post.filters.ToneMapFilter;
 import com.jme3.post.filters.LightScatteringFilter;
+import com.jme3.post.ssao.SSAOFilter;
+import com.jme3.shadow.CompareMode;
+import com.jme3.shadow.DirectionalLightShadowFilter;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.CalistaGameEngine;
@@ -16,6 +19,8 @@ import org.foxesworld.cge.core.module.EngineModule;
 import org.foxesworld.cge.modules.effects.MotionBlurFilter;
 import org.foxesworld.cge.modules.effects.VignetteFilter;
 import org.foxesworld.cge.modules.effects.FlareFilter;
+
+import static com.jme3.shadow.PssmShadowRenderer.FilterMode.PCF8;
 
 @SuppressWarnings("unused")
 public class PostProcessingModule extends EngineModule<PostProcessingConfig> {
@@ -38,7 +43,7 @@ public class PostProcessingModule extends EngineModule<PostProcessingConfig> {
 
     @Override
     protected void initModule(CalistaGameEngine app) {
-        fpp = new FilterPostProcessor(app.getAssetManager());
+        fpp = app.getFilterPostProcessor();
         int samples = app.getContext().getSettings().getSamples();
         if (samples > 0) {
             fpp.setNumSamples(samples);
@@ -46,63 +51,58 @@ public class PostProcessingModule extends EngineModule<PostProcessingConfig> {
 
         PostProcessingConfig cfg = getConfig();
 
-        if (cfg.isEnableBloom()) {
+        if (cfg.getBloom().isEnable()) {
             bloom = new BloomFilter();
-            bloom.setBloomIntensity(cfg.getBloomIntensity());
-            bloom.setExposurePower(cfg.getBloomExposurePower());
-            bloom.setBlurScale(cfg.getBloomRadius());
-            bloom.setDownSamplingFactor(cfg.getBloomThreshold());
+            bloom.setBloomIntensity(cfg.getBloom().getIntensity());
+            bloom.setExposurePower(cfg.getBloom().getExposurePower());
+            bloom.setBlurScale(cfg.getBloom().getRadius());
+            bloom.setDownSamplingFactor(cfg.getBloom().getThreshold());
             fpp.addFilter(bloom);
         }
 
-        if (cfg.isEnableLsf()) {
-            Vector3f dir = new Vector3f(
-                    cfg.getLsfLightDir()[0],
-                    cfg.getLsfLightDir()[1],
-                    cfg.getLsfLightDir()[2]
-            );
-            lsf = new LightScatteringFilter(dir);
-            lsf.setLightDensity(cfg.getLsfDestiny());
-            lsf.setNbSamples(cfg.getLsfGhostCount());
-            //lsf.setDecay(cfg.getLsfHaloWidth());
+        if(cfg.getSsaOfilter().isEnable()) {
+            SSAOFilter ssaoFilter = new SSAOFilter(cfg.getSsaOfilter().getSampleRadius(), cfg.getSsaOfilter().getIntensity(), cfg.getSsaOfilter().getScale(), cfg.getSsaOfilter().getBias());
+            fpp.addFilter(ssaoFilter);
+        }
+
+        if (cfg.getLsf().isEnable()) {
+            float[] lightDir = cfg.getLsf().getLightDir();
+            lsf = new LightScatteringFilter(new Vector3f(lightDir[0], lightDir[1], lightDir[2]));
+            lsf.setLightDensity(cfg.getLsf().getDestiny());
+            lsf.setNbSamples(cfg.getLsf().getGhostCount());
             fpp.addFilter(lsf);
         }
 
+        DirectionalLightShadowFilter dlsf=new DirectionalLightShadowFilter(gameEngine.getAssetManager(),1024,2);
+        fpp.addFilter(dlsf);
+        dlsf.setRenderBackFacesShadows(false);
+        dlsf.setEnabledStabilization(false);
+        dlsf.setShadowIntensity(0.6f);
+        dlsf.setShadowCompareMode(CompareMode.Hardware);
 
-        if (cfg.isEnableDof()) {
+
+        if (cfg.getDof().isEnable()) {
             dof = new DepthOfFieldFilter();
-            dof.setFocusDistance(cfg.getDofFocus());
-            dof.setFocusRange(cfg.getDofRange());
+            dof.setFocusDistance(cfg.getDof().getFocus());
+            dof.setFocusRange(cfg.getDof().getRange());
             //dof.setAperture(cfg.getDofAperture());
-            dof.setBlurScale(cfg.getDofMaxBlur());
+            dof.setBlurScale(cfg.getDof().getMaxBlur());
             fpp.addFilter(dof);
         }
 
-        if (cfg.isEnableMotionBlur()) {
-            //motionBlur = new MotionBlurFilter();
-            //motionBlur.setSampleCount(cfg.getMotionBlurSampleCount());
-            //motionBlur.setExposureLength(cfg.getMotionBlurStrength());
-            //fpp.addFilter(motionBlur);
-        }
 
-        if (cfg.isEnableVignette()) {
-            vignette = new VignetteFilter();
-            vignette.setVignetteIntensity(cfg.getVignetteIntensity());
-            vignette.setVignetteFade(cfg.getVignetteSmoothness());
-            //fpp.addFilter(vignette);
-        }
 
-        if (cfg.isEnableColorGrading()) {
-            toneMap = new ToneMapFilter();
+        if (cfg.getColorGrading().isEnable()) {
+            toneMap=new ToneMapFilter(new Vector3f(cfg.getColorGrading().getContrast(),cfg.getColorGrading().getExposure(),cfg.getColorGrading().getSaturation()).mult(0.7f));
             //toneMap.setExposure(cfg.getExposure());
             //toneMap.setGamma(cfg.getContrast());
             //toneMap.setTonemapper(ToneMapFilter.FilmicToneMap.GALACTIC);
-            //fpp.addFilter(toneMap);
+            fpp.addFilter(toneMap);
         }
 
-        if (cfg.isEnableFXAA()) {
+        if (cfg.getFxaa().isEnable()) {
             fxaa = new FXAAFilter();
-            fxaa.setSpanMax(cfg.getFxaaQuality());
+            fxaa.setSpanMax(cfg.getFxaa().getQuality());
             fpp.addFilter(fxaa);
         }
 
@@ -130,6 +130,10 @@ public class PostProcessingModule extends EngineModule<PostProcessingConfig> {
     @Override
     protected void updateModule(float tpf) {
         // Dynamic updates if needed
+    }
+
+    public FilterPostProcessor getFpp() {
+        return fpp;
     }
 
     @Override

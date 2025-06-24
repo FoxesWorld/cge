@@ -7,6 +7,11 @@ public class PlayerConfig {
     private MovementConfig movement = new MovementConfig();
     private ModelConfig model = new ModelConfig();
     private Vector3f spawnPosition = new Vector3f(0,20,0);
+    private float sensitivity = 0.20f;
+
+    public float getSensitivity() {
+        return sensitivity;
+    }
 
     public PhysicsConfig getPhysics() { return physics; }
     public MovementConfig getMovement() { return movement; }

@@ -11,16 +11,18 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * TextElement — текстовый лейбл на GUI.
- * При обновлении текста анимируется (fade out → смена строки → fade in).
+ * TextElement — a text label for the GUI.
+ * When the text is updated, it animates (fade out → line change → fade in).
  *
- * Поддерживает:
+ * Supports:
  *   • color="r,g,b,a"
  *   • fontSize="20"
  *   • fontPath="..."
  *   • posX=".."
  *   • posY=".."
  *   • align=".."
+ *   • padding="10" or padding="left,top,right,bottom"
+ *   • margin="4" or margin="left,top,right,bottom"
  *   • onClick="methodName" (RawInputListener)
  */
 public class TextElement extends AbstractUIElement implements RawInputListener {
@@ -46,7 +48,7 @@ public class TextElement extends AbstractUIElement implements RawInputListener {
         this.parentPanel = parent;
         this.node.setName("Text_" + id);
 
-        // Создаём рендерер и аниматор
+        // Create renderer and animator
         this.textRenderer = new TextRenderer(assetManager, fontPath, fontSize);
         this.textAnimator = new TextAnimator(textRenderer.getBitmapText());
 
@@ -54,7 +56,7 @@ public class TextElement extends AbstractUIElement implements RawInputListener {
     }
 
     /**
-     * Запускает анимацию смены текста.
+     * Starts text change animation.
      */
     public void setText(String newText) {
         textAnimator.animateTextChange(newText);
@@ -96,40 +98,85 @@ public class TextElement extends AbstractUIElement implements RawInputListener {
             case "posX" -> rawPosX = Float.parseFloat(value);
             case "posY" -> rawPosY = Float.parseFloat(value);
             case "align" -> ownAlign = value;
+            case "padding" -> parseAndSetPadding(value);
+            case "margin" -> parseAndSetMargin(value);
             default -> logger.warn("TextElement '{}' unknown property '{}'", id, key);
         }
     }
 
-    @Override
-    public void setOnClickHandler(String methodName, Object eventHandlerTarget) {
-        super.setOnClickHandler(methodName, eventHandlerTarget);
-        calistaGameEngine.getInputManager().addRawInputListener(this);
+    private void parseAndSetPadding(String value) {
+        float[] vals = parseFourFloats(value);
+        if (vals.length == 1) {
+            textRenderer.setPadding(vals[0]);
+        } else if (vals.length == 4) {
+            textRenderer.setPadding(vals[0], vals[2], vals[1], vals[3]);
+        } else {
+            logger.warn("TextElement '{}' invalid padding value '{}'", id, value);
+        }
+    }
+
+    private void parseAndSetMargin(String value) {
+        float[] vals = parseFourFloats(value);
+        if (vals.length == 1) {
+            textRenderer.setMargin(vals[0]);
+        } else if (vals.length == 4) {
+            textRenderer.setMargin(vals[0], vals[2], vals[1], vals[3]);
+        } else {
+            logger.warn("TextElement '{}' invalid margin value '{}'", id, value);
+        }
+    }
+
+    // Helper: parses "10", "10,20,30,40", etc.
+    private float[] parseFourFloats(String value) {
+        String[] parts = value.split(",");
+        float[] vals = new float[parts.length];
+        try {
+            for (int i = 0; i < parts.length; i++) {
+                vals[i] = Float.parseFloat(parts[i].trim());
+            }
+            return vals;
+        } catch (Exception e) {
+            logger.warn("Failed to parse paddings/margins '{}': {}", value, e.getMessage());
+            return new float[0];
+        }
     }
 
     private ColorRGBA parseColor(String s) {
+        if (s == null || s.isEmpty()) {
+            logger.warn("TextElement '{}' received empty color string", id);
+            return ColorRGBA.White.clone();
+        }
         String[] parts = s.split(",");
         try {
-            float r = Float.parseFloat(parts[0].trim());
-            float g = Float.parseFloat(parts[1].trim());
-            float b = Float.parseFloat(parts[2].trim());
-            float a = Float.parseFloat(parts[3].trim());
+            float r = 1f, g = 1f, b = 1f, a = 1f; // defaults
+            if (parts.length > 0) r = Float.parseFloat(parts[0].trim());
+            if (parts.length > 1) g = Float.parseFloat(parts[1].trim());
+            if (parts.length > 2) b = Float.parseFloat(parts[2].trim());
+            if (parts.length > 3) a = Float.parseFloat(parts[3].trim());
+
+            // Clamp values to [0,1]
+            r = Math.max(0f, Math.min(r, 1f));
+            g = Math.max(0f, Math.min(g, 1f));
+            b = Math.max(0f, Math.min(b, 1f));
+            a = Math.max(0f, Math.min(a, 1f));
+
             return new ColorRGBA(r, g, b, a);
         } catch (Exception e) {
-            logger.warn("TextElement '{}' failed to parse color '{}'", id, s);
+            logger.warn("TextElement '{}' failed to parse color '{}': {}", id, s, e.getMessage());
             return ColorRGBA.White.clone();
         }
     }
 
     /**
-     * Вызывать из вашего UI-менеджера (или AppState) каждый кадр.
-     * Например, в update(float tpf) того AppState, где хранится этот элемент:
+     * Should be called every frame from your UI manager (or AppState).
+     * For example, in update(float tpf) inside the AppState that holds this element:
      * textElement.update(tpf);
      */
     public void update(float tpf) {
         textAnimator.update(tpf);
     }
 
-    // Обработка кликов по AABB текста (не изменялось):
+    // Mouse click handling by AABB of the text (unchanged):
     @Override
     public void onMouseButtonEvent(MouseButtonEvent evt) {
         if (!evt.isPressed()) return;

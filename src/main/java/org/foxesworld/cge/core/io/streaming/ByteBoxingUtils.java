@@ -1,4 +1,4 @@
-package org.foxesworld.cge.core.streaming;
+package org.foxesworld.cge.core.io.streaming;
 
 public final class ByteBoxingUtils {
     private ByteBoxingUtils() {}

@@ -31,7 +31,7 @@ public class SceneCgsCreatorFrame extends JFrame {
             if (icoStream != null) {
                 ICOParser parser = new ICOParser();
                 List<BufferedImage> iconsList = parser.parse(icoStream);  // <- вызов parse(InputStream)
-                BufferedImage bestIcon = parser.getBestIcon(iconsList);
+                BufferedImage bestIcon = parser.getBestMatchingIcon(iconsList, 128, 128);
                 if (bestIcon != null) {
                     setIconImages(List.of(bestIcon));
                 }

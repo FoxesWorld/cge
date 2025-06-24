@@ -17,6 +17,10 @@ import java.util.*;
 
 import static java.nio.ByteOrder.LITTLE_ENDIAN;
 
+/**
+ * Abstract base class for file handling with format definition support.
+ * @param <M> Metadata type.
+ */
 public abstract class AbstractFile<M extends Metadata> implements AutoCloseable {
     private static final Logger logger = LogManager.getLogger(AbstractFile.class);
     protected final HexFormat HEX = HexFormat.of();
@@ -46,27 +50,35 @@ public abstract class AbstractFile<M extends Metadata> implements AutoCloseable 
     private void loadFormatDefinition(String definition) {
         try {
             FileStructureLoader loader = new JsonFileStructureLoader(
-                    CGSFile.class.getClassLoader().getResourceAsStream("config/fileformats/" + definition.toLowerCase() + ".json")
+                    Objects.requireNonNull(
+                            CGSFile.class.getClassLoader().getResourceAsStream(
+                                    "config/fileformats/" + definition.toLowerCase() + ".json"
+                            ), "Config file not found: " + definition
+                    )
             );
             setFormatDefinition(loader.loadFormatDefinition(definition));
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to load " + definition + " format", e);
+        } catch (IOException | NullPointerException e) {
+            logger.error("Failed to load {} format: {}", definition, e.getMessage(), e);
+            throw new FileFormatException("Failed to load " + definition + " format", e);
         }
     }
 
+    /**
+     * Checks and validates file header (magic/version).
+     */
     @Deprecated
     protected void verifyHeader() {
         fileReader.seek(0);
-        byte[] magicBytes = new byte[MAGIC.length()];
-        fileReader.readBytes(magicBytes.length);
-        System.arraycopy(fileReader.readBytes(magicBytes.length), 0, magicBytes, 0, magicBytes.length);
+        byte[] magicBytes = fileReader.readBytes(MAGIC.length());
         String fileMagic = new String(magicBytes, StandardCharsets.US_ASCII);
         if (!fileMagic.equals(MAGIC)) {
-            throw new RuntimeException("Invalid file magic: expected '" + MAGIC + "', got '" + fileMagic + "'");
+            logger.error("Invalid file magic: expected '{}', got '{}'", MAGIC, fileMagic);
+            throw new FileFormatException("Invalid file magic: expected '" + MAGIC + "', got '" + fileMagic + "'");
         }
         int ver = Short.toUnsignedInt(fileReader.readShort());
         if (ver != VERSION) {
-            throw new RuntimeException("Unsupported version: expected " + VERSION + ", got " + ver);
+            logger.error("Unsupported version: expected {}, got {}", VERSION, ver);
+            throw new FileFormatException("Unsupported version: expected " + VERSION + ", got " + ver);
         }
         fileReader.seek(fileReader.position() + 2); // skip 2 bytes
     }
@@ -74,40 +86,54 @@ public abstract class AbstractFile<M extends Metadata> implements AutoCloseable 
     protected abstract void readFileNew() throws IOException;
     protected abstract void onEntryRead(Map<String, Object> entry);
 
+    /**
+     * Reads a field from the file according to its definition.
+     */
     protected Object readField(FieldDefinition field, Map<String, Object> context) throws IOException {
         BYTE_ORDER = field.getByteOrder();
         fileReader.setByteOrder(BYTE_ORDER);
-        return switch (field.getType()) {
-            case "byte" -> fileReader.readByte();
-            case "ushort" -> Short.toUnsignedInt(fileReader.readShort());
-            case "int", "int32" -> readInt(field);
-            case "uint32" -> Integer.toUnsignedLong(readInt(field));
-            case "long", "int64" -> fileReader.readLong();
-            case "uint64" -> {
+        switch (field.getType()) {
+            case "byte":      return fileReader.readByte();
+            case "ushort":    return Short.toUnsignedInt(fileReader.readShort());
+            case "int":
+            case "int32":     return readInt(field);
+            case "uint32":    return Integer.toUnsignedLong(readInt(field));
+            case "long":
+            case "int64":     return fileReader.readLong();
+            case "uint64": {
                 long signed = fileReader.readLong();
                 BigInteger ui64 = BigInteger.valueOf(signed);
-                if (signed < 0) {
-                    ui64 = ui64.add(BigInteger.ONE.shiftLeft(64));
+                if (signed < 0) ui64 = ui64.add(BigInteger.ONE.shiftLeft(64));
+                return ui64;
+            }
+            case "float":     return fileReader.readFloat();
+            case "double":    return fileReader.readDouble();
+            case "length":    return fileReader.size();
+            case "string": {
+                Integer length = field.getLength();
+                if (length == null) {
+                    Object fieldLen = context.get(field.getLengthField());
+                    if (fieldLen == null)
+                        throw new FileFormatException("String length field not found in context: " + field.getLengthField());
+                    length = (int) fieldLen;
                 }
-                yield ui64;
+                return fileReader.readString(length);
             }
-            case "float" -> fileReader.readFloat();
-            case "double" -> fileReader.readDouble();
-            case "length" -> fileReader.size();
-            case "string" -> {
-                int length = field.getLength() != null
-                        ? field.getLength()
-                        : (int) context.get(field.getLengthField());
-                yield fileReader.readString(length);
+            case "byteArray": {
+                Integer arrLen = field.getLength();
+                if (arrLen == null) {
+                    Object fieldLen = context.get(field.getLengthField());
+                    if (fieldLen == null)
+                        throw new FileFormatException("Byte array length field not found in context: " + field.getLengthField());
+                    arrLen = (int) fieldLen;
+                }
+                return fileReader.readBytes(arrLen);
             }
-            case "byteArray" -> {
-                int arrLen = field.getLength() != null
-                        ? field.getLength()
-                        : (int) context.get(field.getLengthField());
-                yield fileReader.readBytes(arrLen);
-            }
-            case "array" -> {
-                int count = (int) context.get(field.getCountField());
+            case "array": {
+                Object countObj = context.get(field.getCountField());
+                if (countObj == null)
+                    throw new FileFormatException("Array count field not found in context: " + field.getCountField());
+                int count = (int) countObj;
                 List<Map<String, Object>> elements = new ArrayList<>();
                 for (int i = 0; i < count; i++) {
                     Map<String, Object> elementContext = new HashMap<>();
@@ -117,12 +143,17 @@ public abstract class AbstractFile<M extends Metadata> implements AutoCloseable 
                     }
                     elements.add(elementContext);
                 }
-                yield elements;
+                return elements;
             }
-            default -> throw new IllegalArgumentException("Unsupported type: " + field.getType());
-        };
+            default:
+                logger.error("Unsupported type: {}", field.getType());
+                throw new FileFormatException("Unsupported type: " + field.getType());
+        }
     }
 
+    /**
+     * Writes a variable-length string (with length prefix).
+     */
     public void writeVariableLengthString(String value) {
         byte[] valueBytes = value.getBytes(StandardCharsets.UTF_8);
         fileReader.getMappedBuffer().putInt(valueBytes.length);
@@ -144,7 +175,7 @@ public abstract class AbstractFile<M extends Metadata> implements AutoCloseable 
     public int readInt(FieldDefinition field) {
         if (field.getSeek() != null && field.getSeek().contains("->")) {
             String[] seekOption = field.getSeek().split("->");
-            if (seekOption[0].equals("header")) {
+            if ("header".equals(seekOption[0])) {
                 fileReader.seek((int) metadata.getTableOffset());
             }
         }
@@ -158,7 +189,8 @@ public abstract class AbstractFile<M extends Metadata> implements AutoCloseable 
     public String readString(int maxLength) {
         int len = fileReader.readInt();
         if (len < 0 || len > maxLength) {
-            throw new RuntimeException("Invalid string length: " + len);
+            logger.error("Invalid string length: {}", len);
+            throw new FileFormatException("Invalid string length: " + len);
         }
         return fileReader.readString(len);
     }

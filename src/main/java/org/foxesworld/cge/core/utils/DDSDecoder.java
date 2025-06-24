@@ -91,7 +91,8 @@ public final class DDSDecoder {
         // Calculate expected data size
         int blocksWide = (width + 3) >> 2;
         int blocksHigh = (height + 3) >> 2;
-        int blockSize = (format == FORMAT_DXT1) ? DXT1_BLOCK_BYTES : DXT3_BLOCK_BYTES;
+        int blockSize = (format == FORMAT_DXT1) ? DXT1_BLOCK_BYTES :
+                (format == FORMAT_DXT3) ? DXT3_BLOCK_BYTES : DXT5_BLOCK_BYTES;
         int expectedSize = blocksWide * blocksHigh * blockSize;
 
         if (data.length < expectedSize) {
@@ -140,6 +141,13 @@ public final class DDSDecoder {
             for (int blockX = 0; blockX < blocksWide; blockX++) {
                 int blockXOffset = blockX * BLOCK_SIZE;
 
+                // Defensive buffer check
+                if (buffer.remaining() < DXT1_BLOCK_BYTES) {
+                    // Not enough data for another block, render fallback
+                    renderFallbackPattern(width, height, pixels);
+                    return;
+                }
+
                 // Decode color block
                 decodeColorBlock(buffer, workBuffers.colorMap, true);
                 int colorIndices = buffer.getInt();
@@ -151,7 +159,7 @@ public final class DDSDecoder {
                 // Output the block's pixels to the image
                 outputBlock(pixels, width, blockXOffset, blockYOffset,
                         blockWidth, blockHeight, workBuffers.colorMap,
-                        colorIndices, workBuffers.alphaMap, null);
+                        colorIndices, null, null);
             }
         }
     }
@@ -166,6 +174,13 @@ public final class DDSDecoder {
 
             for (int blockX = 0; blockX < blocksWide; blockX++) {
                 int blockXOffset = blockX * BLOCK_SIZE;
+
+                // Defensive buffer check
+                if (buffer.remaining() < DXT3_BLOCK_BYTES) {
+                    // Not enough data for another block, render fallback
+                    renderFallbackPattern(width, height, pixels);
+                    return;
+                }
 
                 // Read explicit alpha data (4-bit per pixel)
                 decodeAlphaDXT3(buffer, workBuffers.alphaMap);
@@ -196,6 +211,13 @@ public final class DDSDecoder {
 
             for (int blockX = 0; blockX < blocksWide; blockX++) {
                 int blockXOffset = blockX * BLOCK_SIZE;
+
+                // Defensive buffer check
+                if (buffer.remaining() < DXT5_BLOCK_BYTES) {
+                    // Not enough data for another block, render fallback
+                    renderFallbackPattern(width, height, pixels);
+                    return;
+                }
 
                 // Read interpolated alpha data
                 decodeAlphaDXT5(buffer, workBuffers.alphaMap, workBuffers.alphaTable);
@@ -252,6 +274,10 @@ public final class DDSDecoder {
      * Decodes explicit alpha data for DXT3.
      */
     private static void decodeAlphaDXT3(ByteBuffer buffer, int[] alphaMap) {
+        // Defensive buffer check
+        if (buffer.remaining() < 8) {
+            throw new IllegalArgumentException("DXT3 alpha block too small");
+        }
         // Process 4 rows of 4-bit alpha values (16 pixels total)
         for (int i = 0; i < 4; i++) {
             int rowData = buffer.getShort() & 0xFFFF;
@@ -269,6 +295,10 @@ public final class DDSDecoder {
      * Decodes interpolated alpha data for DXT5 with optimized bit manipulation.
      */
     private static void decodeAlphaDXT5(ByteBuffer buffer, int[] alphaMap, int[] alphaTable) {
+        // Defensive buffer check
+        if (buffer.remaining() < 8) {
+            throw new IllegalArgumentException("DXT5 alpha block too small");
+        }
         // Read alpha endpoints
         int alpha0 = buffer.get() & 0xFF;
         int alpha1 = buffer.get() & 0xFF;
@@ -285,6 +315,9 @@ public final class DDSDecoder {
         // Extract all 16 3-bit indices in batch using bit operations
         for (int i = 0; i < 16; i++) {
             int index = (int)((alphaBits >> (i * 3)) & 0x7);
+            if (index < 0 || index > 7) {
+                throw new IllegalArgumentException("DXT5 alpha index out of bounds: " + index);
+            }
             alphaMap[i] = alphaTable[index];
         }
     }
@@ -326,9 +359,15 @@ public final class DDSDecoder {
                 int pixelIndex = y * 4 + x;
                 int baseOffset = pixelRowOffset + x;
 
+                // Defensive array bounds check
+                if (baseOffset < 0 || baseOffset >= pixels.length) {
+                    continue; // Prevent ArrayIndexOutOfBoundsException
+                }
+
                 // Extract 2-bit color index for this pixel (packed right-to-left)
                 int shift = pixelIndex << 1; // pixelIndex * 2
                 int colorIndex = (colorIndices >> shift) & 0x3;
+                if (colorIndex < 0 || colorIndex > 3) colorIndex = 0;
                 int color = colorMap[colorIndex];
 
                 // Handle alpha
@@ -351,6 +390,10 @@ public final class DDSDecoder {
      * Optimized color blending with pre-shifted channel masks.
      */
     private static int blendColors(int color1, int color2, int weight1, int weight2) {
+        // Defensive: check for zero denominator
+        int totalWeight = weight1 + weight2;
+        if (totalWeight == 0) return 0xFF000000; // fallback to black, fully opaque
+
         // Extract color components
         int r1 = (color1 >> 16) & 0xFF;
         int g1 = (color1 >> 8) & 0xFF;
@@ -359,9 +402,6 @@ public final class DDSDecoder {
         int r2 = (color2 >> 16) & 0xFF;
         int g2 = (color2 >> 8) & 0xFF;
         int b2 = color2 & 0xFF;
-
-        // Calculate sum once to avoid division for each channel
-        int totalWeight = weight1 + weight2;
 
         // Interpolate
         int r = (r1 * weight1 + r2 * weight2) / totalWeight;
@@ -402,8 +442,9 @@ public final class DDSDecoder {
 
         // Add some unique variation based on image size to help identify issues
         int seed = width * 1000 + height;
-        ThreadLocalRandom random = ThreadLocalRandom.current();
-        random.setSeed(seed);
+        // ThreadLocalRandom random = ThreadLocalRandom.current();
+        // random.setSeed(seed); // ThreadLocalRandom#setSeed is not supported, use java.util.Random for deterministic
+        java.util.Random random = new java.util.Random(seed);
         int accent = 0xFF000000 | random.nextInt(0x1000000);
 
         for (int y = 0; y < height; y++) {
@@ -413,6 +454,9 @@ public final class DDSDecoder {
             for (int x = 0; x < width; x++) {
                 boolean oddCol = ((x / cellSize) & 1) == 1;
                 boolean isCorner = (x % cellSize < 2) && (y % cellSize < 2);
+
+                // Defensive bounds
+                if (rowBase + x < 0 || rowBase + x >= pixels.length) continue;
 
                 // Basic checkerboard with accent corners
                 if (isCorner) {

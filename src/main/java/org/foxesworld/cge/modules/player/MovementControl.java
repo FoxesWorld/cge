@@ -1,5 +1,7 @@
 package org.foxesworld.cge.modules.player;
 
+import com.jme3.anim.AnimComposer;
+import com.jme3.anim.tween.action.BlendAction;
 import com.jme3.bullet.control.CharacterControl;
 import com.jme3.input.InputManager;
 import com.jme3.input.KeyInput;
@@ -11,6 +13,7 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.control.AbstractControl;
 import com.jme3.scene.Spatial;
 import org.foxesworld.cge.modules.player.config.PlayerConfig;
+import org.foxesworld.cge.modules.player.animation.AnimLayerControl;
 
 import static java.lang.Math.max;
 
@@ -18,15 +21,17 @@ import static java.lang.Math.max;
  * MovementControl handles first-person character motion with smooth
  * acceleration, deceleration, and jump/landing callbacks. It relies on
  * CharacterControl for robust physics and collision handling.
- * Исправлено: корректная регистрация/сброс, фикс прыжков, инициализация состояний.
- * + Гарантированный захват клавиш через RawInputListener.
+ *
+ * Подготовлен к интеграции с системой анимаций через AnimComposer и AnimLayerControl.
  */
 public class MovementControl extends AbstractControl implements ActionListener {
 
-    public interface JumpListener {
+    public interface MovementListener {
         void onJumpStart();
         void onLanding(float peakHeight);
+        void move(float speed);
     }
+
 
     private static final String MAP_FORWARD   = "MoveForward";
     private static final String MAP_BACKWARD  = "MoveBackward";
@@ -46,8 +51,7 @@ public class MovementControl extends AbstractControl implements ActionListener {
     private final float smoothFactor;
 
     private boolean forward, backward, left, right, sprint;
-    private JumpListener jumpListener;
-
+    private MovementListener movementListener;
     private final Vector3f currentVel = new Vector3f();
     private final Vector3f desiredVel = new Vector3f();
     private final Vector3f camDir     = new Vector3f();
@@ -63,6 +67,13 @@ public class MovementControl extends AbstractControl implements ActionListener {
     private boolean rawRegistered = false;
     private RawInputListener rawListener;
 
+    // --- Для анимации ---
+    private AnimLayerControl animLayerControl;
+    private AnimComposer animComposer;
+    private float walkRunBlend = 0f;
+    private boolean prevMoving = false;
+    private boolean prevSprinting = false;
+
     public MovementControl(PlayerContext player, PlayerConfig.MovementConfig movementConfig) {
         this.player        = player;
         this.character     = player.getCharacter();
@@ -75,6 +86,9 @@ public class MovementControl extends AbstractControl implements ActionListener {
 
         registerInput();
         registerRawInput();
+        // Готовим к анимации: ищем AnimLayerControl и AnimComposer на модели игрока
+        this.animLayerControl = player instanceof Player playerImpl ? playerImpl.getAnimLayerControl() : null;
+        this.animComposer = player instanceof Player playerImpl ? playerImpl.getAnimComposer() : null;
     }
 
     private void registerInput() {
@@ -87,9 +101,7 @@ public class MovementControl extends AbstractControl implements ActionListener {
         if (!input.hasMapping(MAP_JUMP))     input.addMapping(MAP_JUMP,     new KeyTrigger(KeyInput.KEY_SPACE));
         if (!input.hasMapping(MAP_SPRINT))   input.addMapping(MAP_SPRINT,   new KeyTrigger(KeyInput.KEY_LSHIFT));
         input.removeListener(this); // гарантируем, что нет дубля
-        input.addListener(this,
-                MAP_FORWARD, MAP_BACKWARD, MAP_LEFT,
-                MAP_RIGHT, MAP_JUMP, MAP_SPRINT);
+        input.addListener(this, MAP_FORWARD, MAP_BACKWARD, MAP_LEFT, MAP_RIGHT, MAP_JUMP, MAP_SPRINT);
     }
 
     private void registerRawInput() {
@@ -164,7 +176,9 @@ public class MovementControl extends AbstractControl implements ActionListener {
             desiredVel.set(camDir).multLocal(tempDir.z)
                     .addLocal(camLeft.mult(tempDir.x)).normalizeLocal();
             desiredVel.multLocal(sprint ? sprintSpeed : walkSpeed);
+            movementListener.move(sprint ? sprintSpeed : walkSpeed);
         } else {
+            movementListener.move(0f);
             desiredVel.set(0, 0, 0);
         }
 
@@ -183,8 +197,8 @@ public class MovementControl extends AbstractControl implements ActionListener {
         if (inAir && posY > lastY) {
             peakY = max(peakY, posY);
         }
-        if (wasInAir && !inAir && jumpListener != null) {
-            jumpListener.onLanding(FastMath.abs(peakY - lastY));
+        if (wasInAir && !inAir && movementListener != null) {
+            movementListener.onLanding(FastMath.abs(peakY - lastY));
             peakY = 0f;
         }
         wasInAir = inAir;
@@ -193,6 +207,38 @@ public class MovementControl extends AbstractControl implements ActionListener {
         if (player.getPlayerHud() != null) {
             player.getPlayerHud().setPlayerSpeed(getCurrentSpeed());
         }
+
+        updateAnimationState();
+    }
+
+    /**
+     * Логика переключения и blending анимаций, полностью готова к AnimLayerControl/AnimComposer.
+     */
+    private void updateAnimationState() {
+        if (animLayerControl == null || animComposer == null) return;
+
+        boolean moving = isMoving();
+        boolean sprinting = isSprinting();
+
+        // Blend между walk и run
+        if (moving) {
+            walkRunBlend = sprinting ? 1f : 0f;
+
+            if (animComposer.action("walk->run") instanceof BlendAction blend) {
+                blend.getBlendSpace().setValue(walkRunBlend);
+            }
+        }
+
+        // Переключение слоёв
+        if (moving && !prevMoving) {
+            //player.getAnimationController().setAnimation(sprinting ? "walk" : "sprint", 5f, "move", false);
+        }
+        if (!moving && prevMoving) {
+            animLayerControl.exit("move");
+        }
+
+        prevMoving = moving;
+        prevSprinting = sprinting;
     }
 
     @Override
@@ -207,8 +253,8 @@ public class MovementControl extends AbstractControl implements ActionListener {
                 if (isPressed && character.onGround()) {
                     character.jump();
                     peakY = spatial.getWorldTranslation().y;
-                    if (jumpListener != null) {
-                        jumpListener.onJumpStart();
+                    if (movementListener != null) {
+                        movementListener.onJumpStart();
                     }
                 }
             }
@@ -226,15 +272,36 @@ public class MovementControl extends AbstractControl implements ActionListener {
         // Not used
     }
 
-    public void setJumpListener(JumpListener listener) {
-        this.jumpListener = listener;
-    }
-
     public float getCurrentSpeed() {
         return currentVel.length();
     }
 
     public boolean isMoving() {
         return getCurrentSpeed() > 1e-4f;
+    }
+
+    public boolean isWalking() {
+        return isMoving() && !sprint;
+    }
+
+    public boolean isSprinting() {
+        return isMoving() && sprint;
+    }
+
+    public void setMovementListener(MovementListener movementListener) {
+        this.movementListener = movementListener;
+    }
+
+    /**
+     * Returns a snapshot of the current player state for UI or logic.
+     */
+    public PlayerState getPlayerState() {
+        boolean moving = isMoving();
+        boolean sprinting = sprint;
+        boolean inAir = !character.onGround();
+        float speed = getCurrentSpeed();
+        Vector3f velocity = currentVel.clone();
+        Vector3f position = spatial != null ? spatial.getWorldTranslation().clone() : new Vector3f();
+        return new PlayerState(moving, sprinting, inAir, speed, velocity, position);
     }
 }

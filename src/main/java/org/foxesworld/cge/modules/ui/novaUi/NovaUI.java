@@ -11,8 +11,22 @@ import org.foxesworld.cge.modules.ui.novaUi.elements.UIElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collections;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.Objects;
 
+/**
+ * NovaUI is the root UI system for NovaUI-based interfaces.
+ * Optimizations and stability improvements:
+ *  - Safer and more robust lifecycle management.
+ *  - Reduces unnecessary updates and field re-binds.
+ *  - Ensures resource cleanup and error resilience.
+ *  - Thread-safe element manipulation.
+ *  - Improved logging.
+ *  - Defensive programming for nulls and error cases.
+ *  - Consistent resizing and camera adaptation.
+ */
 public class NovaUI extends BaseAppState {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(NovaUI.class);
@@ -21,22 +35,28 @@ public class NovaUI extends BaseAppState {
     private final Node guiNode;
     private final String configPath;
 
-    private PanelElement rootPanel;
-    private Map<String, UIElement> allElements;
+    // Thread-safe (esp. if you add/remove UI at runtime)
+    private volatile PanelElement rootPanel;
+    private volatile Map<String, UIElement> allElements = new ConcurrentHashMap<>();
 
     private final NovaUIUpdater updater = new NovaUIUpdater();
-    private boolean globalDirty = false;
-    private PanelElement dirtyRoot = null;
+    private volatile boolean globalDirty = false;
+    private volatile PanelElement dirtyRoot = null;
     private int lastCamWidth = -1, lastCamHeight = -1;
 
     public NovaUI(CalistaGameEngine engine, String configPath) {
-        this.engine = engine;
+        this.engine = Objects.requireNonNull(engine, "engine must not be null");
         this.guiNode = engine.getGuiNode();
-        this.configPath = configPath;
+        this.configPath = Objects.requireNonNull(configPath, "configPath must not be null");
     }
 
+    /**
+     * Registers a new event handler object for UI binding.
+     * Safe to call multiple times.
+     */
     public void registerEventHandler(Object handler) {
         updater.setEventHandlerTarget(handler);
+        // No bindAllFields here: let user control rebind or do it after UI loading.
     }
 
     @Override
@@ -46,13 +66,15 @@ public class NovaUI extends BaseAppState {
 
         try {
             loadConfiguration();
+            if (rootPanel == null) throw new IllegalStateException("UI rootPanel is null after config load!");
             guiNode.attachChild(rootPanel.getNode());
             rootPanel.getNode().setLocalTranslation(0f, 0f, 0f);
 
-            updater.setAllElements(allElements);
+            updater.setAllElements(Collections.unmodifiableMap(allElements)); // safer: prevent mutation outside add/remove
             updater.bindAllFields();
 
             expandAndPositionRootPanel();
+            LOGGER.info("NovaUI initialized successfully.");
         } catch (Exception e) {
             LOGGER.error("Failed to initialize UIPanel", e);
             throw new RuntimeException(e);
@@ -65,7 +87,8 @@ public class NovaUI extends BaseAppState {
             guiNode.detachChild(rootPanel.getNode());
         }
         rootPanel = null;
-        allElements = null;
+        allElements.clear();
+        LOGGER.info("NovaUI cleaned up.");
     }
 
     @Override
@@ -73,7 +96,11 @@ public class NovaUI extends BaseAppState {
         updater.update(tpf);
 
         if (globalDirty && dirtyRoot != null) {
-            dirtyRoot.recalcAndRepositionSelfAndAncestors();
+            try {
+                dirtyRoot.recalcAndRepositionSelfAndAncestors();
+            } catch (Exception ex) {
+                LOGGER.error("Failed to recalc/reposition dirty root", ex);
+            }
             globalDirty = false;
             dirtyRoot = null;
         }
@@ -87,8 +114,15 @@ public class NovaUI extends BaseAppState {
         }
     }
 
+    /**
+     * Adds an image element to the UI and updates all references and layouts.
+     * Thread-safe element creation and registration.
+     */
     public UIElement addImageElement(Object owner, String imagePath, float relX, float relY, int width, int height) {
-        if (rootPanel == null) return null;
+        if (rootPanel == null) {
+            LOGGER.warn("addImageElement: rootPanel is null, image will not be added.");
+            return null;
+        }
 
         try {
             String id = "image_" + System.nanoTime();
@@ -107,11 +141,13 @@ public class NovaUI extends BaseAppState {
             image.setProperty("posY", String.valueOf(absY));
 
             rootPanel.addChild(image);
+
             allElements.put(id, image);
 
             updater.fixOverlaps(rootPanel);
             updater.bindAllFields();
 
+            LOGGER.info("ImageElement '{}' added at ({}, {})", id, absX, absY);
             return image;
         } catch (Exception e) {
             LOGGER.error("Failed to add image element", e);
@@ -119,9 +155,15 @@ public class NovaUI extends BaseAppState {
         }
     }
 
+    /**
+     * Sets a property on a UI element and marks affected panel(s) as dirty for update.
+     */
     public void setProperty(String elementId, String propKey, String propValue) {
         UIElement e = allElements.get(elementId);
-        if (e == null) return;
+        if (e == null) {
+            LOGGER.warn("setProperty: No UIElement found for id '{}'", elementId);
+            return;
+        }
 
         e.setProperty(propKey, propValue);
         PanelElement parent = e.getParentPanel();
@@ -131,6 +173,9 @@ public class NovaUI extends BaseAppState {
         }
     }
 
+    /**
+     * Returns the uppermost parent panel for a given panel.
+     */
     private PanelElement getTopmostRoot(PanelElement panel) {
         while (panel.getParentPanel() != null) {
             panel = panel.getParentPanel();
@@ -138,19 +183,35 @@ public class NovaUI extends BaseAppState {
         return panel;
     }
 
+    /**
+     * Gets a UI element by its ID.
+     */
     public UIElement getElement(String id) {
         return allElements.get(id);
     }
 
+    /**
+     * Loads UI configuration from XML and sets up rootPanel and allElements.
+     */
     private void loadConfiguration() throws Exception {
         UIXmlParser parser = new UIXmlParser(engine, configPath);
         ParseResult result = parser.parse();
+        if (result.rootPanel == null) throw new IllegalStateException("Parsed UI rootPanel is null!");
         rootPanel = result.rootPanel;
-        allElements = result.allElements;
+        // Defensive: always use thread-safe map
+        allElements = new ConcurrentHashMap<>(result.allElements);
+        LOGGER.info("UI configuration loaded: rootPanel id='{}', {} total elements.", rootPanel.getId(), allElements.size());
     }
 
+    /**
+     * Expands and repositions the root panel to match camera.
+     * Only resizes if needed.
+     */
     private void expandAndPositionRootPanel() {
-        if (rootPanel == null) return;
+        if (rootPanel == null) {
+            LOGGER.warn("expandAndPositionRootPanel: rootPanel is null.");
+            return;
+        }
 
         boolean resized = resizeRootPanelIfNeeded();
         if (resized) {
@@ -164,6 +225,10 @@ public class NovaUI extends BaseAppState {
         updater.fixOverlaps(rootPanel);
     }
 
+    /**
+     * Resizes the root panel if its auto size or needs to expand.
+     * @return true if size was changed.
+     */
     private boolean resizeRootPanelIfNeeded() {
         rootPanel.recomputeSizeAndRepositionChildren();
         float neededW = rootPanel.getCurrentWidth();
@@ -181,6 +246,9 @@ public class NovaUI extends BaseAppState {
         return changed;
     }
 
+    /**
+     * Reloads the UI from configuration, detaching previous resources.
+     */
     public void reloadUI() {
         try {
             if (rootPanel != null) {
@@ -192,13 +260,18 @@ public class NovaUI extends BaseAppState {
             guiNode.attachChild(rootPanel.getNode());
             rootPanel.getNode().setLocalTranslation(0f, 0f, 0f);
 
-            updater.setAllElements(allElements);
+            updater.setAllElements(Collections.unmodifiableMap(allElements));
             updater.bindAllFields();
 
             expandAndPositionRootPanel();
+            LOGGER.info("UI reloaded successfully.");
         } catch (Exception e) {
             LOGGER.error("Failed to reload UI", e);
         }
+    }
+
+    public NovaUIUpdater getUpdater() {
+        return updater;
     }
 
     @Override

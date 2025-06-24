@@ -8,120 +8,145 @@ import org.foxesworld.cge.core.module.ModuleConfig;
  * для AAA-игрового визуала: агрессивный Bloom, DOF, Film Grain, хроматическая аберрация, цветокоррекция, FXAA, Flare.
  */
 public class PostProcessingConfig extends ModuleConfig {
+
     // --- BLOOM ---
-    private boolean enableBloom = true;
-    private float bloomIntensity = 0.35f;
-    private float bloomThreshold = 1.10f;
-    private float bloomRadius = 0.92f;
-    private int bloomExposurePower = 65;
+    public static class Bloom {
+        private boolean enable = true;
+        private float intensity = 0.35f;
+        private float threshold = 1.10f;
+        private float radius = 0.92f;
+        private int exposurePower = 65;
+
+        public boolean isEnable() { return enable; }
+        public float getIntensity() { return intensity; }
+        public float getThreshold() { return threshold; }
+        public float getRadius() { return radius; }
+        public int getExposurePower() { return exposurePower; }
+
+        public void setEnable(boolean enable) { this.enable = enable; }
+        public void setIntensity(float intensity) { this.intensity = intensity; }
+        public void setThreshold(float threshold) { this.threshold = threshold; }
+        public void setRadius(float radius) { this.radius = radius; }
+        public void setExposurePower(int exposurePower) { this.exposurePower = exposurePower; }
+    }
+    private final Bloom bloom = new Bloom();
 
     // --- LENS FLARE (Godrays) ---
-    private boolean enableLsf = false;
-    private float[] lsfLightDir = {10f, 3f, 7f};
-    private int lsfGhostCount = 0;
-    private float lsfHaloWidth = 0.5f;
-    private float lsfDestiny = 0.25f;
+    public static class Lsf {
+        private boolean enable = false;
+        private float[] lightDir = {10f, 3f, 7f};
+        private int ghostCount = 0;
+        private float haloWidth = 0.5f;
+        private float destiny = 0.25f;
 
-    // --- FLARE ---
-    private boolean enableFlare = true;
-    private float flareIntensity = 1.0f;
-    private float flareThreshold = 1.1f;
-    private float[] flareColor = {1f, 1f, 0.95f, 1f}; // мягкий бело-жёлтый ореол
+        public boolean isEnable() { return enable; }
+        public float[] getLightDir() { return lightDir; }
+        public int getGhostCount() { return ghostCount; }
+        public float getHaloWidth() { return haloWidth; }
+        public float getDestiny() { return destiny; }
+
+        public void setEnable(boolean enable) { this.enable = enable; }
+        public void setLightDir(float[] lightDir) { this.lightDir = lightDir; }
+        public void setGhostCount(int ghostCount) { this.ghostCount = ghostCount; }
+        public void setHaloWidth(float haloWidth) { this.haloWidth = haloWidth; }
+        public void setDestiny(float destiny) { this.destiny = destiny; }
+    }
+    private final Lsf lsf = new Lsf();
 
     // --- DEPTH OF FIELD (DOF) ---
-    private boolean enableDof = true;
-    private float dofFocus = 18f;
-    private float dofRange = 60f;
-    private float dofAperture = 1.8f;
-    private float dofMaxBlur = 2.2f;
+    public static class Dof {
+        private boolean enable = true;
+        private float focus = 18f;
+        private float range = 60f;
+        private float aperture = 1.8f;
+        private float maxBlur = 2.2f;
 
-    // --- MOTION BLUR ---
-    private boolean enableMotionBlur = true;
-    private int motionBlurSampleCount = 24;
-    private float motionBlurStrength = 0.7f;
+        public boolean isEnable() { return enable; }
+        public float getFocus() { return focus; }
+        public float getRange() { return range; }
+        public float getAperture() { return aperture; }
+        public float getMaxBlur() { return maxBlur; }
 
-    // --- VIGNETTE ---
-    private boolean enableVignette = true;
-    private float vignetteIntensity = 0.52f;
-    private float vignetteSmoothness = 0.88f;
-
-    // --- FILM GRAIN ---
-    private Boolean enableFilmGrain = true;
-    private Float filmGrainIntensity = 0.22f;
-    private Float filmGrainScale = 1.0f;
-
-    // --- CHROMATIC ABERRATION ---
-    private Boolean enableChromaticAberration = true;
-    private Float chromaticAberrationStrength = 0.012f;
-    private Boolean chromaticRadial = true;
+        public void setEnable(boolean enable) { this.enable = enable; }
+        public void setFocus(float focus) { this.focus = focus; }
+        public void setRange(float range) { this.range = range; }
+        public void setAperture(float aperture) { this.aperture = aperture; }
+        public void setMaxBlur(float maxBlur) { this.maxBlur = maxBlur; }
+    }
+    private final Dof dof = new Dof();
 
     // --- COLOR GRADING & TONEMAPPING ---
-    private boolean enableColorGrading = true;
-    private String colorGradingLUT = "Assets/LUTs/Cinematic.cube";
-    private float exposure = 1.22f;
-    private float contrast = 1.29f;
-    private float saturation = 1.18f;
+    public static class ColorGrading {
+        private boolean enable = true;
+        private String lut = "Assets/LUTs/Cinematic.cube";
+        private float exposure = 1.22f;
+        private float contrast = 1.29f;
+        private float saturation = 1.18f;
+
+        public boolean isEnable() { return enable; }
+        public String getLut() { return lut; }
+        public float getExposure() { return exposure; }
+        public float getContrast() { return contrast; }
+        public float getSaturation() { return saturation; }
+
+        public void setEnable(boolean enable) { this.enable = enable; }
+        public void setLut(String lut) { this.lut = lut; }
+        public void setExposure(float exposure) { this.exposure = exposure; }
+        public void setContrast(float contrast) { this.contrast = contrast; }
+        public void setSaturation(float saturation) { this.saturation = saturation; }
+    }
+    private final ColorGrading colorGrading = new ColorGrading();
 
     // --- FXAA ---
-    private boolean enableFXAA = true;
-    private int fxaaQuality = 3;
+    public static class FXAA {
+        private boolean enable = true;
+        private int quality = 3;
 
-    // --- Getters ---
-    public boolean isEnableBloom() { return enableBloom; }
-    public float getBloomIntensity() { return bloomIntensity; }
-    public float getBloomThreshold() { return bloomThreshold; }
-    public float getBloomRadius() { return bloomRadius; }
-    public int getBloomExposurePower() { return bloomExposurePower; }
+        public boolean isEnable() { return enable; }
+        public int getQuality() { return quality; }
 
-    public boolean isEnableLsf() { return enableLsf; }
-    public float[] getLsfLightDir() { return lsfLightDir; }
-    public int getLsfGhostCount() { return lsfGhostCount; }
-    public float getLsfHaloWidth() { return lsfHaloWidth; }
-    public float getLsfDestiny() { return lsfDestiny; }
+        public void setEnable(boolean enable) { this.enable = enable; }
+        public void setQuality(int quality) { this.quality = quality; }
+    }
+    private final FXAA fxaa = new FXAA();
 
-    // --- FLARE ---
-    public boolean isEnableFlare() { return enableFlare; }
-    public float getFlareIntensity() { return flareIntensity; }
-    public float getFlareThreshold() { return flareThreshold; }
-    public float[] getFlareColor() { return flareColor; }
-    public ColorRGBA getFlareColorRGBA() {
-        return new ColorRGBA(flareColor[0], flareColor[1], flareColor[2], flareColor[3]);
+    public static class  SSAOfilter {
+        private boolean enable = true;
+        private float sampleRadius = 2.9299974f;
+        private float intensity = 25f;
+        private float scale = 5.8100376f;
+        private float bias = 0.091000035f;
+
+        public boolean isEnable() {
+            return enable;
+        }
+
+        public float getSampleRadius() {
+            return sampleRadius;
+        }
+
+        public float getIntensity() {
+            return intensity;
+        }
+
+        public float getScale() {
+            return scale;
+        }
+
+        public float getBias() {
+            return bias;
+        }
     }
 
-    public boolean isEnableDof() { return enableDof; }
-    public float getDofFocus() { return dofFocus; }
-    public float getDofRange() { return dofRange; }
-    public float getDofAperture() { return dofAperture; }
-    public float getDofMaxBlur() { return dofMaxBlur; }
+    private final SSAOfilter ssaOfilter = new SSAOfilter();
 
-    public boolean isEnableMotionBlur() { return enableMotionBlur; }
-    public int getMotionBlurSampleCount() { return motionBlurSampleCount; }
-    public float getMotionBlurStrength() { return motionBlurStrength; }
+    // --- Getters for all post-process classes ---
+    public Bloom getBloom() { return bloom; }
+    public Lsf getLsf() { return lsf; }
+    public Dof getDof() { return dof; }
 
-    public boolean isEnableVignette() { return enableVignette; }
-    public float getVignetteIntensity() { return vignetteIntensity; }
-    public float getVignetteSmoothness() { return vignetteSmoothness; }
+    public SSAOfilter getSsaOfilter() {return ssaOfilter;}
 
-    public Boolean isEnableFilmGrain() { return enableFilmGrain; }
-    public Float getFilmGrainIntensity() { return filmGrainIntensity; }
-    public Float getFilmGrainScale() { return filmGrainScale; }
-
-    public Boolean isEnableChromaticAberration() { return enableChromaticAberration; }
-    public Float getChromaticAberrationStrength() { return chromaticAberrationStrength; }
-    public Boolean isChromaticRadial() { return chromaticRadial; }
-
-    public boolean isEnableColorGrading() { return enableColorGrading; }
-    public String getColorGradingLUT() { return colorGradingLUT; }
-    public float getExposure() { return exposure; }
-    public float getContrast() { return contrast; }
-    public float getSaturation() { return saturation; }
-
-    public boolean isEnableFXAA() { return enableFXAA; }
-    public int getFxaaQuality() { return fxaaQuality; }
-
-    // --- Setters (по необходимости) ---
-    public void setEnableFlare(boolean enableFlare) { this.enableFlare = enableFlare; }
-    public void setFlareIntensity(float flareIntensity) { this.flareIntensity = flareIntensity; }
-    public void setFlareThreshold(float flareThreshold) { this.flareThreshold = flareThreshold; }
-    public void setFlareColor(float[] flareColor) { this.flareColor = flareColor; }
+    public ColorGrading getColorGrading() { return colorGrading; }
+    public FXAA getFxaa() { return fxaa; }
 }

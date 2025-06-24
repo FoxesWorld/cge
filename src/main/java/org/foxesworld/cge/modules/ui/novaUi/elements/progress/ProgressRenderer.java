@@ -6,190 +6,258 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.shape.Quad;
+import com.jme3.scene.Node;
 import org.foxesworld.cge.CalistaGameEngine;
+import org.foxesworld.cge.modules.ui.novaUi.elements.AbstractRenderer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * ProgressRenderer оптимизирован для минимизации пересоздания объектов и
- * добавлена полноценная поддержка alpha-канала для всех геометрий, включая фон.
+ * ProgressRenderer is an optimized progress bar rendering manager.
+ * Minimizes object recreation, improves stability, performance, and flexibility.
+ * Fully supports alpha channel for all geometries.
+ * <p>
+ * Inherits from {@link AbstractRenderer} for UI integration and color management.
+ * </p>
  */
-public class ProgressRenderer {
+public class ProgressRenderer extends AbstractRenderer {
     private static final Logger logger = LoggerFactory.getLogger(ProgressRenderer.class);
 
     private final CalistaGameEngine engine;
 
-    private Geometry borderGeom;
-    private Geometry bgGeom;
-    private Geometry fgGeom;
-
-    private Material borderMat;
-    private Material bgMat;
-    private Material fgMat;
+    private Geometry borderGeom, bgGeom, fgGeom;
+    private Material borderMat, bgMat, fgMat;
+    private float prevBorderW = -1, prevBorderH = -1, prevBgW = -1, prevBgH = -1, prevFgW = -1, prevFgH = -1;
 
     public ProgressRenderer(CalistaGameEngine engine) {
         this.engine = engine;
     }
 
-    public Geometry getBorderGeom() {
-        return borderGeom;
-    }
-
-    public Geometry getBgGeom() {
-        return bgGeom;
-    }
-
-    public Geometry getFgGeom() {
-        return fgGeom;
+    /**
+     * Returns the root node for this progress bar (a Node containing all geometries).
+     */
+    @Override
+    public Node getNode() {
+        Node node = new Node("ProgressBarRoot");
+        if (borderGeom != null) node.attachChild(borderGeom);
+        if (bgGeom != null) node.attachChild(bgGeom);
+        if (fgGeom != null) node.attachChild(fgGeom);
+        return node;
     }
 
     /**
-     * Обновляет или создаёт геометрию рамки (borderGeom) с заданными параметрами.
-     * @param w ширина рамки
-     * @param h высота рамки
-     * @param borderColor цвет рамки (ColorRGBA включает alpha)
-     * @param zIndex Z-положение в сцене (чем больше, тем ближе к камере)
-     * @return обновлённая или новая Geometry для рамки
+     * Sets the color for the fill geometry (if present).
+     */
+    @Override
+    public void setColor(ColorRGBA color) {
+        if (fgMat != null) fgMat.setColor("Color", color);
+    }
+
+    /**
+     * Gets the color of the fill geometry (if present), otherwise null.
+     */
+    @Override
+    public ColorRGBA getColor() {
+        if (fgMat != null && fgMat.getParam("Color") != null) {
+            return ((ColorRGBA) fgMat.getParam("Color").getValue()).clone();
+        }
+        return null;
+    }
+
+    /**
+     * Sets the size of the progress bar (border geometry).
+     */
+    @Override
+    public void setSize(float width, float height) {
+        buildOrUpdateBorder(width, height, borderMat != null && borderMat.getParam("Color") != null
+                ? (ColorRGBA) borderMat.getParam("Color").getValue()
+                : ColorRGBA.White, 0f);
+    }
+
+    /**
+     * Returns the width of the border geometry (if present).
+     */
+    @Override
+    public float getWidth() {
+        if (borderGeom != null && borderGeom.getMesh() instanceof Quad) {
+            return ((Quad) borderGeom.getMesh()).getWidth();
+        }
+        return 0f;
+    }
+
+    /**
+     * Returns the height of the border geometry (if present).
+     */
+    @Override
+    public float getHeight() {
+        if (borderGeom != null && borderGeom.getMesh() instanceof Quad) {
+            return ((Quad) borderGeom.getMesh()).getHeight();
+        }
+        return 0f;
+    }
+
+    public Geometry getBorderGeom() { return borderGeom; }
+    public Geometry getBgGeom()     { return bgGeom; }
+    public Geometry getFgGeom()     { return fgGeom; }
+
+    // ----------- Helper methods for flexibility and reuse -----------
+
+    private static void applyMaterialSettings(Material mat, ColorRGBA color) {
+        mat.setColor("Color", color);
+        mat.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
+    }
+
+    private static void applyGeometrySettings(Geometry geom, Material mat, float tx, float ty, float z, boolean isGui) {
+        geom.setMaterial(mat);
+        if (isGui) geom.setQueueBucket(RenderQueue.Bucket.Gui);
+        geom.setLocalTranslation(tx, ty, z);
+    }
+
+    // --------- Universal build/update for geometries ---------
+
+    private Geometry buildOrUpdateGeom(Geometry geom, float w, float h, Material mat,
+                                       ColorRGBA color, String name,
+                                       float tx, float ty, float z, boolean isGui) {
+        boolean recreateMesh = geom == null || !hasSameQuad(geom, w, h);
+        if (geom == null) {
+            geom = new Geometry(name, new Quad(w, h));
+            if (mat == null) {
+                mat = new Material(engine.getAssetManager(), "Common/MatDefs/Gui/Gui.j3md");
+            }
+            applyMaterialSettings(mat, color);
+            applyGeometrySettings(geom, mat, tx, ty, z, isGui);
+        } else {
+            if (recreateMesh) geom.setMesh(new Quad(w, h));
+            // Preserve alpha on update
+            if (mat.getParam("Color") != null) {
+                ColorRGBA prev = ((ColorRGBA) mat.getParam("Color").getValue());
+                ColorRGBA updated = color.clone();
+                updated.a = prev.a; // Preserve previous alpha
+                applyMaterialSettings(mat, updated);
+            } else {
+                applyMaterialSettings(mat, color);
+            }
+            geom.setLocalTranslation(tx, ty, z);
+        }
+        return geom;
+    }
+
+    private boolean hasSameQuad(Geometry geom, float w, float h) {
+        if (geom == null || !(geom.getMesh() instanceof Quad)) return false;
+        Quad quad = (Quad) geom.getMesh();
+        return Math.abs(quad.getWidth() - w) < 0.0001f && Math.abs(quad.getHeight() - h) < 0.0001f;
+    }
+
+    // --------- Public interface methods ---------
+
+    /**
+     * Builds or updates the border geometry.
+     * Preserves alpha channel when updating.
      */
     public Geometry buildOrUpdateBorder(float w, float h, ColorRGBA borderColor, float zIndex) {
-        if (borderGeom == null) {
-            borderGeom = new Geometry("ProgressBorder", new Quad(w, h));
-            borderMat = new Material(engine.getAssetManager(), "Common/MatDefs/Gui/Gui.j3md");
-            borderMat.setColor("Color", borderColor);
-            borderMat.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
-            borderGeom.setMaterial(borderMat);
-            borderGeom.setQueueBucket(RenderQueue.Bucket.Gui);
-            borderGeom.setLocalTranslation(0f, 0f, zIndex);
-        } else {
-            borderGeom.setMesh(new Quad(w, h));
-            borderMat.setColor("Color", borderColor);
-            borderGeom.setLocalTranslation(0f, 0f, zIndex);
-        }
+        borderMat = (borderMat != null) ? borderMat : new Material(engine.getAssetManager(), "Common/MatDefs/Gui/Gui.j3md");
+        borderGeom = buildOrUpdateGeom(borderGeom, w, h, borderMat, borderColor, "ProgressBorder", 0f, 0f, zIndex, true);
+        prevBorderW = w;
+        prevBorderH = h;
         return borderGeom;
     }
 
     /**
-     * Обновляет или создаёт фон (bgGeom) с заданными параметрами.
-     * @param innerW ширина фона (без рамки)
-     * @param innerH высота фона (без рамки)
-     * @param backgroundColor цвет фона (включая alpha)
-     * @param borderThickness толщина рамки
-     * @param padding внутренний отступ от рамки
-     * @param zIndex Z-положение в сцене
-     * @return обновлённая или новая Geometry для фона
+     * Builds or updates the background geometry.
+     * Preserves alpha channel when updating.
      */
-    public Geometry buildOrUpdateBackground(float innerW, float innerH,
-                                            ColorRGBA backgroundColor,
+    public Geometry buildOrUpdateBackground(float innerW, float innerH, ColorRGBA backgroundColor,
                                             float borderThickness, float padding, float zIndex) {
-        float tx = borderThickness + padding;
-        float ty = borderThickness + padding;
-        if (bgGeom == null) {
-            bgGeom = new Geometry("ProgressBackground", new Quad(innerW, innerH));
-            bgMat = new Material(engine.getAssetManager(), "Common/MatDefs/Gui/Gui.j3md");
-            bgMat.setColor("Color", backgroundColor);
-            bgMat.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
-            bgGeom.setMaterial(bgMat);
-            bgGeom.setQueueBucket(RenderQueue.Bucket.Gui);
-            bgGeom.setLocalTranslation(tx, ty, zIndex);
-        } else {
-            bgGeom.setMesh(new Quad(innerW, innerH));
-            bgMat.setColor("Color", backgroundColor);
-            bgGeom.setLocalTranslation(tx, ty, zIndex);
-        }
+        float tx = borderThickness + padding, ty = borderThickness + padding;
+        bgMat = (bgMat != null) ? bgMat : new Material(engine.getAssetManager(), "Common/MatDefs/Gui/Gui.j3md");
+        bgGeom = buildOrUpdateGeom(bgGeom, innerW, innerH, bgMat, backgroundColor, "ProgressBackground", tx, ty, zIndex, true);
+        prevBgW = innerW;
+        prevBgH = innerH;
         return bgGeom;
     }
 
     /**
-     * Обновляет или создаёт заполнение (fgGeom) с заданными параметрами.
-     * @param fillW ширина заполнения (пропорциональна прогрессу)
-     * @param innerH высота фона (и заливки)
-     * @param fillColor цвет заливки (включая alpha)
-     * @param borderThickness толщина рамки
-     * @param padding внутренний отступ от рамки
-     * @param zIndex Z-положение в сцене
-     * @return обновлённая или новая Geometry для заливки
+     * Builds or updates the fill geometry.
+     * Preserves alpha channel when updating.
      */
-    public Geometry buildOrUpdateFill(float fillW, float innerH,
-                                      ColorRGBA fillColor,
+    public Geometry buildOrUpdateFill(float fillW, float fillH, ColorRGBA fillColor,
                                       float borderThickness, float padding, float zIndex) {
-        float tx = borderThickness + padding;
-        float ty = borderThickness + padding;
-        if (fgGeom == null) {
-            fgGeom = new Geometry("ProgressFill", new Quad(fillW, innerH));
-            fgMat = new Material(engine.getAssetManager(), "Common/MatDefs/Gui/Gui.j3md");
-            fgMat.setColor("Color", fillColor);
-            fgMat.getAdditionalRenderState().setBlendMode(RenderState.BlendMode.Alpha);
-            fgGeom.setMaterial(fgMat);
-            fgGeom.setQueueBucket(RenderQueue.Bucket.Gui);
-            fgGeom.setLocalTranslation(tx, ty, zIndex);
-        } else {
-            fgGeom.setMesh(new Quad(fillW, innerH));
-            fgMat.setColor("Color", fillColor);
-            fgGeom.setLocalTranslation(tx, ty, zIndex);
-        }
+        float tx = borderThickness + padding, ty = borderThickness + padding;
+        fgMat = (fgMat != null) ? fgMat : new Material(engine.getAssetManager(), "Common/MatDefs/Gui/Gui.j3md");
+        fgGeom = buildOrUpdateGeom(fgGeom, fillW, fillH, fgMat, fillColor, "ProgressFill", tx, ty, zIndex, true);
+        prevFgW = fillW;
+        prevFgH = fillH;
         return fgGeom;
     }
 
     /**
-     * Обновляет только заливку (fgGeom). Если fgGeom ещё не создана, создаёт её вместе с материалом.
-     * @param fillW ширина заполнения
-     * @param innerH высота фона (и заливки)
-     * @param fillColor цвет заливки (включая alpha)
-     * @param borderThickness толщина рамки
-     * @param padding внутренний отступ
-     * @param zIndex Z-положение
+     * Updates only the fill geometry (fgGeom) without recreating the material.
+     * Preserves alpha channel when updating.
      */
-    public void updateFill(float fillW, float innerH,
-                           ColorRGBA fillColor,
+    public void updateFill(float fillW, float fillH, ColorRGBA fillColor,
                            float borderThickness, float padding, float zIndex) {
-        if (fgGeom == null) {
-            buildOrUpdateFill(fillW, innerH, fillColor, borderThickness, padding, zIndex);
-        } else {
-            fgGeom.setMesh(new Quad(fillW, innerH));
-            fgMat.setColor("Color", fillColor);
-            fgGeom.setLocalTranslation(borderThickness + padding, borderThickness + padding, zIndex);
+        if (fgGeom == null || fgMat == null) {
+            buildOrUpdateFill(fillW, fillH, fillColor, borderThickness, padding, zIndex);
+            return;
         }
+        if (!hasSameQuad(fgGeom, fillW, fillH)) {
+            fgGeom.setMesh(new Quad(fillW, fillH));
+        }
+        // Preserve alpha when updating
+        if (fgMat.getParam("Color") != null) {
+            ColorRGBA prev = ((ColorRGBA) fgMat.getParam("Color").getValue());
+            ColorRGBA updated = fillColor.clone();
+            updated.a = prev.a;
+            fgMat.setColor("Color", updated);
+        } else {
+            fgMat.setColor("Color", fillColor);
+        }
+        fgGeom.setLocalTranslation(borderThickness + padding, borderThickness + padding, zIndex);
+        prevFgW = fillW; prevFgH = fillH;
     }
 
     /**
-     * Полное обновление прогресса: рамка → фон → заливка в нужном порядке.
-     * Обычно вызывается при первом создании компонента или при глобальном ресайзе.
+     * Universal method to rebuild all parts of the progress bar with minimum operations.
      */
     public void rebuildAll(float totalW, float totalH,
                            ColorRGBA borderColor, ColorRGBA backgroundColor, ColorRGBA fillColor,
                            float borderThickness, float padding) {
-        float zBorder = 0f;
+        float zBorder = 0f, zBg = 1f, zFill = 2f;
         buildOrUpdateBorder(totalW, totalH, borderColor, zBorder);
 
-        float innerW = totalW - 2f * borderThickness;
-        float innerH = totalH - 2f * borderThickness;
-        float zBg = 1f;
+        float innerW = totalW - 2f * borderThickness, innerH = totalH - 2f * borderThickness;
         buildOrUpdateBackground(innerW, innerH, backgroundColor, borderThickness, padding, zBg);
 
-        float innerContentW = innerW - 2f * padding;
-        float zFill = 2f;
-        buildOrUpdateFill(innerContentW, innerH - 2f * padding, fillColor, borderThickness, padding, zFill);
+        float contentW = innerW - 2f * padding, contentH = innerH - 2f * padding;
+        buildOrUpdateFill(contentW, contentH, fillColor, borderThickness, padding, zFill);
     }
 
     /**
-     * Применяет alpha ко всем частям прогресса (рамка, фон, заливка).
-     * @param alpha значение прозрачности [0..1]
+     * Sets the alpha channel for all parts of the progress bar.
      */
     public void setAlpha(float alpha) {
-        if (borderMat != null) {
-            ColorRGBA c = ((ColorRGBA) borderMat.getParam("Color").getValue()).clone();
-            c.a = alpha;
-            borderMat.setColor("Color", c);
-        }
-        if (bgMat != null) {
-            ColorRGBA c = ((ColorRGBA) bgMat.getParam("Color").getValue()).clone();
-            c.a = alpha;
-            bgMat.setColor("Color", c);
-        }
-        if (fgMat != null) {
-            ColorRGBA c = ((ColorRGBA) fgMat.getParam("Color").getValue()).clone();
-            c.a = alpha;
-            fgMat.setColor("Color", c);
-        }
+        if (borderMat != null) setAlphaOnMat(borderMat, alpha);
+        if (bgMat != null) setAlphaOnMat(bgMat, alpha);
+        if (fgMat != null) setAlphaOnMat(fgMat, alpha);
+    }
+
+    private void setAlphaOnMat(Material mat, float alpha) {
+        ColorRGBA c = mat.getParam("Color") != null
+                ? ((ColorRGBA) mat.getParam("Color").getValue()).clone()
+                : ColorRGBA.White.clone();
+        c.a = alpha;
+        mat.setColor("Color", c);
+    }
+
+    // --------- Resource cleanup for flexibility/safety ---------
+
+    public void dispose() {
+        if (borderGeom != null) borderGeom.removeFromParent();
+        if (bgGeom != null) bgGeom.removeFromParent();
+        if (fgGeom != null) fgGeom.removeFromParent();
+        borderGeom = bgGeom = fgGeom = null;
+        borderMat = bgMat = fgMat = null;
+        prevBorderW = prevBorderH = prevBgW = prevBgH = prevFgW = prevFgH = -1;
+        logger.debug("ProgressRenderer disposed and cleaned up.");
     }
 }

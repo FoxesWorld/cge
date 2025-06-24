@@ -4,7 +4,7 @@
 
     <Panel
             id="rootPanel"
-            margin="0,30"
+            margin="0,40"
             padding="0"
             bgColor="0,0,0,0.3"
             width="auto"
@@ -13,7 +13,7 @@
             layout="horizontal"
             spacing="0"
     >
-
+       <!-- <Element id="logo" type="ImageElement" imagePath="Textures/nova.png" width="128" height="128" color="1,1,1,1"/> -->
 
         <Panel id="barPanel"
                margin="5"
@@ -25,7 +25,7 @@
                layout="horizontal"
                spacing="10">
             <Element
-                    id="playerSpeed"
+                    id="speed"
                     type="Progress"
                     width="150"
                     height="8"
@@ -34,8 +34,16 @@
                     fillColor="88,135,81,1"
                     borderThickness="0.1"
             />
+           <Element
+                    id="test"
+                    type="TextElement"
+                    fontPath="assets/Interface/fonts/Aharoni.fnt"
+                    margin="0,-20,0,0"
+                    align="left"
+                    color="208,187,81,1"
+            />
             <Element
-                    id="armorBar"
+                    id="armor"
                     type="Progress"
                     width="50"
                     height="8"
@@ -45,7 +53,7 @@
                     borderThickness="0.1"
             />
             <Element
-                    id="abilityBar"
+                    id="ability"
                     type="Progress"
                     width="45"
                     height="8"

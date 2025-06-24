@@ -119,43 +119,90 @@ public class PanelElement extends AbstractUIElement {
      * Padding is added to both sides, margin is handled externally in positioning.
      */
     public void recomputeSizeAndRepositionChildren() {
-        float totalWidth = 0f;
-        float maxChildHeight = 0f;
-        for (UIElement child : children) {
-            if (child instanceof AbstractUIElement abs) {
-                float cw = abs.getWidth();
-                float ch = abs.getHeight();
-                totalWidth += cw;
-                maxChildHeight = Math.max(maxChildHeight, ch);
-            }
-        }
+        float minX = Float.POSITIVE_INFINITY;
+        float maxX = Float.NEGATIVE_INFINITY;
+        float minY = Float.POSITIVE_INFINITY;
+        float maxY = Float.NEGATIVE_INFINITY;
+
+        // Располагаем детей согласно layout
         if ("none".equalsIgnoreCase(layout)) {
-            float neededW = totalWidth + 2f * paddingH;
-            float neededH = maxChildHeight + 2f * paddingV;
-            if (autoWidth) {
-                fixedWidth = neededW;
-            }
-            if (autoHeight) {
-                fixedHeight = neededH;
-            }
             float currentX = paddingH;
             for (UIElement child : children) {
                 if (child instanceof AbstractUIElement abs) {
                     float cw = abs.getWidth();
-                    float localX = currentX;
-                    float localY = paddingV;
-                    abs.getNode().setLocalTranslation(localX, localY, 0f);
+                    float ch = abs.getHeight();
+
+                    // Layout: горизонтально, сдвиг по X
+                    abs.getNode().setLocalTranslation(currentX, paddingV, 0f);
                     currentX += cw + spacing;
                 }
             }
         } else {
-            layoutHelper.recomputeAndLayOut(
-                    autoWidth ? totalWidth + 2f * paddingH : fixedWidth,
-                    autoHeight ? maxChildHeight + 2f * paddingV : fixedHeight
-            );
+            layoutHelper.recomputeAndLayOut(0, 0); // пусть layoutHelper сам располагает
         }
+
+        // 1. Найти границы дочерних элементов
+        for (UIElement child : children) {
+            if (child instanceof AbstractUIElement abs) {
+                float x = abs.getNode().getLocalTranslation().x;
+                float y = abs.getNode().getLocalTranslation().y;
+                float w = abs.getWidth();
+                float h = abs.getHeight();
+                minX = Math.min(minX, x);
+                minY = Math.min(minY, y);
+                maxX = Math.max(maxX, x + w);
+                maxY = Math.max(maxY, y + h);
+            }
+        }
+
+        // 2. Если дети есть — вычисляем нужные размеры панели
+        float neededW = (minX < Float.POSITIVE_INFINITY && maxX > Float.NEGATIVE_INFINITY)
+                ? (maxX - minX) + 2f * paddingH
+                : 2f * paddingH;
+        float neededH = (minY < Float.POSITIVE_INFINITY && maxY > Float.NEGATIVE_INFINITY)
+                ? (maxY - minY) + 2f * paddingV
+                : 2f * paddingV;
+
+        // 3. Если режим autoWidth/autoHeight — обновляем размеры панели
+        if (autoWidth) {
+            fixedWidth = neededW;
+        }
+        if (autoHeight) {
+            fixedHeight = neededH;
+        }
+
+        // 4. Проверка на выход детей за пределы панели (ширина и высота)
+        float panelWidth = getCurrentWidth();
+        float panelHeight = getCurrentHeight();
+        for (UIElement child : children) {
+            if (child instanceof AbstractUIElement abs) {
+                float x = abs.getNode().getLocalTranslation().x;
+                float y = abs.getNode().getLocalTranslation().y;
+                float w = abs.getWidth();
+                float h = abs.getHeight();
+
+                // Clamp по X
+                if (x < paddingH) {
+                    abs.getNode().setLocalTranslation(paddingH, y, 0f);
+                }
+                if (x + w > panelWidth - paddingH) {
+                    float newX = Math.max(paddingH, panelWidth - paddingH - w);
+                    abs.getNode().setLocalTranslation(newX, y, 0f);
+                }
+                // Clamp по Y
+                if (y < paddingV) {
+                    abs.getNode().setLocalTranslation(abs.getNode().getLocalTranslation().x, paddingV, 0f);
+                }
+                if (y + h > panelHeight - paddingV) {
+                    float newY = Math.max(paddingV, panelHeight - paddingV - h);
+                    abs.getNode().setLocalTranslation(abs.getNode().getLocalTranslation().x, newY, 0f);
+                }
+            }
+        }
+
         renderer.updateGeometry(getCurrentWidth(), getCurrentHeight());
     }
+
 
     /**
      * Recalculates and repositions this panel and all ancestor panels.

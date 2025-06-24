@@ -18,7 +18,6 @@ import com.jme3.scene.control.Control;
  * Поддерживает переключение между первым и третьим лицом.
  */
 public class CameraEffectsControl extends AbstractControl {
-
     private final Camera cam;
     private final Player player;
     private final MovementControl moveCtrl;
@@ -66,10 +65,6 @@ public class CameraEffectsControl extends AbstractControl {
         this.thirdPerson = thirdPerson;
     }
 
-    public boolean isThirdPerson() {
-        return thirdPerson;
-    }
-
     public void notifyJumpStart() {
         isJumping = true;
         jumpStartHeight = characterCtrl.getPhysicsLocation().y;
@@ -94,7 +89,7 @@ public class CameraEffectsControl extends AbstractControl {
         targetRoll = 0f;
 
         boolean moving = moveCtrl.isMoving() && characterCtrl.onGround();
-        boolean running = moving && moveCtrl.getCurrentSpeed() > (player.getWalkSpeed() + 0.01f);
+        boolean running = moving && moveCtrl.getCurrentSpeed() > (player.getPlayerConfig().getMovement().getWalkSpeed() + 0.01f);
 
         if (!thirdPerson) {
             // FIRST PERSON CAMERA EFFECTS
@@ -114,7 +109,7 @@ public class CameraEffectsControl extends AbstractControl {
                 targetYOffset = halfHeight - shake;
                 targetXOffset = shake * 0.14f * FastMath.sin(landingShakeTimer * 26f);
             } else if (moving) {
-                float speed = FastMath.clamp(moveCtrl.getCurrentSpeed() / (player.getWalkSpeed() + player.getSprintSpeed()), 0.5f, 1.0f);
+                float speed = FastMath.clamp(moveCtrl.getCurrentSpeed() / (player.getPlayerConfig().getMovement().getWalkSpeed() + player.getPlayerConfig().getMovement().getSprintSpeed()), 0.5f, 1.0f);
 
                 bobPhase += FastMath.TWO_PI * bobFrequency * tpf * speed;
                 bobPhase %= FastMath.TWO_PI;
@@ -152,7 +147,9 @@ public class CameraEffectsControl extends AbstractControl {
 
             // Сглаживание (чтобы камера не дёргалась резко)
             thirdPersonCamOffset.interpolateLocal(targetCamPos, FastMath.clamp(tpf * 4f, 0f, 1f));
-            cam.setLocation(thirdPersonCamOffset);
+            Vector3f camPos = player.getCamControl().getDesiredCameraPosition();
+            cam.setLocation(camPos);
+            //cam.setLocation(thirdPersonCamOffset);
 
             // Камера всегда "смотрит" на голову персонажа
             Vector3f lookTarget = charPos.add(0, halfHeight, 0);

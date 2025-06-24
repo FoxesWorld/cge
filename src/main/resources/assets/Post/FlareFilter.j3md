@@ -1,19 +1,17 @@
-MaterialDef Flare Filter {
+MaterialDef FlareFilter {
+
     MaterialParameters {
-        Texture2D Texture      // The rendered scene
-        Float FlareIntensity   // Intensity of the flare [default: 1.0]
-        Float FlareThreshold   // Brightness threshold for flare [default: 1.0]
-        Color FlareColor       // Flare tint color
+        Float FlareIntensity
+        Float FlareThreshold
+        Color FlareColor
+        Texture2D Texture
     }
 
     Technique {
-        VertexShader   GLSL100:   Common/MatDefs/Post/Post.vert
-        FragmentShader GLSL100:   assets/Post/FlareFilter.frag
+        VertexShader   GLSL150: Common/MatDefs/Post/Post.vert
+        FragmentShader GLSL150: assets/Post/FlareFilter.frag
 
         WorldParameters {
-        }
-
-        Defines {
         }
 
         RenderState {

@@ -42,7 +42,7 @@ public class Game {
         settings.setFrameRate(-1);
         try (InputStream icoStream = CalistaGameEngine.class.getClassLoader().getResourceAsStream("assets/theme/icon/engineLogo.ico")) {
             ICOParser icoParser = new ICOParser();
-            BufferedImage bestIcon = icoParser.getBestIcon(icoParser.parse(icoStream));
+            BufferedImage bestIcon = icoParser.getLargestIcon(icoParser.parse(icoStream));
             settings.setIcons(new BufferedImage[]{bestIcon});
         } catch (IOException e) {
             e.printStackTrace();

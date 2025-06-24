@@ -8,11 +8,8 @@ public interface PlayerContext {
     InputManager getInput();
     Camera getCam();
     CharacterControl getCharacter();
-    float getWalkSpeed();
-    float getSprintSpeed();
     PlayerHud getPlayerHud();
     PlayerCameraControl getCamControl();
-
+    PlayerAnimationController getAnimationController();
     CameraEffectsControl getCamEffectsControl();
-    // Добавьте другие необходимые методы
 }
