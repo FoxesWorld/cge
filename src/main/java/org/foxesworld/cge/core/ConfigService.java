@@ -91,9 +91,13 @@ public class ConfigService {
      */
     @SuppressWarnings("unchecked")
     public <T> T getConfig(String fileName, boolean exportsConfig) throws IOException {
+        if (!exportsConfig) {
+            // Не экспортируем этот конфиг — создаём новый (НЕ сохраняем на диск!)
+            return createDefault(fileName);
+        }
         return (T) cache.computeIfAbsent(fileName, key -> {
             try {
-                return loadConfig(key, exportsConfig);
+                return loadConfig(key, true);
             } catch (IOException e) {
                 throw new RuntimeException("Failed to load config: " + fileName, e);
             }
@@ -115,6 +119,12 @@ public class ConfigService {
         return cfg;
     }
 
+    public boolean isExports(String configName) {
+        Objects.requireNonNull(configName, "Имя конфигурационного файла не должно быть null");
+        Path path = CONFIG_DIR.resolve(configName);
+        return Files.exists(path);
+    }
+
     /**
      * Internal method to load a config file or create a default one if not found.
      *
@@ -128,7 +138,7 @@ public class ConfigService {
         Path path = CONFIG_DIR.resolve(fileName);
 
         if (!exportsConfig) {
-            return createAndSaveDefault(fileName, clazz, false);
+            return createDefault(fileName);
         }
 
         if (Files.notExists(path)) {
@@ -139,7 +149,6 @@ public class ConfigService {
             return gson.fromJson(reader, clazz);
         }
     }
-
 
     /**
      * Saves a configuration object to disk and updates the cache.
@@ -188,10 +197,11 @@ public class ConfigService {
     }
 
     /**
-     * Creates a default instance of the config class and saves it to disk.
+     * Creates a default instance of the config class and saves it to disk (if exports == true).
      *
      * @param fileName the config file name
      * @param clazz    the config class
+     * @param exports  whether to save config to disk
      * @param <T>      the config type
      * @return the created default config
      * @throws IOException if instantiation or writing fails
@@ -199,7 +209,7 @@ public class ConfigService {
     private <T> T createAndSaveDefault(String fileName, Class<T> clazz, boolean exports) throws IOException {
         try {
             T instance = clazz.getDeclaredConstructor().newInstance();
-            if(exports) {
+            if (exports) {
                 saveConfigInternal(fileName, instance);
             }
             return instance;
@@ -208,8 +218,26 @@ public class ConfigService {
         }
     }
 
-       /* @param configFileName The name of the configuration file that was updated.
-            */
+    /**
+     * Creates a default instance of the config class (does NOT save to disk).
+     *
+     * @param fileName the config file name
+     * @param <T>      the config type
+     * @return the created default config
+     * @throws IOException if instantiation fails
+     */
+    private <T> T createDefault(String fileName) throws IOException {
+        Class<T> clazz = getRegisteredClass(fileName);
+        try {
+            return clazz.getDeclaredConstructor().newInstance();
+        } catch (InstantiationException | IllegalAccessException | InvocationTargetException | NoSuchMethodException e) {
+            throw new IOException("Failed to instantiate default config: " + clazz.getName(), e);
+        }
+    }
+
+    /**
+     * @param configFileName The name of the configuration file that was updated.
+     */
     public void triggerModuleReload(String configFileName) {
         if (configFileName == null || calistaGameEngine == null) {
             return;
@@ -220,7 +248,6 @@ public class ConfigService {
             calistaGameEngine.onConfigReloaded(configFileName);
         });
     }
-
 
     /**
      * Asynchronously preloads a configuration in a background thread.

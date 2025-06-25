@@ -1,6 +1,8 @@
 package org.foxesworld.cge.tmp;
 
 import com.jme3.asset.AssetManager;
+import com.jme3.audio.AudioData;
+import com.jme3.audio.AudioNode;
 import com.jme3.effect.ParticleEmitter;
 import com.jme3.effect.ParticleMesh;
 import com.jme3.material.Material;
@@ -68,11 +70,22 @@ public class ShapeParty {
                     float y = baseHeight + random.nextFloat() * 5f;
                     instance.setLocalTranslation(x, y, z);
 
-                    // Добавляем эффект частиц как дочерний элемент к объекту
+                    // Частицы
                     ParticleEmitter emitter = particleTemplate.clone();
-                    emitter.setLocalTranslation(0, 1.5f, 0); // немного над объектом
+                    emitter.setLocalTranslation(0, -6.5f, 0);
                     ((Node) instance).attachChild(emitter);
-                    emitter.emitAllParticles(); // запускаем эффект
+                    emitter.emitAllParticles();
+
+                    // --- PHONON AUDIO ---
+                    AudioNode sound = new AudioNode(assetManager, "Sounds/bang.mp3", AudioData.DataType.Buffer);
+                    sound.setPositional(true);
+                    sound.setLocalTranslation(0, 0, 0); // относительно instance
+                    sound.setVolume(2.0f);
+                    sound.setLooping(false);
+
+                    ((Node) instance).attachChild(sound);
+                    sound.playInstance();
+                    // --------------------
 
                     calistaGameEngine.getRootNode().attachChild(instance);
 

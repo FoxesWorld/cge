@@ -26,7 +26,7 @@ public class RigidBodyModule extends EngineModule<PhysicsConfig> {
     private final PhysicsModule physicsModule;
 
     public RigidBodyModule(PhysicsModule physicsModule) {
-        super("physics", PhysicsConfig.class, physicsModule.getApp());
+        super(RigidBodyModule.class, PhysicsConfig.class, physicsModule.getApp());
         this.physicsModule = physicsModule;
     }
 

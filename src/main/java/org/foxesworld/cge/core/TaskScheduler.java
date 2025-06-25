@@ -97,9 +97,10 @@ public class TaskScheduler {
 
         // Configure scheduled executor to remove tasks after execution
         scheduledExecutor.setRemoveOnCancelPolicy(true);
-
+        logger.info("Java version: " + System.getProperty("java.version"));
         logger.info("TaskScheduler initialized with {} compute threads and {} IO threads",
                 computeThreads, ioThreads);
+        logger.info("VM args: " + java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments());
     }
 
     /**

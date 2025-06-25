@@ -33,9 +33,9 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
     private CollisionModule collisionModule;
 
     public PhysicsModule(CalistaGameEngine app) {
-        super("physics", PhysicsConfig.class, app, false);
+        super(PhysicsModule.class, PhysicsConfig.class, app, false);
         this.app = app;
-        this.subManager = new ModuleManager(app);
+        this.subManager = app.getModuleManager();
     }
 
     @Override
@@ -53,7 +53,7 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
 
         // Register and init sub-modules
         registerSubModules();
-        subManager.initializeAll(app);
+        //subManager.initializeAll(app);
         applyConfig();
 
         // Setup debug if enabled

@@ -22,8 +22,8 @@ public class ECSModule extends EngineModule<ECSConfig> {
     private DefaultEntityData entityData;
 
     public ECSModule(CalistaGameEngine app) {
-        super("ecs", ECSConfig.class, app, false);
-        this.subManager = new ModuleManager(app);
+        super(ECSModule.class, ECSConfig.class, app, false);
+        this.subManager = app.getModuleManager();
     }
 
     @Override

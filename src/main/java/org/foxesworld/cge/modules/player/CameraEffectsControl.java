@@ -16,6 +16,7 @@ import com.jme3.scene.control.Control;
 /**
  * CameraEffectsControl: AAA-style head bob, jump/landing and roll effects.
  * Поддерживает переключение между первым и третьим лицом.
+ * Все эффекты масштабируются пропорционально размеру модели игрока (высоте капсулы).
  */
 public class CameraEffectsControl extends AbstractControl {
     private final Camera cam;
@@ -23,6 +24,10 @@ public class CameraEffectsControl extends AbstractControl {
     private final MovementControl moveCtrl;
     private final CharacterControl characterCtrl;
     private final float characterHeight;
+    private final float characterRadius;
+
+    // Эталонная высота "человека" для масштабирования эффектов (метры)
+    private static final float BASE_HEIGHT = 1.6f;
 
     private float verticalOffsetSmoothed;
     private float targetYOffset;
@@ -56,6 +61,7 @@ public class CameraEffectsControl extends AbstractControl {
             throw new IllegalStateException("CameraEffectsControl expects CapsuleCollisionShape");
         }
         this.characterHeight = capsule.getHeight() + 2f * capsule.getRadius();
+        this.characterRadius = capsule.getRadius();
 
         verticalOffsetSmoothed = characterHeight / 2f;
         targetYOffset = verticalOffsetSmoothed;
@@ -73,7 +79,9 @@ public class CameraEffectsControl extends AbstractControl {
 
     public void notifyLanding(float airTime) {
         isJumping = false;
-        landingOffset = FastMath.clamp(FastMath.log(airTime + 1f), 0.07f, 0.32f);
+        // Масштабируем силу приземления под размер персонажа
+        float scale = characterHeight / BASE_HEIGHT;
+        landingOffset = FastMath.clamp(FastMath.log(airTime + 1f), 0.07f * scale, 0.32f * scale);
         landingShakeTimer = landingShakeDuration;
         bobPhase = 0f;
         stepPhase = 0f;
@@ -91,23 +99,26 @@ public class CameraEffectsControl extends AbstractControl {
         boolean moving = moveCtrl.isMoving() && characterCtrl.onGround();
         boolean running = moving && moveCtrl.getCurrentSpeed() > (player.getPlayerConfig().getMovement().getWalkSpeed() + 0.01f);
 
+        // Масштабируем эффекты по высоте модели
+        float scale = characterHeight / BASE_HEIGHT;
+
         if (!thirdPerson) {
             // FIRST PERSON CAMERA EFFECTS
-            float bobAmplitude = running ? 0.07f : 0.034f;
-            float bobFrequency = running ? 8.1f : 5.1f;
-            float lateralAmplitude = running ? 0.022f : 0.011f;
-            float lateralFrequency = running ? 4.3f : 2.1f;
-            float rollAmplitude = running ? 0.16f : 0.09f;
+            float bobAmplitude = (running ? 0.07f : 0.034f) * scale;
+            float bobFrequency = (running ? 8.1f : 5.1f) / FastMath.sqrt(scale); // выше персонаж = ниже частота
+            float lateralAmplitude = (running ? 0.022f : 0.011f) * scale;
+            float lateralFrequency = (running ? 4.3f : 2.1f) / FastMath.sqrt(scale);
+            float rollAmplitude = (running ? 0.16f : 0.09f) * scale;
             float rollSyncShift = FastMath.HALF_PI;
 
             if (isJumping) {
                 float jumpNow = (charPos.y - jumpStartHeight) + halfHeight;
-                targetYOffset = FastMath.interpolateLinear(0.18f, verticalOffsetSmoothed, jumpNow + 0.04f * FastMath.sin(bobPhase));
+                targetYOffset = FastMath.interpolateLinear(0.18f, verticalOffsetSmoothed, jumpNow + 0.04f * scale * FastMath.sin(bobPhase));
             } else if (landingShakeTimer > 0f) {
-                float shake = computeLandingShake();
+                float shake = computeLandingShake(scale);
                 landingShakeTimer = Math.max(landingShakeTimer - tpf, 0f);
                 targetYOffset = halfHeight - shake;
-                targetXOffset = shake * 0.14f * FastMath.sin(landingShakeTimer * 26f);
+                targetXOffset = shake * 0.14f * scale * FastMath.sin(landingShakeTimer * 26f / FastMath.sqrt(scale));
             } else if (moving) {
                 float speed = FastMath.clamp(moveCtrl.getCurrentSpeed() / (player.getPlayerConfig().getMovement().getWalkSpeed() + player.getPlayerConfig().getMovement().getSprintSpeed()), 0.5f, 1.0f);
 
@@ -120,13 +131,13 @@ public class CameraEffectsControl extends AbstractControl {
                 float vertBob = FastMath.sin(bobPhase) * bobAmplitude;
                 float latBob = FastMath.sin(stepPhase + FastMath.HALF_PI) * lateralAmplitude;
 
-                float totalBob = vertBob - Math.abs(latBob) * 0.13f;
+                float totalBob = vertBob - Math.abs(latBob) * 0.13f * scale;
                 targetYOffset = halfHeight + totalBob;
                 targetXOffset = latBob;
                 targetRoll = FastMath.sin(stepPhase + rollSyncShift) * rollAmplitude;
             } else {
-                idleBreathPhase = (idleBreathPhase + FastMath.TWO_PI * 1.33f * tpf) % FastMath.TWO_PI;
-                float idleBob = FastMath.sin(idleBreathPhase) * 0.009f;
+                idleBreathPhase = (idleBreathPhase + FastMath.TWO_PI * 1.33f * tpf / FastMath.sqrt(scale)) % FastMath.TWO_PI;
+                float idleBob = FastMath.sin(idleBreathPhase) * 0.009f * scale;
                 targetYOffset = halfHeight + idleBob;
             }
 
@@ -142,8 +153,10 @@ public class CameraEffectsControl extends AbstractControl {
         } else {
             // THIRD PERSON CAMERA FOLLOW
             Vector3f lookDir = cam.getDirection().normalize();
-            Vector3f targetCamPos = charPos.subtract(lookDir.mult(thirdPersonDistance));
-            targetCamPos.y += thirdPersonHeightOffset;
+            float tpsDistance = thirdPersonDistance * scale;
+            float tpsHeightOffset = thirdPersonHeightOffset * scale;
+            Vector3f targetCamPos = charPos.subtract(lookDir.mult(tpsDistance));
+            targetCamPos.y += tpsHeightOffset;
 
             // Сглаживание (чтобы камера не дёргалась резко)
             thirdPersonCamOffset.interpolateLocal(targetCamPos, FastMath.clamp(tpf * 4f, 0f, 1f));
@@ -165,9 +178,9 @@ public class CameraEffectsControl extends AbstractControl {
         return this;
     }
 
-    private float computeLandingShake() {
+    private float computeLandingShake(float scale) {
         float progress = (landingShakeDuration - landingShakeTimer) / landingShakeDuration;
         float spring = FastMath.exp(-progress * 6f) * FastMath.sin(progress * FastMath.PI * 2.2f);
-        return landingOffset * (1f - progress) * (0.62f + 0.38f * spring);
+        return landingOffset * (1f - progress) * (0.62f + 0.38f * spring) * scale;
     }
 }

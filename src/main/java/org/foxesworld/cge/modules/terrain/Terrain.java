@@ -21,7 +21,7 @@ import org.foxesworld.cge.modules.physics.PhysicsModule;
 public class Terrain extends EngineModule<TerrainConfig> {
 
     public Terrain(CalistaGameEngine calistaGameEngine) {
-        super("terrain", TerrainConfig.class, calistaGameEngine);
+        super(Terrain.class, TerrainConfig.class, calistaGameEngine, false);
     }
 
     /**
@@ -31,7 +31,7 @@ public class Terrain extends EngineModule<TerrainConfig> {
      */
     public void createTestTerrain(float width, float height) {
         Material mat = new Material(getGameEngine().getAssetManager(), "Common/MatDefs/Light/PBRLighting.j3md");
-        mat.setTexture("BaseColorMap", getGameEngine().getAssetRepo().getTexture("calista_grid_test_diff"));
+        mat.setTexture("BaseColorMap", getGameEngine().getAssetRepo().getTexture("ch2_dor_bushyground"));
         mat.setBoolean("UseSpecGloss", false);
         mat.setFloat("Glossiness", 0.7f);
         mat.setBoolean("UseSpecularAA", false);
@@ -45,7 +45,7 @@ public class Terrain extends EngineModule<TerrainConfig> {
 
         Quad quad = new Quad(width, height);
         Geometry terrain = new Geometry("TerrainPlane", quad);
-        terrain.getMesh().scaleTextureCoordinates(new Vector2f(32, 32));
+        terrain.getMesh().scaleTextureCoordinates(new Vector2f(16, 16));
         terrain.setLocalTranslation(-width / 2f, 0, height / 2f);
         terrain.rotate(-FastMath.HALF_PI, 0, 0);
         terrain.setMaterial(mat);

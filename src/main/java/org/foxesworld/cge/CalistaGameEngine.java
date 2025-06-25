@@ -3,6 +3,8 @@ package org.foxesworld.cge;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.StatsAppState;
 import com.jme3.asset.AssetManager;
+import com.jme3.phonon.*;
+import com.jme3.phonon.desktop_javasound.JavaSoundPhononSettings;
 import com.jme3.post.FilterPostProcessor;
 import org.foxesworld.cge.core.AssetRepo;
 import org.foxesworld.cge.core.ConfigEditorState;
@@ -22,12 +24,15 @@ import org.foxesworld.cge.modules.ModuleConfig;
 import org.foxesworld.cge.modules.ecs.ECSModule;
 import org.foxesworld.cge.modules.popcycle.PopCycle;
 import org.foxesworld.cge.modules.scene.SceneModule;
+import org.foxesworld.cge.modules.sound.SoundModule;
 import org.foxesworld.cge.tmp.ShapeParty;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.util.Comparator;
 import java.util.List;
 import java.util.logging.LogManager;
+
+import static com.jme3.audio.AudioContext.setAudioRenderer;
 
 /**
  * Main game engine class with dynamic module loading
@@ -44,6 +49,7 @@ public class CalistaGameEngine extends SimpleApplication {
     private AssetLoader assetLoader;
     private ECSModule ecsModule;
     private SceneModule scene;
+    private SoundModule soundModule;
     private ModuleManager moduleManager;
 
     /**
@@ -51,7 +57,7 @@ public class CalistaGameEngine extends SimpleApplication {
      *
      * @param modulesToLoad list of module configurations to load
      */
-    public CalistaGameEngine(List<ModuleConfig> modulesToLoad) {
+    public CalistaGameEngine(List<ModuleConfig> modulesToLoad) throws Exception {
         this.modulesToLoad = modulesToLoad;
 
         // Configure logging
@@ -65,7 +71,7 @@ public class CalistaGameEngine extends SimpleApplication {
         this.configService = new ConfigService(this);
         this.taskScheduler = new TaskScheduler();
 
-
+        // 4. Остальной ваш инициализационный код
         GenericByteParser<Byte[]> parser = new GenericByteParser<>(ByteBoxingUtils::toObject);
         StreamingParserLoader<Byte[]> loader = new StreamingParserLoader<>(parser);
         this.byteStreamer = new StreamingManager<>(loader::load, true, 0);
@@ -89,7 +95,7 @@ public class CalistaGameEngine extends SimpleApplication {
                 .forEach(cfg -> moduleManager.register(cfg.create(this), cfg.getPriority()));
 
         // Initialize and load all modules
-        moduleManager.initializeAll(this);
+        //moduleManager.initializeAll(this);
         moduleManager.loadAll(this, () -> {
             // Register custom importers
             OBJImporter importer = new OBJImporter(OBJImporter.UVProjection.AUTO, true, true);
@@ -98,7 +104,7 @@ public class CalistaGameEngine extends SimpleApplication {
 
             this.scene = moduleManager.getModule(SceneModule.class);
             this.ecsModule = moduleManager.getModule(ECSModule.class);
-
+            this.soundModule = moduleManager.getModule(SoundModule.class);
             // Load assets
             assetLoader.loadAllAssets(() -> {
                 new ShapeParty(this).startParty();
@@ -164,6 +170,10 @@ public class CalistaGameEngine extends SimpleApplication {
 
     public AssetRepo getAssetRepo() {
         return assetRepo;
+    }
+
+    public SoundModule getSoundModule() {
+        return soundModule;
     }
 
     public AssetLoader getAssetLoader() {

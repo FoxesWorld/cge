@@ -23,7 +23,7 @@ public class UIModule extends EngineModule<UIConfig> {
     private NovaUI novaUi;
 
     public UIModule(CalistaGameEngine app) {
-        super(CONFIG_FILE, UIConfig.class, app, false);
+        super(UIModule.class, UIConfig.class, app, false);
         this.calistaGameEngine = app;
         logger.info("UIModule created (config = {})", CONFIG_FILE);
     }

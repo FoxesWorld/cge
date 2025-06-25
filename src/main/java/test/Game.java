@@ -1,5 +1,7 @@
 package test;
 
+import com.jme3.audio.AudioNode;
+import com.jme3.math.Vector3f;
 import com.jme3.system.AppSettings;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.ICOParser;
@@ -10,6 +12,8 @@ import org.foxesworld.cge.modules.physics.PhysicsModule;
 import org.foxesworld.cge.modules.player.PlayerModule;
 import org.foxesworld.cge.modules.renderer.RendererModule;
 import org.foxesworld.cge.modules.scene.SceneModule;
+import org.foxesworld.cge.modules.sound.SoundConfig;
+import org.foxesworld.cge.modules.sound.SoundModule;
 import org.foxesworld.cge.modules.terrain.Terrain;
 import org.foxesworld.cge.modules.ui.UIModule;
 
@@ -30,14 +34,21 @@ public class Game {
              new ModuleConfig(UIModule::new,        5),
              new ModuleConfig(PlayerModule::new, 40),
              new ModuleConfig(Terrain::new, 25),
-                new ModuleConfig(ECSModule::new, 60)
+             new ModuleConfig(ECSModule::new, 60),
+             new ModuleConfig(SoundModule::new, 100)
          );
 
-        CalistaGameEngine app = new CalistaGameEngine(cfg);
+        CalistaGameEngine app = null;
+        try {
+            app = new CalistaGameEngine(cfg);
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
         setupTheme("assets/theme/calista.properties");
 
         AppSettings settings = new AppSettings(false);
         settings.setTitle("Calista Game Engine");
+        //settings.setAudioRenderer(null);
         settings.setSettingsDialogImage("assets/theme/logo3.png");
         settings.setFrameRate(-1);
         try (InputStream icoStream = CalistaGameEngine.class.getClassLoader().getResourceAsStream("assets/theme/icon/engineLogo.ico")) {

@@ -1,6 +1,8 @@
 package org.foxesworld.cge.modules.player;
 
 import com.jme3.anim.AnimComposer;
+import com.jme3.audio.AudioData;
+import com.jme3.audio.AudioNode;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.collision.PhysicsRayTestResult;
@@ -103,6 +105,7 @@ public class Player extends Node implements PlayerContext {
             public void onJumpStart() {
                 camEffectsControl.notifyJumpStart();
                 if (animationController != null) animationController.play("jump", 0.18f, null, false);
+                playerModule.getGameEngine().getSoundModule().playSound("Sounds/bang.ogg", playerModel.getLocalTranslation(), 1.0f);
             }
 
             @Override
@@ -268,6 +271,11 @@ public class Player extends Node implements PlayerContext {
 
     @Override public CharacterControl getCharacter() { return character; }
     @Override public Camera getCam() { return cam; }
+
+    public Spatial getPlayerModel() {
+        return playerModel;
+    }
+
     @Override public InputManager getInput() { return input; }
     @Override public CameraEffectsControl getCamEffectsControl() { return camEffectsControl; }
     @Override public PlayerCameraControl getCamControl() { return camControl; }

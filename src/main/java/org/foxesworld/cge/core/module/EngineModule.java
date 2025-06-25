@@ -63,29 +63,29 @@ public abstract class EngineModule<ModuleConfig> extends BaseAppState {
     /**
      * Constructs an EngineModule with default behavior (config is registered).
      *
-     * @param configFile        the path or identifier of this module's configuration file
+     * @param moduleClass        the path or identifier of this module's configuration file
      * @param configClass       the class object of the configuration type
      * @param calistaGameEngine the central game engine instance
      * @throws NullPointerException if calistaGameEngine is null
      */
-    public EngineModule(String configFile, Class<ModuleConfig> configClass, CalistaGameEngine calistaGameEngine) {
-        this(configFile, configClass, calistaGameEngine, true);
+    public EngineModule(Class moduleClass, Class<ModuleConfig> configClass, CalistaGameEngine calistaGameEngine) {
+        this(moduleClass, configClass, calistaGameEngine, true);
     }
 
     /**
      * Constructs an EngineModule with optional config registration.
      *
-     * @param configFile        the path or identifier of this module's configuration file
+     * @param moduleClass        the path or identifier of this module's configuration file
      * @param configClass       the class object of the configuration type
      * @param calistaGameEngine the central game engine instance
      * @param exportsConfig     if true, registers the config with the ConfigService
      * @throws NullPointerException if calistaGameEngine is null
      */
-    public EngineModule(String configFile, Class<ModuleConfig> configClass, CalistaGameEngine calistaGameEngine, boolean exportsConfig) {
+    public EngineModule(Class moduleClass, Class<ModuleConfig> configClass, CalistaGameEngine calistaGameEngine, boolean exportsConfig) {
         this.gameEngine = Objects.requireNonNull(calistaGameEngine, "Game engine cannot be null");
         this.configService = Objects.requireNonNull(calistaGameEngine.getConfigService(), "Config service cannot be null");
         this.taskScheduler = Objects.requireNonNull(calistaGameEngine.getTaskScheduler(), "Task scheduler cannot be null");
-        this.configFile = configFile;
+        this.configFile = moduleClass.getSimpleName();
         this.configClass = configClass;
         this.exportsConfig = new AtomicBoolean(exportsConfig);
 

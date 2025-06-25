@@ -1,0 +1,8 @@
+{
+  "maxConvolutionSources": 8,
+  "numDiffuseSamples": 64,
+  "numRays": 2048,
+  "numOcclusionSamples": 128,
+  "sampleRate": 44100,
+  "frameSize": 1024
+}

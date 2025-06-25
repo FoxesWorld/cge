@@ -173,6 +173,15 @@ public class PlayerCameraControl extends AbstractControl implements AnalogListen
 
     @Override
     public void onAnalog(String name, float value, float tpf) {
+
+        if (input.isCursorVisible() && (
+                name.equals(MOUSE_LEFT) ||
+                        name.equals(MOUSE_RIGHT) ||
+                        name.equals(MOUSE_UP) ||
+                        name.equals(MOUSE_DOWN))) {
+            return;
+        }
+
         switch (name) {
             case MOUSE_LEFT  -> targetYaw   += value * sensitivity;
             case MOUSE_RIGHT -> targetYaw   -= value * sensitivity;

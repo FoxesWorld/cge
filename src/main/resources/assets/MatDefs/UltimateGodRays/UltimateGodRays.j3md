@@ -1,0 +1,38 @@
+MaterialDef UltimateGodRays {
+
+    Technique {
+        VertexShader   GLSL150:   assets/MatDefs/UltimateGodRays/UltimateGodRays.vert
+        FragmentShader GLSL150:   assets/MatDefs/UltimateGodRays/UltimateGodRays.frag
+
+        WorldParameters {
+            WorldViewProjectionMatrix
+            ViewMatrix
+        }
+
+        Defines {
+            USE_SHADOWMAP : UseShadowMap
+        }
+
+        Attributes {
+            Position
+            Normal
+            TexCoord
+        }
+
+        Uniforms {
+            LightPosition
+            LightColor
+            SunColor
+            SunIntensity
+            RayDecay
+            RayExposure
+            RayDensity
+            RayWeight
+            RaySamples
+            ShadowMap
+            ShadowMapSize
+            Time
+            CameraPosition
+        }
+    }
+}

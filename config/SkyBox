@@ -1,0 +1,51 @@
+{
+  "skyBoxTexture": "cubemap_0",
+  "envMap": "CubeMap",
+  "starsOption": "Cube",
+  "bottomDome": true,
+  "cloudFlattering": 0.5,
+  "cloudiness": 0.5,
+  "cloudYOffset": 0.4,
+  "topAngle": 1.78,
+  "cloudsEnabled": true,
+  "shadowMode": "CastAndReceive",
+  "shadowMapSize": 2048,
+  "shadowFrustumCount": 3,
+  "edgeFilteringMode": "PCF4",
+  "shadowZExtend": 1000.0,
+  "enableShadows": true,
+  "sunLightIntensity": 1.2,
+  "moonLightIntensity": 0.4,
+  "ambientColor": [
+    0.2,
+    0.2,
+    0.2,
+    1.0
+  ],
+  "animatedSun": true,
+  "animatedMoon": true,
+  "sunColor": [
+    1.0,
+    1.0,
+    1.0,
+    1.0
+  ],
+  "moonColor": [
+    0.6,
+    0.7,
+    1.0,
+    1.0
+  ],
+  "dayIntensity": 1.5,
+  "nightIntensity": 0.1,
+  "moonIntensity": 0.3,
+  "dayLengthSec": 600.0,
+  "verticalAngle": 64.0,
+  "bloomEnabled": true,
+  "skyExposure": 1.0,
+  "bloomIntensity": 1.2,
+  "bloomExposure": 2.0,
+  "dayExposure": 1.2,
+  "nightExposure": 0.3,
+  "starsEnabled": true
+}

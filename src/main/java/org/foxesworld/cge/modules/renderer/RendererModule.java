@@ -27,7 +27,7 @@ public class RendererModule extends EngineModule<RendererConfig> {
     private static final Logger logger = LogManager.getLogger(RendererModule.class);
     private static final String CONFIG_FILE = "render_config";
 
-    private final ModuleManager subManager;
+    private boolean postProcessingRegistered = false;
 
     /**
      * Constructs the RendererModule with its default SkyBox sub-module.
@@ -35,10 +35,9 @@ public class RendererModule extends EngineModule<RendererConfig> {
      * @param app the CalistaGameEngine instance
      */
     public RendererModule(CalistaGameEngine app) {
-        super("renderer", RendererConfig.class, app);
-        this.subManager = new ModuleManager(app);
-        // Register default SkyBox before config is loaded
-        subManager.register(new SkyBox(this), 100);
+        super(RendererModule.class, RendererConfig.class, app);
+        // Always register SkyBox (idempotent, safe for multi-register)
+        app.getModuleManager().register(new SkyBox(this), 100);
     }
 
     /**
@@ -64,20 +63,51 @@ public class RendererModule extends EngineModule<RendererConfig> {
         logger.info(" - Texture Array:           {}", caps.contains(Caps.TextureArray));
     }
 
-    /**
-     * Called when this module is disabled; currently no additional logic.
-     */
     @Override
     protected void onDisable() {
         // No special disable logic
     }
 
     /**
-     * Called after configuration is reloaded; can be used to apply dynamic changes.
+     * Called after configuration is reloaded; applies config and reloads submodules as needed.
      */
     @Override
     public void onConfigReloaded() {
-        // No dynamic config reload logic yet
+        logger.info("Reloading RendererModule config at runtime...");
+        RendererConfig cfg = getConfig();
+        if (cfg == null) {
+            logger.warn("RendererConfig not loaded, skipping reload");
+            return;
+        }
+        //CalistaGameEngine app = getApplication();
+
+        // Handle post-processing module reload
+        PostProcessingModule ppModule = gameEngine.getModuleManager().getModule(PostProcessingModule.class);
+        boolean hasPP = (ppModule != null);
+
+        if (cfg.isEnablePostEffects()) {
+            if (!hasPP) {
+                logger.info("Post effects enabled in config, registering PostProcessingModule");
+                gameEngine.getModuleManager().register(new PostProcessingModule(gameEngine), 30);
+                postProcessingRegistered = true;
+            } else {
+                logger.info("PostProcessingModule already present, reloading its config");
+                ppModule.onConfigReloaded();
+            }
+        } else {
+            if (hasPP) {
+                logger.info("Post effects disabled in config, removing PostProcessingModule");
+                gameEngine.getModuleManager().shutdownModule(PostProcessingModule.class); // You must implement shutdownModule in your ModuleManager
+                postProcessingRegistered = false;
+            }
+        }
+
+        // SkyBox should always be present, but if you want to allow dynamic removal, handle similarly
+
+        // Re-integrate with scene module if needed
+        initializeSceneModule(gameEngine);
+
+        logger.info("RendererModule config reload complete.");
     }
 
     /**
@@ -95,13 +125,10 @@ public class RendererModule extends EngineModule<RendererConfig> {
         }
 
         // Register post-processing if enabled in config
-        if (cfg.isEnablePostEffects()) {
-            subManager.register(new PostProcessingModule(app), 30);
+        if (cfg.isEnablePostEffects() && app.getModuleManager().getModule(PostProcessingModule.class) == null) {
+            app.getModuleManager().register(new PostProcessingModule(app), 30);
+            postProcessingRegistered = true;
         }
-
-        // Initialize and load all registered sub-modules
-        subManager.initializeAll(app);
-        subManager.loadAll(app, () -> logger.info("All render modules are ready!"));
 
         // Setup integration with scene module
         initializeSceneModule(app);
@@ -130,21 +157,11 @@ public class RendererModule extends EngineModule<RendererConfig> {
         // TODO: Update light or environment settings based on scene data
     }
 
-    /**
-     * Called each frame; sub-modules handle their own updates via AppState.
-     *
-     * @param tpf time per frame
-     */
     @Override
     protected void updateModule(float tpf) {
         // No direct per-frame logic here
     }
 
-    /**
-     * Cleans up the renderer and its sub-modules when the engine shuts down.
-     *
-     * @param app the Application instance
-     */
     @Override
     protected void cleanupModule(Application app) {
         logger.info("Cleaning up RendererModule and sub-modules...");

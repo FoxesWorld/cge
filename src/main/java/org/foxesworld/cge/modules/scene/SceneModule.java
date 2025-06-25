@@ -38,7 +38,7 @@ public class SceneModule extends EngineModule<SceneConfig> {
     private volatile SceneReadyContext readyContext = null;
 
     public SceneModule(CalistaGameEngine app) {
-        super("scene", SceneConfig.class, app, false);
+        super(SceneModule.class, SceneConfig.class, app, false);
         this.app = app;
     }
 

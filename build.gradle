@@ -9,22 +9,6 @@ version = '1.0.0'
 repositories {
     mavenCentral()
     maven { url 'https://jitpack.io' }
-    maven {
-        name = "GitHubPackages-riccardobl"
-        url = uri("https://maven.pkg.github.com/riccardobl/*")
-        credentials {
-            username = project.findProperty("gpr.user") ?: System.getenv("USERNAME_GITHUB")
-            password = project.findProperty("gpr.key") ?: System.getenv("TOKEN_GITHUB")
-        }
-    }
-    maven {
-        name = "GitHubPackages-jmePhonon"
-        url = uri("https://maven.pkg.github.com/jmePhonon/*")
-        credentials {
-            username = project.findProperty("gpr.user") ?: System.getenv("USERNAME_GITHUB")
-            password = project.findProperty("gpr.key") ?: System.getenv("TOKEN_GITHUB")
-        }
-    }
 }
 ext {
     jmeVersion = '3.8.1-stable'
@@ -37,14 +21,9 @@ dependencies {
     implementation "org.jmonkeyengine:jme3-lwjgl3:$jmeVersion"
     implementation "org.jmonkeyengine:jme3-effects:$jmeVersion"
     implementation files("lib/SkyControl-1.1.0.jar")
-    runtimeOnly    "org.jmonkeyengine:jme3-awt-dialogs:$jmeVersion"
-    implementation "org.jmonkeyengine:jme3-freetype:3.8.1-stable"
-
-
-    //implementation  'wf.frk:jme-effekseer-native:0.4'
-    implementation (group: 'com.jme3.phonon', name: 'jme_phonon', version: '0.3.7', ext: 'jar', classifier: '')
-    implementation  "wf.frk:jme3-bullet-vhacd:1.0.5"
-    implementation  "wf.frk:jme_f3b:0.92"
+    implementation files("lib/jme_phonon-0.3.7.jar")
+    implementation "org.jmonkeyengine:jme3-jogg:$jmeVersion"
+    implementation files("lib/jme3-awt-dialogs-3.8.1-stable.jar") // "org.jmonkeyengine:jme3-awt-dialogs:$jmeVersion"
 
     // GSON для загрузки конфигурации из JSON
     implementation 'com.google.code.gson:gson:2.11.0'
@@ -59,17 +38,22 @@ dependencies {
 
     // Физика Minie
     implementation 'com.github.stephengold:Minie:9.0.1'
-
-    // JAR-файлы из каталога libs
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
-
     // UI: FlatLaf
     implementation 'com.formdev:flatlaf:3.4.1'
-    implementation 'com.formdev:flatlaf-extras:3.4.1' // Доп. темы
+    implementation 'com.formdev:flatlaf-extras:3.4.1'
 }
 
 application {
     mainClass = 'test.Game'
+    applicationDefaultJvmArgs = [
+            '--add-opens=java.base/java.nio=ALL-UNNAMED',
+            '--add-exports=java.desktop/com.sun.media.sound=ALL-UNNAMED',
+            '-XX:+UseZGC',
+            '-XX:MaxGCPauseMillis=5',
+            '-Xss512k',
+            '-Xms4G',
+            '-Xmx4G'
+    ]
 }
 
 tasks.withType(JavaCompile).configureEach {

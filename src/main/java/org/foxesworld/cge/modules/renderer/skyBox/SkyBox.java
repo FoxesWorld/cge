@@ -36,6 +36,7 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
     private AmbientLight ambient;
     private DirectionalLightShadowRenderer shadowRenderer;
     private Updater updater;
+    private Spatial sky;
 
     private final Vector3f tmpDir = new Vector3f();
 
@@ -48,7 +49,7 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
     private boolean shadowsWithSun = true; // true=sun, false=moon
 
     public SkyBox(RendererModule rendererModule) {
-        super("skybox", SkyBoxConfig.class, rendererModule.getGameEngine());
+        super(SkyBox.class, SkyBoxConfig.class, rendererModule.getGameEngine());
         this.engine = rendererModule.getGameEngine();
     }
 
@@ -62,7 +63,7 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
     }
 
     private void setupSkyDome() {
-        Spatial sky = SkyFactory.createSky(
+        sky = SkyFactory.createSky(
                 engine.getAssetManager(),
                 engine.getAssetRepo().getTexture(getConfig().getSkyBoxTexture()),
                 SkyFactory.EnvMapType.valueOf(getConfig().getEnvMap())
@@ -234,7 +235,27 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
 
     @Override
     public void onConfigReloaded() {
-        // Support dynamic reconfiguration if needed
+        // Dynamic reconfiguration: re-init all relevant parts with new config
+        // Remove old
+        /*
+        if (shadowRenderer != null) viewPort().removeProcessor(shadowRenderer);
+        if (skyControl != null) {
+            skyControl.setEnabled(false);
+            engine.getRootNode().removeControl(skyControl);
+            skyControl = null;
+        }
+        if (sky != null) {
+            engine.getRootNode().detachChild(sky);
+            sky = null;
+        }
+        if (sunLight != null) engine.getRootNode().removeLight(sunLight);
+        if (moonLight != null) engine.getRootNode().removeLight(moonLight);
+        if (ambient != null) engine.getRootNode().removeLight(ambient);
+        */
+        // Re-create with updated config
+        setupLighting();
+        setupSkyDome();
+        setupShadows();
     }
 
     private ViewPort viewPort() {

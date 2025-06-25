@@ -21,104 +21,41 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * AAA-grade module management system for the Calista Game Engine.
- * <p>
  * Handles the entire lifecycle of engine modules: discovery, dependency resolution,
  * parallel initialization, hot-reloading, and robust error recovery.
- * <p>
- * Features:
- * <ul>
- *   <li>Automatic and manual module registration</li>
- *   <li>Dependency-aware topological sorting</li>
- *   <li>Parallel, non-blocking initialization</li>
- *   <li>Live module reloading and dynamic configuration</li>
- *   <li>Comprehensive error handling with recovery strategies</li>
- *   <li>Performance-optimized lookups and module tracking</li>
- *   <li>Module health monitoring and lifecycle events</li>
- * </ul>
  */
 public class ModuleManager {
     private static final Logger logger = LoggerFactory.getLogger(ModuleManager.class);
-    private static final int DEFAULT_THREAD_COUNT = Runtime.getRuntime().availableProcessors() > 1 ?
-            Runtime.getRuntime().availableProcessors() / 2 : 1;
+    private static final int DEFAULT_THREAD_COUNT = Math.max(1, Runtime.getRuntime().availableProcessors() / 2);
     private static final int SHUTDOWN_TIMEOUT_SECONDS = 60;
     private static final int MODULE_INIT_TIMEOUT_SECONDS = 30;
 
-    // Core engine references
     private final CalistaGameEngine gameEngine;
     private final AppStateManager stateManager;
     private final ConfigService configService;
     private final TaskScheduler taskScheduler;
 
-    // Module containers - ConcurrentSkipListMap ensures thread-safe priority-based ordering
+    // Thread-safe containers
     private final ConcurrentSkipListMap<Integer, EngineModule<?>> manualModules = new ConcurrentSkipListMap<>();
     private final ConcurrentHashMap<String, EngineModule<?>> moduleInstances = new ConcurrentHashMap<>();
-
-    // For fast class-based lookups (optimization)
     private final ConcurrentHashMap<Class<?>, EngineModule<?>> modulesByClass = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, ModuleHealth> moduleHealth = new ConcurrentHashMap<>();
 
-    // Module initialization resources
     private final ExecutorService initExecutor;
     private final Path modulesDir;
     private final Gson gson;
 
-    // State tracking with thread-safe atomics
     private final AtomicBoolean initializing = new AtomicBoolean(false);
     private final AtomicBoolean initialized = new AtomicBoolean(false);
     private final AtomicBoolean shuttingDown = new AtomicBoolean(false);
 
-    // Module health tracking
-    private final ConcurrentHashMap<String, ModuleHealth> moduleHealth = new ConcurrentHashMap<>();
+    // For onModuleLoaded (event after module init/attach)
+    private final ConcurrentHashMap<Class<?>, CopyOnWriteArrayList<Runnable>> moduleLoadListeners = new ConcurrentHashMap<>();
 
-    /**
-     * Constructs a new ModuleManager for the specified game engine.
-     *
-     * @param gameEngine the game engine instance
-     * @throws NullPointerException if gameEngine is null
-     */
     public ModuleManager(CalistaGameEngine gameEngine) {
         this(gameEngine, Paths.get("modules"));
     }
 
-    /**
-     * Gets all loaded modules as an unmodifiable map.
-     * Finds a module by its associated configuration file name.
-     * <p>
-     * This method iterates through all registered module instances and returns the first
-     * one whose config file name matches the provided name. This is essential for
-     * features like live-reloading from a UI editor.
-     * <p>
-     * <b>Note:</b> This requires the base {@code EngineModule} class to expose its
-     * configuration file name, for example, via a {@code getConfigFileName()} method.
-     *
-     * @return map of module names to instances
-     * @param configFileName The name of the configuration file (e.g., "postprocessing_config.json").
-     * @return The found {@link EngineModule}, or {@code null} if no module is associated with that config file.
-     */
-    public EngineModule<?> getModuleByConfigFile(String configFileName) {
-        if (configFileName == null || configFileName.isBlank()) {
-            return null;
-        }
-
-        for (EngineModule<?> module : moduleInstances.values()) {
-            // Assumes EngineModule has a method to get its config file name.
-            // Example in EngineModule: public String getConfigFileName() { return this.configFileName; }
-            if (configFileName.equalsIgnoreCase(module.getName())) {
-                return module;
-            }
-        }
-
-        logger.warn("No module found for config file: {}", configFileName);
-        return null;
-    }
-
-
-    /**
-     * Constructs a new ModuleManager with a custom modules directory.
-     *
-     * @param gameEngine the game engine instance
-     * @param modulesDir the directory containing module descriptor files
-     * @throws NullPointerException if gameEngine or modulesDir is null
-     */
     public ModuleManager(CalistaGameEngine gameEngine, Path modulesDir) {
         this.gameEngine = Objects.requireNonNull(gameEngine, "Game engine cannot be null");
         this.stateManager = Objects.requireNonNull(gameEngine.getStateManager(), "State manager cannot be null");
@@ -126,7 +63,6 @@ public class ModuleManager {
         this.taskScheduler = Objects.requireNonNull(gameEngine.getTaskScheduler(), "Task scheduler cannot be null");
         this.modulesDir = Objects.requireNonNull(modulesDir, "Modules directory cannot be null");
 
-        // Create a named thread pool with a reasonable size for module initialization
         this.initExecutor = Executors.newFixedThreadPool(
                 DEFAULT_THREAD_COUNT,
                 r -> {
@@ -137,15 +73,9 @@ public class ModuleManager {
                     return thread;
                 });
 
-        // Configure Gson with pretty printing and null serialization for better error messages
-        this.gson = new GsonBuilder()
-                .setPrettyPrinting()
-                .serializeNulls()
-                .create();
+        this.gson = new GsonBuilder().setPrettyPrinting().serializeNulls().create();
 
         logger.info("ModuleManager initialized with modules directory: {}", modulesDir);
-
-        // Create modules directory if it doesn't exist
         try {
             if (!Files.exists(modulesDir)) {
                 Files.createDirectories(modulesDir);
@@ -153,19 +83,12 @@ public class ModuleManager {
             }
         } catch (IOException e) {
             logger.warn("Failed to create modules directory {}: {}", modulesDir, e.getMessage());
-            // Continue execution - the directory might be created later or modules might be registered manually
         }
     }
 
     /**
-     * Registers a module manually with a given priority.
+     * Registers a module manually with a given priority and IMMEDIATELY initializes and attaches it.
      * Lower priority values mean higher execution priority.
-     *
-     * @param module   the module to register
-     * @param priority the module's priority (lower values loaded first)
-     * @return this ModuleManager instance for method chaining
-     * @throws IllegalStateException if initialization has already started
-     * @throws NullPointerException if module is null
      */
     public synchronized ModuleManager register(EngineModule<?> module, int priority) {
         if (initializing.get() || initialized.get()) {
@@ -178,7 +101,7 @@ public class ModuleManager {
         Objects.requireNonNull(module, "Module cannot be null");
         String moduleName = module.getClass().getSimpleName();
 
-        // Check if already registered
+        // Replace if already registered
         if (moduleInstances.containsKey(moduleName)) {
             logger.warn("Module {} already registered, replacing previous instance", moduleName);
         }
@@ -189,57 +112,129 @@ public class ModuleManager {
         moduleHealth.put(moduleName, new ModuleHealth(moduleName));
 
         logger.info("Registered module {} with priority {}", moduleName, priority);
+
+        // Immediately initialize and attach
+        try {
+            logger.debug("Immediately initializing/attaching module {} after registration", moduleName);
+            if (!module.isInitialized()) module.initialize(stateManager, gameEngine);
+            if (!module.isAttached()) stateManager.attach(module);
+            moduleHealth.get(moduleName).setStatus(ModuleState.RUNNING);
+            logger.info("Module {} initialized and attached after registration", moduleName);
+            notifyModuleLoaded(module.getClass());
+        } catch (Exception e) {
+            moduleHealth.get(moduleName).setStatus(ModuleState.FAILED, e.getMessage());
+            logger.error("Failed to immediately initialize/attach module {}: {}", moduleName, e.getMessage(), e);
+            tryRecoverModule(module, gameEngine);
+        }
         return this;
     }
 
     /**
-     * Synchronously initializes all manually registered modules in priority order.
-     *
-     * @param app the application context
-     * @return this ModuleManager instance for method chaining
-     * @throws NullPointerException if app is null
+     * Initializes and attaches a single module by its class, if not already attached.
+     * Returns true if initialization and attachment succeeded.
      */
+    public synchronized <T extends EngineModule<?>> boolean initModule(Class<T> moduleClass) {
+        Objects.requireNonNull(moduleClass, "Module class cannot be null");
+        T module = getModule(moduleClass);
+        if (module == null) {
+            logger.warn("Module {} not registered, cannot initialize", moduleClass.getSimpleName());
+            return false;
+        }
+        String moduleName = module.getClass().getSimpleName();
+        Application app = gameEngine;
+        try {
+            logger.debug("Initializing module {} via initModule", moduleName);
+            if (!module.isInitialized()) module.initialize(stateManager, app);
+            if (!module.isAttached()) stateManager.attach(module);
+            moduleHealth.get(moduleName).setStatus(ModuleState.RUNNING);
+            logger.info("Module {} initialized and attached", moduleName);
+            notifyModuleLoaded(moduleClass);
+            return true;
+        } catch (Exception e) {
+            moduleHealth.get(moduleName).setStatus(ModuleState.FAILED, e.getMessage());
+            logger.error("Failed to initialize/attach module {}: {}", moduleName, e.getMessage(), e);
+            tryRecoverModule(module, app);
+            return false;
+        }
+    }
+
+    public boolean shutdownModule(Class<? extends EngineModule<?>> moduleClass) {
+        EngineModule<?> module = getModule(moduleClass);
+        if (module != null) {
+            module.setEnabled(false);
+            stateManager.detach(module);
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Registers a callback to be executed once a module of the given class is loaded.
+     * If the module is already loaded and initialized, the callback is executed immediately.
+     * Returns the loaded module instance if present, otherwise null.
+     */
+    public <T extends EngineModule<?>> T onModuleLoaded(Class<T> moduleClass, Runnable run) {
+        Objects.requireNonNull(moduleClass, "Module class cannot be null");
+        Objects.requireNonNull(run, "Callback runnable cannot be null");
+        T loaded = getModule(moduleClass);
+        if (loaded != null && loaded.isInitialized()) {
+            run.run();
+            return loaded;
+        }
+        moduleLoadListeners.computeIfAbsent(moduleClass, c -> new CopyOnWriteArrayList<>()).add(run);
+        return loaded;
+    }
+
+    /**
+     * Internal: Call to notify all listeners that a module of the given class has been loaded.
+     */
+    private void notifyModuleLoaded(Class<?> moduleClass) {
+        List<Runnable> listeners = moduleLoadListeners.remove(moduleClass);
+        if (listeners != null) listeners.forEach(r -> {
+            try { r.run(); }
+            catch (Exception e) { logger.error("onModuleLoaded callback error", e); }
+        });
+    }
+
+    public EngineModule<?> getModuleByConfigFile(String configFileName) {
+        if (configFileName == null || configFileName.isBlank()) return null;
+        for (EngineModule<?> module : moduleInstances.values()) {
+            if (configFileName.equalsIgnoreCase(module.getName())) return module;
+        }
+        logger.warn("No module found for config file: {}", configFileName);
+        return null;
+    }
+
+    @Deprecated
     public synchronized ModuleManager initializeAll(Application app) {
         Objects.requireNonNull(app, "Application cannot be null");
-
         if (initialized.get()) {
             logger.warn("ModuleManager already initialized, skipping");
             return this;
         }
-
         if (!initializing.compareAndSet(false, true)) {
             logger.warn("ModuleManager initialization already in progress, skipping");
             return this;
         }
-
-        int successCount = 0;
-        int failCount = 0;
-
+        int successCount = 0, failCount = 0;
         for (Map.Entry<Integer, EngineModule<?>> entry : manualModules.entrySet()) {
             EngineModule<?> module = entry.getValue();
             String moduleName = module.getClass().getSimpleName();
-
             try {
                 logger.debug("Initializing module {} (priority {})", moduleName, entry.getKey());
-                module.initialize(stateManager, app);
-                stateManager.attach(module);
+                if (!module.isInitialized()) module.initialize(stateManager, app);
+                if (!module.isAttached()) stateManager.attach(module);
                 successCount++;
-
-                // Update health status
                 moduleHealth.get(moduleName).setStatus(ModuleState.RUNNING);
-
                 logger.info("Attached manual module {} (priority {})", moduleName, entry.getKey());
+                notifyModuleLoaded(module.getClass());
             } catch (Exception e) {
                 failCount++;
                 moduleHealth.get(moduleName).setStatus(ModuleState.FAILED, e.getMessage());
-
                 logger.error("Failed to attach manual module {}: {}", moduleName, e.getMessage(), e);
-
-                // Attempt recovery if possible
                 tryRecoverModule(module, app);
             }
         }
-
         initialized.set(true);
         initializing.set(false);
         logger.info("Initialized {} manual modules successfully, {} failed", successCount, failCount);
@@ -700,7 +695,7 @@ public class ModuleManager {
      * Checks the health of all modules and attempts recovery if needed.
      */
     private void checkModulesHealth() {
-        logger.debug("Performing module health check");
+        //logger.debug("Performing module health check");
 
         for (Map.Entry<String, EngineModule<?>> entry : moduleInstances.entrySet()) {
             String name = entry.getKey();
@@ -869,7 +864,7 @@ public class ModuleManager {
             return (T) module;
         }
 
-        // Fallback to iteration for subclass matching
+        // Fallback to iteration for subclass matching (supports interface and inheritance)
         for (EngineModule<?> m : moduleInstances.values()) {
             if (moduleClass.isInstance(m)) {
                 // Cache for future lookups

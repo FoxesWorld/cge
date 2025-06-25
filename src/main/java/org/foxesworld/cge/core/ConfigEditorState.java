@@ -105,8 +105,13 @@ public class ConfigEditorState extends AbstractAppState implements ActionListene
         statusLabel.setBorder(new EmptyBorder(10, 10, 10, 10));
         contentPane.add(statusLabel, BorderLayout.NORTH);
 
+        // Только экспортируемые
         DefaultListModel<String> fileListModel = new DefaultListModel<>();
-        configService.getRegisteredConfigFiles().forEach(fileListModel::addElement);
+        for (String fileName : configService.getRegisteredConfigFiles()) {
+            if (configService.isExports(fileName)) {
+                fileListModel.addElement(fileName);
+            }
+        }
         fileListBox = new JList<>(fileListModel);
         // Styling...
         fileListBox.setBackground(GtaTheme.PANEL_LIGHT);
@@ -234,66 +239,73 @@ public class ConfigEditorState extends AbstractAppState implements ActionListene
         gbc.insets = new Insets(8, 5, 8, 5);
         gbc.fill = GridBagConstraints.HORIZONTAL;
 
-        for (Field field : object.getClass().getDeclaredFields()) {
-            if (Modifier.isTransient(field.getModifiers()) || Modifier.isStatic(field.getModifiers())) continue;
-            field.setAccessible(true);
+        if(object.getClass().getDeclaredFields() != null) {
+            for (Field field : object.getClass().getDeclaredFields()) {
+                if (Modifier.isTransient(field.getModifiers()) || Modifier.isStatic(field.getModifiers())) continue;
+                field.setAccessible(true);
 
-            try {
-                Object value = field.get(object);
-                Class<?> type = field.getType();
-                gbc.gridwidth = 1;
+                try {
+                    Object value = field.get(object);
+                    Class<?> type = field.getType();
+                    gbc.gridwidth = 1;
 
-                JLabel label = new JLabel(field.getName().toUpperCase() + ":");
-                label.setFont(GtaTheme.UI_FONT_SMALL);
-                label.setForeground(GtaTheme.TEXT_MUTED);
-                gbc.gridx = 0;
-                gbc.weightx = 0.3;
-                panel.add(label, gbc);
+                    JLabel label = new JLabel(field.getName().toUpperCase() + ":");
+                    label.setFont(GtaTheme.UI_FONT_SMALL);
+                    label.setForeground(GtaTheme.TEXT_MUTED);
+                    gbc.gridx = 0;
+                    gbc.weightx = 0.3;
+                    panel.add(label, gbc);
 
-                gbc.gridx = 1;
-                gbc.weightx = 0.7;
+                    gbc.gridx = 1;
+                    gbc.weightx = 0.7;
 
-                if (type == boolean.class || type == Boolean.class) {
-                    JCheckBox cb = new JCheckBox();
-                    cb.setSelected((Boolean) value);
-                    cb.setOpaque(false);
-                    cb.addItemListener(e -> {
-                        try {
-                            field.set(object, cb.isSelected());
-                        } catch (IllegalAccessException ex) {
-                            ex.printStackTrace();
-                        }
-                    });
-                    panel.add(cb, gbc);
-                } else if (type.isPrimitive() || Number.class.isAssignableFrom(type) || type == String.class) {
-                    JTextField tf = new JTextField(String.valueOf(value));
-                    tf.setFont(GtaTheme.UI_FONT_PLAIN);
-                    tf.setForeground(GtaTheme.TEXT_LIGHT);
-                    tf.setBackground(GtaTheme.BG_DARK);
-                    tf.setCaretColor(GtaTheme.ACCENT_PINK);
-                    tf.setBorder(new CompoundBorder(new MatteBorder(0, 0, 1, 0, GtaTheme.TEXT_MUTED), new EmptyBorder(5, 5, 5, 5)));
-                    tf.addFocusListener(new FocusAdapter() {
-                        @Override
-                        public void focusLost(FocusEvent e) { parseAndSetField(tf, field, object); }
-                        @Override
-                        public void focusGained(FocusEvent e) { tf.setBorder(new CompoundBorder(new MatteBorder(0, 0, 1, 0, GtaTheme.ACCENT_PINK), new EmptyBorder(5, 5, 5, 5))); }
-                    });
-                    tf.addActionListener(e -> parseAndSetField(tf, field, object));
-                    panel.add(tf, gbc);
-                } else {
-                    JPanel nestedPanel = new JPanel(new GridBagLayout());
-                    nestedPanel.setOpaque(false);
-                    nestedPanel.setBorder(new CompoundBorder(GtaTheme.PINK_TOP_BORDER, new EmptyBorder(15, 0, 15, 0)));
-                    buildPanelForObject(nestedPanel, value);
-                    gbc.gridwidth = 2;
-                    gbc.insets = new Insets(15, 0, 15, 0);
-                    panel.add(nestedPanel, gbc);
-                    gbc.insets = new Insets(8, 5, 8, 5);
+                    if (type == boolean.class || type == Boolean.class) {
+                        JCheckBox cb = new JCheckBox();
+                        cb.setSelected((Boolean) value);
+                        cb.setOpaque(false);
+                        cb.addItemListener(e -> {
+                            try {
+                                field.set(object, cb.isSelected());
+                            } catch (IllegalAccessException ex) {
+                                ex.printStackTrace();
+                            }
+                        });
+                        panel.add(cb, gbc);
+                    } else if (type.isPrimitive() || Number.class.isAssignableFrom(type) || type == String.class) {
+                        JTextField tf = new JTextField(String.valueOf(value));
+                        tf.setFont(GtaTheme.UI_FONT_PLAIN);
+                        tf.setForeground(GtaTheme.TEXT_LIGHT);
+                        tf.setBackground(GtaTheme.BG_DARK);
+                        tf.setCaretColor(GtaTheme.ACCENT_PINK);
+                        tf.setBorder(new CompoundBorder(new MatteBorder(0, 0, 1, 0, GtaTheme.TEXT_MUTED), new EmptyBorder(5, 5, 5, 5)));
+                        tf.addFocusListener(new FocusAdapter() {
+                            @Override
+                            public void focusLost(FocusEvent e) {
+                                parseAndSetField(tf, field, object);
+                            }
+
+                            @Override
+                            public void focusGained(FocusEvent e) {
+                                tf.setBorder(new CompoundBorder(new MatteBorder(0, 0, 1, 0, GtaTheme.ACCENT_PINK), new EmptyBorder(5, 5, 5, 5)));
+                            }
+                        });
+                        tf.addActionListener(e -> parseAndSetField(tf, field, object));
+                        panel.add(tf, gbc);
+                    } else {
+                        JPanel nestedPanel = new JPanel(new GridBagLayout());
+                        nestedPanel.setOpaque(false);
+                        nestedPanel.setBorder(new CompoundBorder(GtaTheme.PINK_TOP_BORDER, new EmptyBorder(15, 0, 15, 0)));
+                        buildPanelForObject(nestedPanel, value);
+                        gbc.gridwidth = 2;
+                        gbc.insets = new Insets(15, 0, 15, 0);
+                        panel.add(nestedPanel, gbc);
+                        gbc.insets = new Insets(8, 5, 8, 5);
+                    }
+                    gbc.gridy++;
+
+                } catch (IllegalAccessException e) {
+                    e.printStackTrace();
                 }
-                gbc.gridy++;
-
-            } catch (IllegalAccessException e) {
-                e.printStackTrace();
             }
         }
         gbc.gridy++;
