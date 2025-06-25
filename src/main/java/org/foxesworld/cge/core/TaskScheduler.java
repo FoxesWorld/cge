@@ -439,8 +439,10 @@ public class TaskScheduler {
                     "CGE-" + prefix + "-" + counter.incrementAndGet());
             thread.setPriority(priority);
             thread.setDaemon(true);
-            thread.setUncaughtExceptionHandler((t, e) ->
-                    logger.error("Uncaught exception in thread " + t.getName(), e));
+            thread.setUncaughtExceptionHandler((t, e) -> {
+                    logger.error("Uncaught exception in thread " + t.getName(), e);
+                    e.printStackTrace();
+            });
             return thread;
         };
     }

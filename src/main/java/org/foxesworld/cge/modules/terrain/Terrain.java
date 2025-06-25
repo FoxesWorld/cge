@@ -76,9 +76,9 @@ public class Terrain extends EngineModule<TerrainConfig> {
 
     @Override
     protected void initModule(CalistaGameEngine app) {
-        getGameEngine().getAssetLoader().loadAllAssets(() -> {
+        getGameEngine().getAssetLoader().onAssetsLoaded(() -> {
             createTestTerrain(getConfig().getWidth(), getConfig().getHeight());
-        }, new JmeProgressBar(this.gameEngine));
+        });
     }
 
     @Override

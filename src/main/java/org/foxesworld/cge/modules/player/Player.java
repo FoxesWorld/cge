@@ -20,6 +20,7 @@ import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.modules.physics.PhysicsModule;
 import org.foxesworld.cge.modules.player.animation.AnimLayerControl;
 import org.foxesworld.cge.modules.player.config.PlayerConfig;
+import org.foxesworld.cge.tmp.ShapeParty;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -105,7 +106,6 @@ public class Player extends Node implements PlayerContext {
             public void onJumpStart() {
                 camEffectsControl.notifyJumpStart();
                 if (animationController != null) animationController.play("jump", 0.18f, null, false);
-                playerModule.getGameEngine().getSoundModule().playSound("Sounds/bang.ogg", playerModel.getLocalTranslation(), 1.0f);
             }
 
             @Override

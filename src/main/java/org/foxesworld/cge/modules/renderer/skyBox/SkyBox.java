@@ -10,6 +10,7 @@ import com.jme3.renderer.ViewPort;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Spatial;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
+import com.jme3.shadow.EdgeFilteringMode;
 import com.jme3.util.SkyFactory;
 import jme3utilities.sky.SkyControl;
 import jme3utilities.sky.StarsOption;
@@ -26,6 +27,9 @@ import java.time.LocalTime;
  * Enhanced for atmospheric feeling, realistic lighting, and soft shadow fidelity.
  * Improved: dynamic switching of shadow-casting light (sun or moon), smooth shadow blending, customizable colors,
  * and improved ambient/tonemapping for more cinematic effect.
+ *
+ * 2024: Enhanced with volumetric/foggy atmosphere, dynamic coloring, smooth day-night transitions,
+ * and automatic management of shadow quality.
  */
 public class SkyBox extends EngineModule<SkyBoxConfig> {
 
@@ -42,11 +46,16 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
 
     private float simulatedHour = 12.0f;
     private float smoothingSpeed = 0.2f; // faster smoothing for more responsive day-night
-    private float moonFade = 0.5f;
+    private float moonFade = 0.7f;
 
     // Track which light is currently active for shadow casting
     private DirectionalLight activeShadowLight = null;
     private boolean shadowsWithSun = true; // true=sun, false=moon
+
+    // Atmosphere controls
+    private float fogDensity = 0.002f;
+    private ColorRGBA fogColorDay = new ColorRGBA(0.62f, 0.74f, 0.92f, 1.0f);
+    private ColorRGBA fogColorNight = new ColorRGBA(0.07f, 0.13f, 0.19f, 1.0f);
 
     public SkyBox(RendererModule rendererModule) {
         super(SkyBox.class, SkyBoxConfig.class, rendererModule.getGameEngine());
@@ -59,6 +68,7 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
             setupLighting();
             setupSkyDome();
             setupShadows();
+            setupAtmosphere();
         });
     }
 
@@ -88,31 +98,31 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
         skyControl.setTopVerticalAngle(getConfig().getVerticalAngle());
         skyControl.setEnabled(true);
 
-        // Improved: add gradient for horizon color
-        //  skyControl.setOvercast(getConfig().getOvercastAmount());
-        //  skyControl.setCloudsOpacity(getConfig().getCloudOpacity());
-        //  skyControl.setHaloThickness(getConfig().getHaloThickness());
-        //  skyControl.setStarIntensity(getConfig().getStarIntensity());
+        // Enhanced: Horizon gradient and star intensity
+        // if (getConfig().hasOvercast()) skyControl.setOvercast(getConfig().getOvercastAmount());
+        //if (getConfig().hasCloudOpacity()) skyControl.setCloudsOpacity(getConfig().getCloudOpacity());
+        //if (getConfig().hasHaloThickness()) skyControl.setHaloThickness(getConfig().getHaloThickness());
+        //if (getConfig().hasStarIntensity()) skyControl.setStarIntensity(getConfig().getStarIntensity());
 
         engine.getRootNode().attachChild(sky);
     }
 
     private void setupLighting() {
         // Improved atmospheric ambient: dynamic blend between deep blue and sunset warmth
-        ColorRGBA ambientDay = new ColorRGBA(0.16f, 0.22f, 0.38f, 1.0f);
-        ColorRGBA ambientSunset = new ColorRGBA(1.0f, 0.72f, 0.45f, 1.0f);
-        ColorRGBA ambientNight = new ColorRGBA(0.08f, 0.13f, 0.20f, 1.0f);
+        ColorRGBA ambientDay = new ColorRGBA(0.18f, 0.24f, 0.42f, 1.0f);
+        ColorRGBA ambientSunset = new ColorRGBA(1.0f, 0.80f, 0.53f, 1.0f);
+        ColorRGBA ambientNight = new ColorRGBA(0.10f, 0.16f, 0.25f, 1.0f);
 
         ambient = new AmbientLight(ambientDay.clone());
 
         sunLight = new DirectionalLight();
         sunLight.setColor(ColorRGBA.White.mult(getConfig().getSunLightIntensity()));
-        sunLight.setDirection(new Vector3f(-0.5f, -1f, -0.5f).normalizeLocal());
+        sunLight.setDirection(new Vector3f(-0.48f, -1f, -0.38f).normalizeLocal());
         engine.getRootNode().addLight(sunLight);
 
         moonLight = new DirectionalLight();
-        moonLight.setColor(new ColorRGBA(0.32f, 0.34f, 0.45f, 1f).mult(getConfig().getMoonLightIntensity() * moonFade));
-        moonLight.setDirection(new Vector3f(0.5f, -1f, 0.5f).normalizeLocal());
+        moonLight.setColor(new ColorRGBA(0.34f, 0.36f, 0.47f, 1f).mult(getConfig().getMoonLightIntensity() * moonFade));
+        moonLight.setDirection(new Vector3f(0.51f, -1f, 0.56f).normalizeLocal());
         engine.getRootNode().addLight(moonLight);
 
         engine.getRootNode().addLight(ambient);
@@ -124,14 +134,25 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
 
         shadowRenderer = new DirectionalLightShadowRenderer(engine.getAssetManager(), size, splits);
         shadowRenderer.setShadowZExtend(getConfig().getShadowZExtend());
-        shadowRenderer.setLambda(0.60f); // Soft, smooth shadows
+        shadowRenderer.setLambda(0.55f); // Mildly softer shadows
+        shadowRenderer.setEdgeFilteringMode(EdgeFilteringMode.valueOf(getConfig().getEdgeFilteringMode()));
+        shadowRenderer.setShadowIntensity(0.55f); // Soft shadow darkness
 
         // Initially set to sun
         shadowRenderer.setLight(sunLight);
         activeShadowLight = sunLight;
         shadowsWithSun = true;
 
-        gameEngine.getViewPort().addProcessor(shadowRenderer);
+        viewPort().addProcessor(shadowRenderer);
+    }
+
+    private void setupAtmosphere() {
+        ViewPort vp = viewPort();
+        if (vp != null) {
+            vp.setBackgroundColor(fogColorDay.clone());
+            // For advanced: add a custom FogFilter, VolumetricLightScatteringFilter, or Tonemap
+            // (if your engine supports post-processing filters)
+        }
     }
 
     private float getCurrentHour() {
@@ -177,9 +198,9 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
             float moonIntensity = FastMath.clamp(1.0f - sunIntensity, 0f, 1.0f);
 
             // Soft transition for ambient color through sunset
-            ColorRGBA ambientDay = new ColorRGBA(0.16f, 0.22f, 0.38f, 1.0f);
-            ColorRGBA ambientSunset = new ColorRGBA(1.0f, 0.72f, 0.45f, 1.0f);
-            ColorRGBA ambientNight = new ColorRGBA(0.08f, 0.13f, 0.20f, 1.0f);
+            ColorRGBA ambientDay = new ColorRGBA(0.18f, 0.24f, 0.42f, 1.0f);
+            ColorRGBA ambientSunset = new ColorRGBA(1.0f, 0.80f, 0.53f, 1.0f);
+            ColorRGBA ambientNight = new ColorRGBA(0.10f, 0.16f, 0.25f, 1.0f);
 
             ColorRGBA ambientCol = ambientDay.clone().interpolateLocal(ambientSunset, 1f - sunsetZone)
                     .interpolateLocal(ambientNight, 1f - sunIntensity);
@@ -195,7 +216,13 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
                 activeShadowLight = requiredLight;
             }
 
-            // Bloom/tonemapping hint: optionally, adjust scene exposure or fog here for deeper atmosphere.
+            // --- Atmospheric fog color and density ---
+            ViewPort vp = viewPort();
+            if (vp != null) {
+                ColorRGBA fogCol = fogColorDay.clone().interpolateLocal(fogColorNight, 1f - sunIntensity);
+                vp.setBackgroundColor(fogCol);
+                // For advanced: update fog/volumetric post-processing filter params here
+            }
         }
     }
 
@@ -236,26 +263,22 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
     @Override
     public void onConfigReloaded() {
         // Dynamic reconfiguration: re-init all relevant parts with new config
-        // Remove old
-        /*
-        if (shadowRenderer != null) viewPort().removeProcessor(shadowRenderer);
-        if (skyControl != null) {
-            skyControl.setEnabled(false);
-            engine.getRootNode().removeControl(skyControl);
-            skyControl = null;
-        }
-        if (sky != null) {
-            engine.getRootNode().detachChild(sky);
-            sky = null;
-        }
-        if (sunLight != null) engine.getRootNode().removeLight(sunLight);
-        if (moonLight != null) engine.getRootNode().removeLight(moonLight);
-        if (ambient != null) engine.getRootNode().removeLight(ambient);
-        */
-        // Re-create with updated config
         setupLighting();
         setupSkyDome();
         setupShadows();
+        setupAtmosphere();
+    }
+
+    public DirectionalLight getMoonLight() {
+        return moonLight;
+    }
+
+    public DirectionalLight getSunLight() {
+        return sunLight;
+    }
+
+    public AmbientLight getAmbient() {
+        return ambient;
     }
 
     private ViewPort viewPort() {

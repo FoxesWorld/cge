@@ -42,13 +42,13 @@ public class Game {
         try {
             app = new CalistaGameEngine(cfg);
         } catch (Exception e) {
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
         setupTheme("assets/theme/calista.properties");
 
         AppSettings settings = new AppSettings(false);
         settings.setTitle("Calista Game Engine");
-        //settings.setAudioRenderer(null);
         settings.setSettingsDialogImage("assets/theme/logo3.png");
         settings.setFrameRate(-1);
         try (InputStream icoStream = CalistaGameEngine.class.getClassLoader().getResourceAsStream("assets/theme/icon/engineLogo.ico")) {
@@ -57,7 +57,6 @@ public class Game {
             settings.setIcons(new BufferedImage[]{bestIcon});
         } catch (IOException e) {
             e.printStackTrace();
-            System.err.println("Failed to load .ico icon file.");
         }
 
         app.setSettings(settings);

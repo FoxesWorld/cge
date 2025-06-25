@@ -68,8 +68,11 @@ public class ModuleManager {
                 r -> {
                     Thread thread = new Thread(r, "ModuleInit-Worker");
                     thread.setDaemon(true);
-                    thread.setUncaughtExceptionHandler((t, e) ->
-                            logger.error("Uncaught exception in module initialization thread: {}", t.getName(), e));
+                    thread.setUncaughtExceptionHandler((t, e) ->{
+                                logger.error("Uncaught exception in module initialization thread: {}", t.getName(), e);
+                                e.printStackTrace();
+                            });
+
                     return thread;
                 });
 

@@ -1,0 +1,26 @@
+MaterialDef LensFlare
+{
+    MaterialParameters {
+        Texture2D Scene
+        Texture2D Bloom
+        Texture2D Dirt
+        Vector2 LightPos
+        Vector2 Resolution
+    }
+    Technique {
+        VertexShader   GLSL150:   assets/Shaders/LensFlare/LensFlare.vert
+        FragmentShader GLSL150:   assets/Shaders/LensFlare/LensFlare.frag
+
+        WorldParameters {
+        }
+
+        Defines {
+        }
+
+        RenderState {
+            Blend Additive
+            DepthWrite Off
+            DepthTest Off
+        }
+    }
+}

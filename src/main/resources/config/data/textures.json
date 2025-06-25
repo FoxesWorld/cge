@@ -13,5 +13,10 @@
     "path": "data/testGrid.cgtex" ,
     "flipY": true ,
     "generateMipmaps": true
+  },
+  {
+    "path": "data/lensFlare.cgtex" ,
+    "flipY": true ,
+    "generateMipmaps": true
   }
 ]

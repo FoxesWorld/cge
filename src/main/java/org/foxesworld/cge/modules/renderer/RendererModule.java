@@ -28,6 +28,7 @@ public class RendererModule extends EngineModule<RendererConfig> {
     private static final String CONFIG_FILE = "render_config";
 
     private boolean postProcessingRegistered = false;
+    private final SkyBox skyBox;
 
     /**
      * Constructs the RendererModule with its default SkyBox sub-module.
@@ -37,7 +38,8 @@ public class RendererModule extends EngineModule<RendererConfig> {
     public RendererModule(CalistaGameEngine app) {
         super(RendererModule.class, RendererConfig.class, app);
         // Always register SkyBox (idempotent, safe for multi-register)
-        app.getModuleManager().register(new SkyBox(this), 100);
+        this.skyBox = new SkyBox(this);
+        app.getModuleManager().register(skyBox, 100);
     }
 
     /**
@@ -160,6 +162,10 @@ public class RendererModule extends EngineModule<RendererConfig> {
     @Override
     protected void updateModule(float tpf) {
         // No direct per-frame logic here
+    }
+
+    public SkyBox getSkyBox() {
+        return skyBox;
     }
 
     @Override

@@ -49,7 +49,7 @@ public class PlayerModule extends EngineModule<PlayerConfig> {
     @Override
     protected void initModule(CalistaGameEngine app) throws Exception {
         // Гарантируем, что игрок создаётся только после полной готовности сцены
-        app.getAssetLoader().loadAllAssets(() -> {
+        app.getAssetLoader().onAssetsLoaded(() -> {
             app.enqueue(() -> {
                 if (player != null) {
                     logger.warn("Player already exists, skipping spawn.");
@@ -64,7 +64,7 @@ public class PlayerModule extends EngineModule<PlayerConfig> {
                 app.getRootNode().attachChild(player);
                 logger.info("Player spawned at {}", spawn);
             });
-        }, new JmeProgressBar(gameEngine));
+        });
     }
 
     @Override

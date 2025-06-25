@@ -50,7 +50,7 @@ public class ShapeParty {
         particleTemplate.setHighLife(2f);
 
         calistaGameEngine.enqueue(() -> {
-            calistaGameEngine.getAssetLoader().loadAllAssets(() -> {
+            //calistaGameEngine.getAssetLoader().loadAllAssets(() -> {
                 PhysicsModule physicsModule = calistaGameEngine.getModuleManager().getModule(PhysicsModule.class);
                 AssetManager assetManager = calistaGameEngine.getAssetManager();
 
@@ -72,28 +72,18 @@ public class ShapeParty {
 
                     // Частицы
                     ParticleEmitter emitter = particleTemplate.clone();
-                    emitter.setLocalTranslation(0, -6.5f, 0);
+                    emitter.setLocalTranslation(0, -4.5f, 0);
                     ((Node) instance).attachChild(emitter);
                     emitter.emitAllParticles();
 
-                    // --- PHONON AUDIO ---
-                    AudioNode sound = new AudioNode(assetManager, "Sounds/bang.mp3", AudioData.DataType.Buffer);
-                    sound.setPositional(true);
-                    sound.setLocalTranslation(0, 0, 0); // относительно instance
-                    sound.setVolume(2.0f);
-                    sound.setLooping(false);
-
-                    ((Node) instance).attachChild(sound);
-                    sound.playInstance();
-                    // --------------------
-
                     calistaGameEngine.getRootNode().attachChild(instance);
 
-                    if (physicsModule != null && instance instanceof Node) {
+                    if (physicsModule != null) {
                         processNodePhysics((Node) instance, physicsModule);
                     }
+                    calistaGameEngine.getSoundModule().playSound("Sounds/bang.ogg", model.getLocalTranslation(), 1.0f);
                 }
-            }, new JmeProgressBar(calistaGameEngine));
+            //}, new JmeProgressBar(calistaGameEngine));
         });
 
     }

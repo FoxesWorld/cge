@@ -53,6 +53,39 @@ public class PostProcessingConfig extends ModuleConfig {
     }
     private final Lsf lsf = new Lsf();
 
+    public static class Dlsf {
+        private boolean enable = true;
+        private boolean renderBackFacesShadows = true;
+        private boolean stabilization = true;
+        private float shadowIntensity = 0.55f;
+        private String edgeFilteringMode = "PCF8";
+        private String shadowCompareMode = "Hardware";
+        public boolean isEnable() {
+            return enable;
+        }
+
+        public boolean isRenderBackFacesShadows() {
+            return renderBackFacesShadows;
+        }
+
+        public boolean isStabilization() {
+            return stabilization;
+        }
+
+        public float getShadowIntensity() {
+            return shadowIntensity;
+        }
+
+        public String getEdgeFilteringMode() {
+            return edgeFilteringMode;
+        }
+
+        public String getShadowCompareMode() {
+            return shadowCompareMode;
+        }
+    }
+    private final Dlsf dlsf = new Dlsf();
+
     // --- DEPTH OF FIELD (DOF) ---
     public static class Dof {
         private boolean enable = true;
@@ -144,6 +177,10 @@ public class PostProcessingConfig extends ModuleConfig {
     public Bloom getBloom() { return bloom; }
     public Lsf getLsf() { return lsf; }
     public Dof getDof() { return dof; }
+
+    public Dlsf getDlsf() {
+        return dlsf;
+    }
 
     public SSAOfilter getSsaOfilter() {return ssaOfilter;}
 
