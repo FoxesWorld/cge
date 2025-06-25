@@ -2,17 +2,21 @@ package org.foxesworld.cge.modules.renderer;
 
 import com.jme3.app.Application;
 import com.jme3.renderer.Caps;
+import com.jme3.renderer.Limits;
 import com.jme3.renderer.Renderer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.module.EngineModule;
-import org.foxesworld.cge.core.module.ModuleManager;
 import org.foxesworld.cge.modules.renderer.postProcessing.PostProcessingModule;
 import org.foxesworld.cge.modules.renderer.skyBox.SkyBox;
 import org.foxesworld.cge.modules.scene.SceneModule;
+import org.lwjgl.opengl.GL11;
 
+import java.util.Comparator;
+import java.util.EnumMap;
 import java.util.EnumSet;
+import java.util.StringJoiner;
 
 /**
  * RendererModule is responsible for aggregating and managing rendering-related sub-modules,
@@ -21,11 +25,15 @@ import java.util.EnumSet;
  * This module handles initialization, configuration reloads, and cleanup of the renderer
  * and its sub-components.
  * </p>
+ * <br>
+ * <b>✨ GPU Information and Renderer Capabilities</b><br>
+ * On initialization, this module provides a detailed and stylized report of the current GPU
+ * and renderer capabilities, including shader language support, framebuffer capabilities,
+ * and other advanced GPU features. This information is logged using a visually distinctive format.
  */
 public class RendererModule extends EngineModule<RendererConfig> {
 
     private static final Logger logger = LogManager.getLogger(RendererModule.class);
-    private static final String CONFIG_FILE = "render_config";
 
     private boolean postProcessingRegistered = false;
     private final SkyBox skyBox;
@@ -47,22 +55,7 @@ public class RendererModule extends EngineModule<RendererConfig> {
      */
     @Override
     protected void onEnable() {
-        Renderer renderer = getApplication().getRenderer();
-        logger.info("Renderer initialized:");
-        logRendererCapabilities(renderer.getCaps());
-    }
 
-    /**
-     * Logs key renderer capabilities for debugging purposes.
-     *
-     * @param caps the set of capabilities supported by the renderer
-     */
-    private void logRendererCapabilities(EnumSet<Caps> caps) {
-        logger.info("Capabilities:");
-        logger.info(" - Shader Language Support: {}", caps.contains(Caps.GLSL100));
-        logger.info(" - FrameBuffer Support:     {}", caps.contains(Caps.FrameBuffer));
-        logger.info(" - Geometry Shader:         {}", caps.contains(Caps.GeometryShader));
-        logger.info(" - Texture Array:           {}", caps.contains(Caps.TextureArray));
     }
 
     @Override
@@ -81,9 +74,7 @@ public class RendererModule extends EngineModule<RendererConfig> {
             logger.warn("RendererConfig not loaded, skipping reload");
             return;
         }
-        //CalistaGameEngine app = getApplication();
 
-        // Handle post-processing module reload
         PostProcessingModule ppModule = gameEngine.getModuleManager().getModule(PostProcessingModule.class);
         boolean hasPP = (ppModule != null);
 
@@ -99,7 +90,7 @@ public class RendererModule extends EngineModule<RendererConfig> {
         } else {
             if (hasPP) {
                 logger.info("Post effects disabled in config, removing PostProcessingModule");
-                gameEngine.getModuleManager().shutdownModule(PostProcessingModule.class); // You must implement shutdownModule in your ModuleManager
+                gameEngine.getModuleManager().shutdownModule(PostProcessingModule.class);
                 postProcessingRegistered = false;
             }
         }

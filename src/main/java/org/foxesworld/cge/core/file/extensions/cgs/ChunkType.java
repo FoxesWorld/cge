@@ -1,20 +1,29 @@
 package org.foxesworld.cge.core.file.extensions.cgs;
 
 
+/**
+ * Enum for explicit chunk types in the CGS format.
+ */
 public enum ChunkType {
-    GEOMETRY,
-    PHYSICS,
-    TERRAIN,
-    LIGHTING,
-    MATERIALS,
-    CAMERAS,
-    NAVMESH,
-    CUSTOM;
+    HEIGHTMAP(1),
+    OBJECTS(2),
+    PLANES(3),
+    UNKNOWN(-1);
 
-    public static ChunkType fromOrdinal(int ordinal) {
-        if (ordinal < 0 || ordinal >= values().length) {
-            throw new IllegalArgumentException("Unknown chunk type ordinal: " + ordinal);
+    private final int typeValue;
+
+    ChunkType(int typeValue) {
+        this.typeValue = typeValue;
+    }
+
+    public int getTypeValue() {
+        return typeValue;
+    }
+
+    public static ChunkType fromInt(int typeValue) {
+        for (ChunkType t : values()) {
+            if (t.typeValue == typeValue) return t;
         }
-        return values()[ordinal];
+        return UNKNOWN;
     }
 }

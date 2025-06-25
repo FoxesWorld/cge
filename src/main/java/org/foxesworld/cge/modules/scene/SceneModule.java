@@ -67,6 +67,7 @@ public class SceneModule extends EngineModule<SceneConfig> {
                         this.sceneFile = new CGSFile(new File(cfg.getScenePath()), "r");
                         this.sceneFile.readFileNew();
                         this.cgsMetadata = sceneFile.getMetadata();
+                        // Use explicit ChunkEntry type from CGSFile
                         this.entries = new ArrayList<>(sceneFile.getChunkTable());
                         setupStreamingForChunks(this.sceneFile);
                     } catch (Exception e) {
@@ -138,13 +139,13 @@ public class SceneModule extends EngineModule<SceneConfig> {
     private Spatial parseChunk(CalistaGameEngine app, SceneChunk chunk) {
         logger.debug("Chunk {} data - {}", chunk.getEntry().type(), dumpBufferHex(chunk.getData()));
 
-        // Создание ECS-контекста на лету для конкретного чанка
-        //SceneEntityContext ctx = new SceneEntityContext(sceneRoot, cgsMetadata, entries, app.getEcsModule().getEntityData());
-
         return switch (chunk.getEntry().type()) {
-            case TERRAIN -> new TerrainParser().parse(app, chunk, configLoader);
-            case LIGHTING -> new LightingParser().parse(app, chunk, configLoader);
-            default -> new Node("CustomChunk-" + chunk.getId());
+            case HEIGHTMAP -> new TerrainParser().parse(app, chunk, configLoader);
+            case OBJECTS   -> // TODO: реализовать парсер объектов, пока временно возвращает Node
+                    new Node("ObjectsChunk-" + chunk.getId());
+            case PLANES    -> // TODO: реализовать парсер плоскостей, пока временно возвращает Node
+                    new Node("PlanesChunk-" + chunk.getId());
+            default        -> new Node("CustomChunk-" + chunk.getId());
         };
     }
 

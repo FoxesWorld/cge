@@ -6,6 +6,7 @@ import com.jme3.asset.AssetManager;
 import com.jme3.phonon.*;
 import com.jme3.phonon.desktop_javasound.JavaSoundPhononSettings;
 import com.jme3.post.FilterPostProcessor;
+import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.core.AssetRepo;
 import org.foxesworld.cge.core.ConfigEditorState;
@@ -24,6 +25,8 @@ import org.foxesworld.cge.importers.obj.OBJImporter;
 import org.foxesworld.cge.modules.ModuleConfig;
 import org.foxesworld.cge.modules.ecs.ECSModule;
 import org.foxesworld.cge.modules.popcycle.PopCycle;
+import org.foxesworld.cge.modules.renderer.GpuInfo;
+import org.foxesworld.cge.modules.renderer.RendererModule;
 import org.foxesworld.cge.modules.renderer.postProcessing.PostProcessingModule;
 import org.foxesworld.cge.modules.scene.SceneModule;
 import org.foxesworld.cge.modules.sound.SoundModule;
@@ -32,7 +35,6 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.util.Comparator;
 import java.util.List;
-import java.util.logging.LogManager;
 
 import static com.jme3.audio.AudioContext.setAudioRenderer;
 
@@ -65,9 +67,8 @@ public class CalistaGameEngine extends SimpleApplication {
         // Configure logging
         System.setProperty("log.dir", System.getProperty("user.dir"));
         System.setProperty("log.level", "DEBUG");
-        LogManager.getLogManager().reset();
+        java.util.logging.LogManager.getLogManager().reset();
         SLF4JBridgeHandler.install();
-
         this.assetRepo = new AssetRepo(this);
         this.popCycle = new PopCycle(this);
         this.configService = new ConfigService(this);
@@ -88,6 +89,7 @@ public class CalistaGameEngine extends SimpleApplication {
         }
 
         // Initialize modules
+        System.out.println("\n" + new GpuInfo(renderer).formatGpuInfo());
         this.moduleManager = new ModuleManager(this);
         this.assetLoader = new AssetLoader(this);
         filterPostProcessor = new FilterPostProcessor(getAssetManager());

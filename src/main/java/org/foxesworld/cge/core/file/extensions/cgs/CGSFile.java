@@ -4,8 +4,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.core.file.AbstractFile;
 import org.foxesworld.cge.core.file.definition.FieldDefinition;
-import org.foxesworld.cge.core.file.definition.FileStructureLoader;
-import org.foxesworld.cge.core.file.definition.JsonFileStructureLoader;
 
 import java.io.File;
 import java.io.IOException;
@@ -16,17 +14,12 @@ import java.util.*;
 /**
  * Handler for CGS files used in Calista Game Engine.
  * Supports reading CGS headers, metadata, and scene chunks.
+ * Updated for the new CGS format (v1, little-endian, explicit chunk types).
  */
 public class CGSFile extends AbstractFile<CGSMetadata> {
     private static final Logger logger = LogManager.getLogger(CGSFile.class);
     private final Map<Integer, ChunkEntry> chunkTable = new LinkedHashMap<>();
 
-    /**
-     * Constructs a new CGSFile handler.
-     *
-     * @param file the CGS file to open
-     * @param mode the mode in which to open the file (e.g., "r" or "rw")
-     */
     public CGSFile(File file, String mode) {
         super(file, mode, "CGS");
         setMAGIC("CGS0");
@@ -34,12 +27,9 @@ public class CGSFile extends AbstractFile<CGSMetadata> {
         setBYTE_ORDER(ByteOrder.LITTLE_ENDIAN);
     }
 
-
-
     /**
      * Called when a chunk entry has been parsed. Populates the chunk table.
-     *
-     * @param entry parsed entry map
+     * Now supports explicit chunk type mapping (int type field, not enum ordinal).
      */
     @Override
     @SuppressWarnings("unchecked")
@@ -50,8 +40,8 @@ public class CGSFile extends AbstractFile<CGSMetadata> {
                 int id = ((Number) chunkMap.get("id")).intValue();
                 long offset = ((Number) chunkMap.get("offset")).longValue();
                 int length = ((Number) chunkMap.get("length")).intValue();
-                int typeOrdinal = ((Number) chunkMap.get("type")).intValue();
-                ChunkType type = ChunkType.values()[typeOrdinal];
+                int typeValue = ((Number) chunkMap.get("type")).intValue();
+                ChunkType type = ChunkType.fromInt(typeValue);
                 chunkTable.put(id, new ChunkEntry(id, offset, length, type));
             }
         } else {
@@ -61,8 +51,7 @@ public class CGSFile extends AbstractFile<CGSMetadata> {
 
     /**
      * Reads and parses the CGS file header and chunk entries.
-     *
-     * @throws IOException if reading fails
+     * Now expects the new format: chunk type is explicit (int) and fields are little-endian.
      */
     @Override
     public void readFileNew() throws IOException {
@@ -78,11 +67,11 @@ public class CGSFile extends AbstractFile<CGSMetadata> {
         }
 
         String magic = (String) headerMap.get("magic");
-        int version = (Integer) headerMap.get("version");
+        int version = ((Number) headerMap.get("version")).intValue();
         String sceneName = (String) headerMap.get("sceneName");
-        long tableOffset = (Long) headerMap.get("tableOffset");
+        long tableOffset = ((Number) headerMap.get("tableOffset")).longValue();
 
-        // MMAP: перемещаемся к нужной позиции через buffer.position
+        // Move to chunk table offset
         getFileReader().getMappedBuffer().position(Math.toIntExact(tableOffset));
         int chunkCount = getFileReader().getMappedBuffer().getInt();
 
@@ -101,10 +90,11 @@ public class CGSFile extends AbstractFile<CGSMetadata> {
 
     /**
      * Reads a scene chunk from the file based on its chunk ID.
+     * The returned ByteBuffer is little-endian and positioned at the start of the chunk.
      *
      * @param id the chunk ID
      * @return a SceneChunk instance
-     * @throws IOException if reading fails or chunk ID is invalid
+     * @throws IllegalArgumentException if chunk ID is invalid
      */
     public SceneChunk readChunk(int id) {
         ChunkEntry entry = chunkTable.get(id);
@@ -113,30 +103,19 @@ public class CGSFile extends AbstractFile<CGSMetadata> {
             throw new IllegalArgumentException("Chunk id not found: " + id);
         }
 
-        // Перемещаемся к нужной позиции
         getFileReader().getMappedBuffer().position((int) entry.offset());
 
-        // Создаём slice для указанного куска, чтобы избежать копирования данных
         ByteBuffer chunkBuffer = getFileReader().getMappedBuffer().slice();
         chunkBuffer.limit(entry.length());
         chunkBuffer.order(getBYTE_ORDER());
 
-        byte[] data = new byte[entry.length()];
-        chunkBuffer.get(data);
+        logger.debug("Chunk id={} prepared (offset={}, length={}, type={})", id, entry.offset(), entry.length(), entry.type());
 
-        logger.debug("Chunk {} raw data (hex): {}", id, HEX.formatHex(data));
-        logger.debug("Chunk id={} Read: {} bytes", id, data.length);
-
-        // Если SceneChunk требует ByteBuffer, можно передать slice повторно:
-        chunkBuffer.position(0); // Сбросим позицию для чтения в SceneChunk, если нужно
+        // Do not read to byte[]: keep ByteBuffer for zero-copy reading (for floats/ints etc)
+        chunkBuffer.position(0);
         return new SceneChunk(entry, chunkBuffer);
     }
 
-    /**
-     * Returns all chunk entries parsed from the CGS file.
-     *
-     * @return collection of chunk entries
-     */
     public Collection<ChunkEntry> getChunkTable() {
         return chunkTable.values();
     }

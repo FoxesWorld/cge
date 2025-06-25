@@ -1,14 +1,20 @@
 package org.foxesworld.cge.core.file.extensions.cgs;
 
-import java.util.Objects;
+public class ChunkEntry {
+    private final int id;
+    private final long offset;
+    private final int length;
+    private final ChunkType type;
 
-public record ChunkEntry(int id, long offset, int length, ChunkType type) {
-    public ChunkEntry(int id, long offset, int length, int rawType) {
-        this(id, offset, length, ChunkType.fromOrdinal(rawType));
+    public ChunkEntry(int id, long offset, int length, ChunkType type) {
+        this.id = id;
+        this.offset = offset;
+        this.length = length;
+        this.type = type;
     }
 
-    public ChunkEntry {
-        Objects.requireNonNull(type, "ChunkType cannot be null");
-    }
+    public int id() { return id; }
+    public long offset() { return offset; }
+    public int length() { return length; }
+    public ChunkType type() { return type; }
 }
-

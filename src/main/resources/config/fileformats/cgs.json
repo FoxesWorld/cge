@@ -1,39 +1,39 @@
 {
-  "CGS": {
+  "CGSMapFormat": {
     "header": [
       {
         "name": "magic",
         "type": "string",
         "length": 4,
-        "byteOrder": "BIG_ENDIAN"
+        "description": "Магическая сигнатура (например, 'CGS\\0')"
       },
       {
         "name": "version",
-        "type": "int",
-        "byteOrder": "BIG_ENDIAN"
+        "type": "int32",
+        "description": "Версия формата"
       },
       {
         "name": "sceneNameLength",
-        "type": "int",
-        "byteOrder": "BIG_ENDIAN"
+        "type": "int32",
+        "description": "Длина имени сцены в байтах"
       },
       {
         "name": "sceneName",
         "type": "string",
-        "lengthField": "sceneNameLength"
+        "lengthField": "sceneNameLength",
+        "description": "Имя сцены"
       },
       {
         "name": "tableOffset",
-        "type": "long",
-        "byteOrder": "BIG_ENDIAN"
+        "type": "int64",
+        "description": "Смещение до таблицы чанков"
       }
     ],
-    "entry": [
+    "chunkTable": [
       {
         "name": "chunkCount",
-        "seek": "header->tableOffset",
-        "type": "int",
-        "byteOrder": "BIG_ENDIAN"
+        "type": "int32",
+        "description": "Количество чанков"
       },
       {
         "name": "chunks",
@@ -43,26 +43,117 @@
           "fields": [
             {
               "name": "id",
-              "type": "int",
-              "byteOrder": "BIG_ENDIAN"
+              "type": "int32"
             },
             {
               "name": "offset",
-              "type": "long",
-              "byteOrder": "BIG_ENDIAN"
+              "type": "int64"
             },
             {
               "name": "length",
-              "type": "int",
-              "byteOrder": "BIG_ENDIAN"
+              "type": "int32"
             },
             {
               "name": "type",
-              "type": "int",
-              "byteOrder": "BIG_ENDIAN"
+              "type": "int32",
+              "description": "1 = heightmap, 2 = objects, 3 = planes, и т.д."
             }
           ]
         }
+      }
+    ],
+    "chunkTypes": [
+      {
+        "type": 1,
+        "name": "heightmap",
+        "fields": [
+          {
+            "name": "width",
+            "type": "int32"
+          },
+          {
+            "name": "height",
+            "type": "int32"
+          },
+          {
+            "name": "heightData",
+            "type": "float[]",
+            "lengthField": "width * height",
+            "description": "Высоты по строкам или столбцам"
+          }
+        ]
+      },
+      {
+        "type": 2,
+        "name": "objects",
+        "fields": [
+          {
+            "name": "objectCount",
+            "type": "int32"
+          },
+          {
+            "name": "objects",
+            "type": "array",
+            "countField": "objectCount",
+            "element": {
+              "fields": [
+                {
+                  "name": "typeId",
+                  "type": "int32"
+                },
+                {
+                  "name": "pos",
+                  "type": "float[3]",
+                  "description": "Позиция X, Y, Z"
+                },
+                {
+                  "name": "rot",
+                  "type": "float[4]",
+                  "description": "Кватернион поворота"
+                },
+                {
+                  "name": "scale",
+                  "type": "float[3]",
+                  "description": "Масштаб по осям"
+                }
+              ]
+            }
+          }
+        ]
+      },
+      {
+        "type": 3,
+        "name": "planes",
+        "fields": [
+          {
+            "name": "planeCount",
+            "type": "int32"
+          },
+          {
+            "name": "planes",
+            "type": "array",
+            "countField": "planeCount",
+            "element": {
+              "fields": [
+                {
+                  "name": "type",
+                  "type": "int32",
+                  "description": "Тип плоскости (например, 1=вода, 2=триггер)"
+                },
+                {
+                  "name": "normal",
+                  "type": "float[3]",
+                  "description": "Нормаль плоскости"
+                },
+                {
+                  "name": "d",
+                  "type": "float",
+                  "description": "Смещение плоскости"
+                }
+              ]
+            }
+          }
+        ]
       }
     ]
   }
