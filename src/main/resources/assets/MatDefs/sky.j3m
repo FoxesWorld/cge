@@ -1,0 +1,6 @@
+Material Sky : Common/MatDefs/Misc/Sky.j3md {
+    MaterialParameters {
+        Texture (Texture) : ch2_dor_bushyground|EdgeClamp
+        NormalScale (vector3) :
+    }
+}

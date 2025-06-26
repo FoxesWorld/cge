@@ -9,7 +9,7 @@
   "topAngle": 1.78,
   "cloudsEnabled": true,
   "shadowMode": "CastAndReceive",
-  "shadowMapSize": 2048,
+  "shadowMapSize": 4096,
   "shadowFrustumCount": 3,
   "edgeFilteringMode": "PCF4",
   "shadowZExtend": 1000.0,

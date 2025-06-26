@@ -1,6 +1,6 @@
 Material Grass : Common/MatDefs/Light/PBRLighting.j3md {
     MaterialParameters {
-        BaseColorMap (Texture) : ch2_dor_bushyground|Repat
+        BaseColorMap (Texture) : ch2_dor_bushyground|Repeat
         UseSpecGloss (Boolean) : false
         UseSpecularAA (Boolean) : false
         Glossiness (Float) : 0.7
