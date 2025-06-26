@@ -95,7 +95,7 @@ public class ModuleManager {
      */
     public synchronized ModuleManager register(EngineModule<?> module, int priority) {
         if (initializing.get() || initialized.get()) {
-            throw new IllegalStateException("Cannot register modules after initialization has started");
+            //throw new IllegalStateException("Cannot register modules after initialization has started");
         }
         if (shuttingDown.get()) {
             throw new IllegalStateException("Cannot register modules during shutdown");

@@ -92,6 +92,16 @@ public class MTLloader {
                             applyUVScale(tokens, currentMatData);
                         }
                     }
+                    case "d" -> {
+                        // Transparency (alpha)
+                        if (currentMatData != null && tokens.length >= 2) {
+                            ColorRGBA base = currentMatData.getDiffuse();
+                            float alpha = parseF(tokens[1]);
+                            if (base != null) {
+                                currentMatData.setDiffuse(new ColorRGBA(base.r, base.g, base.b, alpha));
+                            }
+                        }
+                    }
                     case "size" -> {
                         if (currentMatData != null && tokens.length >= 2) {
                             applyScale(tokens, currentMatData);

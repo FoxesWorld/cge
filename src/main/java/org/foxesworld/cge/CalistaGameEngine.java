@@ -15,6 +15,7 @@ import org.foxesworld.cge.core.TaskScheduler;
 import org.foxesworld.cge.core.io.GenericByteParser;
 import org.foxesworld.cge.core.loader.AssetLoader;
 import org.foxesworld.cge.core.loader.JmeProgressBar;
+import org.foxesworld.cge.core.material.MaterialManager;
 import org.foxesworld.cge.core.module.EngineModule;
 import org.foxesworld.cge.core.module.ModuleManager;
 import org.foxesworld.cge.core.io.streaming.ByteBoxingUtils;
@@ -24,12 +25,14 @@ import org.foxesworld.cge.importers.fbx.FBXImporter;
 import org.foxesworld.cge.importers.obj.OBJImporter;
 import org.foxesworld.cge.modules.ModuleConfig;
 import org.foxesworld.cge.modules.ecs.ECSModule;
+import org.foxesworld.cge.modules.physics.PhysicsModule;
 import org.foxesworld.cge.modules.popcycle.PopCycle;
 import org.foxesworld.cge.modules.renderer.GpuInfo;
 import org.foxesworld.cge.modules.renderer.RendererModule;
 import org.foxesworld.cge.modules.renderer.postProcessing.PostProcessingModule;
 import org.foxesworld.cge.modules.scene.SceneModule;
 import org.foxesworld.cge.modules.sound.SoundModule;
+import org.foxesworld.cge.tmp.CollisionParticleEmitter;
 import org.foxesworld.cge.tmp.ShapeParty;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
@@ -51,6 +54,7 @@ public class CalistaGameEngine extends SimpleApplication {
     private final StreamingManager<String, Byte[]> byteStreamer;
 
     private AssetLoader assetLoader;
+    private MaterialManager materialManager;
     private ECSModule ecsModule;
     private SceneModule scene;
     private SoundModule soundModule;
@@ -92,17 +96,12 @@ public class CalistaGameEngine extends SimpleApplication {
         System.out.println("\n" + new GpuInfo(renderer).formatGpuInfo());
         this.moduleManager = new ModuleManager(this);
         this.assetLoader = new AssetLoader(this);
+        this.materialManager = new MaterialManager(this);
         filterPostProcessor = new FilterPostProcessor(getAssetManager());
         
-        modulesToLoad.stream()
-                .sorted(Comparator.comparingInt(ModuleConfig::getPriority))
-                .forEach(cfg -> moduleManager.register(cfg.create(this), cfg.getPriority()));
-
-        // Initialize and load all modules
-        //moduleManager.initializeAll(this);
+        modulesToLoad.stream().sorted(Comparator.comparingInt(ModuleConfig::getPriority)).forEach(cfg -> moduleManager.register(cfg.create(this), cfg.getPriority()));
         moduleManager.loadAll(this, () -> {
             // Register custom importers
-            OBJImporter importer = new OBJImporter(OBJImporter.UVProjection.AUTO, true, true);
             this.assetManager.registerLoader(OBJImporter.class, "obj");
             //this.assetManager.registerLoader(FBXImporter.class, "fbx");
 
@@ -112,10 +111,7 @@ public class CalistaGameEngine extends SimpleApplication {
             // Load assets
             assetLoader.loadAllAssets(new JmeProgressBar(this));
             stateManager.attach(new ConfigEditorState(configService));
-            assetLoader.onAssetsLoaded(() -> {
-                new ShapeParty(this).startParty();
-            });
-
+            assetLoader.onAssetsLoaded(() -> new ShapeParty(this).startParty());
         });
     }
 
@@ -177,6 +173,10 @@ public class CalistaGameEngine extends SimpleApplication {
 
     public SoundModule getSoundModule() {
         return soundModule;
+    }
+
+    public MaterialManager getMaterialManager() {
+        return materialManager;
     }
 
     public AssetLoader getAssetLoader() {

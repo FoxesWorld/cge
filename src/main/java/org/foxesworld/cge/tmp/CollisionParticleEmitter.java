@@ -1,6 +1,5 @@
 package org.foxesworld.cge.tmp;
 
-import com.jme3.asset.AssetManager;
 import com.jme3.bullet.collision.PhysicsCollisionEvent;
 import com.jme3.bullet.collision.PhysicsCollisionListener;
 import com.jme3.effect.ParticleEmitter;
@@ -37,8 +36,8 @@ public class CollisionParticleEmitter implements PhysicsCollisionListener {
 
     private ParticleEmitter createImpactParticles(Vector3f location) {
         ParticleEmitter emitter = new ParticleEmitter("Impact", ParticleMesh.Type.Triangle, 20);
-        Material mat = new Material((AssetManager) engine.getAssetManager(), "Common/MatDefs/Misc/Particle.j3md");
-        mat.setTexture("Texture", engine.getAssetRepo().getTexture("cubemap_5"));
+        Material mat = new Material(engine.getAssetManager(), "Common/MatDefs/Misc/Particle.j3md");
+        mat.setTexture("Texture", engine.getAssetRepo().getTexture("explosion"));
         emitter.setMaterial(mat);
 
         emitter.setImagesX(2);

@@ -5,7 +5,6 @@ import org.lwjgl.opengl.GL15;
 import org.lwjgl.opengl.GL20;
 import org.lwjgl.opengl.GL30;
 
-import java.io.FileInputStream;
 import java.nio.FloatBuffer;
 import java.nio.IntBuffer;
 import java.util.List;
@@ -131,7 +130,7 @@ public class FBXModelExample {
     public static void main(String[] args) {
         try {
             // 1. Импортируем FBX-модель
-            EngineMesh mesh = importFbxMesh("meshes/AlanTree.fbx");
+            EngineMesh mesh = importFbxMesh("assets/meshes/AlanTree.fbx");
 
             // 2. Загружаем в GPU (или вашу систему рендера) и отображаем
             uploadToGPUAndDraw(mesh);

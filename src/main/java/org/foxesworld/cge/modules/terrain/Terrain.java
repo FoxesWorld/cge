@@ -30,19 +30,7 @@ public class Terrain extends EngineModule<TerrainConfig> {
      * @param height height of the terrain
      */
     public void createTestTerrain(float width, float height) {
-        Material mat = new Material(getGameEngine().getAssetManager(), "Common/MatDefs/Light/PBRLighting.j3md");
-        mat.setTexture("BaseColorMap", getGameEngine().getAssetRepo().getTexture("ch2_dor_bushyground"));
-        mat.setBoolean("UseSpecGloss", false);
-        mat.setFloat("Glossiness", 0.7f);
-        mat.setBoolean("UseSpecularAA", false);
-        mat.setFloat("Metallic", 0.0f);
-
-        // Repeat texture for large terrain
-        Texture baseColor = mat.getTextureParam("BaseColorMap").getTextureValue();
-        if (baseColor != null) {
-            baseColor.setWrap(Texture.WrapMode.Repeat);
-        }
-
+        Material mat = gameEngine.getMaterialManager().getMaterial("assets/MatDefs/grass.j3m");
         Quad quad = new Quad(width, height);
         Geometry terrain = new Geometry("TerrainPlane", quad);
         terrain.getMesh().scaleTextureCoordinates(new Vector2f(16, 16));

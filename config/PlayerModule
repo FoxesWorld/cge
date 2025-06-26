@@ -16,7 +16,7 @@
     "smoothing": 2.2
   },
   "model": {
-    "modelPath": "meshes/YBot.j3o",
+    "modelPath": "assets/meshes/YBot.j3o",
     "scale": 0.01,
     "backOffset": 0.0,
     "downOffset": -0.85

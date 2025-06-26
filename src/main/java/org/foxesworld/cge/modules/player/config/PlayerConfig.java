@@ -88,7 +88,7 @@ public class PlayerConfig {
     }
 
     public static class ModelConfig {
-        private String modelPath = "meshes/YBot.j3o";
+        private String modelPath = "assets/meshes/YBot.j3o";
         private float scale = .01f;
         private float backOffset = 0.0f;
         private float downOffset = -1.6f;

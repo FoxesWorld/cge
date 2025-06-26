@@ -66,7 +66,7 @@ public class AWTErrorDialog extends JDialog {
             @Override protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setComposite(AlphaComposite.SrcOver.derive(opacity));
-                g2.setColor(OVERLAY);
+                //g2.setColor(OVERLAY);
                 g2.fillRect(0, 0, getWidth(), getHeight());
                 g2.dispose();
             }
@@ -75,7 +75,7 @@ public class AWTErrorDialog extends JDialog {
         add(overlay, BorderLayout.CENTER);
 
         JPanel panel = new JPanel(new BorderLayout(16, 16));
-        panel.setBackground(BG_PANEL);
+        //panel.setBackground(BG_PANEL);
         panel.setBorder(new EmptyBorder(24, 24, 24, 24));
         panel.setBounds(150, 100, 700, 400);  // adjust bounds for new width
         overlay.add(panel);
@@ -165,7 +165,7 @@ public class AWTErrorDialog extends JDialog {
         JButton b = new JButton(text);
         b.setFont(new Font("Segoe UI Semibold", Font.PLAIN, 14));
         b.setForeground(Color.WHITE);
-        b.setBackground(ACCENT);
+        //b.setBackground(ACCENT);
         b.setFocusPainted(false);
         b.setBorder(new EmptyBorder(8,16,8,16));
         b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
@@ -195,7 +195,7 @@ public class AWTErrorDialog extends JDialog {
                 .setContents(new StringSelection(text), null);
         // Flash the field
         Color orig = stackArea.getBackground();
-        stackArea.setBackground(ACCENT.brighter().brighter());
+        //stackArea.setBackground(ACCENT.brighter().brighter());
         Timer flash = new Timer(300, e -> stackArea.setBackground(orig));
         flash.setRepeats(false);
         flash.start();

@@ -1,8 +1,6 @@
 package org.foxesworld.cge.tmp;
 
 import com.jme3.asset.AssetManager;
-import com.jme3.audio.AudioData;
-import com.jme3.audio.AudioNode;
 import com.jme3.effect.ParticleEmitter;
 import com.jme3.effect.ParticleMesh;
 import com.jme3.material.Material;
@@ -14,7 +12,6 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import org.foxesworld.cge.CalistaGameEngine;
-import org.foxesworld.cge.core.loader.JmeProgressBar;
 import org.foxesworld.cge.modules.physics.PhysicsModule;
 
 import java.util.Random;
@@ -36,7 +33,7 @@ public class ShapeParty {
         // Заранее создаем шаблон эффекта частиц
         ParticleEmitter particleTemplate = new ParticleEmitter("my particle effect", ParticleMesh.Type.Triangle, 60);
         Material pmMat = new Material(calistaGameEngine.getAssetManager(), "Common/MatDefs/Misc/Particle.j3md");
-        pmMat.setTexture("Texture", calistaGameEngine.getAssetManager().loadTexture("Textures/explosion.png"));
+        pmMat.setTexture("Texture", calistaGameEngine.getAssetRepo().getTexture("explosion"));
         particleTemplate.setMaterial(pmMat);
         particleTemplate.setImagesX(1);
         particleTemplate.setImagesY(1);
@@ -81,7 +78,7 @@ public class ShapeParty {
                     if (physicsModule != null) {
                         processNodePhysics((Node) instance, physicsModule);
                     }
-                    calistaGameEngine.getSoundModule().playSound("Sounds/bang.ogg", model.getLocalTranslation(), 1.0f);
+                    calistaGameEngine.getSoundModule().playSound("assets/Sounds/bang.ogg", model.getLocalTranslation(), 1.0f);
                 }
             //}, new JmeProgressBar(calistaGameEngine));
         });

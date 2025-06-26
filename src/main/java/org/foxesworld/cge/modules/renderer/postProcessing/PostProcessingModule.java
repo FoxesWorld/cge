@@ -46,8 +46,8 @@ public class PostProcessingModule extends EngineModule<PostProcessingConfig> {
     private LensFlareFilter flare;
     private DirectionalLightShadowFilter dlsf;
 
-    public PostProcessingModule(CalistaGameEngine engine) {
-        super(PostProcessingModule.class, PostProcessingConfig.class, engine);
+    public PostProcessingModule(RendererModule rendererModule) {
+        super(PostProcessingModule.class, PostProcessingConfig.class, rendererModule.getGameEngine());
     }
 
     @Override

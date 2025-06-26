@@ -114,7 +114,7 @@ public abstract class EngineModule<ModuleConfig> extends BaseAppState {
     @Override
     protected void initialize(Application app) {
         if (isLoaded.get()) {
-            logger.warn("{} initialize() called again while already loaded", getName());
+            //logger.warn("{} initialize() called again while already loaded", getName());
             return;
         }
 
