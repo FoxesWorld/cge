@@ -589,7 +589,7 @@ public class ModuleManager {
      * @param app the application context
      * @throws Exception if an error occurs during attachment
      */
-    private void asyncAttach(EngineModule<?> module, Application app) throws Exception {
+    private void asyncAttach(EngineModule<?> module, Application app) {
         String moduleName = module.getClass().getSimpleName();
         try {
             if (!module.isInitialized()) {

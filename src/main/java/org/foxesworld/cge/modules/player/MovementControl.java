@@ -122,7 +122,7 @@ public class MovementControl extends AbstractControl implements ActionListener {
                     onRawKeyR();
                     evt.setConsumed(); // если не хотите, чтобы другие ловили R
                 }
-                if (evt.getKeyCode() == KeyInput.KEY_C && evt.isPressed()) {
+                if (evt.getKeyCode() == KeyInput.KEY_V && evt.isPressed()) {
                     if(!player.getCamControl().isThirdPerson()) {
                         player.getCamControl().setThirdPerson(true);
                         player.getCamEffectsControl().setThirdPerson(true);

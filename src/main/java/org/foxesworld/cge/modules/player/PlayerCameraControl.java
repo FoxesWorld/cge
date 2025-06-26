@@ -83,7 +83,7 @@ public class PlayerCameraControl extends AbstractControl implements AnalogListen
     }
 
     private void setupInputMappings() {
-        input.addMapping(TOGGLE_VIEW, new KeyTrigger(KeyInput.KEY_C));
+        input.addMapping(TOGGLE_VIEW, new KeyTrigger(KeyInput.KEY_V));
         input.addMapping(MOUSE_LEFT,  new MouseAxisTrigger(MouseInput.AXIS_X, true));
         input.addMapping(MOUSE_RIGHT, new MouseAxisTrigger(MouseInput.AXIS_X, false));
         input.addMapping(MOUSE_UP,    new MouseAxisTrigger(MouseInput.AXIS_Y, true));
