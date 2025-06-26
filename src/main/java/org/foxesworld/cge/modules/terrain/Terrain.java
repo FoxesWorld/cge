@@ -9,9 +9,7 @@ import com.jme3.math.Vector2f;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.shape.Quad;
-import com.jme3.texture.Texture;
 import org.foxesworld.cge.CalistaGameEngine;
-import org.foxesworld.cge.core.loader.JmeProgressBar;
 import org.foxesworld.cge.core.module.EngineModule;
 import org.foxesworld.cge.modules.physics.PhysicsModule;
 

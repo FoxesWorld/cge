@@ -2,9 +2,7 @@ package org.foxesworld.cge.modules.player;
 
 import com.jme3.app.Application;
 import com.jme3.math.Vector3f;
-import com.simsilica.es.EntityData;
 import org.foxesworld.cge.CalistaGameEngine;
-import org.foxesworld.cge.core.loader.JmeProgressBar;
 import org.foxesworld.cge.core.module.EngineModule;
 import org.foxesworld.cge.modules.player.config.PlayerConfig;
 import org.slf4j.Logger;

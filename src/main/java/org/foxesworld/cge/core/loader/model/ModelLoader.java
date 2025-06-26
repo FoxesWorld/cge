@@ -5,6 +5,9 @@ import com.jme3.asset.AssetManager;
 import com.jme3.scene.Spatial;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.loader.AbstractAssetLoader;
+import org.foxesworld.cge.core.loader.ILoader;
+import org.foxesworld.cge.core.utils.CallbackLatch;
+import org.foxesworld.cge.core.loader.AssetProgressListener;
 
 import java.lang.reflect.Type;
 import java.nio.file.Paths;
@@ -13,8 +16,9 @@ import java.util.concurrent.*;
 
 /**
  * Asynchronous loader for 3D models using a fixed thread pool.
+ * Implements ILoader for dynamic registration in AssetLoader.
  */
-public class ModelLoader extends AbstractAssetLoader<String> {
+public class ModelLoader extends AbstractAssetLoader<String> implements ILoader {
     private final AssetManager assetManager;
     private final CalistaGameEngine engine;
 
@@ -56,5 +60,17 @@ public class ModelLoader extends AbstractAssetLoader<String> {
         String filename = Paths.get(path).getFileName().toString();
         int dot = filename.lastIndexOf('.');
         return dot >= 0 ? filename.substring(0, dot) : filename;
+    }
+
+    // --- ILoader interface implementation for AssetLoader ---
+
+    @Override
+    public void setProgressListener(AssetProgressListener listener) {
+        super.setProgressListener(listener);
+    }
+
+    @Override
+    public void loadWithLatch(CallbackLatch latch) {
+        super.loadWithLatch(latch);
     }
 }

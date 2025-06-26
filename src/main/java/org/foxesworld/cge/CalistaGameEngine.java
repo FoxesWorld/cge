@@ -2,44 +2,32 @@ package org.foxesworld.cge;
 
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.StatsAppState;
-import com.jme3.asset.AssetManager;
-import com.jme3.phonon.*;
-import com.jme3.phonon.desktop_javasound.JavaSoundPhononSettings;
 import com.jme3.post.FilterPostProcessor;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.core.AssetRepo;
 import org.foxesworld.cge.core.ConfigEditorState;
 import org.foxesworld.cge.core.ConfigService;
 import org.foxesworld.cge.core.TaskScheduler;
 import org.foxesworld.cge.core.io.GenericByteParser;
 import org.foxesworld.cge.core.loader.AssetLoader;
-import org.foxesworld.cge.core.loader.JmeProgressBar;
+import org.foxesworld.cge.core.loader.ConsoleProgressBar;
 import org.foxesworld.cge.core.material.MaterialManager;
 import org.foxesworld.cge.core.module.EngineModule;
 import org.foxesworld.cge.core.module.ModuleManager;
 import org.foxesworld.cge.core.io.streaming.ByteBoxingUtils;
 import org.foxesworld.cge.core.io.streaming.StreamingManager;
 import org.foxesworld.cge.core.io.streaming.StreamingParserLoader;
-import org.foxesworld.cge.importers.fbx.FBXImporter;
 import org.foxesworld.cge.importers.obj.OBJImporter;
 import org.foxesworld.cge.modules.ModuleConfig;
 import org.foxesworld.cge.modules.ecs.ECSModule;
-import org.foxesworld.cge.modules.physics.PhysicsModule;
 import org.foxesworld.cge.modules.popcycle.PopCycle;
 import org.foxesworld.cge.modules.renderer.GpuInfo;
-import org.foxesworld.cge.modules.renderer.RendererModule;
-import org.foxesworld.cge.modules.renderer.postProcessing.PostProcessingModule;
 import org.foxesworld.cge.modules.scene.SceneModule;
 import org.foxesworld.cge.modules.sound.SoundModule;
-import org.foxesworld.cge.tmp.CollisionParticleEmitter;
 import org.foxesworld.cge.tmp.ShapeParty;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.util.Comparator;
 import java.util.List;
-
-import static com.jme3.audio.AudioContext.setAudioRenderer;
 
 /**
  * Main game engine class with dynamic module loading
@@ -109,7 +97,7 @@ public class CalistaGameEngine extends SimpleApplication {
             this.ecsModule = moduleManager.getModule(ECSModule.class);
             this.soundModule = moduleManager.getModule(SoundModule.class);
             // Load assets
-            assetLoader.loadAllAssets(new JmeProgressBar(this));
+            assetLoader.loadAllAssets(new ConsoleProgressBar());
             stateManager.attach(new ConfigEditorState(configService));
             assetLoader.onAssetsLoaded(() -> new ShapeParty(this).startParty());
         });

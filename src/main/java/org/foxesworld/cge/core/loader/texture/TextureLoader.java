@@ -7,6 +7,9 @@ import com.jme3.texture.image.ColorSpace;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.file.extensions.cgtex.CGTEXFile;
 import org.foxesworld.cge.core.loader.AbstractAssetLoader;
+import org.foxesworld.cge.core.loader.AssetLoader;
+import org.foxesworld.cge.core.loader.ILoader;
+import org.foxesworld.cge.core.utils.CallbackLatch;
 import org.foxesworld.cge.core.utils.DDSDecoder;
 
 import java.awt.image.BufferedImage;
@@ -19,8 +22,9 @@ import java.util.concurrent.CompletableFuture;
 /**
  * Optimized loader for CGTEX textures defined by a JSON list,
  * leveraging asynchronous loading from the parent abstract loader.
+ * Implements AssetLoader.ILoader for dynamic loader registration.
  */
-public class TextureLoader extends AbstractAssetLoader<TextureEntry> {
+public class TextureLoader extends AbstractAssetLoader<TextureEntry> implements ILoader {
 
     private final CalistaGameEngine engine;
 
@@ -40,7 +44,6 @@ public class TextureLoader extends AbstractAssetLoader<TextureEntry> {
 
     @Override
     protected CompletableFuture<Integer> loadEntryAsync(TextureEntry entry) {
-        // Leverage the default ForkJoinPool for supplyAsync
         return CompletableFuture.supplyAsync(() -> processEntry(entry));
     }
 
@@ -58,21 +61,16 @@ public class TextureLoader extends AbstractAssetLoader<TextureEntry> {
             cgtex.readFileNew();
             int count = 0;
             for (org.foxesworld.cge.core.file.extensions.cgtex.TextureEntry te : cgtex.getEntries()) {
-                // Decode DDS data into a BufferedImage
                 BufferedImage img = DDSDecoder.decode(
                         te.getWidth(), te.getHeight(), te.getFormat(), te.getCompressedData()
                 );
-                // Convert to ByteBuffer
                 ByteBuffer buf = toByteBuffer(img, flipY);
-                // Create JME image and set properties
                 Image jmeImage = new Image(Image.Format.RGBA8, te.getWidth(), te.getHeight(), buf, ColorSpace.sRGB);
                 jmeImage.setMipmapsGenerated(genMipMaps);
 
-                // Create Texture2D and register in asset repository
                 Texture2D tex = new Texture2D(jmeImage);
                 tex.setName(te.getName());
                 engine.getAssetRepo().addTexture(te.getName(), tex);
-
                 count++;
             }
             return count;
@@ -108,5 +106,17 @@ public class TextureLoader extends AbstractAssetLoader<TextureEntry> {
         }
         buf.flip();
         return buf;
+    }
+
+    // --- ILoader interface implementation for dynamic registration ---
+
+    @Override
+    public void setProgressListener(org.foxesworld.cge.core.loader.AssetProgressListener listener) {
+        super.setProgressListener(listener);
+    }
+
+    @Override
+    public void loadWithLatch(CallbackLatch latch) {
+        super.loadWithLatch(latch);
     }
 }

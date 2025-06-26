@@ -1,6 +1,6 @@
 package org.foxesworld.cge.core.loader;
 
-@Deprecated
+
 public class ConsoleProgressBar implements AssetProgressListener {
     @Override
     public void onProgress(String assetType, int loaded, int total) {
