@@ -3,6 +3,7 @@ package org.foxesworld.cge.core.loader;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.CalistaGameEngine;
+import org.foxesworld.cge.core.io.progressBar.ProgressListener;
 import org.foxesworld.cge.core.loader.model.ModelLoader;
 import org.foxesworld.cge.core.loader.texture.TextureLoader;
 import org.foxesworld.cge.core.utils.CallbackLatch;
@@ -43,7 +44,7 @@ public class AssetLoader {
     /**
      * Loads all registered loaders, logging counts and invoking callback when done.
      */
-    public void loadAllAssets(AssetProgressListener progressListener) {
+    public void loadAllAssets(ProgressListener progressListener) {
         logger.info("Starting asset loading with {} loader(s)...", loaders.size());
         CallbackLatch latch = new CallbackLatch(loaders.size(), () -> {
             logger.info("All assets loaded successfully.");

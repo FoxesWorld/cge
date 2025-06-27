@@ -7,7 +7,7 @@ import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.loader.AbstractAssetLoader;
 import org.foxesworld.cge.core.loader.ILoader;
 import org.foxesworld.cge.core.utils.CallbackLatch;
-import org.foxesworld.cge.core.loader.AssetProgressListener;
+import org.foxesworld.cge.core.io.progressBar.ProgressListener;
 
 import java.lang.reflect.Type;
 import java.nio.file.Paths;
@@ -65,7 +65,7 @@ public class ModelLoader extends AbstractAssetLoader<String> implements ILoader 
     // --- ILoader interface implementation for AssetLoader ---
 
     @Override
-    public void setProgressListener(AssetProgressListener listener) {
+    public void setProgressListener(ProgressListener listener) {
         super.setProgressListener(listener);
     }
 

@@ -1,10 +1,10 @@
-package org.foxesworld.cge.core.loader;
+package org.foxesworld.cge.core.io.progressBar;
 
 /**
  * Простая callback-интерфейс для прогресса загрузки ассетов.
  * Может быть реализован для UI, логирования, HUD и т.п.
  */
-public interface AssetProgressListener {
+public interface ProgressListener {
     /**
      * Вызывается при обновлении прогресса.
      * @param assetType   тип ассета (например "Texture", "Model", "Sound")

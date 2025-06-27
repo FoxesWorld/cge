@@ -33,11 +33,13 @@ public class AssetRepo {
      * Retrieves a texture by name. Returns a default Texture2D if not found.
      */
     public Texture getTexture(String name) {
-        return getAsset(
+        Texture texture = getAsset(
                 name,
                 textureMap,
                 Texture2D::new,
                 "texture");
+        texture.setName(name+"-tetxture");
+        return texture;
     }
 
     /**

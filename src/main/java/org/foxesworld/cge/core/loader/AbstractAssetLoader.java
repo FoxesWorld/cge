@@ -3,6 +3,7 @@ package org.foxesworld.cge.core.loader;
 import com.google.gson.Gson;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.foxesworld.cge.core.io.progressBar.ProgressListener;
 import org.foxesworld.cge.core.utils.CallbackLatch;
 
 import java.io.InputStream;
@@ -35,14 +36,14 @@ public abstract class AbstractAssetLoader<E> {
      */
     private static final Gson GSON = new Gson();
 
-    private AssetProgressListener progressListener;
+    private ProgressListener progressListener;
     private final AtomicBoolean loaded = new AtomicBoolean(false);
     private CompletableFuture<Integer> loadFuture;
 
     /**
      * Sets a progress listener for this loader.
      */
-    public void setProgressListener(AssetProgressListener listener) {
+    public void setProgressListener(ProgressListener listener) {
         this.progressListener = listener;
     }
 

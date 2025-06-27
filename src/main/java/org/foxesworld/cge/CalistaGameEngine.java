@@ -9,7 +9,7 @@ import org.foxesworld.cge.core.ConfigService;
 import org.foxesworld.cge.core.TaskScheduler;
 import org.foxesworld.cge.core.io.GenericByteParser;
 import org.foxesworld.cge.core.loader.AssetLoader;
-import org.foxesworld.cge.core.loader.ConsoleProgressBar;
+import org.foxesworld.cge.core.io.progressBar.StatusProgressBar;
 import org.foxesworld.cge.core.material.MaterialManager;
 import org.foxesworld.cge.core.module.EngineModule;
 import org.foxesworld.cge.core.module.ModuleManager;
@@ -23,6 +23,8 @@ import org.foxesworld.cge.modules.popcycle.PopCycle;
 import org.foxesworld.cge.modules.renderer.GpuInfo;
 import org.foxesworld.cge.modules.scene.SceneModule;
 import org.foxesworld.cge.modules.sound.SoundModule;
+import org.foxesworld.cge.modules.ui.novaUi.NovaUI;
+import org.foxesworld.cge.tmp.menu.MainMenuAppState;
 import org.foxesworld.cge.tmp.ShapeParty;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
@@ -47,6 +49,7 @@ public class CalistaGameEngine extends SimpleApplication {
     private SceneModule scene;
     private SoundModule soundModule;
     private ModuleManager moduleManager;
+    private NovaUI novaUI;
 
     /**
      * Constructs a new CalistaGameEngine with the provided list of modules to load.
@@ -65,6 +68,7 @@ public class CalistaGameEngine extends SimpleApplication {
         this.popCycle = new PopCycle(this);
         this.configService = new ConfigService(this);
         this.taskScheduler = new TaskScheduler();
+
 
         // 4. Остальной ваш инициализационный код
         GenericByteParser<Byte[]> parser = new GenericByteParser<>(ByteBoxingUtils::toObject);
@@ -86,21 +90,8 @@ public class CalistaGameEngine extends SimpleApplication {
         this.assetLoader = new AssetLoader(this);
         this.materialManager = new MaterialManager(this);
         filterPostProcessor = new FilterPostProcessor(getAssetManager());
-        
-        modulesToLoad.stream().sorted(Comparator.comparingInt(ModuleConfig::getPriority)).forEach(cfg -> moduleManager.register(cfg.create(this), cfg.getPriority()));
-        moduleManager.loadAll(this, () -> {
-            // Register custom importers
-            this.assetManager.registerLoader(OBJImporter.class, "obj");
-            //this.assetManager.registerLoader(FBXImporter.class, "fbx");
-
-            this.scene = moduleManager.getModule(SceneModule.class);
-            this.ecsModule = moduleManager.getModule(ECSModule.class);
-            this.soundModule = moduleManager.getModule(SoundModule.class);
-            // Load assets
-            assetLoader.loadAllAssets(new ConsoleProgressBar());
-            stateManager.attach(new ConfigEditorState(configService));
-            assetLoader.onAssetsLoaded(() -> new ShapeParty(this).startParty());
-        });
+        MainMenuAppState mainMenuAppState = new MainMenuAppState();
+        stateManager.attach(mainMenuAppState);
     }
 
     /**
@@ -177,5 +168,24 @@ public class CalistaGameEngine extends SimpleApplication {
 
     public FilterPostProcessor getFilterPostProcessor() {
         return filterPostProcessor;
+    }
+
+    public void startGameFromMenu() {
+        stateManager.detach(stateManager.getState(MainMenuAppState.class));
+        modulesToLoad.stream().sorted(Comparator.comparingInt(ModuleConfig::getPriority)).forEach(cfg -> moduleManager.register(cfg.create(this), cfg.getPriority()));
+
+        moduleManager.loadAll(this, () -> {
+            // Register custom importers
+            this.assetManager.registerLoader(OBJImporter.class, "obj");
+            //this.assetManager.registerLoader(FBXImporter.class, "fbx");
+
+            this.scene = moduleManager.getModule(SceneModule.class);
+            this.ecsModule = moduleManager.getModule(ECSModule.class);
+            this.soundModule = moduleManager.getModule(SoundModule.class);
+            // Load assets
+            assetLoader.loadAllAssets(new StatusProgressBar());
+            stateManager.attach(new ConfigEditorState(configService));
+            assetLoader.onAssetsLoaded(() -> new ShapeParty(this).startParty());
+        });
     }
 }

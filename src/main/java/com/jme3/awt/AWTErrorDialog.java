@@ -1,19 +1,22 @@
 package com.jme3.awt;
 
+import com.formdev.flatlaf.FlatClientProperties;
 import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.extras.FlatAnimatedLafChange;
+import com.formdev.flatlaf.icons.FlatWindowCloseIcon;
 import org.foxesworld.cge.ICOParser;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
 import java.awt.event.*;
 import java.awt.geom.RoundRectangle2D;
-import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.net.URL;
+import java.net.URI;
+import java.util.Objects;
+
+import static org.foxesworld.cge.tools.SceneCGSCreator.SceneCgsCreatorFrame.setupTheme;
 
 /**
  * AAA-style error dialog for the Calista Game Engine using FlatLaf.
@@ -24,79 +27,119 @@ import java.net.URL;
  * - Prominent title bar with engine logo
  * - Stack trace view with copy & report buttons
  * - Keyboard shortcuts: Ctrl+C copy, Esc close
+ * - Modern, glassy, material-inspired design with drop shadow and accent highlights
  */
 public class AWTErrorDialog extends JDialog {
-    private static final int CORNER_RADIUS = 16;
+    private static final int CORNER_RADIUS = 18;
     private static final Color OVERLAY = new Color(0, 0, 0, 200);
-    private static final Color BG_PANEL = new Color(45, 45, 48);
-    private static final Color ACCENT = new Color(220, 80, 80);
+    private static final Color BG_PANEL = new Color(36, 37, 41, 230);
+    private static final Color ACCENT = new Color(255, 92, 92);
+    private static final Color ACCENT_GRAD = new Color(255, 140, 115);
+    private static final Color BORDER_COLOR = new Color(80, 80, 90, 120);
 
+    private float opacity = 0f;
     private Timer fadeIn;
     private Timer fadeOut;
-    private float opacity = 0f;
 
-    private JLabel iconLabel;
     private JTextArea stackArea;
     private JButton copyBtn;
     private Point dragOffset;
 
-    public AWTErrorDialog(String title, String message, Throwable t) {
+    public AWTErrorDialog(String title, String message) {
         super((Frame) null, true);
-        FlatDarkLaf.setup();
+        setupTheme("assets/theme/calista.properties");;
         FlatAnimatedLafChange.showSnapshot();
 
         initDialog();
-        buildUI(title, message, t);
+        buildUI(title, message);
         applyDrag();
         startFade();
     }
 
     private void initDialog() {
         setUndecorated(true);
-        setBackground(new Color(0,0,0,0));
-        setSize(1000, 600);  // widened dialog
+        setBackground(new Color(0, 0, 0, 0));
+        setSize(1000, 600);
         setLocationRelativeTo(null);
         setShape(new RoundRectangle2D.Double(0, 0, getWidth(), getHeight(), CORNER_RADIUS, CORNER_RADIUS));
-        getContentPane().setLayout(new BorderLayout());
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
+
+        // Drop shadow
+        getRootPane().setBorder(BorderFactory.createEmptyBorder(8, 8, 8, 8));
+        getRootPane().setOpaque(false);
     }
 
-    private void buildUI(String title, String message, Throwable t) {
+    private void buildUI(String title, String message) {
         JPanel overlay = new JPanel() {
-            @Override protected void paintComponent(Graphics g) {
+            @Override
+            protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
                 g2.setComposite(AlphaComposite.SrcOver.derive(opacity));
-                //g2.setColor(OVERLAY);
+                g2.setColor(OVERLAY);
                 g2.fillRect(0, 0, getWidth(), getHeight());
                 g2.dispose();
             }
         };
         overlay.setLayout(null);
+        overlay.setOpaque(false);
         add(overlay, BorderLayout.CENTER);
 
-        JPanel panel = new JPanel(new BorderLayout(16, 16));
-        //panel.setBackground(BG_PANEL);
-        panel.setBorder(new EmptyBorder(24, 24, 24, 24));
-        panel.setBounds(150, 100, 700, 400);  // adjust bounds for new width
+        JPanel panel = buildPanel(title, message);
         overlay.add(panel);
 
-        JPanel titleBar = new JPanel(new BorderLayout(8,0));
-        titleBar.setOpaque(false);
-        JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(new Font("Segoe UI Semibold", Font.BOLD, 24));
-        titleLabel.setForeground(Color.WHITE);
-        ICOParser parser = new ICOParser();
-        java.util.List<BufferedImage> iconsList = null;
-        try {
-            iconsList = parser.parse(AWTErrorDialog.class.getClassLoader().getResourceAsStream("assets/theme/icon/engineLogo.ico"));
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        iconLabel = new JLabel(new ImageIcon(iconsList.get(2)));
-        titleBar.add(iconLabel, BorderLayout.WEST);
-        titleBar.add(titleLabel, BorderLayout.CENTER);
-        panel.add(titleBar, BorderLayout.NORTH);
+        setupShortcuts(panel);
+    }
 
+    private JPanel buildPanel(String title, String message) {
+        JPanel glassPanel = new JPanel(new BorderLayout(0, 0)) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                // Glassy background
+                g2.setComposite(AlphaComposite.SrcOver.derive(0.98f));
+                g2.setPaint(new GradientPaint(0, 0, BG_PANEL, getWidth(), getHeight(), BG_PANEL.darker()));
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), CORNER_RADIUS * 2, CORNER_RADIUS * 2);
+
+                // Border
+                g2.setColor(BORDER_COLOR);
+                g2.setStroke(new BasicStroke(2f));
+                g2.drawRoundRect(1, 1, getWidth() - 3, getHeight() - 3, CORNER_RADIUS * 2, CORNER_RADIUS * 2);
+
+                g2.dispose();
+            }
+        };
+        glassPanel.setBackground(new Color(0,0,0,0));
+        glassPanel.setBorder(new EmptyBorder(32, 32, 32, 32));
+        glassPanel.setBounds(140, 80, 720, 440);
+        glassPanel.setOpaque(false);
+
+        // Title bar
+        JPanel titleBar = new JPanel(new BorderLayout(12, 0));
+        titleBar.setOpaque(false);
+
+        JLabel titleLabel = new JLabel(title);
+        titleLabel.setFont(new Font("Segoe UI Semibold", Font.BOLD, 28));
+        titleLabel.setForeground(Color.WHITE);
+
+        JLabel iconLabel = iconLabel();
+        if (iconLabel != null) titleBar.add(iconLabel, BorderLayout.WEST);
+
+        titleBar.add(titleLabel, BorderLayout.CENTER);
+
+        JButton closeBtn = new JButton(new FlatWindowCloseIcon());
+        closeBtn.putClientProperty(FlatClientProperties.BUTTON_TYPE, FlatClientProperties.BUTTON_TYPE_TOOLBAR_BUTTON);
+        closeBtn.setToolTipText("Close (Esc)");
+        closeBtn.setFocusable(false);
+        closeBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        closeBtn.addActionListener(e -> fadeOut.start());
+        titleBar.add(closeBtn, BorderLayout.EAST);
+
+        glassPanel.add(titleBar, BorderLayout.NORTH);
+
+        // Message and stacktrace area
         JTextArea msgArea = new JTextArea(message);
         msgArea.setFont(new Font("Segoe UI", Font.PLAIN, 16));
         msgArea.setForeground(Color.WHITE);
@@ -104,41 +147,97 @@ public class AWTErrorDialog extends JDialog {
         msgArea.setEditable(false);
         msgArea.setLineWrap(true);
         msgArea.setWrapStyleWord(true);
+        msgArea.setBorder(BorderFactory.createEmptyBorder(10, 14, 10, 14)); // <-- ОТСТУПЫ
 
-        stackArea = new JTextArea();
-        stackArea.setFont(new Font("Consolas", Font.PLAIN, 12));
-        stackArea.setForeground(Color.LIGHT_GRAY);
+        stackArea = new JTextArea(message);
+        stackArea.setFont(new Font(Font.MONOSPACED, Font.PLAIN, 13));
+        stackArea.setForeground(new Color(220, 230, 245));
+        stackArea.setBackground(new Color(18, 20, 25, 180));
+        stackArea.setCaretPosition(0);
         stackArea.setEditable(false);
-        stackArea.setText(getStackTrace(t));
+        stackArea.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(60,70,80,120), 1, true),
+                BorderFactory.createEmptyBorder(8, 14, 8, 14) // <-- ОТСТУПЫ
+        ));
 
-        JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT,
-                new JScrollPane(msgArea), new JScrollPane(stackArea));
-        split.setResizeWeight(0.3);
+        JScrollPane msgScroll = new JScrollPane(msgArea);
+        msgScroll.setBorder(null);
+        msgScroll.setOpaque(false);
+        msgScroll.getViewport().setOpaque(false);
+
+        JScrollPane stackScroll = new JScrollPane(stackArea);
+        stackScroll.setBorder(null);
+
+        JSplitPane split = new JSplitPane(JSplitPane.VERTICAL_SPLIT, msgScroll, stackScroll);
+        split.setResizeWeight(0.25);
+        split.setDividerSize(6);
         split.setBorder(null);
-        panel.add(split, BorderLayout.CENTER);
+        glassPanel.add(split, BorderLayout.CENTER);
 
-        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT,12,12));
+        // Actions row
+        JPanel actions = new JPanel(new FlowLayout(FlowLayout.RIGHT, 14, 14));
         actions.setOpaque(false);
-        copyBtn = styledButton("Copy"); copyBtn.addActionListener(e -> copyAll());
-        JButton reportBtn = styledButton("Report"); reportBtn.addActionListener(e -> openReport());
+        copyBtn = styledButton("Copy", e -> copyAll());
+        JButton reportBtn = styledButton("Report", e -> openReport());
+        reportBtn.setForeground(ACCENT);
         reportBtn.setEnabled(false);
-        JButton closeBtn = styledButton("Close"); closeBtn.addActionListener(e -> fadeOut.start());
-        actions.add(copyBtn); actions.add(reportBtn); actions.add(closeBtn);
-        panel.add(actions, BorderLayout.SOUTH);
+        reportBtn.setBorder(BorderFactory.createLineBorder(ACCENT, 2, true));
+        JButton closeBtn2 = styledButton("Close", e -> fadeOut.start());
+        actions.add(copyBtn);
+        actions.add(reportBtn);
+        actions.add(closeBtn2);
+        glassPanel.add(actions, BorderLayout.SOUTH);
 
-        InputMap im = panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
-        ActionMap am = panel.getActionMap();
-        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "close");
-        am.put("close", new AbstractAction(){ public void actionPerformed(ActionEvent e){ fadeOut.start(); }});
-        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK), "copy");
-        am.put("copy", new AbstractAction(){ public void actionPerformed(ActionEvent e){ copyAll(); }});
+        // Subtle glass shadow (optional, for extra modern look)
+        glassPanel.setBorder(BorderFactory.createCompoundBorder(
+                glassPanel.getBorder(),
+                BorderFactory.createMatteBorder(0,0,12,0,new Color(0,0,0,24))
+        ));
+
+        return glassPanel;
+    }
+
+    private JLabel iconLabel() {
+        try {
+            var parser = new ICOParser();
+            var icons = parser.parse(Objects.requireNonNull(AWTErrorDialog.class.getClassLoader()
+                    .getResourceAsStream("assets/theme/icon/engineLogo.ico")));
+            if (icons != null && icons.size() > 2) {
+                Image scaled = icons.get(2).getScaledInstance(38, 38, Image.SCALE_SMOOTH);
+                JLabel iconLabel = new JLabel(new ImageIcon(scaled));
+                iconLabel.setBorder(new EmptyBorder(0, 0, 0, 8));
+                return iconLabel;
+            }
+        } catch (IOException | NullPointerException e) {
+            System.err.println("Icon load failed: " + e.getMessage());
+        }
+        return null;
+    }
+
+    private JButton styledButton(String text, ActionListener action) {
+        var b = new JButton(text);
+        b.setFont(new Font("Segoe UI Semibold", Font.PLAIN, 14));
+        b.setForeground(Color.WHITE);
+        b.setFocusPainted(false);
+        b.setBackground(new Color(40,40,45,180));
+        b.setBorder(BorderFactory.createEmptyBorder(9, 20, 9, 20));
+        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        b.addActionListener(action);
+        b.setOpaque(false);
+        b.setContentAreaFilled(false);
+        b.setBorderPainted(true);
+        return b;
     }
 
     private void applyDrag() {
         MouseAdapter ma = new MouseAdapter() {
-            @Override public void mousePressed(MouseEvent e) { dragOffset = e.getPoint(); }
-            @Override public void mouseDragged(MouseEvent e) {
-                Point loc = getLocation();
+            @Override
+            public void mousePressed(MouseEvent e) {
+                dragOffset = e.getPoint();
+            }
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                var loc = getLocation();
                 setLocation(loc.x + e.getX() - dragOffset.x, loc.y + e.getY() - dragOffset.y);
             }
         };
@@ -146,14 +245,27 @@ public class AWTErrorDialog extends JDialog {
         addMouseMotionListener(ma);
     }
 
+    private void setupShortcuts(JComponent panel) {
+        var im = panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        var am = panel.getActionMap();
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "close");
+        am.put("close", new AbstractAction() {
+            @Override public void actionPerformed(ActionEvent e) { fadeOut.start(); }
+        });
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK), "copy");
+        am.put("copy", new AbstractAction() {
+            @Override public void actionPerformed(ActionEvent e) { copyAll(); }
+        });
+    }
+
     private void startFade() {
         fadeIn = new Timer(15, e -> {
-            opacity = Math.min(1f, opacity + 0.05f);
+            opacity = Math.min(1f, opacity + 0.06f);
             repaint();
             if (opacity >= 1f) fadeIn.stop();
         });
         fadeOut = new Timer(15, e -> {
-            opacity = Math.max(0f, opacity - 0.05f);
+            opacity = Math.max(0f, opacity - 0.06f);
             repaint();
             if (opacity <= 0f) { fadeOut.stop(); dispose(); }
         });
@@ -161,69 +273,35 @@ public class AWTErrorDialog extends JDialog {
         fadeIn.start();
     }
 
-    private JButton styledButton(String text) {
-        JButton b = new JButton(text);
-        b.setFont(new Font("Segoe UI Semibold", Font.PLAIN, 14));
-        b.setForeground(Color.WHITE);
-        //b.setBackground(ACCENT);
-        b.setFocusPainted(false);
-        b.setBorder(new EmptyBorder(8,16,8,16));
-        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        return b;
-    }
-
-    private Icon loadIcon(String path, int size) {
-        URL url = getClass().getClassLoader().getResource(path);
-        if (url != null) {
-            try {
-                Image img = ImageIO.read(url).getScaledInstance(size, size, Image.SCALE_SMOOTH);
-                return new ImageIcon(img);
-            } catch (IOException ignored) {}
-        }
-        return UIManager.getIcon("OptionPane.errorIcon");
-    }
-
-    private String getStackTrace(Throwable t) {
-        StringBuilder sb = new StringBuilder();
-        for (StackTraceElement el : t.getStackTrace()) sb.append(el).append("\n");
-        return sb.toString();
-    }
-
     private void copyAll() {
-        String text = stackArea.getText();
+        var text = stackArea.getText();
         Toolkit.getDefaultToolkit().getSystemClipboard()
                 .setContents(new StringSelection(text), null);
-        // Flash the field
-        Color orig = stackArea.getBackground();
-        //stackArea.setBackground(ACCENT.brighter().brighter());
-        Timer flash = new Timer(300, e -> stackArea.setBackground(orig));
-        flash.setRepeats(false);
-        flash.start();
-        // Show checkmark on copy button
+
         String origText = copyBtn.getText();
         copyBtn.setText("✔");
-        Timer chk = new Timer(1000, e -> copyBtn.setText(origText));
+        Timer chk = new Timer(1100, e -> copyBtn.setText(origText));
         chk.setRepeats(false);
         chk.start();
     }
 
     private void openReport() {
-        try { Desktop.getDesktop().browse(new java.net.URI("https://tracker.calista/gameerror")); }
-        catch (Exception ignored) {}
+        try {
+            Desktop.getDesktop().browse(new URI("https://tracker.calista/gameerror"));
+        } catch (Exception ignored) {}
     }
 
-    public static void showError(String msg, Throwable t) {
-        SwingUtilities.invokeLater(() -> new AWTErrorDialog("Calista Engine Error", msg, t));
+    public static void showDialog(String msg) {
+        SwingUtilities.invokeLater(() -> new AWTErrorDialog("Calista Engine Error", msg));
     }
 
     public static void main(String[] args) {
-        boolean dry = args.length>0 && "--dryrun".equalsIgnoreCase(args[0]);
+        boolean dry = args.length > 0 && "--dryrun".equalsIgnoreCase(args[0]);
         if (dry) System.out.println("[DryRun] Building dialog (no show)");
         SwingUtilities.invokeLater(() -> {
             AWTErrorDialog dlg = new AWTErrorDialog(
-                    dry?"DryRun Error":"Calista Engine Error",
-                    dry?"UI build only":"Test exception",
-                    new Exception("Test Throwable")
+                    dry ? "DryRun Error" : "Calista Engine Error",
+                    dry ? "UI build only" : "Test exception\n\nStackTrace here\nat com.test.Main(x:42)"
             );
             if (dry) dlg.dispose();
         });

@@ -32,7 +32,7 @@ public class Game {
              new ModuleConfig(SoundModule::new, 100)
          );
 
-        CalistaGameEngine app = null;
+        CalistaGameEngine app;
         try {
             app = new CalistaGameEngine(cfg);
         } catch (Exception e) {

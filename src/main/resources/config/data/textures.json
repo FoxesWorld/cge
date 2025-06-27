@@ -18,5 +18,10 @@
     "path": "data/lensFlare.cgtex" ,
     "flipY": true ,
     "generateMipmaps": true
+  },
+  {
+    "path": "data/graphics.cgtex" ,
+    "flipY": true ,
+    "generateMipmaps": true
   }
 ]

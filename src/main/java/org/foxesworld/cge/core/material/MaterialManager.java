@@ -112,28 +112,32 @@ public class MaterialManager {
             String line, j3md = null;
             Map<String, ParamValue> params = new HashMap<>();
             while ((line = reader.readLine()) != null) {
-                line = line.trim();
-                if (line.startsWith("Material ") && line.contains(":")) {
-                    int colon = line.indexOf(':');
-                    int brace = line.indexOf('{', colon);
-                    j3md = line.substring(colon + 1, brace > colon ? brace : line.length()).trim();
-                    logger.debug("Found j3md template: {}", j3md);
-                }
-                if (line.contains(":") && !line.startsWith("Material ")) {
-                    String[] parts = line.split(":", 2);
-                    if (parts.length == 2) {
-                        String rawKey = parts[0].trim();
-                        String value = parts[1].trim().replace("\"", "");
-                        String key = rawKey;
-                        String type = null;
-                        if (rawKey.contains("(") && rawKey.contains(")")) {
-                            int start = rawKey.indexOf('(');
-                            int end = rawKey.indexOf(')');
-                            type = rawKey.substring(start + 1, end).trim().toLowerCase();
-                            key = rawKey.substring(0, start).trim();
+                if(!line.contains("#")) {
+                    line = line.trim();
+                    if (line.startsWith("Material ") && line.contains(":")) {
+                        int colon = line.indexOf(':');
+                        int brace = line.indexOf('{', colon);
+                        j3md = line.substring(colon + 1, brace > colon ? brace : line.length()).trim();
+                        logger.debug("Found j3md template: {}", j3md);
+                    }
+                    if (line.contains(":") && !line.startsWith("Material ")) {
+                        String[] parts = line.split(":", 2);
+                        if (parts.length == 2) {
+                            String left = parts[0].trim();
+                            String value = parts[1].trim().replace("\"", "");
+                            String type = null, key = null;
+                            // Пытаемся выделить тип и ключ
+                            int space = left.indexOf(' ');
+                            if (space > 0) {
+                                type = left.substring(0, space).trim().toLowerCase();
+                                key = left.substring(space + 1).trim();
+                            } else {
+                                // fallback: если не найдено, всё как раньше
+                                key = left;
+                            }
+                            logger.debug("Parameter: {} (type: {}) = {}", key, type, value);
+                            params.put(key, new ParamValue(type, value));
                         }
-                        logger.debug("Parameter: {} (type: {}) = {}", key, type, value);
-                        params.put(key, new ParamValue(type, value));
                     }
                 }
             }

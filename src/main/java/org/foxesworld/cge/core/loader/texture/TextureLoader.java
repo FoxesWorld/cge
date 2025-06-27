@@ -7,8 +7,8 @@ import com.jme3.texture.image.ColorSpace;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.file.extensions.cgtex.CGTEXFile;
 import org.foxesworld.cge.core.loader.AbstractAssetLoader;
-import org.foxesworld.cge.core.loader.AssetLoader;
 import org.foxesworld.cge.core.loader.ILoader;
+import org.foxesworld.cge.core.io.progressBar.ProgressListener;
 import org.foxesworld.cge.core.utils.CallbackLatch;
 import org.foxesworld.cge.core.utils.DDSDecoder;
 
@@ -111,7 +111,7 @@ public class TextureLoader extends AbstractAssetLoader<TextureEntry> implements 
     // --- ILoader interface implementation for dynamic registration ---
 
     @Override
-    public void setProgressListener(org.foxesworld.cge.core.loader.AssetProgressListener listener) {
+    public void setProgressListener(ProgressListener listener) {
         super.setProgressListener(listener);
     }
 
