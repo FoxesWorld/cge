@@ -33,7 +33,7 @@
         <Text
                 id="test"
                 fontPath="Interface/fonts/Aharoni.fnt"
-                margin="0,-20,0,0"
+                margin="0,-40,0,0"
                 align="left"
                 color="0.81, 0.73, 0.31, 1.0"
         />
