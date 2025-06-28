@@ -3,6 +3,9 @@ package org.foxesworld.cge.modules.player;
 
 import com.jme3.scene.Node;
 import org.foxesworld.cge.modules.ui.UIModule;
+import org.foxesworld.cge.modules.ui.novaUi.NovaUI;
+import org.foxesworld.cge.modules.ui.novaUi.elements.image.ImageElement;
+import org.foxesworld.cge.modules.ui.novaUi.elements.panel.PanelElement;
 
 /**
  * Inner HUD class for managing on-screen player stats.
@@ -23,8 +26,13 @@ public class PlayerHud {
     public PlayerHud(Player p) {
         this.player = p;
         UIModule ui = p.getEngine().getModuleManager().getModule(UIModule.class);
-        ui.addPanel(this, "playerHud", "assets/Interface/stats_config.xml");
-        ui.getNovaUi().registerEventHandler(this);
+        NovaUI hud = ui.createUi("hud", "assets/Interface/stats_config.xml", this);
+
+        //ImageElement crosshair = new ImageElement(p.getEngine(), "crosshair", (PanelElement) hud.getElement("root"));
+        //crosshair.setProperty("imagePath", "assets/Interface/crosshair.png");
+        //crosshair.setProperty("width", "32");
+        //crosshair.setProperty("height", "32");
+        //crosshair.setProperty("align", "center");
     }
 
     public void setPlayerSpeed(float s) { speed = Math.abs(s) * 7f; }

@@ -1,81 +1,47 @@
 package org.foxesworld.cge.modules.ui.novaUi.elements.progress;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.jme3.math.FastMath;
 
 /**
- * ProgressAnimator – отвечает за плавную анимацию перехода
- * от displayedProgress к targetProgress со скоростью animationSpeed.
- *
- * Поведение:
- *  • display – текущее отображаемое значение [0..1]
- *  • target  – желаемое значение [0..1]
- *  • speed   – скорость изменения (в единицах [0..1] в секунду)
- *
- * Во внешнем цикле каждый кадр вызывается update(tpf),
- * чтобы постепенно приближаться к target.
+ * A simple animator that smoothly interpolates a float value towards a target.
  */
 public class ProgressAnimator {
-    private static final Logger logger = LoggerFactory.getLogger(ProgressAnimator.class);
+    private float currentValue;
+    private float targetValue;
+    private float speed;
 
-    private float displayed;    // отображаемое значение [0..1]
-    private float target;       // целевое значение [0..1]
-    private float speed = 1f;   // скорость [0..1] за секунду
-
-    public ProgressAnimator(float initial, float speed) {
-        this.displayed = clamp(initial, 0f, 1f);
-        this.target    = this.displayed;
-        this.speed     = Math.max(0f, speed);
-    }
-
-    /** Устанавливает новый targetProgress (в диапазоне 0..1). */
-    public void setTarget(float t) {
-        this.target = clamp(t, 0f, 1f);
-    }
-
-    /** Возвращает текущее отображаемое значение. */
-    public float getDisplayed() {
-        return displayed;
-    }
-
-    /** Возвращает текущий target (может отличаться, пока анимация не закончена). */
-    public float getTarget() {
-        return target;
-    }
-
-    /** Устанавливает скорость анимации. */
-    public void setSpeed(float speed) {
-        this.speed = Math.max(0f, speed);
-    }
-
-    /** Возвращает скорость анимации. */
-    public float getSpeed() {
-        return speed;
+    public ProgressAnimator(float initialValue, float speed) {
+        this.currentValue = initialValue;
+        this.targetValue = initialValue;
+        this.speed = speed;
     }
 
     /**
-     * Вызывается каждый кадр: постепенно приближает displayed к target
-     * со скоростью speed (учитывая переданное tpf).
-     *
-     * @param tpf Время кадра (в секундах)
-     * @return true, если после обновления displayed изменился; false, если уже равен target
+     * Updates the current value, moving it towards the target.
+     * @param tpf Time per frame.
+     * @return true if the value changed, false otherwise.
      */
     public boolean update(float tpf) {
-        if (Math.abs(displayed - target) < 1e-6f) {
-            displayed = target;
+        if (FastMath.abs(currentValue - targetValue) < 0.001f) {
+            if (currentValue != targetValue) {
+                currentValue = targetValue; // Snap to final value
+                return true;
+            }
             return false;
         }
-        float delta = target - displayed;
-        float maxStep = speed * tpf;
-        if (Math.abs(delta) <= maxStep) {
-            displayed = target;
-        } else {
-            displayed += Math.copySign(maxStep, delta);
-        }
+        currentValue = FastMath.interpolateLinear(tpf * speed, currentValue, targetValue);
         return true;
     }
 
-    private float clamp(float v, float min, float max) {
-        return (v < min) ? min : Math.min(v, max);
+    public void setTarget(float newTarget) {
+        this.targetValue = newTarget;
+    }
+
+    public void setSpeed(float speed) {
+        this.speed = speed;
+    }
+
+    public float getCurrentValue() {
+        return currentValue;
     }
 }

@@ -76,7 +76,7 @@ public class ButtonAnimator {
         renderer.getNode().setLocalScale(scale);
 
         // Свечение и фон
-        ColorRGBA baseBg = renderer.bgColor;
+        ColorRGBA baseBg = renderer.getLabelText().getColor();
         ColorRGBA hoverGlow = new ColorRGBA(1f, 1f, 1f, 0.13f + 0.13f * glowPulse * hoverLerp); // белый "ореол"
         ColorRGBA pressGlow = new ColorRGBA(1f, 0.9f, 0.3f, 0.18f * pressedLerp); // желтый ореол как в GTA
         ColorRGBA finalGlow = baseBg.clone();
@@ -88,7 +88,7 @@ public class ButtonAnimator {
         renderer.setBackgroundColor(finalGlow);
 
         // Текст: делаем чуть светлее при наведении и нажатии
-        ColorRGBA baseText = renderer.textColor;
+        ColorRGBA baseText = renderer.getLabelText().getColor();
         ColorRGBA hoverText = baseText.clone().interpolateLocal(ColorRGBA.White, hoverLerp * 0.5f);
         ColorRGBA pressText = hoverText.clone().interpolateLocal(new ColorRGBA(1f, 0.94f, 0.7f, 1f), pressedLerp * 0.85f);
         renderer.setTextColor(pressText);

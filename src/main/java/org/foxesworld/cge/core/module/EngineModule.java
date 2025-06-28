@@ -122,7 +122,7 @@ public abstract class EngineModule<ModuleConfig> extends BaseAppState {
         transitionTo(ModuleState.LOADING_CONFIG);
         modulesLoadingCount.incrementAndGet();
 
-        initFuture = taskScheduler.submit(() -> {
+        initFuture = taskScheduler.schedule(() -> {
             try {
                 // Load configuration if specified
                 if (configFile != null && !configFile.isEmpty()) {
@@ -165,7 +165,7 @@ public abstract class EngineModule<ModuleConfig> extends BaseAppState {
                 handleFailure(t, "initialize");
                 modulesLoadingCount.decrementAndGet();
             }
-        });
+        }, 0, TimeUnit.MICROSECONDS);
 
         // Add timeout handling for initialization
         CompletableFuture.runAsync(() -> {
@@ -182,7 +182,7 @@ public abstract class EngineModule<ModuleConfig> extends BaseAppState {
                 // The future handling itself failed
                 logger.error("{} error while waiting for initialization completion: {}", getName(), e.getMessage(), e);
             }
-        }, taskScheduler.getExecutor());
+        }, taskScheduler.getIoExecutor());
     }
 
     /**
@@ -197,13 +197,13 @@ public abstract class EngineModule<ModuleConfig> extends BaseAppState {
             return;
         }
 
-        taskScheduler.submit(() -> {
+        taskScheduler.schedule(() -> {
             try {
                 updateModule(tpf);
             } catch (Throwable t) {
                 handleFailure(t, "update");
             }
-        });
+        }, 0, TimeUnit.MILLISECONDS);
     }
 
     /**
@@ -294,7 +294,7 @@ public abstract class EngineModule<ModuleConfig> extends BaseAppState {
                 handleFailure(t, "reloadConfig");
                 return false;
             }
-        }, taskScheduler.getExecutor());
+        }, taskScheduler.getIoExecutor());
     }
 
     /**
@@ -362,7 +362,7 @@ public abstract class EngineModule<ModuleConfig> extends BaseAppState {
             } finally {
                 recoveryInProgress.set(false);
             }
-        }, taskScheduler.getExecutor());
+        }, taskScheduler.getIoExecutor());
 
         return true;
     }

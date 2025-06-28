@@ -1,43 +1,55 @@
 package org.foxesworld.cge.modules.ui.novaUi.elements;
 
+import com.jme3.asset.AssetManager;
 import com.jme3.scene.Node;
-import org.foxesworld.cge.modules.ui.novaUi.OnClickHandler;
+import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.modules.ui.novaUi.elements.panel.PanelElement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.lang.reflect.Method;
+import java.util.Objects;
 
+/**
+ * An abstract base class that provides a default implementation for most of the
+ * {@link UIElement} interface. It handles common properties like ID, parent, node,
+ * margins, padding, alignment, and onClick event handling.
+ *
+ * Concrete elements should extend this class and override methods as needed.
+ */
 public abstract class AbstractUIElement implements UIElement {
-    protected final Node node = new Node();
-    protected float width, height;
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractUIElement.class);
+
     protected String id;
+    protected Node node;
     protected PanelElement parentPanel;
-    protected float rawPosX = 0f;
-    protected float rawPosY = 0f;
-    protected String ownAlign;
-    protected OnClickHandler clickHandler;
+    protected CalistaGameEngine engine;
+    protected AssetManager assetManager;
 
-    @FunctionalInterface
-    public interface ResizeListener {
-        void onResize(AbstractUIElement element, float newWidth, float newHeight);
+    // Common layout properties with sane defaults
+    protected float marginH = 0f;
+    protected float marginV = 0f;
+    protected float paddingH = 0f;
+    protected float paddingV = 0f;
+    protected float posX = 0f;
+    protected float posY = 0f;
+    protected String align = "center"; // Default alignment
+
+    // onClick event handling fields
+    private String onClickMethodName;
+    private Object eventHandlerTarget;
+
+    public AbstractUIElement(CalistaGameEngine engine, String id, PanelElement parent) {
+        this.id = Objects.requireNonNull(id, "Element ID cannot be null");
+        this.engine = Objects.requireNonNull(engine, "Engine cannot be null");
+        this.assetManager = engine.getAssetManager();
+        this.parentPanel = parent;
+        this.node = new Node("UIElement-" + id);
     }
-
-    private final List<ResizeListener> resizeListeners = new ArrayList<>();
-    private float lastKnownWidth = -1f;
-    private float lastKnownHeight = -1f;
-
-    public AbstractUIElement() { }
-
-    public void updateSelf(float tpf) { }
 
     @Override
     public String getId() {
         return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-        this.node.setName(id);
     }
 
     @Override
@@ -50,98 +62,100 @@ public abstract class AbstractUIElement implements UIElement {
         return parentPanel;
     }
 
+    @Override
     public void setParentPanel(PanelElement parent) {
         this.parentPanel = parent;
     }
 
-    public void removeFromParent() {
-        if (parentPanel != null) {
-            parentPanel.removeChild(this);
-            parentPanel = null;
-        }
-    }
-
-    public float getRawPosX() {
-        return rawPosX;
-    }
-
-    public float getRawPosY() {
-        return rawPosY;
-    }
-
-    public void setRawPosX(float x) {
-        this.rawPosX = x;
-    }
-
-    public void setRawPosY(float y) {
-        this.rawPosY = y;
+    @Override
+    public void update(float tpf) {
+        // Default implementation does nothing. Override for animated elements.
     }
 
     @Override
-    public boolean hasOwnAlign() {
-        return ownAlign != null && !ownAlign.trim().isEmpty();
+    public void setProperty(String key, String value) {
+        // This acts as a router for common properties.
+        // Concrete classes can call super.setProperty() for unrecognized keys.
+        switch (key.toLowerCase()) {
+            case "posx":
+                this.posX = Float.parseFloat(value);
+                break;
+            case "posy":
+                this.posY = Float.parseFloat(value);
+                break;
+            case "align":
+                this.align = value;
+                break;
+            case "margin":
+                parseAndSetMargin(value);
+                break;
+            case "padding":
+                parseAndSetPadding(value);
+                break;
+            case "onclick":
+                this.onClickMethodName = value;
+                break;
+            default:
+                LOGGER.trace("Property '{}' not handled by AbstractUIElement, must be handled by subclass.", key);
+                break;
+        }
+    }
+
+    protected void parseAndSetMargin(String value) {
+        float[] values = PropertyParser.parseEdgeValues(value);
+        if (values.length == 1) {
+            this.marginH = values[0];
+            this.marginV = values[0];
+        } else if (values.length >= 2) {
+            this.marginH = values[0];
+            this.marginV = values[1];
+        }
+    }
+
+    protected void parseAndSetPadding(String value) {
+        float[] values = PropertyParser.parseEdgeValues(value);
+        if (values.length == 1) {
+            this.paddingH = values[0];
+            this.paddingV = values[0];
+        } else if (values.length >= 2) {
+            this.paddingH = values[0];
+            this.paddingV = values[1];
+        }
     }
 
     @Override
-    public String getOwnAlign() {
-        return ownAlign;
-    }
-
-    public void setOwnAlign(String align) {
-        this.ownAlign = (align != null ? align.trim() : null);
+    public void setEventHandler(Object target) {
+        this.eventHandlerTarget = target;
     }
 
     @Override
-    public void setOnClickHandler(String methodName, Object eventHandlerTarget) {
-        if (methodName != null && !methodName.isEmpty() && eventHandlerTarget != null) {
-            this.clickHandler = new OnClickHandler(methodName, eventHandlerTarget);
+    public void triggerClick() {
+        if (onClickMethodName == null || eventHandlerTarget == null) {
+            return;
         }
-    }
-
-    protected void triggerClick() {
-        if (clickHandler != null) {
-            clickHandler.invoke();
-        }
-    }
-
-    public void addResizeListener(ResizeListener listener) {
-        if (listener != null && !resizeListeners.contains(listener)) {
-            resizeListeners.add(listener);
-        }
-    }
-
-    public void removeResizeListener(ResizeListener listener) {
-        resizeListeners.remove(listener);
-    }
-
-    protected void checkAndNotifyResize() {
-        float currentWidth = getWidth();
-        float currentHeight = getHeight();
-        if (currentWidth != lastKnownWidth || currentHeight != lastKnownHeight) {
-            for (ResizeListener listener : resizeListeners) {
-                listener.onResize(this, currentWidth, currentHeight);
+        try {
+            // Find a method with no parameters
+            Method method = eventHandlerTarget.getClass().getMethod(onClickMethodName);
+            method.invoke(eventHandlerTarget);
+        } catch (NoSuchMethodException e) {
+            // Or a method that takes this UIElement as a parameter
+            try {
+                Method method = eventHandlerTarget.getClass().getMethod(onClickMethodName, UIElement.class);
+                method.invoke(eventHandlerTarget, this);
+            } catch (Exception e2) {
+                LOGGER.error("Could not find or invoke onClick method '{}' on target '{}'", onClickMethodName, eventHandlerTarget.getClass().getSimpleName(), e2);
             }
-            lastKnownWidth = currentWidth;
-            lastKnownHeight = currentHeight;
+        } catch (Exception e) {
+            LOGGER.error("Error invoking onClick method '{}' on target '{}'", onClickMethodName, eventHandlerTarget.getClass().getSimpleName(), e);
         }
     }
 
-    public boolean isVisible() {
-        return true;
-    }
-
-    public void setEnabled(boolean enabled) { }
-
-    @Override
-    public void setProperty(String key, String value) { }
-
-    @Override
-    public float getWidth() {
-        return this.width;
-    }
-
-    @Override
-    public float getHeight() {
-        return this.height;
-    }
+    // --- Default Getters for Layout Properties ---
+    @Override public float getMarginH() { return marginH; }
+    @Override public float getMarginV() { return marginV; }
+    @Override public float getPaddingH() { return paddingH; }
+    @Override public float getPaddingV() { return paddingV; }
+    @Override public String getAlign() { return align; }
+    @Override public float getPosX() { return posX; }
+    @Override public float getPosY() { return posY; }
 }

@@ -809,7 +809,7 @@ public class ModuleManager {
 
                     tryRecoverModule(module, gameEngine);
                 }
-            }, taskScheduler.getExecutor());
+            }, taskScheduler.getComputeExecutor());
 
             return true;
         } else {

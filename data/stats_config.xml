@@ -28,15 +28,7 @@
            height="auto"
            align="top-right"
            layout="horizontal"
-           spacing="5">
-
-        <Text
-                id="test"
-                fontPath="Interface/fonts/Aharoni.fnt"
-                margin="0,-20,0,0"
-                align="left"
-                color="0.81, 0.73, 0.31, 1.0"
-        />
+           spacing="10">
 
         <Progress
                 id="speed"
@@ -48,7 +40,13 @@
                 borderThickness="0.1"
         />
 
-
+        <Text
+                id="test"
+                fontPath="Interface/fonts/Aharoni.fnt"
+                margin="0,-20,0,0"
+                align="left"
+                color="0.81, 0.73, 0.31, 1.0"
+        />
 
         <Progress
                 id="armor"

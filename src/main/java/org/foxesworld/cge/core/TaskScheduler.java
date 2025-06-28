@@ -7,448 +7,300 @@ import java.util.Map;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicLong;
+import java.util.function.Supplier;
 
 /**
- * High-performance task scheduler optimized for game engine workloads.
- * <p>
- * Features:
+ * A high-performance, modern task scheduler optimized for game engine workloads on Java 17.
+ * It is built upon Java's CompletableFuture for powerful asynchronous programming.
+ *
+ * <h3>Key Features:</h3>
  * <ul>
- *   <li>Separate thread pools for compute-intensive and IO-bound tasks</li>
- *   <li>First-class support for scheduled and delayed execution</li>
- *   <li>Fine-grained task prioritization</li>
- *   <li>Comprehensive metrics and monitoring</li>
- *   <li>Automatic thread naming for easier debugging</li>
- *   <li>Graceful handling of task exceptions</li>
+ *   <li><b>CompletableFuture API:</b> All task submissions return {@link CompletableFuture},
+ *       enabling powerful, non-blocking asynchronous workflows.</li>
+ *   <li><b>Type-Safe Task Distinction:</b> Uses a {@link TaskType} enum to clearly
+ *       separate compute-intensive and IO-bound tasks onto optimized thread pools.</li>
+ *   <li><b>Optimized IO Pool:</b> Employs a cached thread pool for IO-bound tasks,
+ *       efficiently handling numerous blocking operations.</li>
+ *   <li><b>Centralized Metrics & Error Handling:</b> A unified wrapping mechanism
+ *       ensures all tasks have consistent metrics and robust exception logging.</li>
+ *   <li><b>Support for Callables:</b> Natively handles tasks that return results.</li>
  * </ul>
+ *
+ * @version 2.0-java17
+ * @author CalistaF0X & Gemini
  */
 public class TaskScheduler {
     private static final Logger logger = LoggerFactory.getLogger(TaskScheduler.class);
 
-    // Core executors for different workload types
+    /**
+     * Defines the type of task to guide its execution on the appropriate thread pool.
+     */
+    public enum TaskType {
+        /** For CPU-intensive operations like physics, AI calculations, complex logic. */
+        COMPUTE,
+        /** For blocking operations like file I/O, network requests, database access. */
+        IO
+    }
+
     private final ScheduledThreadPoolExecutor scheduledExecutor;
     private final ExecutorService computeExecutor;
     private final ExecutorService ioExecutor;
 
-    // Task monitoring and metrics
     private final ConcurrentHashMap<String, TaskMetrics> metricsMap = new ConcurrentHashMap<>();
     private final AtomicLong totalTasksSubmitted = new AtomicLong(0);
-    private final AtomicLong totalTasksCompleted = new AtomicLong(0);
-    private final AtomicLong totalTasksFailed = new AtomicLong(0);
 
-    // Thread management
     private final ThreadGroup threadGroup;
-    private final int computeThreads;
-    private final int ioThreads;
-
-    // Task rejection handler
-    private final RejectedExecutionHandler rejectionHandler = (task, executor) -> {
-        logger.warn("Task rejected: executor saturated. Consider increasing thread pool size.");
-        if (task instanceof Runnable) {
-            // Execute in the calling thread as fallback
-            try {
-                ((Runnable) task).run();
-            } catch (Exception e) {
-                logger.error("Error executing rejected task in caller thread", e);
-            }
-        }
-    };
 
     /**
      * Creates a TaskScheduler with thread pools sized based on available processors.
      */
     public TaskScheduler() {
-        this(Runtime.getRuntime().availableProcessors(),
-                Runtime.getRuntime().availableProcessors() * 2);
+        // Defaults: N cores for compute, 4*N for IO max threads (a reasonable starting point)
+        this(Runtime.getRuntime().availableProcessors(), Runtime.getRuntime().availableProcessors() * 4);
     }
 
     /**
      * Creates a TaskScheduler with custom thread pool sizes.
      *
-     * @param computeThreads number of threads for compute-intensive tasks
-     * @param ioThreads number of threads for IO-bound tasks
+     * @param computeThreads number of threads for compute-intensive tasks.
+     * @param maxIoThreads   maximum number of threads for the IO-bound task pool.
      */
-    public TaskScheduler(int computeThreads, int ioThreads) {
-        this.computeThreads = Math.max(2, computeThreads);
-        this.ioThreads = Math.max(2, ioThreads);
-        this.threadGroup = new ThreadGroup("TaskSchedulerGroup");
+    public TaskScheduler(int computeThreads, int maxIoThreads) {
+        this.threadGroup = new ThreadGroup("CGE-TaskGroup");
+        int coreSchedulerThreads = Math.max(2, Runtime.getRuntime().availableProcessors() / 2);
 
-        // Initialize thread pools with custom thread factories
         this.scheduledExecutor = new ScheduledThreadPoolExecutor(
-                4, // Core scheduler threads
-                createThreadFactory("Scheduler", Thread.NORM_PRIORITY),
-                rejectionHandler
+                coreSchedulerThreads,
+                createThreadFactory("Scheduler", Thread.NORM_PRIORITY)
         );
+        this.scheduledExecutor.setRemoveOnCancelPolicy(true);
 
         this.computeExecutor = new ThreadPoolExecutor(
-                this.computeThreads, this.computeThreads,
-                60, TimeUnit.SECONDS,
-                new LinkedBlockingQueue<>(1000),
-                createThreadFactory("ComputeTask", Thread.MAX_PRIORITY - 1),
-                rejectionHandler
+                computeThreads, computeThreads,
+                60L, TimeUnit.SECONDS,
+                new LinkedBlockingQueue<>(),
+                createThreadFactory("Compute", Thread.NORM_PRIORITY)
         );
 
-        this.ioExecutor = new ThreadPoolExecutor(
-                this.ioThreads, this.ioThreads,
-                60, TimeUnit.SECONDS,
-                new LinkedBlockingQueue<>(1000),
-                createThreadFactory("IOTask", Thread.NORM_PRIORITY - 1),
-                rejectionHandler
-        );
+        this.ioExecutor = createIoExecutor(maxIoThreads);
 
-        // Configure scheduled executor to remove tasks after execution
-        scheduledExecutor.setRemoveOnCancelPolicy(true);
-        logger.info("Java version: " + System.getProperty("java.version"));
-        logger.info("TaskScheduler initialized with {} compute threads and {} IO threads",
-                computeThreads, ioThreads);
-        logger.info("VM args: " + java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments());
+        logger.info("TaskScheduler initialized [Compute Threads: {}, IO Pool: Cached, Max IO Threads: {}]",
+                computeThreads, maxIoThreads);
     }
 
     /**
-     * Submits a compute-intensive task for asynchronous execution.
+     * Submits a task that returns a value.
      *
-     * @param task the task to execute
-     * @return a Future representing the task
+     * @param task     The task to execute.
+     * @param taskType The type of task (COMPUTE or IO).
+     * @return A CompletableFuture representing the pending result of the task.
      */
-    public Future<?> submit(Runnable task) {
-        return submitInternal(task, null, computeExecutor, "default");
+    public <T> CompletableFuture<T> submit(Callable<T> task, TaskType taskType) {
+        ExecutorService executor = getExecutorForType(taskType);
+        Callable<T> wrappedTask = wrapTask(task, taskType.name());
+        totalTasksSubmitted.incrementAndGet();
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                return wrappedTask.call();
+            } catch (Exception e) {
+                // This will be caught and propagated by CompletableFuture
+                throw new CompletionException(e);
+            }
+        }, executor);
     }
 
     /**
-     * Submits an IO-bound task for asynchronous execution.
+     * Submits a fire-and-forget task.
      *
-     * @param task the task to execute
-     * @return a Future representing the task
+     * @param task     The task to execute.
+     * @param taskType The type of task (COMPUTE or IO).
+     * @return A CompletableFuture<Void> that completes when the task is done.
      */
-    public Future<?> submitIO(Runnable task) {
-        return submitInternal(task, null, ioExecutor, "io");
+    public CompletableFuture<Void> submit(Runnable task, TaskType taskType) {
+        Callable<Void> callable = Executors.callable(task, null);
+        return submit(callable, taskType);
     }
 
     /**
-     * Submits a task with completion callback.
+     * Schedules a task to run after a given delay.
      *
-     * @param task the task to execute
-     * @param onComplete callback to run after task completion
-     * @return a Future representing the task
-     */
-    public Future<?> submit(Runnable task, Runnable onComplete) {
-        return submitInternal(task, onComplete, computeExecutor, "default");
-    }
-
-    /**
-     * Submits a task with priority (1-10, higher is more important).
-     *
-     * @param task the task to execute
-     * @param priority priority level (1-10)
-     * @return a Future representing the task
-     */
-    public Future<?> submitWithPriority(Runnable task, int priority) {
-        final ExecutorService executor = priority >= 8 ?
-                computeExecutor : (priority <= 3 ? ioExecutor : computeExecutor);
-
-        return submitInternal(task, null, executor, "priority-" + priority);
-    }
-
-    /**
-     * Schedules a task to execute after a delay.
-     *
-     * @param task the task to execute
-     * @param delayMs delay in milliseconds
-     * @return a ScheduledFuture representing the task
-     */
-    public ScheduledFuture<?> schedule(Runnable task, long delayMs) {
-        return schedule(task, delayMs, TimeUnit.MILLISECONDS);
-    }
-
-    /**
-     * Schedules a task to execute after a delay.
-     *
-     * @param task the task to execute
-     * @param delay the delay amount
-     * @param unit the time unit of the delay
-     * @return a ScheduledFuture representing the task
+     * @param task    The task to execute.
+     * @param delay   The time from now to delay execution.
+     * @param unit    The time unit of the delay parameter.
+     * @return A ScheduledFuture that can be used to cancel the task.
      */
     public ScheduledFuture<?> schedule(Runnable task, long delay, TimeUnit unit) {
+        Runnable wrappedTask = wrapScheduledTask(task, "scheduled");
         totalTasksSubmitted.incrementAndGet();
-        String taskType = "scheduled";
-
-        return scheduledExecutor.schedule(() -> {
-            long startTime = System.nanoTime();
-            try {
-                task.run();
-                totalTasksCompleted.incrementAndGet();
-                recordTaskCompletion(taskType, true, startTime);
-            } catch (Exception e) {
-                totalTasksFailed.incrementAndGet();
-                recordTaskCompletion(taskType, false, startTime);
-                logger.error("Scheduled task execution failed", e);
-            }
-        }, delay, unit);
+        return scheduledExecutor.schedule(wrappedTask, delay, unit);
     }
 
     /**
      * Schedules a task to execute periodically.
      *
-     * @param task           the task to execute
-     * @param initialDelayMs initial delay in milliseconds
-     * @param periodMs       interval in milliseconds
-     * @param seconds
-     * @return a ScheduledFuture representing the task
+     * @param task         The task to execute.
+     * @param initialDelay The time to delay first execution.
+     * @param period       The period between successive executions.
+     * @param unit         The time unit of the initialDelay and period parameters.
+     * @return A ScheduledFuture that can be used to cancel the task.
      */
-    public ScheduledFuture<?> scheduleAtFixedRate(Runnable task, long initialDelayMs, long periodMs, TimeUnit seconds) {
+    public ScheduledFuture<?> scheduleAtFixedRate(Runnable task, long initialDelay, long period, TimeUnit unit) {
+        Runnable wrappedTask = wrapScheduledTask(task, "periodic");
         totalTasksSubmitted.incrementAndGet();
-        String taskType = "periodic";
-
-        return scheduledExecutor.scheduleAtFixedRate(() -> {
-            long startTime = System.nanoTime();
-            try {
-                task.run();
-                totalTasksCompleted.incrementAndGet();
-                recordTaskCompletion(taskType, true, startTime);
-            } catch (Exception e) {
-                totalTasksFailed.incrementAndGet();
-                recordTaskCompletion(taskType, false, startTime);
-                logger.error("Periodic task execution failed", e);
-            }
-        }, initialDelayMs, periodMs, TimeUnit.MILLISECONDS);
-    }
-
-    /**
-     * Executes a task synchronously in the current thread.
-     *
-     * @param task the task to execute
-     */
-    public void executeSync(Runnable task) {
-        long startTime = System.nanoTime();
-        try {
-            task.run();
-            recordTaskCompletion("sync", true, startTime);
-        } catch (Exception e) {
-            recordTaskCompletion("sync", false, startTime);
-            logger.error("Synchronous task execution failed", e);
-        }
-    }
-
-    /**
-     * Waits for all tasks to complete execution.
-     *
-     * @param timeoutMs maximum time to wait in milliseconds
-     * @return true if all tasks completed, false if timeout occurred
-     */
-    public boolean awaitAllTasksCompletion(long timeoutMs) {
-        CompletableFuture<Void> computeDone = CompletableFuture.runAsync(() -> {
-            ThreadPoolExecutor tpe = (ThreadPoolExecutor) computeExecutor;
-            while (tpe.getActiveCount() > 0) {
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
-                }
-            }
-        });
-
-        CompletableFuture<Void> ioDone = CompletableFuture.runAsync(() -> {
-            ThreadPoolExecutor tpe = (ThreadPoolExecutor) ioExecutor;
-            while (tpe.getActiveCount() > 0) {
-                try {
-                    Thread.sleep(50);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                    break;
-                }
-            }
-        });
-
-        try {
-            CompletableFuture.allOf(computeDone, ioDone)
-                    .get(timeoutMs, TimeUnit.MILLISECONDS);
-            return true;
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            return false;
-        } catch (ExecutionException | TimeoutException e) {
-            return false;
-        }
+        return scheduledExecutor.scheduleAtFixedRate(wrappedTask, initialDelay, period, unit);
     }
 
     /**
      * Shuts down the scheduler gracefully.
+     * It will wait for currently running tasks to finish but will not accept new tasks.
      *
-     * @param timeoutMs time to wait for tasks to complete in milliseconds
-     * @return true if shutdown completed successfully
+     * @param timeout The maximum time to wait.
+     * @param unit    The time unit of the timeout argument.
+     * @return true if all executors terminated, false if the timeout elapsed.
      */
-    public boolean shutdown(long timeoutMs) {
+    public boolean shutdown(long timeout, TimeUnit unit) {
         logger.info("TaskScheduler shutting down...");
+        boolean allTerminated = true;
+        long singleTimeout = timeout > 3 ? timeout / 3 : timeout;
 
-        scheduledExecutor.shutdown();
-        computeExecutor.shutdown();
-        ioExecutor.shutdown();
+        for (ExecutorService executor : new ExecutorService[]{computeExecutor, ioExecutor, scheduledExecutor}) {
+            executor.shutdown();
+        }
 
         try {
-            // Wait for scheduled tasks first
-            if (!scheduledExecutor.awaitTermination(timeoutMs / 3, TimeUnit.MILLISECONDS)) {
-                scheduledExecutor.shutdownNow();
-            }
-
-            // Then wait for compute tasks
-            if (!computeExecutor.awaitTermination(timeoutMs / 3, TimeUnit.MILLISECONDS)) {
+            if (!computeExecutor.awaitTermination(singleTimeout, unit)) {
+                logger.warn("Compute executor did not terminate in time.");
                 computeExecutor.shutdownNow();
+                allTerminated = false;
             }
-
-            // Finally wait for IO tasks
-            if (!ioExecutor.awaitTermination(timeoutMs / 3, TimeUnit.MILLISECONDS)) {
+            if (!ioExecutor.awaitTermination(singleTimeout, unit)) {
+                logger.warn("I/O executor did not terminate in time.");
                 ioExecutor.shutdownNow();
+                allTerminated = false;
             }
-
-            logger.info("TaskScheduler shutdown complete");
-            return true;
+            if (!scheduledExecutor.awaitTermination(singleTimeout, unit)) {
+                logger.warn("Scheduled executor did not terminate in time.");
+                scheduledExecutor.shutdownNow();
+                allTerminated = false;
+            }
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
-            logger.warn("TaskScheduler shutdown interrupted");
+            logger.error("Shutdown was interrupted.", e);
+            computeExecutor.shutdownNow();
+            ioExecutor.shutdownNow();
+            scheduledExecutor.shutdownNow();
             return false;
         }
+
+        if(allTerminated) {
+            logger.info("TaskScheduler shutdown complete.");
+        } else {
+            logger.warn("TaskScheduler shutdown finished forcefully.");
+        }
+        return allTerminated;
     }
 
-    /**
-     * Gets the metrics for a specific task type.
-     *
-     * @param taskType the type of task
-     * @return metrics for the task type
-     */
+    // --- Metrics and Monitoring ---
+
     public TaskMetrics getMetrics(String taskType) {
         return metricsMap.computeIfAbsent(taskType, k -> new TaskMetrics());
     }
 
-    /**
-     * Gets a snapshot of all task metrics.
-     *
-     * @return map of task types to metrics
-     */
     public Map<String, TaskMetrics> getAllMetrics() {
         return new ConcurrentHashMap<>(metricsMap);
     }
 
-    /**
-     * Resets all task metrics.
-     */
     public void resetMetrics() {
         metricsMap.clear();
         totalTasksSubmitted.set(0);
-        totalTasksCompleted.set(0);
-        totalTasksFailed.set(0);
     }
 
-    /**
-     * Gets the total number of tasks submitted.
-     *
-     * @return count of submitted tasks
-     */
     public long getTotalTasksSubmitted() {
         return totalTasksSubmitted.get();
     }
 
-    /**
-     * Gets the total number of tasks completed.
-     *
-     * @return count of completed tasks
-     */
-    public long getTotalTasksCompleted() {
-        return totalTasksCompleted.get();
-    }
-
-    /**
-     * Gets the total number of tasks that failed.
-     *
-     * @return count of failed tasks
-     */
-    public long getTotalTasksFailed() {
-        return totalTasksFailed.get();
-    }
-
-    /**
-     * Gets the underlying executor for compute tasks.
-     *
-     * @return the executor service
-     */
-    public ExecutorService getExecutor() {
+    public ExecutorService getComputeExecutor() {
         return computeExecutor;
     }
 
-    /**
-     * Gets the thread group used by this scheduler.
-     *
-     * @return the thread group
-     */
-    public ThreadGroup getThreadGroup() {
-        return threadGroup;
+    public ExecutorService getIoExecutor() {
+        return ioExecutor;
     }
 
-    /**
-     * Internal method to handle task submission with metrics tracking.
-     */
-    private Future<?> submitInternal(Runnable task, Runnable onComplete, ExecutorService executor, String taskType) {
-        totalTasksSubmitted.incrementAndGet();
-        long startTime = System.nanoTime();
+    // --- Private Helper Methods ---
 
-        return executor.submit(() -> {
-            Thread currentThread = Thread.currentThread();
-            String originalName = currentThread.getName();
+    private ExecutorService getExecutorForType(TaskType taskType) {
+        return (taskType == TaskType.COMPUTE) ? computeExecutor : ioExecutor;
+    }
+
+    private <T> Callable<T> wrapTask(Callable<T> task, String taskType) {
+        return () -> {
+            long startTime = System.nanoTime();
+            boolean success = false;
             try {
-                // Update thread name for better debugging
-                currentThread.setName(originalName + "-" + taskType);
-
-                // Execute the task
-                task.run();
-                totalTasksCompleted.incrementAndGet();
-                recordTaskCompletion(taskType, true, startTime);
-
-                // Execute completion callback if provided
-                if (onComplete != null) {
-                    try {
-                        onComplete.run();
-                    } catch (Exception e) {
-                        logger.error("Task completion callback failed", e);
-                    }
-                }
+                T result = task.call();
+                success = true;
+                return result;
             } catch (Exception e) {
-                totalTasksFailed.incrementAndGet();
-                recordTaskCompletion(taskType, false, startTime);
-                logger.error("Task execution failed: " + taskType, e);
+                logger.error("Task [{}] execution failed", taskType, e);
+                throw e; // Re-throw to be handled by CompletableFuture
             } finally {
-                // Restore original thread name
-                currentThread.setName(originalName);
+                recordTaskCompletion(taskType, success, startTime);
             }
-        });
+        };
     }
 
-    /**
-     * Records task execution metrics.
-     */
+    private Runnable wrapScheduledTask(Runnable task, String taskType) {
+        return () -> {
+            long startTime = System.nanoTime();
+            boolean success = false;
+            try {
+                task.run();
+                success = true;
+            } catch (Exception e) {
+                logger.error("Scheduled task [{}] execution failed", taskType, e);
+                // Don't re-throw for scheduled tasks, or they will stop executing.
+            } finally {
+                recordTaskCompletion(taskType, success, startTime);
+            }
+        };
+    }
+
     private void recordTaskCompletion(String taskType, boolean success, long startTimeNanos) {
         long durationNanos = System.nanoTime() - startTimeNanos;
         getMetrics(taskType).recordExecution(durationNanos, success);
     }
 
-    /**
-     * Creates a thread factory with custom naming pattern and priority.
-     */
     private ThreadFactory createThreadFactory(String prefix, int priority) {
         AtomicInteger counter = new AtomicInteger(0);
         return r -> {
-            Thread thread = new Thread(threadGroup, r,
-                    "CGE-" + prefix + "-" + counter.incrementAndGet());
+            Thread thread = new Thread(threadGroup, r, "CGE-" + prefix + "-" + counter.incrementAndGet());
             thread.setPriority(priority);
-            thread.setDaemon(true);
-            thread.setUncaughtExceptionHandler((t, e) -> {
-                    logger.error("Uncaught exception in thread " + t.getName(), e);
-                    e.printStackTrace();
-            });
+            thread.setDaemon(true); // Daemon threads won't prevent JVM exit
+            thread.setUncaughtExceptionHandler((t, e) -> logger.error("Uncaught exception in thread {}", t.getName(), e));
             return thread;
         };
     }
 
     /**
-     * Metrics for task execution.
+     * Creates an I/O executor configured as a cached thread pool.
+     * This is ideal for numerous, short-lived, blocking I/O tasks on Java 17.
+     *
+     * @param maxIoThreads The maximum number of threads allowed in the pool.
+     * @return A configured ExecutorService for I/O tasks.
+     */
+    private ExecutorService createIoExecutor(int maxIoThreads) {
+        return new ThreadPoolExecutor(
+                0, // Core pool size - start with zero threads
+                maxIoThreads, // Max threads - grow up to this limit
+                60L, TimeUnit.SECONDS, // Keep-alive time for idle threads
+                new SynchronousQueue<>(), // A queue that hands off tasks directly, forcing new thread creation if all are busy
+                createThreadFactory("IO", Thread.NORM_PRIORITY)
+        );
+    }
+
+    /**
+     * Holds performance metrics for a specific type of task. This class is thread-safe.
      */
     public static class TaskMetrics {
         private final AtomicLong count = new AtomicLong(0);
@@ -457,24 +309,10 @@ public class TaskScheduler {
         private final AtomicLong successCount = new AtomicLong(0);
         private final AtomicLong failureCount = new AtomicLong(0);
 
-        /**
-         * Records the execution of a task.
-         *
-         * @param durationNanos duration in nanoseconds
-         * @param success whether the task completed successfully
-         */
         public void recordExecution(long durationNanos, boolean success) {
             count.incrementAndGet();
             totalTimeNanos.addAndGet(durationNanos);
-
-            // Update max execution time if greater
-            long currentMax = maxTimeNanos.get();
-            while (durationNanos > currentMax) {
-                if (maxTimeNanos.compareAndSet(currentMax, durationNanos)) {
-                    break;
-                }
-                currentMax = maxTimeNanos.get();
-            }
+            maxTimeNanos.accumulateAndGet(durationNanos, Math::max); // More concise way to set max
 
             if (success) {
                 successCount.incrementAndGet();
@@ -483,67 +321,24 @@ public class TaskScheduler {
             }
         }
 
-        /**
-         * Gets the total number of tasks executed.
-         *
-         * @return task count
-         */
-        public long getCount() {
-            return count.get();
-        }
-
-        /**
-         * Gets the average execution time in milliseconds.
-         *
-         * @return average time in milliseconds
-         */
+        public long getCount() { return count.get(); }
         public double getAverageTimeMs() {
             long c = count.get();
             return c > 0 ? totalTimeNanos.get() / (c * 1_000_000.0) : 0;
         }
-
-        /**
-         * Gets the maximum execution time in milliseconds.
-         *
-         * @return maximum time in milliseconds
-         */
-        public double getMaxTimeMs() {
-            return maxTimeNanos.get() / 1_000_000.0;
-        }
-
-        /**
-         * Gets the success rate (0.0 to 1.0).
-         *
-         * @return success rate
-         */
+        public double getMaxTimeMs() { return maxTimeNanos.get() / 1_000_000.0; }
+        public long getSuccessCount() { return successCount.get(); }
+        public long getFailureCount() { return failureCount.get(); }
         public double getSuccessRate() {
             long c = count.get();
-            return c > 0 ? (double)successCount.get() / c : 0;
-        }
-
-        /**
-         * Gets the number of successful task completions.
-         *
-         * @return success count
-         */
-        public long getSuccessCount() {
-            return successCount.get();
-        }
-
-        /**
-         * Gets the number of task failures.
-         *
-         * @return failure count
-         */
-        public long getFailureCount() {
-            return failureCount.get();
+            return c > 0 ? (double) successCount.get() / c : 1.0;
         }
 
         @Override
         public String toString() {
             return String.format(
-                    "TaskMetrics[count=%d, avgTime=%.2fms, maxTime=%.2fms, successRate=%.2f%%]",
-                    count.get(), getAverageTimeMs(), getMaxTimeMs(), getSuccessRate() * 100);
+                    "Metrics[count=%d, avgTime=%.3fms, maxTime=%.3fms, successRate=%.2f%%]",
+                    getCount(), getAverageTimeMs(), getMaxTimeMs(), getSuccessRate() * 100);
         }
     }
 }

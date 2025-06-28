@@ -29,7 +29,7 @@ public class CollisionParticleEmitter implements PhysicsCollisionListener {
                 particles.emitAllParticles();
 
                 // Удаляем после проигрыша
-                engine.getTaskScheduler().getExecutor().execute(particles::removeFromParent);
+                engine.getTaskScheduler().getComputeExecutor().execute(particles::removeFromParent);
             });
         }
     }
