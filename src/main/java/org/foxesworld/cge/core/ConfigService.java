@@ -1,10 +1,13 @@
 package org.foxesworld.cge.core;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
 import com.jme3.math.ColorRGBA;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.utils.json.ColorRGBAAdapter;
+
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.io.IOException;
 import java.io.Reader;
@@ -12,9 +15,12 @@ import java.io.Writer;
 import java.lang.reflect.InvocationTargetException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.*;
+import java.time.Duration;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 /**
  * Provides centralized loading, caching, saving, and optional asynchronous hot-reloading
@@ -36,10 +42,15 @@ public class ConfigService {
     private static final Path CONFIG_DIR = Paths.get("config");
 
     private final Gson gson;
-    private final ForkJoinPool pool;
+    private final ExecutorService asyncPool;
     private final CalistaGameEngine calistaGameEngine;
-    private final Map<String, Object> cache = new ConcurrentHashMap<>();
     private final Map<String, Class<?>> registry = new ConcurrentHashMap<>();
+
+    // Caffeine cache: max 32 entries, expire 30 min after access
+    private final Cache<String, Object> cache = Caffeine.newBuilder()
+            .maximumSize(32)
+            .expireAfterAccess(Duration.ofMinutes(30))
+            .build();
 
     /**
      * Constructs a new ConfigService with GSON support for JME's ColorRGBA.
@@ -47,7 +58,7 @@ public class ConfigService {
     public ConfigService(CalistaGameEngine calistaGameEngine) {
         this.calistaGameEngine = calistaGameEngine;
         this.gson = new GsonBuilder().setPrettyPrinting().registerTypeAdapter(ColorRGBA.class, new ColorRGBAAdapter()).create();
-        this.pool = new ForkJoinPool(Runtime.getRuntime().availableProcessors());
+        this.asyncPool = Executors.newFixedThreadPool(Math.max(2, Runtime.getRuntime().availableProcessors() / 2));
         ensureConfigDirExists();
     }
 
@@ -95,13 +106,18 @@ public class ConfigService {
             // Не экспортируем этот конфиг — создаём новый (НЕ сохраняем на диск!)
             return createDefault(fileName);
         }
-        return (T) cache.computeIfAbsent(fileName, key -> {
-            try {
-                return loadConfig(key, true);
-            } catch (IOException e) {
-                throw new RuntimeException("Failed to load config: " + fileName, e);
-            }
-        });
+        try {
+            return (T) cache.get(fileName, key -> {
+                try {
+                    return loadConfig(key, true);
+                } catch (IOException e) {
+                    throw new RuntimeException("Failed to load config: " + fileName, e);
+                }
+            });
+        } catch (RuntimeException e) {
+            if (e.getCause() instanceof IOException) throw (IOException) e.getCause();
+            throw e;
+        }
     }
 
     /**
@@ -166,26 +182,19 @@ public class ConfigService {
 
     /**
      * Internal method to save a config to disk.
-     *
-     * @param fileName the config file name
-     * @param config   the config object
-     * @param <T>      the config type
-     * @throws IOException if writing fails
      */
     private <T> void saveConfigInternal(String fileName, T config) throws IOException {
         Path path = CONFIG_DIR.resolve(fileName);
-        try (Writer writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
-            gson.toJson(config, writer);
+        // Синхронизация на уровне файла
+        synchronized (getFileLock(fileName)) {
+            try (Writer writer = Files.newBufferedWriter(path, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING)) {
+                gson.toJson(config, writer);
+            }
         }
     }
 
     /**
      * Retrieves the registered config class for a given file.
-     *
-     * @param fileName the config file name
-     * @param <T>      the config type
-     * @return the registered class
-     * @throws IllegalArgumentException if not registered
      */
     @SuppressWarnings("unchecked")
     private <T> Class<T> getRegisteredClass(String fileName) {
@@ -198,13 +207,6 @@ public class ConfigService {
 
     /**
      * Creates a default instance of the config class and saves it to disk (if exports == true).
-     *
-     * @param fileName the config file name
-     * @param clazz    the config class
-     * @param exports  whether to save config to disk
-     * @param <T>      the config type
-     * @return the created default config
-     * @throws IOException if instantiation or writing fails
      */
     private <T> T createAndSaveDefault(String fileName, Class<T> clazz, boolean exports) throws IOException {
         try {
@@ -220,11 +222,6 @@ public class ConfigService {
 
     /**
      * Creates a default instance of the config class (does NOT save to disk).
-     *
-     * @param fileName the config file name
-     * @param <T>      the config type
-     * @return the created default config
-     * @throws IOException if instantiation fails
      */
     private <T> T createDefault(String fileName) throws IOException {
         Class<T> clazz = getRegisteredClass(fileName);
@@ -242,9 +239,7 @@ public class ConfigService {
         if (configFileName == null || calistaGameEngine == null) {
             return;
         }
-        // Enqueue the task to the JME thread to ensure thread safety
         calistaGameEngine.enqueue(() -> {
-            // Assumes CalistaGameEngine has a method to handle this notification
             calistaGameEngine.onConfigReloaded(configFileName);
         });
     }
@@ -257,17 +252,26 @@ public class ConfigService {
      * @param <T>      the config type
      * @return Optional of the config or empty if loading failed
      */
-    public <T> Optional<Object> preloadConfigAsync(String fileName, boolean exportsConfig) {
-        return Optional.ofNullable(pool.submit(() -> {
+    public <T> CompletableFuture<Optional<T>> preloadConfigAsync(String fileName, boolean exportsConfig) {
+        return CompletableFuture.supplyAsync(() -> {
             try {
-                return getConfig(fileName, exportsConfig);
+                return Optional.ofNullable(getConfig(fileName, exportsConfig));
             } catch (IOException e) {
-                return null;
+                return Optional.empty();
             }
-        }).join());
+        }, asyncPool);
     }
 
     public Map<String, Class<?>> getRegistry() {
         return registry;
+    }
+    private static final Map<String, Object> fileLocks = new ConcurrentHashMap<>();
+    private static Object getFileLock(String fileName) {
+        return fileLocks.computeIfAbsent(fileName, k -> new Object());
+    }
+
+    public void shutdown() {
+        cache.invalidateAll();
+        asyncPool.shutdownNow();
     }
 }

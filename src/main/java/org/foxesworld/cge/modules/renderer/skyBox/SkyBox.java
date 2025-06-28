@@ -10,7 +10,7 @@ import com.jme3.renderer.ViewPort;
 import com.jme3.renderer.queue.RenderQueue;
 import com.jme3.scene.Spatial;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
-import com.jme3.shadow.EdgeFilteringMode;
+//import com.jme3.shadow.EdgeFilteringMode;
 import com.jme3.util.SkyFactory;
 import jme3utilities.sky.SkyControl;
 import jme3utilities.sky.StarsOption;
@@ -135,7 +135,7 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
         shadowRenderer = new DirectionalLightShadowRenderer(engine.getAssetManager(), size, splits);
         shadowRenderer.setShadowZExtend(getConfig().getShadowZExtend());
         shadowRenderer.setLambda(0.55f); // Mildly softer shadows
-        shadowRenderer.setEdgeFilteringMode(EdgeFilteringMode.valueOf(getConfig().getEdgeFilteringMode()));
+        //shadowRenderer.setEdgeFilteringMode(EdgeFilteringMode.valueOf(getConfig().getEdgeFilteringMode()));
         shadowRenderer.setShadowIntensity(0.55f); // Soft shadow darkness
 
         // Initially set to sun
@@ -148,6 +148,7 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
 
     private void setupAtmosphere() {
         ViewPort vp = viewPort();
+        new SunEffects(engine).initFilters(this);
         if (vp != null) {
             vp.setBackgroundColor(fogColorDay.clone());
             // For advanced: add a custom FogFilter, VolumetricLightScatteringFilter, or Tonemap
@@ -281,7 +282,7 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
         return ambient;
     }
 
-    private ViewPort viewPort() {
+    public ViewPort viewPort() {
         return engine.getRenderManager().getMainView("Default");
     }
 }

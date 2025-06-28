@@ -1,5 +1,5 @@
 {
-  "skyBoxTexture": "cubemap_0",
+  "skyBoxTexture": "cubemap_2",
   "envMap": "CubeMap",
   "starsOption": "Cube",
   "bottomDome": true,
@@ -14,7 +14,7 @@
   "edgeFilteringMode": "PCF4",
   "shadowZExtend": 1000.0,
   "enableShadows": true,
-  "sunLightIntensity": 1.2,
+  "sunLightIntensity": 2.2,
   "moonLightIntensity": 0.4,
   "ambientColor": [
     0.2,

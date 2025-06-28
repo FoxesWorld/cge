@@ -12,7 +12,7 @@ import com.jme3.post.filters.LightScatteringFilter;
 import com.jme3.post.ssao.SSAOFilter;
 import com.jme3.shadow.CompareMode;
 import com.jme3.shadow.DirectionalLightShadowFilter;
-import com.jme3.shadow.EdgeFilteringMode;
+//import com.jme3.shadow.EdgeFilteringMode;
 import com.jme3.texture.Texture2D;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -105,7 +105,7 @@ public class PostProcessingModule extends EngineModule<PostProcessingConfig> {
                 dlsf.setRenderBackFacesShadows(getConfig().getDlsf().isRenderBackFacesShadows());           // Мягкие края теней, меньше артефактов на тонких объектах
                 dlsf.setEnabledStabilization(getConfig().getDlsf().isStabilization());             // Стабилизация теней при движении камеры (минимум дрожания)
                 dlsf.setShadowIntensity(getConfig().getDlsf().getShadowIntensity());                 // Более мягкие тени, киношный эффект
-                dlsf.setEdgeFilteringMode(EdgeFilteringMode.valueOf(getConfig().getDlsf().getEdgeFilteringMode())); // Улучшено сглаживание границ теней
+                //dlsf.setEdgeFilteringMode(EdgeFilteringMode.valueOf(getConfig().getDlsf().getEdgeFilteringMode())); // Улучшено сглаживание границ теней
                 dlsf.setShadowCompareMode(CompareMode.valueOf(getConfig().getDlsf().getShadowCompareMode()));   // Аппаратное сравнение теней для лучшей производительности
 
                 // Если у вас динамическая сцена с перемещением солнца, обновляйте свет каждый кадр:

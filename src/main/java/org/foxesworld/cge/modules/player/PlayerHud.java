@@ -23,9 +23,7 @@ public class PlayerHud {
     public PlayerHud(Player p) {
         this.player = p;
         UIModule ui = p.getEngine().getModuleManager().getModule(UIModule.class);
-        Node playerHud = new Node();
-        playerHud.setName("playerHud");
-        ui.addPanel(this, playerHud, "assets/Interface/stats_config.xml");
+        ui.addPanel(this, "playerHud", "assets/Interface/stats_config.xml");
         ui.getNovaUi().registerEventHandler(this);
     }
 

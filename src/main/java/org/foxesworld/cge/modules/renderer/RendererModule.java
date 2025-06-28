@@ -36,18 +36,20 @@ public class RendererModule extends EngineModule<RendererConfig> {
     private static final Logger logger = LogManager.getLogger(RendererModule.class);
 
     private boolean postProcessingRegistered = false;
-    private final SkyBox skyBox;
+    private SkyBox skyBox;
 
     /**
-     * Constructs the RendererModule with its default SkyBox sub-module.
+     * Constructs the RendererModule with its default SkyBox
      *
      * @param app the CalistaGameEngine instance
      */
     public RendererModule(CalistaGameEngine app) {
         super(RendererModule.class, RendererConfig.class, app);
         // Always register SkyBox (idempotent, safe for multi-register)
-        this.skyBox = new SkyBox(this);
-        app.getModuleManager().register(skyBox, 100);
+        app.getAssetLoader().onAssetsLoaded(() -> {
+            this.skyBox = new SkyBox(this);
+            app.getModuleManager().register(skyBox, 100);
+        });
     }
 
     /**

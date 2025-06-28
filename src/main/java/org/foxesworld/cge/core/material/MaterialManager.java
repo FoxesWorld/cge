@@ -1,9 +1,12 @@
 package org.foxesworld.cge.core.material;
 
+import com.github.benmanes.caffeine.cache.Cache;
+import com.github.benmanes.caffeine.cache.Caffeine;
+import com.jme3.asset.AssetInfo;
+import com.jme3.asset.AssetKey;
 import com.jme3.asset.AssetManager;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
-import com.jme3.shader.VarType;
 import com.jme3.texture.Texture;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.AssetRepo;
@@ -14,27 +17,52 @@ import java.io.BufferedReader;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
+import java.time.Duration;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.BiConsumer;
 
+import static com.jme3.shader.ShaderBufferBlock.BufferType.UniformBufferObject;
+
+/**
+ * Centralized manager for loading, caching, and constructing jME3 materials from custom .j3m files.
+ * Supports custom parameter parsing (color, float, int, boolean, vectors, textures).
+ * Thread-safe for concurrent material access and loading.
+ * Uses Caffeine for material caching.
+ */
 public class MaterialManager {
 
     private final AssetManager assetManager;
     private final AssetRepo assetRepo;
     private static final Logger logger = LoggerFactory.getLogger(MaterialManager.class);
-    private final Map<String, Material> materialCache = new HashMap<>();
-    private final Map<String, BiConsumer<Material, ParamContext>> typeSetters = new HashMap<>();
 
+    /** Caffeine cache for loaded materials (max 128 entries, expire after 60 minutes of inactivity) */
+    private final Cache<String, Material> materialCache = Caffeine.newBuilder()
+            .maximumSize(128)
+            .expireAfterAccess(Duration.ofMinutes(60))
+            .build();
+
+    /** Parameter type handlers (e.g., "color", "texture", etc.) */
+    private final Map<String, BiConsumer<Material, ParamContext>> typeSetters = new ConcurrentHashMap<>();
+
+    /**
+     * Creates a MaterialManager for the given game engine.
+     *
+     * @param calistaGameEngine the active game engine
+     */
     public MaterialManager(CalistaGameEngine calistaGameEngine) {
         this.assetManager = calistaGameEngine.getAssetManager();
         this.assetRepo = calistaGameEngine.getAssetRepo();
         initTypeSetters();
     }
 
+    /**
+     * Registers default parameter type setters for materials.
+     * Extend this method to add new parameter types.
+     */
     private void initTypeSetters() {
         typeSetters.put("texture", (mat, ctx) -> {
-            logger.info("Loading texture '{}' for '{}'", ctx.value, ctx.key);
+            logger.debug("Loading texture '{}' for '{}'", ctx.value, ctx.key);
             String[] parts = ctx.value.split("\\|");
             String texName = parts[0].trim();
             Texture.WrapMode wrapMode = Texture.WrapMode.Repeat;
@@ -55,7 +83,7 @@ public class MaterialManager {
             }
         });
 
-        typeSetters.put("color", (mat, ctx) -> setColor(mat, ctx, "color"));
+        typeSetters.put("color", MaterialManager::setColor);
         typeSetters.put("float", (mat, ctx) -> setPrimitive(mat, ctx, "float"));
         typeSetters.put("int", (mat, ctx) -> setPrimitive(mat, ctx, "int"));
         typeSetters.put("boolean", (mat, ctx) -> setPrimitive(mat, ctx, "boolean"));
@@ -63,14 +91,21 @@ public class MaterialManager {
         typeSetters.put("vector3", (mat, ctx) -> setVector(mat, ctx, 3));
         typeSetters.put("vector4", (mat, ctx) -> setVector(mat, ctx, 4));
         typeSetters.put("string", (mat, ctx) -> {
-            mat.setParam(ctx.key, VarType.UniformBufferObject, ctx.value);
+            mat.setParam(ctx.key, UniformBufferObject);
             logger.debug("Parameter '{}' (string) = {}", ctx.key, ctx.value);
         });
     }
 
+    /**
+     * Retrieves a material by name, loading and caching it if not present.
+     *
+     * @param name name or path of the material (e.g., "MyMat.j3m")
+     * @return the loaded Material, or null if not found or failed to load
+     */
     public Material getMaterial(String name) {
         logger.debug("Requested material: {}", name);
-        return materialCache.computeIfAbsent(name, n -> {
+        // Use Caffeine cache get
+        return materialCache.get(name, n -> {
             Material mat = loadMaterial(n);
             if (mat != null) {
                 logger.debug("Material {} loaded and cached", n);
@@ -81,16 +116,31 @@ public class MaterialManager {
         });
     }
 
+    /**
+     * Explicitly adds a material to the cache.
+     *
+     * @param name     name or path
+     * @param material the Material instance
+     */
     public void putMaterial(String name, Material material) {
         logger.debug("Explicitly adding material {} to cache", name);
         materialCache.put(name, material);
     }
 
+    /**
+     * Clears all cached materials.
+     */
     public void clearCache() {
         logger.info("Clearing material cache");
-        materialCache.clear();
+        materialCache.invalidateAll();
     }
 
+    /**
+     * Loads a material by name. Currently only supports .j3m files.
+     *
+     * @param name name or path of the material
+     * @return loaded Material, or null if not found/invalid
+     */
     private Material loadMaterial(String name) {
         try {
             if (name.endsWith(".j3m")) {
@@ -105,14 +155,28 @@ public class MaterialManager {
         }
     }
 
+    /**
+     * Deserializes a .j3m material file into a Material instance.
+     *
+     * @param j3mPath the path to the .j3m file
+     * @return the constructed Material
+     * @throws Exception if reading or parsing fails
+     */
     private Material deserializeJ3M(String j3mPath) throws Exception {
         logger.info("Deserializing .j3m: {}", j3mPath);
-        try (InputStream is = assetManager.locateAsset(new com.jme3.asset.AssetKey<>(j3mPath)).openStream();
+
+        AssetInfo info = assetManager.locateAsset(new AssetKey<>(j3mPath));
+        if (info == null) {
+            logger.warn("Asset not found: {}", j3mPath);
+            return null;
+        }
+
+        try (InputStream is = info.openStream();
              BufferedReader reader = new BufferedReader(new InputStreamReader(is, StandardCharsets.UTF_8))) {
             String line, j3md = null;
-            Map<String, ParamValue> params = new HashMap<>();
+            Map<String, ParamValue> params = new ConcurrentHashMap<>();
             while ((line = reader.readLine()) != null) {
-                if(!line.contains("#")) {
+                if (!line.trim().startsWith("#")) {
                     line = line.trim();
                     if (line.startsWith("Material ") && line.contains(":")) {
                         int colon = line.indexOf(':');
@@ -126,13 +190,11 @@ public class MaterialManager {
                             String left = parts[0].trim();
                             String value = parts[1].trim().replace("\"", "");
                             String type = null, key = null;
-                            // Пытаемся выделить тип и ключ
                             int space = left.indexOf(' ');
                             if (space > 0) {
                                 type = left.substring(0, space).trim().toLowerCase();
                                 key = left.substring(space + 1).trim();
                             } else {
-                                // fallback: если не найдено, всё как раньше
                                 key = left;
                             }
                             logger.debug("Parameter: {} (type: {}) = {}", key, type, value);
@@ -160,6 +222,14 @@ public class MaterialManager {
         }
     }
 
+    /**
+     * Gets the parameter setter for a given type/key/value.
+     *
+     * @param type  the parameter type (may be null)
+     * @param key   the parameter key
+     * @param value the parameter value
+     * @return a BiConsumer to set the parameter on a Material
+     */
     private BiConsumer<Material, ParamContext> getTypeSetter(String type, String key, String value) {
         if (type != null && typeSetters.containsKey(type)) return typeSetters.get(type);
         if (isTextureKey(key)) return typeSetters.get("texture");
@@ -173,49 +243,71 @@ public class MaterialManager {
         return typeSetters.get("string");
     }
 
+    /**
+     * Allows external registration or override of parameter type setters.
+     *
+     * @param type     the parameter type string
+     * @param setter   a BiConsumer to set the parameter
+     */
+    public void registerTypeSetter(String type, BiConsumer<Material, ParamContext> setter) {
+        typeSetters.put(type, setter);
+    }
+
     // --- Helper methods ---
 
-    private static void setColor(Material mat, ParamContext ctx, String logType) {
-        float[] c = parseFloats(ctx.value);
-        ColorRGBA color = c.length == 3 ? new ColorRGBA(c[0], c[1], c[2], 1f)
-                : c.length == 4 ? new ColorRGBA(c[0], c[1], c[2], c[3]) : null;
-        if (color != null) {
-            mat.setColor(ctx.key, color);
-            logger.debug("Color {} set for '{}'", color, ctx.key);
-        } else {
-            logger.warn("Cannot parse color for '{}': '{}'", ctx.key, ctx.value);
+    private static void setColor(Material mat, ParamContext ctx) {
+        try {
+            float[] c = parseFloats(ctx.value);
+            ColorRGBA color = c.length == 3 ? new ColorRGBA(c[0], c[1], c[2], 1f)
+                    : c.length == 4 ? new ColorRGBA(c[0], c[1], c[2], c[3]) : null;
+            if (color != null) {
+                mat.setColor(ctx.key, color);
+                logger.debug("Color {} set for '{}'", color, ctx.key);
+            } else {
+                logger.warn("Cannot parse color for '{}': '{}'", ctx.key, ctx.value);
+            }
+        } catch (Exception e) {
+            logger.warn("Failed to parse color '{}': {}", ctx.value, e.getMessage());
         }
     }
 
     private static void setPrimitive(Material mat, ParamContext ctx, String type) {
-        switch (type) {
-            case "float":
-                mat.setFloat(ctx.key, Float.parseFloat(ctx.value));
-                break;
-            case "int":
-                mat.setInt(ctx.key, Integer.parseInt(ctx.value));
-                break;
-            case "boolean":
-                mat.setBoolean(ctx.key, Boolean.parseBoolean(ctx.value));
-                break;
+        try {
+            switch (type) {
+                case "float":
+                    mat.setFloat(ctx.key, Float.parseFloat(ctx.value));
+                    break;
+                case "int":
+                    mat.setInt(ctx.key, Integer.parseInt(ctx.value));
+                    break;
+                case "boolean":
+                    mat.setBoolean(ctx.key, Boolean.parseBoolean(ctx.value));
+                    break;
+            }
+            logger.debug("Parameter '{}' ({}) = {}", ctx.key, type, ctx.value);
+        } catch (Exception e) {
+            logger.warn("Failed to parse {} for '{}': {}", type, ctx.key, e.getMessage());
         }
-        logger.debug("Parameter '{}' ({}) = {}", ctx.key, type, ctx.value);
     }
 
     private static void setVector(Material mat, ParamContext ctx, int dim) {
-        float[] v = parseFloats(ctx.value);
-        switch (dim) {
-            case 2:
-                mat.setVector2(ctx.key, new com.jme3.math.Vector2f(v[0], v[1]));
-                break;
-            case 3:
-                mat.setVector3(ctx.key, new com.jme3.math.Vector3f(v[0], v[1], v[2]));
-                break;
-            case 4:
-                mat.setVector4(ctx.key, new com.jme3.math.Vector4f(v[0], v[1], v[2], v[3]));
-                break;
+        try {
+            float[] v = parseFloats(ctx.value);
+            switch (dim) {
+                case 2:
+                    mat.setVector2(ctx.key, new com.jme3.math.Vector2f(v[0], v[1]));
+                    break;
+                case 3:
+                    mat.setVector3(ctx.key, new com.jme3.math.Vector3f(v[0], v[1], v[2]));
+                    break;
+                case 4:
+                    mat.setVector4(ctx.key, new com.jme3.math.Vector4f(v[0], v[1], v[2], v[3]));
+                    break;
+            }
+            logger.debug("Parameter '{}' (vector{}) = {}", ctx.key, dim, ctx.value);
+        } catch (Exception e) {
+            logger.warn("Failed to parse vector{} for '{}': {}", dim, ctx.key, e.getMessage());
         }
-        logger.debug("Parameter '{}' (vector{}) = {}", ctx.key, dim, ctx.value);
     }
 
     private static boolean isTextureKey(String key) {
