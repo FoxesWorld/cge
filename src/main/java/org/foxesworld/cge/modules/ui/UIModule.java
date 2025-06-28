@@ -1,6 +1,7 @@
 package org.foxesworld.cge.modules.ui;
 
 import com.jme3.app.Application;
+import com.jme3.scene.Node;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.CalistaGameEngine;
@@ -33,9 +34,9 @@ public class UIModule extends EngineModule<UIConfig> {
         logger.info("UIModule initializing...");
     }
 
-    public void addPanel(Object handler, String xmlFile) {
+    public void addPanel(Object handler, Node guiNode, String xmlFile) {
         if (isLoaded()) {
-            novaUi = new NovaUI(calistaGameEngine, xmlFile);
+            novaUi = new NovaUI(calistaGameEngine, guiNode, xmlFile);
             calistaGameEngine.getStateManager().attach(novaUi);
             novaUi.registerEventHandler(handler);
             novaUis.add(novaUi);

@@ -44,9 +44,10 @@ public class NovaUI extends BaseAppState {
     private volatile PanelElement dirtyRoot = null;
     private int lastCamWidth = -1, lastCamHeight = -1;
 
-    public NovaUI(CalistaGameEngine engine, String configPath) {
+    public NovaUI(CalistaGameEngine engine, Node guiNode, String configPath) {
         this.engine = Objects.requireNonNull(engine, "engine must not be null");
-        this.guiNode = engine.getGuiNode();
+        this.guiNode = guiNode;//engine.getGuiNode();
+        engine.getGuiNode().attachChild(this.guiNode);
         this.configPath = Objects.requireNonNull(configPath, "configPath must not be null");
     }
 

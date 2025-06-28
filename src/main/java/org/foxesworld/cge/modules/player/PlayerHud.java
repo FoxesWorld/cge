@@ -1,6 +1,7 @@
 package org.foxesworld.cge.modules.player;
 
 
+import com.jme3.scene.Node;
 import org.foxesworld.cge.modules.ui.UIModule;
 
 /**
@@ -22,7 +23,9 @@ public class PlayerHud {
     public PlayerHud(Player p) {
         this.player = p;
         UIModule ui = p.getEngine().getModuleManager().getModule(UIModule.class);
-        ui.addPanel(this, "assets/Interface/stats_config.xml");
+        Node playerHud = new Node();
+        playerHud.setName("playerHud");
+        ui.addPanel(this, playerHud, "assets/Interface/stats_config.xml");
         ui.getNovaUi().registerEventHandler(this);
     }
 
