@@ -28,7 +28,7 @@ public class ElementRegistry {
     private void registerDefaultElements(CalistaGameEngine engine) {
         register("Panel", ctx -> new PanelElement(engine, ctx.definition.getAttribute("id"), ctx.parent));
         register("Image", ctx -> new ImageElement(engine, ctx.definition.getAttribute("id"), ctx.parent));
-        register("Text", ctx -> new TextElement(engine, ctx.definition.getAttribute("id"), ctx.parent));
+        register("Text", ctx -> new TextElement(engine, ctx, ctx.parent));
         register("Button", ctx -> new ButtonElement(engine, ctx.definition.getAttribute("id"), ctx.parent));
         register("Progress", ctx -> new ProgressElement(engine, ctx.definition.getAttribute("id"), ctx.parent));
     }

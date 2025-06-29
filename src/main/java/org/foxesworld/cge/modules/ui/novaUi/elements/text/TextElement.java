@@ -2,11 +2,15 @@ package org.foxesworld.cge.modules.ui.novaUi.elements.text;
 
 import com.jme3.font.BitmapText;
 import org.foxesworld.cge.CalistaGameEngine;
+import org.foxesworld.cge.modules.ui.novaUi.ElementRegistry;
 import org.foxesworld.cge.modules.ui.novaUi.elements.AbstractUIElement;
 import org.foxesworld.cge.modules.ui.novaUi.elements.PropertyParser;
+import org.foxesworld.cge.modules.ui.novaUi.elements.UIElement;
 import org.foxesworld.cge.modules.ui.novaUi.elements.panel.PanelElement;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.function.Function;
 
 /**
  * A UI element for displaying text.
@@ -31,12 +35,15 @@ public class TextElement extends AbstractUIElement {
     private final BitmapText bitmapText;
     private ITextAnimator animator;
 
-    public TextElement(CalistaGameEngine engine, String id, PanelElement parent) {
-        super(engine, id, parent);
+    public TextElement(CalistaGameEngine engine, ElementRegistry.CreationContext ctx, PanelElement parent) {
+        super(engine, ctx.definition().getAttribute("id"), parent);
         this.node.setName("Text_" + id);
-
+        String font = "Interface/Fonts/Default.fnt";
         // Default font settings, can be overridden by properties
-        this.bitmapText = new BitmapText(engine.getAssetManager().loadFont("Interface/Fonts/Default.fnt"));
+        if(ctx.definition().getAttribute("fontPath") != null) {
+            font = ctx.definition().getAttribute("fontPath");
+        }
+        this.bitmapText = new BitmapText(engine.getAssetManager().loadFont(font));
         this.node.attachChild(bitmapText);
 
         // Default animator is instant change.

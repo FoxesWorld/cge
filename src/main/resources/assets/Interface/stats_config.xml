@@ -28,7 +28,7 @@
 
     <Panel id="barPanel">
         <property name="margin" value="5"/>
-        <property name="padding" value="0,25"/>
+        <property name="padding" value="5"/>
         <property name="bgColor" value="0,0,0,0.0"/>
         <property name="width" value="auto"/>
         <property name="height" value="auto"/>
@@ -37,8 +37,8 @@
         <property name="spacing" value="5"/>
 
         <Text id="test">
-            <property name="fontPath" value="Interface/fonts/Aharoni.fnt"/>
-            <property name="margin" value="0,-40,0,0"/>
+            <property name="fontPath" value="assets/Interface/fonts/Aharoni.fnt"/>
+            <property name="margin" value="0,0,0,0"/>
             <property name="align" value="left"/>
             <property name="color" value="0.81, 0.73, 0.31, 1.0"/>
         </Text>
