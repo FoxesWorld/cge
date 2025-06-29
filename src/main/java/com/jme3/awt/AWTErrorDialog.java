@@ -164,9 +164,9 @@ public class AWTErrorDialog extends JDialog {
         root.getActionMap().put("copy", copyAction);
     }
 
-    public static void showDialog(String title, String message) {
+    public static void showDialog(String message) {
         SwingUtilities.invokeLater(() -> {
-            AWTErrorDialog dialog = new AWTErrorDialog(null, title, title, message);
+            AWTErrorDialog dialog = new AWTErrorDialog(null, "Error", "We are sorry =(", message);
             dialog.setVisible(true);
         });
     }
@@ -178,7 +178,7 @@ public class AWTErrorDialog extends JDialog {
         try {
             int x = 5 / 0;
         } catch (Exception e) {
-            showDialog("An Unexpected Error Occurred", "The application has encountered a critical error and needs to close.");
+            showDialog(e.getMessage());
         }
     }
 }

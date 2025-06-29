@@ -1,5 +1,5 @@
 {
-  "skyBoxTexture": "cubemap_2",
+  "skyBoxTexture": "cubemap_0",
   "envMap": "CubeMap",
   "starsOption": "Cube",
   "bottomDome": true,

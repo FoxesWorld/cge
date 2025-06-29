@@ -45,6 +45,7 @@ public class Game {
         settings.setTitle("Calista Game Engine");
         settings.setSettingsDialogImage("assets/theme/logo3.png");
         settings.setRenderer(AppSettings.LWJGL_OPENGL45);
+        settings.setTitle("Calista Experimental");
         settings.setFrameRate(-1);
         try (InputStream icoStream = CalistaGameEngine.class.getClassLoader().getResourceAsStream("assets/theme/icon/engineLogo.ico")) {
             ICOParser icoParser = new ICOParser();

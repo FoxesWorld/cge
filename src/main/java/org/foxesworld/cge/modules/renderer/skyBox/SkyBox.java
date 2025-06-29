@@ -7,29 +7,20 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.ViewPort;
-import com.jme3.renderer.queue.RenderQueue;
-import com.jme3.scene.Spatial;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
 //import com.jme3.shadow.EdgeFilteringMode;
-import com.jme3.util.SkyFactory;
 import jme3utilities.sky.SkyControl;
 import jme3utilities.sky.StarsOption;
-import jme3utilities.sky.Updater;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.module.EngineModule;
-import org.foxesworld.cge.core.module.ModuleState;
-import org.foxesworld.cge.modules.renderer.RendererModule;
+import org.foxesworld.cge.modules.renderer.CinematicPipeline;
 
 import java.time.LocalTime;
 
 /**
- * SkyBox simulates a dynamic sky environment including sun, moon, clouds, stars, and real-time lighting.
- * Enhanced for atmospheric feeling, realistic lighting, and soft shadow fidelity.
- * Improved: dynamic switching of shadow-casting light (sun or moon), smooth shadow blending, customizable colors,
- * and improved ambient/tonemapping for more cinematic effect.
- *
- * 2024: Enhanced with volumetric/foggy atmosphere, dynamic coloring, smooth day-night transitions,
- * and automatic management of shadow quality.
+ * AAA-уровень системы управления атмосферой.
+ * Управляет динамическим небом, освещением, тенями (PSSM) и пост-эффектами
+ * для создания целостной и кинематографичной картины.
  */
 public class SkyBox extends EngineModule<SkyBoxConfig> {
 
@@ -37,49 +28,40 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
     private SkyControl skyControl;
     private DirectionalLight sunLight;
     private DirectionalLight moonLight;
-    private AmbientLight ambient;
-    private DirectionalLightShadowRenderer shadowRenderer;
-    private Updater updater;
-    private Spatial sky;
+    private AmbientLight ambientLight;
+    private DirectionalLightShadowRenderer pssmShadowRenderer;
+    private CinematicPipeline cinematicPipeline;
 
-    private final Vector3f tmpDir = new Vector3f();
+    private float simulationHour = 12.0f;
+    private final float timeSmoothingFactor = 0.1f;
 
-    private float simulatedHour = 12.0f;
-    private float smoothingSpeed = 0.2f; // faster smoothing for more responsive day-night
-    private float moonFade = 0.7f;
+    private static final ColorRGBA SUN_COLOR_ZENITH = ColorRGBA.White.clone();
+    private static final ColorRGBA SUN_COLOR_HORIZON = new ColorRGBA(1.0f, 0.6f, 0.4f, 1.0f);
+    private static final ColorRGBA AMBIENT_DAY = new ColorRGBA(0.4f, 0.5f, 0.7f, 1.0f);
+    private static final ColorRGBA AMBIENT_NIGHT = new ColorRGBA(0.08f, 0.12f, 0.2f, 1.0f);
+    private static final ColorRGBA MOON_COLOR = new ColorRGBA(0.7f, 0.8f, 1.0f, 1.0f);
 
-    // Track which light is currently active for shadow casting
-    private DirectionalLight activeShadowLight = null;
-    private boolean shadowsWithSun = true; // true=sun, false=moon
+    public SkyBox(CalistaGameEngine engine) {
+        super(SkyBox.class, SkyBoxConfig.class, engine);
+        this.engine = engine;
+    }
 
-    // Atmosphere controls
-    private float fogDensity = 0.002f;
-    private ColorRGBA fogColorDay = new ColorRGBA(0.62f, 0.74f, 0.92f, 1.0f);
-    private ColorRGBA fogColorNight = new ColorRGBA(0.07f, 0.13f, 0.19f, 1.0f);
+    @Override
+    public void onConfigReloaded() throws Exception {
 
-    public SkyBox(RendererModule rendererModule) {
-        super(SkyBox.class, SkyBoxConfig.class, rendererModule.getGameEngine());
-        this.engine = rendererModule.getGameEngine();
     }
 
     @Override
     protected void initModule(CalistaGameEngine app) {
         engine.enqueue(() -> {
-            setupLighting();
-            setupSkyDome();
-            setupShadows();
-            setupAtmosphere();
+            initSkyControl();
+            initLights();
+            initShadows();
+            initPostProcessing();
         });
     }
 
-    private void setupSkyDome() {
-        sky = SkyFactory.createSky(
-                engine.getAssetManager(),
-                engine.getAssetRepo().getTexture(getConfig().getSkyBoxTexture()),
-                SkyFactory.EnvMapType.valueOf(getConfig().getEnvMap())
-        );
-        sky.setShadowMode(RenderQueue.ShadowMode.Off);
-
+    private void initSkyControl() {
         skyControl = new SkyControl(
                 engine.getAssetManager(),
                 engine.getCamera(),
@@ -88,201 +70,142 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
                 getConfig().isBottomDome()
         );
         engine.getRootNode().addControl(skyControl);
-
-        updater = skyControl.getUpdater();
-        updater.setAmbientLight(ambient);
-        updater.setMainLight(sunLight);
-
+        skyControl.getUpdater().setMainLight(sunLight);
+        skyControl.getUpdater().setAmbientLight(ambientLight);
         skyControl.setCloudiness(getConfig().getCloudiness());
-        skyControl.setCloudsYOffset(getConfig().getCloudYOffset());
-        skyControl.setTopVerticalAngle(getConfig().getVerticalAngle());
         skyControl.setEnabled(true);
-
-        // Enhanced: Horizon gradient and star intensity
-        // if (getConfig().hasOvercast()) skyControl.setOvercast(getConfig().getOvercastAmount());
-        //if (getConfig().hasCloudOpacity()) skyControl.setCloudsOpacity(getConfig().getCloudOpacity());
-        //if (getConfig().hasHaloThickness()) skyControl.setHaloThickness(getConfig().getHaloThickness());
-        //if (getConfig().hasStarIntensity()) skyControl.setStarIntensity(getConfig().getStarIntensity());
-
-        engine.getRootNode().attachChild(sky);
     }
 
-    private void setupLighting() {
-        // Improved atmospheric ambient: dynamic blend between deep blue and sunset warmth
-        ColorRGBA ambientDay = new ColorRGBA(0.18f, 0.24f, 0.42f, 1.0f);
-        ColorRGBA ambientSunset = new ColorRGBA(1.0f, 0.80f, 0.53f, 1.0f);
-        ColorRGBA ambientNight = new ColorRGBA(0.10f, 0.16f, 0.25f, 1.0f);
-
-        ambient = new AmbientLight(ambientDay.clone());
-
+    private void initLights() {
         sunLight = new DirectionalLight();
-        sunLight.setColor(ColorRGBA.White.mult(getConfig().getSunLightIntensity()));
-        sunLight.setDirection(new Vector3f(-0.48f, -1f, -0.38f).normalizeLocal());
+        sunLight.setColor(SUN_COLOR_ZENITH.mult(getConfig().getSunLightIntensity()));
         engine.getRootNode().addLight(sunLight);
 
         moonLight = new DirectionalLight();
-        moonLight.setColor(new ColorRGBA(0.34f, 0.36f, 0.47f, 1f).mult(getConfig().getMoonLightIntensity() * moonFade));
-        moonLight.setDirection(new Vector3f(0.51f, -1f, 0.56f).normalizeLocal());
+        moonLight.setColor(MOON_COLOR.mult(getConfig().getMoonLightIntensity()));
         engine.getRootNode().addLight(moonLight);
 
-        engine.getRootNode().addLight(ambient);
+        ambientLight = new AmbientLight(AMBIENT_DAY);
+        engine.getRootNode().addLight(ambientLight);
     }
 
-    private void setupShadows() {
-        int size = getConfig().getShadowMapSize();
-        int splits = getConfig().getShadowFrustumCount();
-
-        shadowRenderer = new DirectionalLightShadowRenderer(engine.getAssetManager(), size, splits);
-        shadowRenderer.setShadowZExtend(getConfig().getShadowZExtend());
-        shadowRenderer.setLambda(0.55f); // Mildly softer shadows
-        //shadowRenderer.setEdgeFilteringMode(EdgeFilteringMode.valueOf(getConfig().getEdgeFilteringMode()));
-        shadowRenderer.setShadowIntensity(0.55f); // Soft shadow darkness
-
-        // Initially set to sun
-        shadowRenderer.setLight(sunLight);
-        activeShadowLight = sunLight;
-        shadowsWithSun = true;
-
-        viewPort().addProcessor(shadowRenderer);
+    private void initShadows() {
+        pssmShadowRenderer = new DirectionalLightShadowRenderer(
+                engine.getAssetManager(),
+                getConfig().getShadowMapSize(),
+                getConfig().getShadowFrustumCount()
+        );
+        pssmShadowRenderer.setLight(sunLight);
+        pssmShadowRenderer.setShadowIntensity(0.6f);
+        pssmShadowRenderer.setLambda(0.65f);
+        pssmShadowRenderer.setShadowZExtend(getConfig().getShadowZExtend());
+        //pssmShadowRenderer.setEdgeFilteringMode(EdgeFilteringMode.PCFPOISSON);
+        viewPort().addProcessor(pssmShadowRenderer);
     }
 
-    private void setupAtmosphere() {
-        ViewPort vp = viewPort();
-        new SunEffects(engine).initFilters(this);
-        if (vp != null) {
-            vp.setBackgroundColor(fogColorDay.clone());
-            // For advanced: add a custom FogFilter, VolumetricLightScatteringFilter, or Tonemap
-            // (if your engine supports post-processing filters)
+    private void initPostProcessing() {
+        cinematicPipeline = new CinematicPipeline(engine);
+        cinematicPipeline.initialize(sunLight);
+    }
+
+    @Override
+    protected void updateModule(float tpf) {
+        if (skyControl == null) return;
+
+        updateTime(tpf);
+        AtmosphereState state = calculateAtmosphereState();
+        updateSkyControl(state);
+        updateLighting(state);
+        updateShadows(state);
+        updatePostProcessing(state, tpf);
+    }
+
+    private void updateTime(float tpf) {
+        float targetHour = getSystemHour(); //: getConfig().getFixedHour();
+        float hourDelta = targetHour - simulationHour;
+        if (hourDelta > 12f) hourDelta -= 24f;
+        if (hourDelta < -12f) hourDelta += 24f;
+        simulationHour += hourDelta * timeSmoothingFactor * tpf;
+        simulationHour = (simulationHour + 24f) % 24f;
+    }
+
+    private AtmosphereState calculateAtmosphereState() {
+        Vector3f sunDir = skyControl.getSunAndStars().sunDirection(null);
+        float sunElevation = sunDir.dot(Vector3f.UNIT_Y);
+        return new AtmosphereState(sunDir, sunElevation);
+    }
+
+    private void updateSkyControl(AtmosphereState state) {
+        skyControl.getSunAndStars().setHour(simulationHour);
+    }
+
+    private void updateLighting(AtmosphereState state) {
+        sunLight.setDirection(state.sunDirection.negate());
+        moonLight.setDirection(state.sunDirection);
+
+        float sunIntensity = FastMath.saturate(state.sunElevation * 10f);
+        float moonIntensity = FastMath.saturate(-state.sunElevation * 5f);
+
+        ColorRGBA sunColor = new ColorRGBA().interpolateLocal(SUN_COLOR_HORIZON, SUN_COLOR_ZENITH, FastMath.saturate(state.sunElevation * 2f));
+        sunLight.setColor(sunColor.mult(getConfig().getSunLightIntensity() * sunIntensity));
+        moonLight.setColor(MOON_COLOR.mult(getConfig().getMoonLightIntensity() * moonIntensity));
+
+        ColorRGBA ambientColor = new ColorRGBA().interpolateLocal(AMBIENT_DAY, AMBIENT_NIGHT, 1f - FastMath.saturate(state.sunElevation * 4f + 0.5f));
+        ambientLight.setColor(ambientColor);
+    }
+
+    private void updateShadows(AtmosphereState state) {
+        pssmShadowRenderer.setShadowIntensity(0.6f * FastMath.saturate(state.sunElevation * 15f));
+    }
+
+    private void updatePostProcessing(AtmosphereState state, float tpf) {
+        if(cinematicPipeline != null) {
+            cinematicPipeline.update(tpf);
         }
     }
 
-    private float getCurrentHour() {
+    private record AtmosphereState(Vector3f sunDirection, float sunElevation) {}
+
+    private float getSystemHour() {
         LocalTime now = LocalTime.now();
         return now.getHour() + now.getMinute() / 60f + now.getSecond() / 3600f;
     }
 
     @Override
-    public void update(float tpf) {
-        if (getState() == ModuleState.RUNNING && skyControl != null) {
-            float targetHour = getCurrentHour();
-
-            // Smoothly interpolate simulatedHour toward targetHour
-            float hourDelta = targetHour - simulatedHour;
-            // Wrap-around for day/night cycle
-            if (hourDelta > 12.0f) hourDelta -= 24.0f;
-            if (hourDelta < -12.0f) hourDelta += 24.0f;
-            simulatedHour += hourDelta * smoothingSpeed * tpf;
-
-            // Clamp simulatedHour to [0,24)
-            if (simulatedHour < 0f) simulatedHour += 24f;
-            if (simulatedHour >= 24f) simulatedHour -= 24f;
-
-            skyControl.getSunAndStars().setHour(simulatedHour);
-
-            // Sun and moon directions (for shadows and highlights)
-            Vector3f sunDirection = skyControl.getSunAndStars().sunDirection(tmpDir);
-
-            // This is the upward normal of the sun; positive when above the horizon
-            float sunDot = sunDirection.dot(Vector3f.UNIT_Y);
-
-            // Determine if it's day or night (threshold can be tuned)
-            boolean isDay = sunDot > -0.08f;
-            shadowsWithSun = isDay;
-
-            // Update light directions
-            sunLight.setDirection(sunDirection.negate());
-            moonLight.setDirection(sunDirection);
-
-            // --- Atmosphere: improved blend for day, sunset, and night ---
-            float sunsetZone = FastMath.clamp((sunDot + 0.1f) / 0.18f, 0f, 1f); // 0 at -0.1, 1 at +0.08
-            float sunIntensity = FastMath.clamp(sunDot + 0.13f, 0.13f, 1.0f);
-            float moonIntensity = FastMath.clamp(1.0f - sunIntensity, 0f, 1.0f);
-
-            // Soft transition for ambient color through sunset
-            ColorRGBA ambientDay = new ColorRGBA(0.18f, 0.24f, 0.42f, 1.0f);
-            ColorRGBA ambientSunset = new ColorRGBA(1.0f, 0.80f, 0.53f, 1.0f);
-            ColorRGBA ambientNight = new ColorRGBA(0.10f, 0.16f, 0.25f, 1.0f);
-
-            ColorRGBA ambientCol = ambientDay.clone().interpolateLocal(ambientSunset, 1f - sunsetZone)
-                    .interpolateLocal(ambientNight, 1f - sunIntensity);
-            ambient.setColor(ambientCol);
-
-            sunLight.setColor(ColorRGBA.White.mult(getConfig().getSunLightIntensity() * sunIntensity));
-            moonLight.setColor(new ColorRGBA(0.36f, 0.39f, 0.55f, 1f).mult(getConfig().getMoonLightIntensity() * moonIntensity * moonFade));
-
-            // --- SHADOW CASTING LIGHT SWITCH ---
-            DirectionalLight requiredLight = shadowsWithSun ? sunLight : moonLight;
-            if (activeShadowLight != requiredLight && shadowRenderer != null) {
-                shadowRenderer.setLight(requiredLight);
-                activeShadowLight = requiredLight;
-            }
-
-            // --- Atmospheric fog color and density ---
-            ViewPort vp = viewPort();
-            if (vp != null) {
-                ColorRGBA fogCol = fogColorDay.clone().interpolateLocal(fogColorNight, 1f - sunIntensity);
-                vp.setBackgroundColor(fogCol);
-                // For advanced: update fog/volumetric post-processing filter params here
-            }
-        }
-    }
-
-    /**
-     * Returns which light is currently used for shadow casting: "sun" or "moon"
-     */
-    public String getActiveShadowCaster() {
-        return (activeShadowLight == sunLight) ? "sun" : "moon";
-    }
-
-    @Override
-    protected void updateModule(float tpf) {
-        // Reserved for future atmospheric/weather/volumetric effects.
-    }
-
-    @Override
     protected void cleanupModule(Application app) {
-        if (skyControl != null) skyControl.setEnabled(false);
-        if (sunLight != null) engine.getRootNode().removeLight(sunLight);
-        if (moonLight != null) engine.getRootNode().removeLight(moonLight);
-        if (ambient != null) engine.getRootNode().removeLight(ambient);
-        if (shadowRenderer != null) viewPort().removeProcessor(shadowRenderer);
+        engine.enqueue(() -> {
+            if (skyControl != null) engine.getRootNode().removeControl(skyControl);
+            if (sunLight != null) engine.getRootNode().removeLight(sunLight);
+            if (moonLight != null) engine.getRootNode().removeLight(moonLight);
+            if (ambientLight != null) engine.getRootNode().removeLight(ambientLight);
+            if (pssmShadowRenderer != null) viewPort().removeProcessor(pssmShadowRenderer);
+            if (cinematicPipeline != null) cinematicPipeline.cleanup();
+        });
     }
 
     @Override
     protected void onEnable() {
         if (skyControl != null) skyControl.setEnabled(true);
-        if (shadowRenderer != null) viewPort().addProcessor(shadowRenderer);
+        if (pssmShadowRenderer != null) viewPort().addProcessor(pssmShadowRenderer);
+        if (cinematicPipeline != null) cinematicPipeline.setEnabled(true);
     }
 
     @Override
     protected void onDisable() {
         if (skyControl != null) skyControl.setEnabled(false);
-        if (shadowRenderer != null) viewPort().removeProcessor(shadowRenderer);
-        if (ambient != null) engine.getRootNode().removeLight(ambient);
+        if (pssmShadowRenderer != null) viewPort().removeProcessor(pssmShadowRenderer);
+        if (cinematicPipeline != null) cinematicPipeline.setEnabled(false);
     }
 
-    @Override
-    public void onConfigReloaded() {
-        // Dynamic reconfiguration: re-init all relevant parts with new config
-        setupLighting();
-        setupSkyDome();
-        setupShadows();
-        setupAtmosphere();
-    }
-
-    public DirectionalLight getMoonLight() {
-        return moonLight;
+    public ViewPort viewPort() {
+        return engine.getViewPort();
     }
 
     public DirectionalLight getSunLight() {
         return sunLight;
     }
 
-    public AmbientLight getAmbient() {
-        return ambient;
-    }
-
-    public ViewPort viewPort() {
-        return engine.getRenderManager().getMainView("Default");
+    public DirectionalLight getMoonLight() {
+        return moonLight;
     }
 }

@@ -5,6 +5,7 @@ import com.jme3.asset.TextureKey;
 import com.jme3.material.Material;
 import com.jme3.material.RenderState.BlendMode;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.shape.Quad;
@@ -13,8 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * Handles the visual rendering of the ImageElement.
- * It manages the Geometry, Material, and Texture for the image quad.
+ * Handles the visual rendering and positioning of the ImageElement.
+ * It manages the Geometry, Material, Texture, and local translation for the image quad.
  */
 public class ImageRenderer {
 
@@ -24,15 +25,15 @@ public class ImageRenderer {
     private final Node node = new Node("ImageRenderer");
     private final Geometry quadGeom;
     private final Material material;
+    private final Vector3f translation = new Vector3f();
 
     public ImageRenderer(AssetManager assetManager) {
         this.assetManager = assetManager;
 
-        // Create the material that will display the image
         this.material = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
         material.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
 
-        // Create the quad geometry
+        // Создаем геометрию Quad
         this.quadGeom = new Geometry("ImageQuad", new Quad(1, 1));
         quadGeom.setMaterial(material);
 
@@ -49,7 +50,7 @@ public class ImageRenderer {
             return;
         }
         try {
-            TextureKey key = new TextureKey(imagePath, false); // false = don't flip texture
+            TextureKey key = new TextureKey(imagePath, true);
             Texture tex = assetManager.loadTexture(key);
             material.setTexture("ColorMap", tex);
         } catch (Exception e) {
@@ -72,7 +73,39 @@ public class ImageRenderer {
      */
     public void setSize(float width, float height) {
         ((Quad) quadGeom.getMesh()).updateGeometry(width, height);
-        //quadGeom.setLocalBound(null); // Force bound recalculation
+    }
+
+    // --- НОВЫЕ МЕТОДЫ для управления смещением ---
+
+    /**
+     * Sets the vertical translation (Y-axis) of the image quad, relative to its
+     * position determined by the layout.
+     * @param y The vertical offset.
+     */
+    public void setTranslateY(float y) {
+        this.translation.setY(y);
+        this.quadGeom.setLocalTranslation(this.translation);
+    }
+
+    /**
+     * Sets the horizontal translation (X-axis) of the image quad, relative to its
+     * position determined by the layout.
+     * @param x The horizontal offset.
+     */
+    public void setTranslateX(float x) {
+        this.translation.setX(x);
+        this.quadGeom.setLocalTranslation(this.translation);
+    }
+
+    /**
+     * Sets the full 2D translation of the image quad, relative to its
+     * position determined by the layout.
+     * @param x The horizontal offset.
+     * @param y The vertical offset.
+     */
+    public void setTranslation(float x, float y) {
+        this.translation.set(x, y, this.translation.z); // Сохраняем z на случай, если он используется
+        this.quadGeom.setLocalTranslation(this.translation);
     }
 
     public Node getNode() {

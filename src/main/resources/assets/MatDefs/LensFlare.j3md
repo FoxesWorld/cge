@@ -1,0 +1,33 @@
+// LensFlare.j3md
+// Материал для AAA-style cinematic Lens Flare фильтра.
+// Связывает Java-код с GLSL шейдерами.
+
+MaterialDef LensFlare {
+
+    Technique {
+        // Указываем, какие шейдеры использовать для этого эффекта.
+        VertexShader = /assets/Shaders/LensFlare/Passthrough.vert
+        FragmentShader =  /assets/Shaders/LensFlare/LensFlare.frag
+
+        // Определяем обязательные параметры, которые jMonkeyEngine передает автоматически.
+        WorldParameters {
+            WorldViewProjectionMatrix
+        }
+    }
+
+    // Определяем параметры, которые мы будем передавать из Java-кода.
+    // Имена должны точно совпадать с теми, что используются в setTexture/setVector2.
+    MaterialParameters {
+        // Текстура с яркими участками сцены (выход из Bloom-фильтра).
+        Texture2D Bloom
+
+        // Текстура с отпечатками и пылью на линзе.
+        Texture2D Dirt
+
+        // Позиция источника света на экране (в координатах 0-1).
+        Vector2 LightPos
+
+        // Разрешение экрана в пикселях.
+        Vector2 Resolution
+    }
+}

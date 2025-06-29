@@ -46,10 +46,10 @@ public class RendererModule extends EngineModule<RendererConfig> {
     public RendererModule(CalistaGameEngine app) {
         super(RendererModule.class, RendererConfig.class, app);
         // Always register SkyBox (idempotent, safe for multi-register)
-        app.getAssetLoader().onAssetsLoaded(() -> {
-            this.skyBox = new SkyBox(this);
+        //app.getAssetLoader().onAssetsLoaded(() -> {
+            this.skyBox = new SkyBox(app);
             app.getModuleManager().register(skyBox, 100);
-        });
+        //});
     }
 
     /**

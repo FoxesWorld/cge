@@ -1,73 +1,73 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
-    ИЗМЕНЕНИЯ:
-    1. Удален внешний тег <UI>. Корнем документа теперь является сама панель.
-    2. Удален тег <Font>. Глобальные шрифты лучше настраивать в теме или коде, а не в разметке.
-    3. Теги <Element type="..."> заменены на прямые теги: <Progress>, <Text>.
-    4. Путь к шрифту исправлен (убран префикс 'assets/').
-    5. Значения цвета исправлены (переведены из диапазона 0-255 в диапазон 0.0-1.0).
+    Эта разметка использует структурированный формат со свойствами в виде дочерних тегов.
+
+    КЛЮЧЕВЫЕ ПРИНЦИПЫ:
+    1. 'id' элемента остается атрибутом для быстрой идентификации.
+    2. Все остальные параметры (margin, color, width и т.д.) выносятся в теги <property name="..." value="..."/>.
+    3. Этот подход позволяет в будущем использовать сложные значения свойств (например, вложенные XML).
 -->
-<Panel
-        id="rootPanel"
-        margin="0,40"
-        padding="0"
-        bgColor="0,0,0,0.3"
-        width="auto"
-        height="auto"
-        align="bottom-left"
-        layout="horizontal"
-        spacing="0"
->
-    <!-- <Image id="logo" imagePath="Textures/nova.png" width="128" height="128" color="1,1,1,1"/> -->
+<Panel id="rootPanel">
+    <property name="margin" value="0,40"/>
+    <property name="padding" value="20"/>
+    <property name="bgColor" value="0,0,0,0.3"/>
+    <property name="width" value="auto"/>
+    <property name="height" value="auto"/>
+    <property name="align" value="bottom-left"/>
+    <property name="layout" value="horizontal"/>
+    <property name="spacing" value="0"/>
 
-    <Panel id="barPanel"
-           margin="5"
-           padding="0,25"
-           bgColor="0,0,0,0.0"
-           width="auto"
-           height="auto"
-           align="top-right"
-           layout="horizontal"
-           spacing="5">
-
-        <Text
-                id="test"
-                fontPath="Interface/fonts/Aharoni.fnt"
-                margin="0,-40,0,0"
-                align="left"
-                color="0.81, 0.73, 0.31, 1.0"
-        />
-
-        <Progress
-                id="speed"
-                width="150"
-                height="8"
-                borderColor="0,0,0,0.8"
-                backgroundColor="0.23, 0.38, 0.24, 0.1"
-                fillColor="0.34, 0.52, 0.31, 1.0"
-                borderThickness="0.1"
-        />
+    <!-- Пример закомментированного элемента в новом формате -->
+    <Image id="logo">
+        <property name="imagePath" value="assets/Textures/nova.png"/>
+        <property name="width" value="64"/>
+        <property name="height" value="64"/>
+        <property name="color" value="1,1,1,1"/>
+    </Image>
 
 
+    <Panel id="barPanel">
+        <property name="margin" value="5"/>
+        <property name="padding" value="0,25"/>
+        <property name="bgColor" value="0,0,0,0.0"/>
+        <property name="width" value="auto"/>
+        <property name="height" value="auto"/>
+        <property name="align" value="top-right"/>
+        <property name="layout" value="horizontal"/>
+        <property name="spacing" value="5"/>
 
-        <Progress
-                id="armor"
-                width="50"
-                height="8"
-                borderColor="0,0,0,0.6"
-                backgroundColor="0.22, 0.39, 0.47, 0.1"
-                fillColor="0.23, 0.58, 0.66, 1.0"
-                borderThickness="0.1"
-        />
+        <Text id="test">
+            <property name="fontPath" value="Interface/fonts/Aharoni.fnt"/>
+            <property name="margin" value="0,-40,0,0"/>
+            <property name="align" value="left"/>
+            <property name="color" value="0.81, 0.73, 0.31, 1.0"/>
+        </Text>
 
-        <Progress
-                id="ability"
-                width="45"
-                height="8"
-                borderColor="0,0,0,0.6"
-                backgroundColor="0.73, 0.60, 0.25, 0.1"
-                fillColor="0.81, 0.73, 0.31, 1.0"
-                borderThickness="0.1"
-        />
+        <Progress id="speed">
+            <property name="width" value="150"/>
+            <property name="height" value="8"/>
+            <property name="borderColor" value="0,0,0,0.8"/>
+            <property name="backgroundColor" value="0.23, 0.38, 0.24, 0.1"/>
+            <property name="fillColor" value="0.34, 0.52, 0.31, 1.0"/>
+            <property name="borderThickness" value="0.1"/>
+        </Progress>
+
+        <Progress id="armor">
+            <property name="width" value="50"/>
+            <property name="height" value="8"/>
+            <property name="borderColor" value="0,0,0,0.6"/>
+            <property name="backgroundColor" value="0.22, 0.39, 0.47, 0.1"/>
+            <property name="fillColor" value="0.23, 0.58, 0.66, 1.0"/>
+            <property name="borderThickness" value="0.1"/>
+        </Progress>
+
+        <Progress id="ability">
+            <property name="width" value="45"/>
+            <property name="height" value="8"/>
+            <property name="borderColor" value="0,0,0,0.6"/>
+            <property name="backgroundColor" value="0.73, 0.60, 0.25, 0.1"/>
+            <property name="fillColor" value="0.81, 0.73, 0.31, 1.0"/>
+            <property name="borderThickness" value="0.1"/>
+        </Progress>
     </Panel>
 </Panel>

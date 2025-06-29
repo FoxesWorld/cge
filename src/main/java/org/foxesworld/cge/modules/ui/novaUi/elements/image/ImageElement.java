@@ -49,6 +49,18 @@ public class ImageElement extends AbstractUIElement {
             case "color":
                 renderer.setColor(PropertyParser.parseColorRGBA(value));
                 break;
+            case "translatex":
+                renderer.setTranslateX(PropertyParser.tryParseFloat(value, 0f));
+                break;
+            case "translatey":
+                renderer.setTranslateY(PropertyParser.tryParseFloat(value, 0f));
+                break;
+            case "translate": // Для установки X и Y одновременно, например "10,-5"
+                float[] xy = PropertyParser.parseEdgeValues(value);
+                if (xy.length >= 2) {
+                    renderer.setTranslation(xy[0], xy[1]);
+                }
+                break;
             default:
                 // For align, margin, onClick, etc.
                 super.setProperty(key, value);

@@ -1,0 +1,24 @@
+// ColorGrading.j3md
+// Определяет материал для нашего фильтра цветокоррекции.
+MaterialDef Color Grading {
+
+    // Параметры, которые мы будем устанавливать из Java-кода
+    MaterialParameters {
+        // Текстура сцены (передается автоматически FilterPostProcessor)
+        Texture2D Texture
+
+        // Наша LUT-текстура
+        Texture2D ColorLUT
+
+        // Размер LUT (например, 16.0)
+        Float LutSize
+    }
+
+    Technique {
+        // Мы используем стандартный вершинный шейдер для пост-эффектов
+        VertexShader GLSL150 : Common/MatDefs/Post/Post.vert
+
+        // ... и наш собственный фрагментный шейдер
+        FragmentShader GLSL150 : assets/Shaders/ColorGrading.frag
+    }
+}
