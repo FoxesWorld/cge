@@ -57,7 +57,7 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
             initSkyControl();
             initLights();
             initShadows();
-            initPostProcessing();
+            //initPostProcessing();
         });
     }
 

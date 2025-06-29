@@ -1,4 +1,4 @@
-package org.foxesworld.cge.modules.player; // Убедитесь, что пакет правильный
+package org.foxesworld.cge.tmp; // Убедитесь, что пакет правильный
 
 import com.jme3.anim.tween.action.Action;
 import com.jme3.anim.tween.action.BlendableAction;

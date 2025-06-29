@@ -40,41 +40,30 @@ public class ButtonElement extends AbstractUIElement {
     public void setProperty(String key, String value) {
         boolean needsRecalc = false;
         switch (key.toLowerCase()) {
-            case "text":
+            case "text" -> {
                 renderer.setText(value);
                 needsRecalc = true;
-                break;
-            case "fontsize":
+            }
+            case "fontsize" -> {
                 renderer.setFontSize(Float.parseFloat(value));
                 needsRecalc = true;
-                break;
-            case "fontpath":
+            }
+            case "fontpath" -> {
                 renderer.setFont(assetManager.loadFont(value));
                 needsRecalc = true;
-                break;
-            case "textcolor":
-                renderer.setTextColor(PropertyParser.parseColorRGBA(value));
-                break;
-            case "bgcolor":
-                interactionHandler.setBgColorNormal(PropertyParser.parseColorRGBA(value));
-                break;
-            case "bgcolorhover":
-                interactionHandler.setBgColorHover(PropertyParser.parseColorRGBA(value));
-                break;
-            case "bgcolorpressed":
-                interactionHandler.setBgColorPressed(PropertyParser.parseColorRGBA(value));
-                break;
-            case "enabled":
-                this.enabled = Boolean.parseBoolean(value);
-                break;
-            case "padding": // Padding is a layout property, needs recalc
+            }
+            case "textcolor" -> renderer.setTextColor(PropertyParser.parseColorRGBA(value));
+            case "bgcolor" -> interactionHandler.setBgColorNormal(PropertyParser.parseColorRGBA(value));
+            case "bgcolorhover" -> interactionHandler.setBgColorHover(PropertyParser.parseColorRGBA(value));
+            case "bgcolorpressed" -> interactionHandler.setBgColorPressed(PropertyParser.parseColorRGBA(value));
+            case "enabled" -> this.enabled = Boolean.parseBoolean(value);
+            case "padding" -> { // Padding is a layout property, needs recalc
                 super.setProperty(key, value);
                 needsRecalc = true;
-                break;
-            default:
+            }
+            default ->
                 // For margin, align, onClick, etc.
-                super.setProperty(key, value);
-                break;
+                    super.setProperty(key, value);
         }
 
         if (needsRecalc) {

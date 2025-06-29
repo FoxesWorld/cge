@@ -5,6 +5,7 @@ import com.jme3.asset.TextureKey;
 import com.jme3.material.Material;
 import com.jme3.material.RenderState.BlendMode;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
@@ -26,6 +27,7 @@ public class ImageRenderer {
     private final Geometry quadGeom;
     private final Material material;
     private final Vector3f translation = new Vector3f();
+    private final Vector2f originalImageSize = new Vector2f();
 
     public ImageRenderer(AssetManager assetManager) {
         this.assetManager = assetManager;
@@ -41,20 +43,28 @@ public class ImageRenderer {
     }
 
     /**
-     * Sets the image to be displayed from a texture path.
+     * Sets the image and returns its original dimensions.
      * @param imagePath The path to the texture asset.
+     * @return A Vector2f containing the width and height of the loaded texture, or null on failure.
      */
-    public void setImage(String imagePath) {
+    public Vector2f setImage(String imagePath) {
         if (imagePath == null || imagePath.isEmpty()) {
             material.clearParam("ColorMap");
-            return;
+            originalImageSize.set(0, 0);
+            return null;
         }
         try {
             TextureKey key = new TextureKey(imagePath, true);
             Texture tex = assetManager.loadTexture(key);
             material.setTexture("ColorMap", tex);
+
+            originalImageSize.set(tex.getImage().getWidth(), tex.getImage().getHeight());
+            return originalImageSize;
+
         } catch (Exception e) {
             LOGGER.error("Failed to load image texture from path: {}", imagePath, e);
+            originalImageSize.set(0, 0);
+            return null;
         }
     }
 
@@ -97,6 +107,9 @@ public class ImageRenderer {
         this.quadGeom.setLocalTranslation(this.translation);
     }
 
+    public Vector2f getOriginalImageSize() {
+        return originalImageSize;
+    }
     /**
      * Sets the full 2D translation of the image quad, relative to its
      * position determined by the layout.

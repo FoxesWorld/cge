@@ -10,14 +10,13 @@
 <Panel id="rootPanel">
     <property name="margin" value="0,40"/>
     <property name="padding" value="20"/>
-    <property name="bgColor" value="0,0,0,0.3"/>
+    <property name="bgColor" value="0,0,0,0.5"/>
     <property name="width" value="auto"/>
     <property name="height" value="auto"/>
     <property name="align" value="bottom-left"/>
     <property name="layout" value="horizontal"/>
     <property name="spacing" value="0"/>
 
-    <!-- Пример закомментированного элемента в новом формате -->
     <Image id="logo">
         <property name="imagePath" value="assets/Textures/nova.png"/>
         <property name="width" value="64"/>
@@ -25,6 +24,17 @@
         <property name="color" value="1,1,1,1"/>
     </Image>
 
+    <Text id="test">
+        <property name="fontPath" value="assets/Interface/fonts/Aharoni.fnt"/>
+        <property name="margin" value="0,0,0,0"/>
+        <property name="align" value="left"/>
+        <property name="color" value="0.81, 0.73, 0.31, 1.0"/>
+    </Text>
+    <Button id="resr2">
+        <property name="text" value="left"/>
+        <property name="padding" value="5"/>
+
+    </Button>
 
     <Panel id="barPanel">
         <property name="margin" value="5"/>
@@ -36,12 +46,7 @@
         <property name="layout" value="horizontal"/>
         <property name="spacing" value="5"/>
 
-        <Text id="test">
-            <property name="fontPath" value="assets/Interface/fonts/Aharoni.fnt"/>
-            <property name="margin" value="0,0,0,0"/>
-            <property name="align" value="left"/>
-            <property name="color" value="0.81, 0.73, 0.31, 1.0"/>
-        </Text>
+
 
         <Progress id="speed">
             <property name="width" value="150"/>

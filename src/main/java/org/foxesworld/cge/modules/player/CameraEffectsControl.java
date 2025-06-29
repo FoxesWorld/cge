@@ -17,6 +17,8 @@ import com.jme3.scene.control.Control;
  * CameraEffectsControl: AAA-style head bob, jump/landing and roll effects.
  * Поддерживает переключение между первым и третьим лицом.
  * Все эффекты масштабируются пропорционально размеру модели игрока (высоте капсулы).
+ *
+ *
  */
 public class CameraEffectsControl extends AbstractControl {
     private final Camera cam;

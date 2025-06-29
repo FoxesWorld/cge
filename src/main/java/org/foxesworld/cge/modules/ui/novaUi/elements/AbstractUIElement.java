@@ -128,7 +128,6 @@ public abstract class AbstractUIElement implements UIElement {
         this.eventHandlerTarget = target;
     }
 
-    @Override
     public void triggerClick() {
         if (onClickMethodName == null || eventHandlerTarget == null) {
             return;

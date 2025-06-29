@@ -1,15 +1,12 @@
 package org.foxesworld.cge.modules.player;
 
 import com.jme3.anim.AnimComposer;
-import com.jme3.audio.AudioData;
-import com.jme3.audio.AudioNode;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.collision.PhysicsRayTestResult;
 import com.jme3.bullet.collision.shapes.CapsuleCollisionShape;
 import com.jme3.bullet.control.CharacterControl;
 import com.jme3.input.InputManager;
-import com.jme3.math.Ray;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.Camera;
 import com.jme3.renderer.queue.RenderQueue;
@@ -20,7 +17,7 @@ import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.modules.physics.PhysicsModule;
 import org.foxesworld.cge.modules.player.animation.AnimLayerControl;
 import org.foxesworld.cge.modules.player.config.PlayerConfig;
-import org.foxesworld.cge.tmp.ShapeParty;
+import org.foxesworld.cge.modules.player.hud.PlayerHud;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
