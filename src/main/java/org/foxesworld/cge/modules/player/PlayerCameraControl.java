@@ -13,6 +13,7 @@ import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.ViewPort;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.control.AbstractControl;
+import org.foxesworld.cge.modules.player.config.PlayerConfig;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -58,14 +59,14 @@ public class PlayerCameraControl extends AbstractControl implements AnalogListen
 
     private final Vector3f tempVec = new Vector3f();
 
-    public PlayerCameraControl(Player player, float eyeHeight, float sensitivity, float smoothing, Spatial sceneRoot) {
+    public PlayerCameraControl(Player player) {
         this.cam = player.getCam();
         this.input = player.getInput();
-        this.sceneRoot = sceneRoot;
+        this.sceneRoot = player.getEngine().getRootNode();
 
-        this.eyeHeight = eyeHeight;
-        this.sensitivity = sensitivity;
-        this.smoothingFactor = FastMath.clamp(smoothing, 0f, 1f);
+        this.eyeHeight = player.getPlayerConfig().getPhysics().getEyeHeight();
+        this.sensitivity = player.getPlayerConfig().getSensitivity();
+        this.smoothingFactor = FastMath.clamp(player.getPlayerConfig().getMovement().getSmoothing(), 0f, 1f);
 
         this.minDistance = 1.2f;
         this.maxDistance = 16.0f;

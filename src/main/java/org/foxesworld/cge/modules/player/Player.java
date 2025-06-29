@@ -90,8 +90,7 @@ public class Player extends Node implements PlayerContext {
         engine.getFlyByCamera().setEnabled(false);
         input.setCursorVisible(false);
 
-        camControl = new PlayerCameraControl(this, configEyeHeight, playerModule.getConfig().getSensitivity(), playerModule.getConfig().getMovement().getSmoothing(),
-                engine.getRootNode());
+        camControl = new PlayerCameraControl(this);
         addControl(camControl);
 
         movementControl = new MovementControl(this, playerModule.getConfig().getMovement());
