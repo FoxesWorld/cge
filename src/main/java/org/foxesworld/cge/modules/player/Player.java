@@ -188,6 +188,8 @@ public class Player extends Node implements PlayerContext {
         updateGroundedState(tpf);
         playerHud.update(tpf);
         animLayerControl.update(tpf);
+        animationController.update(tpf
+        );
     }
 
     private void synchronize(boolean instant) {
@@ -285,8 +287,6 @@ public class Player extends Node implements PlayerContext {
 
     public MovementControl getMovementControl() { return movementControl; }
     public CalistaGameEngine getEngine() { return engine; }
-    public boolean isCrouching() { return isCrouching; }
-    public float getInterpEyeHeight() { return interpEyeHeight; }
     public PlayerHud getPlayerHud() { return playerHud; }
     public AnimComposer getAnimComposer() { return animComposer; }
     public AnimLayerControl getAnimLayerControl() { return animLayerControl; }

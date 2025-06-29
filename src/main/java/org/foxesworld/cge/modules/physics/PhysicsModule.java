@@ -16,58 +16,87 @@ import org.foxesworld.cge.modules.physics.body.rigid.RigidBodyModule;
 import org.foxesworld.cge.modules.physics.body.soft.SoftBodyModule;
 import org.foxesworld.cge.modules.physics.collision.CollisionModule;
 
+import java.util.Objects;
+import java.util.concurrent.Callable;
+
 /**
- * Aggregates physics subsystems: collision, rigid and soft bodies, and debug.
- * Delegates body property management to submodules for AAA extensibility.
+ * Модуль физики, предоставляющий единый фасад для управления физическим миром в jMonkeyEngine.
+ * <p>
+ * Агрегирует подсистемы для работы с твердыми телами, мягкими телами и коллизиями,
+ * делегируя управление свойствами соответствующим подмодулям.
+ * <p>
+ * Обеспечивает потокобезопасность при взаимодействии с физическим миром и графом сцены
+ * путем выполнения всех модификаций в основном потоке приложения через {@link Application#enqueue(Callable)}.
  */
 public class PhysicsModule extends EngineModule<PhysicsConfig> {
     private static final Logger logger = LogManager.getLogger(PhysicsModule.class);
+
     private final CalistaGameEngine app;
     private final ModuleManager subManager;
+
     private BulletAppState bulletAppState;
     private BulletDebugAppState debugAppState;
 
-    // Exposed submodules for property delegation
+    // Подмодули для делегирования логики
     private RigidBodyModule rigidBodyModule;
     private SoftBodyModule softBodyModule;
     private CollisionModule collisionModule;
 
     public PhysicsModule(CalistaGameEngine app) {
         super(PhysicsModule.class, PhysicsConfig.class, app, false);
-        this.app = app;
+        this.app = Objects.requireNonNull(app, "Application cannot be null");
         this.subManager = app.getModuleManager();
     }
 
     @Override
     protected void initModule(CalistaGameEngine app) throws Exception {
         logger.info("Initializing PhysicsModule...");
-        // Attach or reuse BulletAppState
+
+        // Инициализируем BulletAppState, если он еще не существует
         bulletAppState = app.getStateManager().getState(BulletAppState.class);
         if (bulletAppState == null) {
             bulletAppState = new BulletAppState();
+            // Можно настроить поток для физики, например:
+            // bulletAppState.setThreadingType(BulletAppState.ThreadingType.PARALLEL);
             app.getStateManager().attach(bulletAppState);
-            logger.debug("BulletAppState attached");
+            logger.debug("New BulletAppState attached.");
         } else {
-            logger.debug("BulletAppState already present");
+            logger.debug("Reusing existing BulletAppState.");
         }
 
-        // Register and init sub-modules
-        registerSubModules();
-        //subManager.initializeAll(app);
+        // Регистрируем и инициализируем подмодули
+        registerAndInitSubModules();
         applyConfig();
 
-        // Setup debug if enabled
+        // Настраиваем отладку, если включена в конфигурации
+        debugAppState = app.getStateManager().getState(BulletDebugAppState.class);
+
         if (getConfig().debug) {
-            DebugConfiguration cfg = new DebugConfiguration();
-            cfg.setEnabled(true);
-            debugAppState = new BulletDebugAppState(cfg);
+            if (debugAppState == null) {
+                DebugConfiguration debugConfig = new DebugConfiguration();
+                debugAppState = new BulletDebugAppState(debugConfig);
+                app.getStateManager().attach(debugAppState);
+                logger.info("BulletDebugAppState attached with new configuration.");
+            }
+
             debugAppState.setEnabled(true);
-            app.getStateManager().attach(debugAppState);
-            logger.info("BulletDebugAppState attached and enabled");
+            logger.info("Bullet physics debug view enabled.");
+
+        } else {
+            if (debugAppState != null) {
+                debugAppState.setEnabled(false);
+                logger.info("Bullet physics debug view disabled as per configuration.");
+                 if (app.getStateManager().hasState(debugAppState)) {
+                     app.getStateManager().detach(debugAppState);
+                     this.debugAppState = null;
+                 }
+            }
         }
+
+        logger.info("PhysicsModule initialized successfully.");
     }
 
-    private void registerSubModules() {
+    private void registerAndInitSubModules() {
         collisionModule = new CollisionModule(this);
         rigidBodyModule = new RigidBodyModule(this);
         softBodyModule = new SoftBodyModule(this);
@@ -75,47 +104,70 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
         subManager.register(collisionModule, 10);
         subManager.register(rigidBodyModule, 20);
         subManager.register(softBodyModule, 30);
+
+        // Предполагается, что ModuleManager сам вызовет init для зарегистрированных модулей.
+        // Если нет, их нужно инициализировать здесь вручную.
     }
 
     private void applyConfig() {
         PhysicsConfig cfg = getConfig();
-        PhysicsSpace space = bulletAppState.getPhysicsSpace();
-        space.setGravity(cfg.gravity);
-        logger.info("Gravity set to {}", cfg.gravity);
+        getPhysicsSpace().setGravity(cfg.gravity);
+        logger.info("Physics world gravity set to {}.", cfg.gravity);
     }
 
     @Override
-    protected void updateModule(float tpf) throws Exception {
-        // Physics stepping is handled by BulletAppState internally
+    public void onConfigReloaded() {
+        logger.info("Reloading physics configuration...");
+        applyConfig();
+        // Делегируем перезагрузку конфигурации подмодулям
+        subManager.getModules().stream()
+                .filter(m -> m instanceof EngineModule) // Убедимся, что это наши подмодули
+                .forEach(m -> {
+                    try {
+                        ((EngineModule<?>) m).onConfigReloaded();
+                    } catch (Exception e) {
+                        logger.error("Failed to reload config for submodule: " + m.getClass().getSimpleName(), e);
+                    }
+                });
     }
 
     @Override
-    protected void cleanupModule(Application app) throws Exception {
+    protected void cleanupModule(Application app) {
         logger.info("Cleaning up PhysicsModule...");
-        subManager.shutdown(app);
-        if (debugAppState != null) {
+        subManager.shutdown(app); // Очищаем подмодули
+
+        if (debugAppState != null && app.getStateManager().hasState(debugAppState)) {
             app.getStateManager().detach(debugAppState);
-            logger.debug("BulletDebugAppState detached");
+            logger.debug("BulletDebugAppState detached.");
         }
-        if (bulletAppState != null) {
+        if (bulletAppState != null && app.getStateManager().hasState(bulletAppState)) {
             app.getStateManager().detach(bulletAppState);
-            logger.debug("BulletAppState detached");
+            logger.debug("BulletAppState detached.");
         }
     }
 
-    @Override
-    public void onConfigReloaded() throws Exception {
-        PhysicsConfig cfg = getConfig();
-        bulletAppState.getPhysicsSpace().setGravity(cfg.gravity);
-        logger.info("Gravity reloaded: {}", cfg.gravity);
-        // Delegate config reloads to submodules if needed
-        if (rigidBodyModule != null) rigidBodyModule.onConfigReloaded();
-        if (softBodyModule != null) softBodyModule.onConfigReloaded();
-        if (collisionModule != null) collisionModule.onConfigReloaded();
+    /**
+     * Обеспечивает выполнение действия в потоке рендеринга jME3 для потокобезопасности.
+     * @param action Действие для выполнения.
+     */
+    private void execute(Runnable action) {
+        app.enqueue(action);
     }
 
-    @Override protected void onEnable() {}
-    @Override protected void onDisable() {}
+    /**
+     * Проверяет, инициализирован ли модуль, и выбрасывает исключение, если нет.
+     */
+    private void checkInitialized() {
+        if (!isInitialized()) {
+            throw new IllegalStateException("PhysicsModule is not initialized. Cannot perform this action.");
+        }
+    }
+
+    // --- Public API ---
+
+    public PhysicsSpace getPhysicsSpace() {
+        return bulletAppState.getPhysicsSpace();
+    }
 
     public BulletAppState getBulletAppState() {
         return bulletAppState;
@@ -125,77 +177,86 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
         return app;
     }
 
-    // Delegation methods for RigidBodyModule
+    // --- Делегирование методов подмодулям с обеспечением потокобезопасности ---
+
     public RigidBodyModule getRigidBodyModule() {
         return rigidBodyModule;
     }
 
-    public void addRigidBody(Spatial spat, float mass) {
-        if (rigidBodyModule != null) {
-            rigidBodyModule.addRigidBody(spat, mass);
-        } else {
-            logger.warn("RigidBodyModule is not initialized.");
-        }
+    /**
+     * Добавляет твердое тело для указанного Spatial с заданной массой.
+     * Форма столкновения будет сгенерирована автоматически.
+     * @param spatial Объект сцены.
+     * @param mass Масса объекта (0 для статичного тела).
+     */
+    public void addRigidBody(Spatial spatial, float mass) {
+        checkInitialized();
+        execute(() -> rigidBodyModule.addRigidBody(spatial, mass));
     }
 
-    public void removeRigidBody(Spatial spat) {
-        if (rigidBodyModule != null) {
-            rigidBodyModule.removeRigidBody(spat);
-        } else {
-            logger.warn("RigidBodyModule is not initialized.");
-        }
+    public void removeRigidBody(Spatial spatial) {
+        checkInitialized();
+        execute(() -> rigidBodyModule.removeRigidBody(spatial));
     }
 
-    public void setRigidBodyFriction(Spatial spat, float friction) {
-        if (rigidBodyModule != null && rigidBodyModule.hasRigidBody(spat)) {
-            RigidBodyControl ctrl = rigidBodyModule.getRigidBodyControl(spat);
-            // Проверка: control и его native object ещё валидны!
-            if (ctrl != null && ctrl.getPhysicsSpace() != null) {
-                ctrl.setFriction(friction);
+    public void setRigidBodyFriction(Spatial spatial, float friction) {
+        checkInitialized();
+        execute(() -> {
+            RigidBodyControl control = rigidBodyModule.getRigidBodyControl(spatial);
+            // Проверяем, что control все еще существует и привязан к миру,
+            // на случай если объект был удален между вызовом и выполнением.
+            if (control != null && control.getPhysicsSpace() != null) {
+                control.setFriction(friction);
             } else {
-                logger.warn("Attempt to set friction on invalid or removed body '{}'", spat.getName());
+                logger.warn("Attempted to set friction on a non-existent or detached rigid body for spatial: {}", spatial.getName());
             }
-        }
+        });
     }
 
-    public void setRigidBodyRestitution(Spatial spat, float restitution) {
-        if (rigidBodyModule != null && rigidBodyModule.hasRigidBody(spat)) {
-            rigidBodyModule.getRigidBodyControl(spat).setRestitution(restitution);
-            logger.debug("Set restitution={} for rigid body '{}'", restitution, spat.getName());
-        }
+    public void setRigidBodyRestitution(Spatial spatial, float restitution) {
+        checkInitialized();
+        execute(() -> {
+            RigidBodyControl control = rigidBodyModule.getRigidBodyControl(spatial);
+            if (control != null && control.getPhysicsSpace() != null) {
+                control.setRestitution(restitution);
+            }
+        });
     }
 
-    public void setRigidBodyDamping(Spatial spat, float linear, float angular) {
-        if (rigidBodyModule != null && rigidBodyModule.hasRigidBody(spat)) {
-            rigidBodyModule.getRigidBodyControl(spat).setDamping(linear, angular);
-            logger.debug("Set damping l={} a={} for rigid body '{}'", linear, angular, spat.getName());
-        }
+    public void setRigidBodyDamping(Spatial spatial, float linear, float angular) {
+        checkInitialized();
+        execute(() -> {
+            RigidBodyControl control = rigidBodyModule.getRigidBodyControl(spatial);
+            if (control != null && control.getPhysicsSpace() != null) {
+                control.setDamping(linear, angular);
+            }
+        });
     }
 
-    // Delegation methods for SoftBodyModule
+    // --- SoftBodyModule Delegation ---
+
     public SoftBodyModule getSoftBodyModule() {
         return softBodyModule;
     }
 
-    public void addSoftBody(Spatial spat) {
-        if (softBodyModule != null) {
-            softBodyModule.addSoftBody(spat);
-        } else {
-            logger.warn("SoftBodyModule is not initialized.");
-        }
+    public void addSoftBody(Spatial spatial) {
+        checkInitialized();
+        execute(() -> softBodyModule.addSoftBody(spatial));
     }
 
-    public void removeSoftBody(Spatial spat) {
-        if (softBodyModule != null) {
-            softBodyModule.removeSoftBody(spat);
-        } else {
-            logger.warn("SoftBodyModule is not initialized.");
-        }
+    public void removeSoftBody(Spatial spatial) {
+        checkInitialized();
+        execute(() -> softBodyModule.removeSoftBody(spatial));
     }
 
-    // ... Add more delegation methods as needed for other properties (pressure, stiffness, anchors, etc.)
+    // --- CollisionModule Delegation ---
 
     public CollisionModule getCollisionModule() {
         return collisionModule;
     }
+
+    // Остальные методы жизненного цикла, если они не используются, можно оставить пустыми.
+    @Override protected void updateModule(float tpf) { /* Физика обновляется через BulletAppState */ }
+    @Override protected void onEnable() { /* NOP */ }
+    @Override protected void onDisable() { /* NOP */ }
 }

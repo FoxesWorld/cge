@@ -235,6 +235,10 @@ public class ModuleManager {
         return loaded;
     }
 
+    public List<EngineModule<?>> getModules() {
+        return new ArrayList<>(manualModules.values());
+    }
+
     /**
      * Discovers modules from the modules directory.
      *
