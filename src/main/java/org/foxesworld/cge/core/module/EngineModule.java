@@ -235,7 +235,7 @@ public abstract class EngineModule<ModuleConfig> extends BaseAppState {
      * @param app the application context provided by JME
      */
     @Override
-    protected void cleanup(Application app) {
+    public void cleanup(Application app) {
         logger.info("{} cleanup() start, current state={}", getName(), state.get());
         transitionTo(ModuleState.SHUTTING_DOWN);
 

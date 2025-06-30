@@ -45,7 +45,7 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
     public PhysicsModule(CalistaGameEngine app) {
         super(PhysicsModule.class, PhysicsConfig.class, app, false);
         this.app = Objects.requireNonNull(app, "Application cannot be null");
-        this.subManager = app.getModuleManager();
+        this.subManager = new ModuleManager(app);
     }
 
     @Override
@@ -86,10 +86,10 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
             if (debugAppState != null) {
                 debugAppState.setEnabled(false);
                 logger.info("Bullet physics debug view disabled as per configuration.");
-                 if (app.getStateManager().hasState(debugAppState)) {
-                     app.getStateManager().detach(debugAppState);
-                     this.debugAppState = null;
-                 }
+                if (app.getStateManager().hasState(debugAppState)) {
+                    app.getStateManager().detach(debugAppState);
+                    this.debugAppState = null;
+                }
             }
         }
 

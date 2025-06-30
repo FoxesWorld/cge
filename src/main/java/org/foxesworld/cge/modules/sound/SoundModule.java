@@ -52,10 +52,10 @@ public class SoundModule extends EngineModule<SoundConfig> {
     /**
      * Воспроизводит 3D-звук в мире.
      */
-    public void playSound(String soundPath, Vector3f position, float volume) {
+    public void playSound(String soundPath, Vector3f position, boolean positional, float volume) {
         try {
             StereoAudioNode sound = new StereoAudioNode(getGameEngine().getAssetManager(), soundPath, AudioData.DataType.Buffer);
-            sound.setPositional(true);
+            sound.setPositional(positional);
             sound.setLocalTranslation(position);
             sound.setVolume(volume);
             sound.setLooping(false);

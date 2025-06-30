@@ -19,13 +19,17 @@ import org.foxesworld.cge.core.io.streaming.StreamingParserLoader;
 import org.foxesworld.cge.importers.obj.OBJImporter;
 import org.foxesworld.cge.modules.ModuleConfig;
 import org.foxesworld.cge.modules.ecs.ECSModule;
+import org.foxesworld.cge.modules.ecs.systems.PhysicsSystem;
+import org.foxesworld.cge.modules.ecs.systems.SceneGraphSystem;
+import org.foxesworld.cge.modules.ecs.systems.SoundSystem;
+import org.foxesworld.cge.modules.physics.PhysicsModule;
 import org.foxesworld.cge.modules.popcycle.PopCycle;
 import org.foxesworld.cge.modules.renderer.GpuInfo;
 import org.foxesworld.cge.modules.scene.SceneModule;
 import org.foxesworld.cge.modules.sound.SoundModule;
 import org.foxesworld.cge.modules.ui.novaUi.NovaUI;
+import org.foxesworld.cge.tmp.ShapePartySpawner;
 import org.foxesworld.cge.tmp.menu.MainMenuAppState;
-import org.foxesworld.cge.tmp.ShapeParty;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
 import java.util.Comparator;
@@ -180,12 +184,22 @@ public class CalistaGameEngine extends SimpleApplication {
             //this.assetManager.registerLoader(FBXImporter.class, "fbx");
 
             this.scene = moduleManager.getModule(SceneModule.class);
-            this.ecsModule = moduleManager.getModule(ECSModule.class);
             this.soundModule = moduleManager.getModule(SoundModule.class);
+
+            //ECS System
+            this.ecsModule = moduleManager.getModule(ECSModule.class);
+            ecsModule.addSystem(new PhysicsSystem(moduleManager.getModule(PhysicsModule.class)));
+            ecsModule.addSystem(new SoundSystem(soundModule));
+            ecsModule.addSystem(new SceneGraphSystem(this.getRootNode()));
+
             // Load assets
             assetLoader.loadAllAssets(new StatusProgressBar());
             stateManager.attach(new ConfigEditorState(configService));
-            assetLoader.onAssetsLoaded(() -> new ShapeParty(this).startParty());
+            assetLoader.onAssetsLoaded(() -> {
+                ShapePartySpawner spawner = new ShapePartySpawner(this);
+                spawner.preloadAssets();
+                spawner.startParty(10);
+            });
         });
     }
 }

@@ -14,6 +14,7 @@ import jme3utilities.sky.StarsOption;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.module.EngineModule;
 import org.foxesworld.cge.modules.renderer.CinematicPipeline;
+import org.foxesworld.cge.modules.renderer.RendererModule;
 
 import java.time.LocalTime;
 
@@ -41,10 +42,11 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
     private static final ColorRGBA AMBIENT_NIGHT = new ColorRGBA(0.08f, 0.12f, 0.2f, 1.0f);
     private static final ColorRGBA MOON_COLOR = new ColorRGBA(0.7f, 0.8f, 1.0f, 1.0f);
 
-    public SkyBox(CalistaGameEngine engine) {
-        super(SkyBox.class, SkyBoxConfig.class, engine);
-        this.engine = engine;
+    public SkyBox(RendererModule rendererModule) {
+        super(SkyBox.class, SkyBoxConfig.class, rendererModule.getGameEngine());
+        this.engine = rendererModule.getGameEngine();
     }
+
 
     @Override
     public void onConfigReloaded() throws Exception {

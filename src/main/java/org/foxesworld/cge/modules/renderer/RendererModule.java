@@ -8,6 +8,7 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.module.EngineModule;
+import org.foxesworld.cge.core.module.ModuleManager;
 import org.foxesworld.cge.modules.renderer.postProcessing.PostProcessingModule;
 import org.foxesworld.cge.modules.renderer.skyBox.SkyBox;
 import org.foxesworld.cge.modules.scene.SceneModule;
@@ -19,152 +20,135 @@ import java.util.EnumSet;
 import java.util.StringJoiner;
 
 /**
- * RendererModule is responsible for aggregating and managing rendering-related sub-modules,
- * including SkyBox, PostProcessing, and integration with SceneModule.
+ * Manages rendering-related sub-modules and settings.
  * <p>
- * This module handles initialization, configuration reloads, and cleanup of the renderer
- * and its sub-components.
+ * This module acts as a coordinator, ensuring that core rendering components like
+ * {@link SkyBox} and {@link PostProcessingModule} are registered and initialized correctly.
+ * It follows a cleaner architecture where it does not manage sub-modules' lifecycles directly,
+ * but instead registers them with the main {@code ModuleManager}, which handles them.
  * </p>
- * <br>
- * <b>✨ GPU Information and Renderer Capabilities</b><br>
- * On initialization, this module provides a detailed and stylized report of the current GPU
- * and renderer capabilities, including shader language support, framebuffer capabilities,
- * and other advanced GPU features. This information is logged using a visually distinctive format.
+ * <p>
+ * On initialization, this module logs a detailed and stylized report of the GPU and renderer
+ * capabilities, which is useful for debugging and diagnostics.
+ * </p>
  */
 public class RendererModule extends EngineModule<RendererConfig> {
 
-    private static final Logger logger = LogManager.getLogger(RendererModule.class);
-
-    private boolean postProcessingRegistered = false;
+    private static final Logger LOGGER = LogManager.getLogger(RendererModule.class);
+    private final ModuleManager subManager;
     private SkyBox skyBox;
+    private PostProcessingModule postProcessingModule;
 
     /**
-     * Constructs the RendererModule with its default SkyBox
-     *
-     * @param app the CalistaGameEngine instance
+     * Constructs the RendererModule.
+     * @param app The CalistaGameEngine instance.
      */
     public RendererModule(CalistaGameEngine app) {
         super(RendererModule.class, RendererConfig.class, app);
-        // Always register SkyBox (idempotent, safe for multi-register)
-        //app.getAssetLoader().onAssetsLoaded(() -> {
-            this.skyBox = new SkyBox(app);
-            app.getModuleManager().register(skyBox, 100);
-        //});
+        this.subManager = new ModuleManager(app);
     }
 
     /**
-     * Called when this module is enabled; logs renderer capabilities.
+     * Initializes the module and its dependent sub-modules.
+     * It registers SkyBox and PostProcessing with the main module manager and logs GPU info.
+     *
+     * @param app The CalistaGameEngine instance.
+     * @throws IllegalStateException if the configuration is not loaded.
      */
     @Override
-    protected void onEnable() {
+    protected void initModule(CalistaGameEngine app) throws Exception {
+        if (getConfig() == null) {
+            throw new IllegalStateException("RendererConfig not loaded. Cannot initialize RendererModule.");
+        }
+        // Register sub-modules with the main manager. Their lifecycle will be handled automatically.
+        // This is a cleaner approach than managing a local subManager.
+        this.skyBox = new SkyBox(this);
+        this.postProcessingModule = new PostProcessingModule(this);
+        subManager.register(skyBox, 20);
+        subManager.register(postProcessingModule, 30);
 
+        initializeSceneIntegration(app);
+    }
+
+    /**
+     * Called when the configuration is reloaded.
+     * This module itself doesn't have much to re-apply, but it must propagate the reload
+     * event to its dependent sub-modules.
+     */
+    @Override
+    public void onConfigReloaded() throws Exception {
+        LOGGER.info("Propagating config reload to rendering sub-modules...");
+
+        // The sub-modules are responsible for reacting to the config change.
+        // For example, PostProcessingModule will enable/disable itself based on the new config.
+        SkyBox skyBox = gameEngine.getModuleManager().getModule(SkyBox.class);
+        if (skyBox != null) {
+            skyBox.onConfigReloaded();
+        }
+
+        PostProcessingModule ppModule = gameEngine.getModuleManager().getModule(PostProcessingModule.class);
+        if (ppModule != null) {
+            ppModule.onConfigReloaded();
+        }
+    }
+
+    /**
+     * Sets up a callback to adjust renderer settings when the scene becomes ready.
+     * This establishes the integration point between rendering and scene content.
+     *
+     * @param app The CalistaGameEngine instance.
+     */
+    private void initializeSceneIntegration(CalistaGameEngine app) {
+        SceneModule sceneModule = app.getModuleManager().getModule(SceneModule.class);
+        if (sceneModule != null) {
+            sceneModule.onSceneReady(ctx -> {
+                LOGGER.info("Scene is ready, performing final renderer updates (e.g., environment setup)...");
+                // TODO: Implement scene-specific rendering updates, like updating environment maps or lighting probes.
+            });
+        } else {
+            LOGGER.warn("SceneModule not found. Scene-specific renderer integration will be skipped.");
+        }
+    }
+
+
+    // --- Accessors for dependent modules ---
+
+    /**
+     * Gets the SkyBox module instance managed by the engine.
+     * @return The {@link SkyBox} instance, or null if not yet initialized.
+     */
+    public SkyBox getSkyBox() {
+        return this.skyBox;
+    }
+
+    /**
+     * Gets the PostProcessingModule instance managed by the engine.
+     * @return The {@link PostProcessingModule} instance, or null if not yet initialized.
+     */
+    public PostProcessingModule getPostProcessingModule() {
+        return gameEngine.getModuleManager().getModule(PostProcessingModule.class);
+    }
+
+    // --- Unused Lifecycle Methods ---
+
+    @Override
+    protected void onEnable() {
+        // Initialization logic is in initModule()
     }
 
     @Override
     protected void onDisable() {
-        // No special disable logic
-    }
-
-    /**
-     * Called after configuration is reloaded; applies config and reloads submodules as needed.
-     */
-    @Override
-    public void onConfigReloaded() {
-        logger.info("Reloading RendererModule config at runtime...");
-        RendererConfig cfg = getConfig();
-        if (cfg == null) {
-            logger.warn("RendererConfig not loaded, skipping reload");
-            return;
-        }
-
-        PostProcessingModule ppModule = gameEngine.getModuleManager().getModule(PostProcessingModule.class);
-        boolean hasPP = (ppModule != null);
-
-        if (cfg.isEnablePostEffects()) {
-            if (!hasPP) {
-                logger.info("Post effects enabled in config, registering PostProcessingModule");
-                gameEngine.getModuleManager().register(new PostProcessingModule(this), 30);
-                postProcessingRegistered = true;
-            } else {
-                logger.info("PostProcessingModule already present, reloading its config");
-                ppModule.onConfigReloaded();
-            }
-        } else {
-            if (hasPP) {
-                logger.info("Post effects disabled in config, removing PostProcessingModule");
-                gameEngine.getModuleManager().shutdownModule(PostProcessingModule.class);
-                postProcessingRegistered = false;
-            }
-        }
-
-        // SkyBox should always be present, but if you want to allow dynamic removal, handle similarly
-
-        // Re-integrate with scene module if needed
-        initializeSceneModule(gameEngine);
-
-        logger.info("RendererModule config reload complete.");
-    }
-
-    /**
-     * Initializes the module based on its configuration.
-     * Registers post-processing sub-module if enabled, then initializes all sub-modules.
-     *
-     * @param app the CalistaGameEngine instance
-     * @throws Exception if configuration is not loaded or initialization fails
-     */
-    @Override
-    protected void initModule(CalistaGameEngine app) throws Exception {
-        RendererConfig cfg = getConfig();
-        if (cfg == null) {
-            throw new IllegalStateException("RendererConfig not loaded");
-        }
-
-        // Register post-processing if enabled in config
-        if (cfg.isEnablePostEffects() && app.getModuleManager().getModule(PostProcessingModule.class) == null) {
-            app.getModuleManager().register(new PostProcessingModule(this), 30);
-            postProcessingRegistered = true;
-        }
-
-        // Setup integration with scene module
-        initializeSceneModule(app);
-    }
-
-    /**
-     * Sets up a callback to adjust renderer settings when the scene is ready.
-     *
-     * @param app the CalistaGameEngine instance
-     */
-    private void initializeSceneModule(CalistaGameEngine app) {
-        SceneModule sceneModule = app.getModuleManager().getModule(SceneModule.class);
-        if (sceneModule != null) {
-            sceneModule.onSceneReady(ctx -> {
-                logger.info("Scene loaded, updating renderer settings...");
-                updateRendererSettingsBasedOnScene();
-            });
-        }
-    }
-
-    /**
-     * Placeholder for scene-based renderer adjustments, such as lighting updates.
-     */
-    private void updateRendererSettingsBasedOnScene() {
-        logger.info("Updating lights on scene loaded!");
-        // TODO: Update light or environment settings based on scene data
+        // No special disable logic required
     }
 
     @Override
     protected void updateModule(float tpf) {
-        // No direct per-frame logic here
-    }
-
-    public SkyBox getSkyBox() {
-        return skyBox;
+        // No per-frame logic; sub-modules are updated by the main loop.
     }
 
     @Override
     protected void cleanupModule(Application app) {
-        logger.info("Cleaning up RendererModule and sub-modules...");
-        // Sub-modules perform their own cleanup
-        logger.info("RendererModule cleaned up.");
+        // Sub-modules are cleaned up by the main ModuleManager, so no action is needed here.
+        LOGGER.info("RendererModule has been cleaned up.");
     }
 }
