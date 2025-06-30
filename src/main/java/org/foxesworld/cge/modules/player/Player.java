@@ -1,6 +1,8 @@
 package org.foxesworld.cge.modules.player;
 
+import com.google.gson.Gson;
 import com.jme3.anim.AnimComposer;
+import com.jme3.asset.AssetInfo;
 import com.jme3.bullet.BulletAppState;
 import com.jme3.bullet.PhysicsSpace;
 import com.jme3.bullet.collision.PhysicsRayTestResult;
@@ -16,11 +18,16 @@ import com.jme3.scene.control.Control;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.modules.physics.PhysicsModule;
 import org.foxesworld.cge.modules.player.animation.AnimLayerControl;
+import org.foxesworld.cge.modules.player.config.AnimationMapping;
 import org.foxesworld.cge.modules.player.config.PlayerConfig;
 import org.foxesworld.cge.modules.player.hud.PlayerHud;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Objects;
 
@@ -131,13 +138,55 @@ public class Player extends Node implements PlayerContext {
         synchronize(true);
     }
 
+    private AnimationMapping loadAnimationMapping() {
+        String path = playerModule.getConfig().getAnimMappingPath();
+        AnimationMapping animationMapping;
+
+        // 1. Проверяем, задан ли путь
+        if (path == null || path.isEmpty()) {
+            logger.warn("Animation mapping path is not defined in player config. Using an empty mapping.");
+            animationMapping = new AnimationMapping(); // Создаем пустую карту
+            return null;
+        }
+
+        // 2. Используем AssetManager для загрузки
+        try {
+            // AssetManager.loadAsset() может загружать не только модели, но и текстовые файлы.
+            // Для этого нужно правильно указать ключ.
+            // Он вернет объект, из которого можно получить поток данных.
+            AssetInfo assetInfo = engine.getAssetManager().locateAsset(new com.jme3.asset.AssetKey<>(path));
+
+            if (assetInfo == null) {
+                throw new com.jme3.asset.AssetNotFoundException("Asset not found via locateAsset: " + path);
+            }
+
+            // 3. Открываем поток и читаем JSON (try-with-resources закроет потоки автоматически)
+            try (InputStream stream = assetInfo.openStream();
+                 Reader reader = new InputStreamReader(stream, StandardCharsets.UTF_8)) {
+
+                animationMapping = new Gson().fromJson(reader, AnimationMapping.class);
+                if (animationMapping == null) {
+                    animationMapping = new AnimationMapping();
+                    logger.warn("Animation mapping file '{}' is empty or invalid. Using an empty mapping.", path);
+                } else {
+                    logger.info("Successfully loaded animation mapping from '{}'", path);
+                }
+            }
+
+        } catch (Exception e) {
+            logger.error("Failed to load animation mapping from '{}'. Using an empty mapping.", path, e);
+            animationMapping = new AnimationMapping();
+        }
+        return animationMapping;
+    }
+
     private void loadPlayerModel(String modelPath) {
         try {
             playerModel = engine.getAssetManager().loadModel(modelPath);
             playerModel.setLocalScale(playerModule.getConfig().getModel().getScale());
             playerModel.setShadowMode(RenderQueue.ShadowMode.CastAndReceive);
             playerModel.setCullHint(Spatial.CullHint.Never);
-            playerModel.setLocalTranslation(0, playerModule.getConfig().getModel().getDownOffset(), 0);
+            playerModel.setLocalTranslation(0, playerModule.getConfig().getModel().getDownOffset(), playerModule.getConfig().getModel().getBackOffset());
             attachChild(playerModel);
 
             animComposer = fetchControl(playerModel, AnimComposer.class);
@@ -148,7 +197,7 @@ public class Player extends Node implements PlayerContext {
                 animLayerControl = new AnimLayerControl();
                 playerModel.addControl(animLayerControl);
 
-                animationController = new PlayerAnimationController(animComposer);
+                animationController = new PlayerAnimationController(animComposer, loadAnimationMapping());
                 animationController.play("idle", 0.15f, null, true);
             } else {
                 logger.warn("AnimComposer not found on player model!");

@@ -1,0 +1,12 @@
+{
+  "mapping": {
+    "idle": "Idle",
+    "walk": "Walk",
+    "sprint": "Run Forward",
+    "jump": "Jump",
+    "fall": "Fall_Loop",
+    "landing": "Jumping Down",
+    "crouch_idle": "Crouch_Idle",
+    "crouch_walk": "Crouch_Walk_Fwd"
+  }
+}

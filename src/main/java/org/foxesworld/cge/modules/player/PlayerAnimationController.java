@@ -5,6 +5,7 @@ import com.jme3.anim.tween.action.BaseAction;
 import com.jme3.anim.tween.*;
 import com.jme3.anim.tween.action.LinearBlendSpace;
 import com.jme3.math.FastMath;
+import org.foxesworld.cge.modules.player.config.AnimationMapping;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -33,8 +34,10 @@ public class PlayerAnimationController {
     private final Deque<Float> speedHistory = new ArrayDeque<>();
     private final Queue<AnimationTask> taskQueue = new ConcurrentLinkedQueue<>();
     private Method blendedActionMethod;
+    private AnimationMapping animationMapping;
 
-    public PlayerAnimationController(AnimComposer composer) {
+    public PlayerAnimationController(AnimComposer composer, AnimationMapping animationMapping) {
+        this.animationMapping = animationMapping;
         this.composer = Objects.requireNonNull(composer, "AnimComposer cannot be null");
         initReflection();
         ensureLayer(DEFAULT_LAYER);
@@ -97,11 +100,9 @@ public class PlayerAnimationController {
      */
     public void play(String name, float blendTime, String layer, boolean loop) {
         String targetLayer = layer != null ? layer : DEFAULT_LAYER;
-        AnimClip clip = composer.getAnimClip(name);
-        if (clip == null) {
-            logger.warn("Animation '{}' not found!", name);
-            return;
-        }
+        //AnimClip clip = composer.getAnimClip(name);
+        name = animationMapping.get(name);
+
         AnimationState prev = stateByLayer.get(targetLayer);
         if (prev != null && prev.name.equals(name) && blendTime > 0f) {
             return; // already playing same

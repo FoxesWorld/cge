@@ -3,76 +3,96 @@ package org.foxesworld.cge.tmp.menu;
 import com.jme3.asset.AssetManager;
 import com.jme3.font.BitmapText;
 import com.jme3.material.Material;
+import com.jme3.material.RenderState.BlendMode;
 import com.jme3.math.ColorRGBA;
+import com.jme3.math.FastMath;
+import com.jme3.math.Vector2f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Quad;
 
-public class SimpleButton {
+public final class SimpleButton {
 
     private final Node buttonNode;
     private final BitmapText label;
     private final Geometry background;
     private final Runnable action;
 
+    private float x, y, width, height;
+
+    private final ColorRGBA currentColor = new ColorRGBA();
+    private final ColorRGBA targetColor = new ColorRGBA();
+    private static final float LERP_SPEED = 10f;
+
     public SimpleButton(AssetManager assetManager, String text, String fontPath, Runnable action) {
         this.action = action;
         this.buttonNode = new Node("Button: " + text);
 
-        // 1. Создаем фон
-        background = new Geometry("ButtonBackground", new Quad(1, 1)); // Размер будет задан позже
         Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-        mat.getAdditionalRenderState().setBlendMode(com.jme3.material.RenderState.BlendMode.Alpha);
-        background.setMaterial(mat);
-        buttonNode.attachChild(background);
+        mat.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
 
-        // 2. Создаем текст
-        label = new BitmapText(assetManager.loadFont(fontPath), false);
-        label.setText(text.toUpperCase()); // Стиль GTA - всегда заглавные
-        label.setLocalTranslation(0, 0, 1); // Текст поверх фона
-        buttonNode.attachChild(label);
+        this.background = new Geometry("ButtonBackground", new Quad(1, 1));
+        this.background.setMaterial(mat);
+
+        this.label = new BitmapText(assetManager.loadFont(fontPath), false);
+        this.label.setText(text.toUpperCase());
+        //this.label.setShadow(new ColorRGBA(0, 0, 0, 0.6f)); // Добавляем тень для читаемости
+        //this.label.setShadowOffset(new Vector2f(2f, -2f));
+        this.label.setLocalTranslation(0, 0, 1);
+
+        this.buttonNode.attachChild(background);
+        this.buttonNode.attachChild(label);
     }
 
     public void setSize(float width, float height) {
-        // Масштабируем фон
-        background.setLocalScale(width, height, 1);
-
-        // Масштабируем и центрируем текст
-        float textHeight = label.getLineHeight();
-        float desiredScale = (height * 0.7f) / textHeight; // Текст занимает 70% высоты кнопки
-        label.setSize(desiredScale * label.getFont().getCharSet().getRenderedSize());
-
-        // Центрируем текст внутри кнопки
-        float textWidth = label.getLineWidth();
-        float textX = (width - textWidth) / 2f;
-        float textY = (height + label.getLineHeight()) / 2f;
-        label.setLocalTranslation(textX, textY, 1);
+        this.width = width;
+        this.height = height;
+        this.background.setLocalScale(width, height, 1);
+        centerLabel();
     }
 
     public void setPosition(float x, float y) {
-        buttonNode.setLocalTranslation(x, y, 0);
+        this.x = x;
+        this.y = y;
+        this.buttonNode.setLocalTranslation(x, y, 0);
     }
 
+    /**
+     * ВОССТАНОВЛЕННЫЙ МЕТОД: Устанавливает стиль мгновенно, но плавно
+     * переходит к новому цвету фона.
+     */
     public void setStyle(ColorRGBA bgColor, ColorRGBA textColor) {
-        // Устанавливаем цвет текста
-        label.setColor(textColor);
-        // Устанавливаем цвет фона
-        background.getMaterial().setColor("Color", bgColor);
-        // Если фон полностью прозрачный, он не будет отрисовываться
-        background.getMaterial().getAdditionalRenderState().setBlendMode(
-                bgColor.a < 1.0f ? com.jme3.material.RenderState.BlendMode.Alpha : com.jme3.material.RenderState.BlendMode.Off
-        );
+        this.targetColor.set(bgColor);
+        this.label.setColor(textColor);
     }
 
-// В классе SimpleButton.java
+    /**
+     * НОВЫЙ МЕТОД: Позволяет изменять размер текста вручную, как для заголовка.
+     */
+    public void setLabelSize(float size) {
+        this.label.setSize(size);
+        centerLabel(); // Перецентровка после изменения размера
+    }
+
+    /**
+     * НОВЫЙ МЕТОД: Позволяет изменять цвет текста вручную.
+     */
+    public void setLabelColor(ColorRGBA color) {
+        this.label.setColor(color);
+    }
+
+    private void centerLabel() {
+        if (width == 0 || height == 0) return;
+        float textWidth = label.getLineWidth();
+        float textHeight = label.getLineHeight();
+        float textX = (width - textWidth) / 2f;
+        float textY = (height + textHeight) / 2f;
+        this.label.setLocalTranslation(textX, textY, 1);
+    }
 
     public void setBackgroundVisibility(boolean visible) {
-        if (visible) {
-            background.setCullHint(Spatial.CullHint.Inherit); // Или CullHint.Never, если у родителя может быть Always
-        } else {
-            background.setCullHint(Spatial.CullHint.Always); // Сказать рендеру полностью игнорировать этот объект
-        }
+        this.background.setCullHint(visible ? Spatial.CullHint.Inherit : Spatial.CullHint.Always);
     }
 
     public void executeAction() {
@@ -81,7 +101,20 @@ public class SimpleButton {
         }
     }
 
-    public Node getButtonNode() {
+    public boolean intersects(Vector2f point) {
+        return point.x >= this.x && point.x <= (this.x + this.width) &&
+                point.y >= this.y && point.y <= (this.y + this.height);
+    }
+
+    public void update(float tpf) {
+        // Плавный переход цвета фона
+        if (!currentColor.equals(targetColor)) {
+            currentColor.interpolateLocal(targetColor, tpf * LERP_SPEED);
+            this.background.getMaterial().setColor("Color", currentColor);
+        }
+    }
+
+    public Node getNode() {
         return buttonNode;
     }
 

@@ -8,6 +8,7 @@ public class PlayerConfig {
     private ModelConfig model = new ModelConfig();
     private Vector3f spawnPosition = new Vector3f(0,20,0);
     private float sensitivity = 0.20f;
+    private String animMappingPath = "assets/meshes/erikaAnimMappings.json";
 
     public float getSensitivity() {
         return sensitivity;
@@ -19,6 +20,10 @@ public class PlayerConfig {
 
     public Vector3f getSpawnPosition() {
         return spawnPosition;
+    }
+
+    public String getAnimMappingPath() {
+        return animMappingPath;
     }
 
     public static class PhysicsConfig {
@@ -88,10 +93,10 @@ public class PlayerConfig {
     }
 
     public static class ModelConfig {
-        private String modelPath = "assets/meshes/YBot.j3o";
-        private float scale = .01f;
+        private String modelPath = "assets/meshes/erika.j3o";
+        private float scale = 1f;
         private float backOffset = 0.0f;
-        private float downOffset = -1.6f;
+        private float downOffset = -0.85f;
 
         public String getModelPath() {
             return modelPath;

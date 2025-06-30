@@ -1,2 +1,943 @@
-[20:56:30.347][INFO][TaskScheduler] TaskScheduler initialized [Compute Threads: 20, IO Pool: Cached, Max IO Threads: 80]
-[20:56:32.153][INFO][ModuleManager] ModuleManager initialized with modules directory: modules
+[10:11:03.436][INFO][TaskScheduler] TaskScheduler initialized [Compute Threads: 20, IO Pool: Cached, Max IO Threads: 80]
+[10:11:05.428][INFO][ModuleManager] ModuleManager initialized with modules directory: modules
+[10:11:06.713][DEBUG][UIModule] UIModule constructor: configFile='UIModule', configClass=UIConfig, exportsConfig=false
+[10:11:06.713][DEBUG][UIModule] Registered config 'UIModule' for module UIModule
+[10:11:06.713][INFO][ModuleManager] Registered module UIModule with priority 5
+[10:11:06.714][DEBUG][ModuleManager] Immediately initializing/attaching module UIModule after registration
+[10:11:06.714][INFO][UIModule] UIModule initialize() start
+[10:11:06.714][DEBUG][UIModule] UIModule: UNLOADED -> LOADING_CONFIG
+[10:11:06.716][DEBUG][UIModule] UIModule loading config from 'UIModule'
+[10:11:06.717][DEBUG][UIModule] UIModule: LOADING_CONFIG -> INITIALIZING
+[10:11:06.717][DEBUG][UIModule] UIModule calling initModule
+[10:11:06.717][INFO][UIModule] UIModule initialized.
+[10:11:06.717][DEBUG][UIModule] UIModule: INITIALIZING -> RUNNING
+[10:11:06.718][INFO][UIModule] UIModule initialized and running
+[10:11:06.718][DEBUG][UIModule] UIModule enabled, all screens are now active.
+[10:11:06.718][DEBUG][UIModule] UIModule attached to AppStateManager
+[10:11:06.718][INFO][ModuleManager] Module UIModule initialized and attached after registration
+[10:11:06.718][DEBUG][RendererModule] RendererModule constructor: configFile='RendererModule', configClass=RendererConfig, exportsConfig=true
+[10:11:06.718][DEBUG][RendererModule] Registered config 'RendererModule' for module RendererModule
+[10:11:06.719][DEBUG][SkyBox] SkyBox constructor: configFile='SkyBox', configClass=SkyBoxConfig, exportsConfig=true
+[10:11:06.719][DEBUG][SkyBox] Registered config 'SkyBox' for module SkyBox
+[10:11:06.719][INFO][ModuleManager] Registered module SkyBox with priority 100
+[10:11:06.719][DEBUG][ModuleManager] Immediately initializing/attaching module SkyBox after registration
+[10:11:06.720][INFO][SkyBox] SkyBox initialize() start
+[10:11:06.720][DEBUG][SkyBox] SkyBox: UNLOADED -> LOADING_CONFIG
+[10:11:06.720][DEBUG][SkyBox] SkyBox loading config from 'SkyBox'
+[10:11:06.720][DEBUG][SkyBox] SkyBox attached to AppStateManager
+[10:11:06.720][INFO][ModuleManager] Module SkyBox initialized and attached after registration
+[10:11:06.720][INFO][ModuleManager] Registered module RendererModule with priority 20
+[10:11:06.720][DEBUG][ModuleManager] Immediately initializing/attaching module RendererModule after registration
+[10:11:06.720][INFO][RendererModule] RendererModule initialize() start
+[10:11:06.721][DEBUG][RendererModule] RendererModule: UNLOADED -> LOADING_CONFIG
+[10:11:06.721][DEBUG][RendererModule] RendererModule attached to AppStateManager
+[10:11:06.721][DEBUG][RendererModule] RendererModule loading config from 'RendererModule'
+[10:11:06.721][INFO][ModuleManager] Module RendererModule initialized and attached after registration
+[10:11:06.721][DEBUG][Terrain] Terrain constructor: configFile='Terrain', configClass=TerrainConfig, exportsConfig=false
+[10:11:06.721][DEBUG][Terrain] Registered config 'Terrain' for module Terrain
+[10:11:06.722][INFO][ModuleManager] Registered module Terrain with priority 25
+[10:11:06.722][DEBUG][ModuleManager] Immediately initializing/attaching module Terrain after registration
+[10:11:06.722][INFO][Terrain] Terrain initialize() start
+[10:11:06.722][DEBUG][Terrain] Terrain: UNLOADED -> LOADING_CONFIG
+[10:11:06.722][DEBUG][Terrain] Terrain attached to AppStateManager
+[10:11:06.722][DEBUG][Terrain] Terrain loading config from 'Terrain'
+[10:11:06.722][INFO][ModuleManager] Module Terrain initialized and attached after registration
+[10:11:06.722][DEBUG][Terrain] Terrain: LOADING_CONFIG -> INITIALIZING
+[10:11:06.722][DEBUG][Terrain] Terrain calling initModule
+[10:11:06.723][DEBUG][PhysicsModule] PhysicsModule constructor: configFile='PhysicsModule', configClass=PhysicsConfig, exportsConfig=false
+[10:11:06.723][DEBUG][Terrain] Terrain: INITIALIZING -> RUNNING
+[10:11:06.723][DEBUG][PhysicsModule] Registered config 'PhysicsModule' for module PhysicsModule
+[10:11:06.723][INFO][Terrain] Terrain initialized and running
+[10:11:06.723][INFO][ModuleManager] Registered module PhysicsModule with priority 35
+[10:11:06.723][DEBUG][ModuleManager] Immediately initializing/attaching module PhysicsModule after registration
+[10:11:06.723][INFO][PhysicsModule] PhysicsModule initialize() start
+[10:11:06.723][DEBUG][PhysicsModule] PhysicsModule: UNLOADED -> LOADING_CONFIG
+[10:11:06.724][DEBUG][PhysicsModule] PhysicsModule attached to AppStateManager
+[10:11:06.724][INFO][ModuleManager] Module PhysicsModule initialized and attached after registration
+[10:11:06.724][DEBUG][PhysicsModule] PhysicsModule loading config from 'PhysicsModule'
+[10:11:06.724][DEBUG][PhysicsModule] PhysicsModule: LOADING_CONFIG -> INITIALIZING
+[10:11:06.724][DEBUG][PlayerModule] PlayerModule constructor: configFile='PlayerModule', configClass=PlayerConfig, exportsConfig=true
+[10:11:06.724][DEBUG][PhysicsModule] PhysicsModule calling initModule
+[10:11:06.724][DEBUG][PlayerModule] Registered config 'PlayerModule' for module PlayerModule
+[10:11:06.724][INFO][PhysicsModule] Initializing PhysicsModule...
+[10:11:06.724][INFO][ModuleManager] Registered module PlayerModule with priority 40
+[10:11:06.725][DEBUG][ModuleManager] Immediately initializing/attaching module PlayerModule after registration
+[10:11:06.725][INFO][PlayerModule] PlayerModule initialize() start
+[10:11:06.725][DEBUG][PlayerModule] PlayerModule: UNLOADED -> LOADING_CONFIG
+[10:11:06.725][DEBUG][PlayerModule] PlayerModule loading config from 'PlayerModule'
+[10:11:06.725][DEBUG][PlayerModule] PlayerModule attached to AppStateManager
+[10:11:06.725][INFO][ModuleManager] Module PlayerModule initialized and attached after registration
+[10:11:06.726][DEBUG][ECSModule] ECSModule constructor: configFile='ECSModule', configClass=ECSConfig, exportsConfig=false
+[10:11:06.726][DEBUG][ECSModule] Registered config 'ECSModule' for module ECSModule
+[10:11:06.726][INFO][ModuleManager] Registered module ECSModule with priority 60
+[10:11:06.726][DEBUG][ModuleManager] Immediately initializing/attaching module ECSModule after registration
+[10:11:06.727][INFO][ECSModule] ECSModule initialize() start
+[10:11:06.727][DEBUG][ECSModule] ECSModule: UNLOADED -> LOADING_CONFIG
+[10:11:06.727][INFO][ECSModule] ECSModule enabled
+[10:11:06.727][DEBUG][ECSModule] ECSModule loading config from 'ECSModule'
+[10:11:06.727][DEBUG][ECSModule] ECSModule attached to AppStateManager
+[10:11:06.727][DEBUG][ECSModule] ECSModule: LOADING_CONFIG -> INITIALIZING
+[10:11:06.727][INFO][ModuleManager] Module ECSModule initialized and attached after registration
+[10:11:06.727][DEBUG][ECSModule] ECSModule calling initModule
+[10:11:06.728][DEBUG][SoundModule] SoundModule constructor: configFile='SoundModule', configClass=SoundConfig, exportsConfig=true
+[10:11:06.728][DEBUG][SoundModule] Registered config 'SoundModule' for module SoundModule
+[10:11:06.728][INFO][ModuleManager] Registered module SoundModule with priority 100
+[10:11:06.728][DEBUG][ModuleManager] Immediately initializing/attaching module SoundModule after registration
+[10:11:06.728][INFO][SoundModule] SoundModule initialize() start
+[10:11:06.728][DEBUG][SoundModule] SoundModule: UNLOADED -> LOADING_CONFIG
+[10:11:06.728][DEBUG][SoundModule] SoundModule loading config from 'SoundModule'
+[10:11:06.729][DEBUG][SoundModule] SoundModule attached to AppStateManager
+[10:11:06.729][INFO][ModuleManager] Module SoundModule initialized and attached after registration
+[10:11:06.729][DEBUG][SoundModule] SoundModule: LOADING_CONFIG -> INITIALIZING
+[10:11:06.729][DEBUG][SoundModule] SoundModule calling initModule
+[10:11:06.729][DEBUG][RendererModule] RendererModule: LOADING_CONFIG -> INITIALIZING
+[10:11:06.729][DEBUG][SoundModule] SoundModule: INITIALIZING -> RUNNING
+[10:11:06.729][DEBUG][RendererModule] RendererModule calling initModule
+[10:11:06.730][INFO][SoundModule] SoundModule initialized and running
+[10:11:06.730][DEBUG][ModuleManager] Module of type PostProcessingModule not found
+[10:11:06.730][DEBUG][SkyBox] SkyBox: LOADING_CONFIG -> INITIALIZING
+[10:11:06.730][DEBUG][SkyBox] SkyBox calling initModule
+[10:11:06.730][DEBUG][ModuleManager] Discovering modules in modules
+[10:11:06.730][DEBUG][UIModule] UIModule enabled, all screens are now active.
+[10:11:06.730][INFO][SkyBox] SkyBox initialize() start
+[10:11:06.730][DEBUG][SkyBox] SkyBox: INITIALIZING -> LOADING_CONFIG
+[10:11:06.730][DEBUG][SkyBox] SkyBox: LOADING_CONFIG -> RUNNING
+[10:11:06.730][INFO][SkyBox] SkyBox initialized and running
+[10:11:06.731][INFO][RendererModule] RendererModule initialize() start
+[10:11:06.730][DEBUG][SkyBox] SkyBox loading config from 'SkyBox'
+[10:11:06.731][DEBUG][RendererModule] RendererModule: INITIALIZING -> LOADING_CONFIG
+[10:11:06.731][DEBUG][RendererModule] RendererModule loading config from 'RendererModule'
+[10:11:06.731][INFO][PhysicsModule] PhysicsModule initialize() start
+[10:11:06.731][DEBUG][PhysicsModule] PhysicsModule: INITIALIZING -> LOADING_CONFIG
+[10:11:06.731][DEBUG][PhysicsModule] PhysicsModule loading config from 'PhysicsModule'
+[10:11:06.731][INFO][PlayerModule] PlayerModule initialize() start
+[10:11:06.731][DEBUG][PhysicsModule] PhysicsModule: LOADING_CONFIG -> INITIALIZING
+[10:11:06.732][DEBUG][PlayerModule] PlayerModule: LOADING_CONFIG -> LOADING_CONFIG
+[10:11:06.732][DEBUG][PhysicsModule] PhysicsModule calling initModule
+[10:11:06.732][DEBUG][PlayerModule] PlayerModule loading config from 'PlayerModule'
+[10:11:06.732][INFO][PhysicsModule] Initializing PhysicsModule...
+[10:11:06.732][INFO][ModuleManager] Discovered 0 module descriptors
+[10:11:06.732][INFO][ECSModule] ECSModule initialize() start
+[10:11:06.732][DEBUG][ECSModule] ECSModule: INITIALIZING -> LOADING_CONFIG
+[10:11:06.732][INFO][ECSModule] Zay-ES 1.6.0 initialized with ECS core setup
+[10:11:06.732][DEBUG][RendererModule] RendererModule: LOADING_CONFIG -> INITIALIZING
+[10:11:06.732][INFO][ECSModule] ECSModule enabled
+[10:11:06.732][DEBUG][ECSModule] ECSModule loading config from 'ECSModule'
+[10:11:06.732][DEBUG][ECSModule] ECSModule: LOADING_CONFIG -> RUNNING
+[10:11:06.732][DEBUG][RendererModule] RendererModule calling initModule
+[10:11:06.732][DEBUG][ModuleManager] Module of type PostProcessingModule not found
+[10:11:06.732][INFO][ECSModule] ECSModule initialized and running
+[10:11:06.732][DEBUG][ECSModule] ECSModule: RUNNING -> INITIALIZING
+[10:11:06.733][DEBUG][ECSModule] ECSModule calling initModule
+[10:11:06.733][INFO][ECSModule] Zay-ES 1.6.0 initialized with ECS core setup
+[10:11:06.733][ERROR][ECSModule] ECSModule initialization timed out after 60 seconds
+[10:11:06.733][DEBUG][ECSModule] ECSModule: INITIALIZING -> RUNNING
+[10:11:06.733][DEBUG][PostProcessingModule] PostProcessingModule constructor: configFile='PostProcessingModule', configClass=PostProcessingConfig, exportsConfig=true
+[10:11:06.733][INFO][ECSModule] ECSModule initialized and running
+[10:11:06.733][DEBUG][PostProcessingModule] PostProcessingModule constructor: configFile='PostProcessingModule', configClass=PostProcessingConfig, exportsConfig=true
+[10:11:06.733][DEBUG][PostProcessingModule] Registered config 'PostProcessingModule' for module PostProcessingModule
+[10:11:06.733][DEBUG][PostProcessingModule] Registered config 'PostProcessingModule' for module PostProcessingModule
+[10:11:06.733][WARN][ModuleManager] Registering module after initialization has started may have no effect.
+[10:11:06.733][INFO][ModuleManager] Registered module PostProcessingModule with priority 30
+[10:11:06.733][DEBUG][ModuleManager] Immediately initializing/attaching module PostProcessingModule after registration
+[10:11:06.733][INFO][PostProcessingModule] PostProcessingModule initialize() start
+[10:11:06.734][DEBUG][PostProcessingModule] PostProcessingModule: UNLOADED -> LOADING_CONFIG
+[10:11:06.734][DEBUG][PlayerModule] PlayerModule: LOADING_CONFIG -> INITIALIZING
+[10:11:06.734][DEBUG][PlayerModule] PlayerModule: INITIALIZING -> INITIALIZING
+[10:11:06.734][DEBUG][PlayerModule] PlayerModule calling initModule
+[10:11:06.734][DEBUG][PlayerModule] PlayerModule calling initModule
+[10:11:06.734][DEBUG][PostProcessingModule] PostProcessingModule attached to AppStateManager
+[10:11:06.734][INFO][ModuleManager] Module PostProcessingModule initialized and attached after registration
+[10:11:06.734][DEBUG][PostProcessingModule] PostProcessingModule loading config from 'PostProcessingModule'
+[10:11:06.734][WARN][ModuleManager] Registering module after initialization has started may have no effect.
+[10:11:06.734][WARN][ModuleManager] Module PostProcessingModule already registered, replacing previous instance
+[10:11:06.734][INFO][ModuleManager] Registered module PostProcessingModule with priority 30
+[10:11:06.734][DEBUG][ModuleManager] Immediately initializing/attaching module PostProcessingModule after registration
+[10:11:06.734][INFO][PostProcessingModule] PostProcessingModule initialize() start
+[10:11:06.734][DEBUG][PostProcessingModule] PostProcessingModule: UNLOADED -> LOADING_CONFIG
+[10:11:06.735][DEBUG][PostProcessingModule] PostProcessingModule loading config from 'PostProcessingModule'
+[10:11:06.735][DEBUG][PlayerModule] PlayerModule: INITIALIZING -> RUNNING
+[10:11:06.735][DEBUG][PlayerModule] PlayerModule: RUNNING -> RUNNING
+[10:11:06.735][INFO][PlayerModule] PlayerModule initialized and running
+[10:11:06.735][INFO][PlayerModule] PlayerModule initialized and running
+[10:11:06.735][DEBUG][PostProcessingModule] PostProcessingModule attached to AppStateManager
+[10:11:06.735][INFO][ModuleManager] Module PostProcessingModule initialized and attached after registration
+[10:11:06.737][DEBUG][ModuleManager] Module of type SceneModule not found
+[10:11:06.737][DEBUG][ModuleManager] Module of type SceneModule not found
+[10:11:06.737][DEBUG][RendererModule] RendererModule: INITIALIZING -> RUNNING
+[10:11:06.737][DEBUG][RendererModule] RendererModule: RUNNING -> RUNNING
+[10:11:06.737][INFO][RendererModule] RendererModule initialized and running
+[10:11:06.737][INFO][RendererModule] RendererModule initialized and running
+[10:11:06.738][DEBUG][SkyBox] SkyBox: RUNNING -> INITIALIZING
+[10:11:06.738][DEBUG][SkyBox] SkyBox calling initModule
+[10:11:06.738][DEBUG][SkyBox] SkyBox: INITIALIZING -> RUNNING
+[10:11:06.739][INFO][SkyBox] SkyBox initialized and running
+[10:11:06.742][DEBUG][PostProcessingModule] PostProcessingModule: LOADING_CONFIG -> INITIALIZING
+[10:11:06.742][INFO][PostProcessingModule] PostProcessingModule initialize() start
+[10:11:06.742][DEBUG][PostProcessingModule] PostProcessingModule: LOADING_CONFIG -> INITIALIZING
+[10:11:06.742][DEBUG][PostProcessingModule] PostProcessingModule calling initModule
+[10:11:06.742][INFO][PhysicsModule] PhysicsModule initialize() start
+[10:11:06.742][DEBUG][PostProcessingModule] PostProcessingModule calling initModule
+[10:11:06.742][DEBUG][PostProcessingModule] PostProcessingModule: INITIALIZING -> LOADING_CONFIG
+[10:11:06.742][DEBUG][PhysicsModule] PhysicsModule: INITIALIZING -> LOADING_CONFIG
+[10:11:06.743][DEBUG][PostProcessingModule] PostProcessingModule loading config from 'PostProcessingModule'
+[10:11:06.743][DEBUG][PhysicsModule] PhysicsModule loading config from 'PhysicsModule'
+[10:11:06.743][DEBUG][PostProcessingModule] PostProcessingModule: LOADING_CONFIG -> INITIALIZING
+[10:11:06.743][DEBUG][PhysicsModule] PhysicsModule: LOADING_CONFIG -> INITIALIZING
+[10:11:06.743][DEBUG][PostProcessingModule] PostProcessingModule calling initModule
+[10:11:06.743][DEBUG][PhysicsModule] PhysicsModule calling initModule
+[10:11:06.743][INFO][PhysicsModule] Initializing PhysicsModule...
+[10:11:06.743][DEBUG][PostProcessingModule] PostProcessingModule: INITIALIZING -> RUNNING
+[10:11:06.743][DEBUG][PostProcessingModule] PostProcessingModule: INITIALIZING -> RUNNING
+[10:11:06.743][INFO][PostProcessingModule] PostProcessingModule initialized and running
+[10:11:06.743][DEBUG][PhysicsModule] New BulletAppState attached.
+[10:11:06.743][DEBUG][PhysicsModule] Reusing existing BulletAppState.
+[10:11:06.743][INFO][PostProcessingModule] PostProcessingModule initialized and running
+[10:11:06.743][DEBUG][ModuleManager] Attached module PostProcessingModule
+[10:11:06.743][DEBUG][ModuleManager] Attached module PhysicsModule
+[10:11:06.743][DEBUG][ModuleManager] Attached module SoundModule
+[10:11:06.743][DEBUG][ModuleManager] Attached module ECSModule
+[10:11:06.743][DEBUG][ModuleManager] Attached module PlayerModule
+[10:11:06.743][DEBUG][ModuleManager] Attached module Terrain
+[10:11:06.744][INFO][ModuleManager] Attached manual module PhysicsModule (priority 35)
+[10:11:06.743][DEBUG][ModuleManager] Attached module UIModule
+[10:11:06.744][INFO][ModuleManager] Attached manual module SoundModule (priority 100)
+[10:11:06.744][INFO][ModuleManager] Attached manual module PostProcessingModule (priority 30)
+[10:11:06.744][INFO][ModuleManager] Attached manual module ECSModule (priority 60)
+[10:11:06.744][INFO][ModuleManager] Attached manual module PlayerModule (priority 40)
+[10:11:06.744][DEBUG][PostProcessingModule] PostProcessingModule: RUNNING -> RUNNING
+[10:11:06.744][INFO][ModuleManager] Attached manual module Terrain (priority 25)
+[10:11:06.743][DEBUG][ModuleManager] Attached module RendererModule
+[10:11:06.744][INFO][ModuleManager] Attached manual module UIModule (priority 5)
+[10:11:06.744][INFO][PostProcessingModule] PostProcessingModule initialized and running
+[10:11:06.744][DEBUG][CollisionModule] CollisionModule constructor: configFile='CollisionModule', configClass=PhysicsConfig, exportsConfig=true
+[10:11:06.744][DEBUG][CollisionModule] CollisionModule constructor: configFile='CollisionModule', configClass=PhysicsConfig, exportsConfig=true
+[10:11:06.744][INFO][ModuleManager] Attached manual module RendererModule (priority 20)
+[10:11:06.744][DEBUG][CollisionModule] Registered config 'CollisionModule' for module CollisionModule
+[10:11:06.744][DEBUG][CollisionModule] Registered config 'CollisionModule' for module CollisionModule
+[10:11:06.745][DEBUG][RigidBodyModule] RigidBodyModule constructor: configFile='RigidBodyModule', configClass=PhysicsConfig, exportsConfig=true
+[10:11:06.745][DEBUG][RigidBodyModule] RigidBodyModule constructor: configFile='RigidBodyModule', configClass=PhysicsConfig, exportsConfig=true
+[10:11:06.745][DEBUG][RigidBodyModule] Registered config 'RigidBodyModule' for module RigidBodyModule
+[10:11:06.745][DEBUG][RigidBodyModule] Registered config 'RigidBodyModule' for module RigidBodyModule
+[10:11:06.745][DEBUG][SoftBodyModule] SoftBodyModule constructor: configFile='SoftBodyModule', configClass=PhysicsConfig, exportsConfig=true
+[10:11:06.745][DEBUG][SoftBodyModule] SoftBodyModule constructor: configFile='SoftBodyModule', configClass=PhysicsConfig, exportsConfig=true
+[10:11:06.745][INFO][DomeMesh] 1 740 triangles
+[10:11:06.745][DEBUG][SoftBodyModule] Registered config 'SoftBodyModule' for module SoftBodyModule
+[10:11:06.745][DEBUG][SoftBodyModule] Registered config 'SoftBodyModule' for module SoftBodyModule
+[10:11:06.746][WARN][ModuleManager] Registering module after initialization has started may have no effect.
+[10:11:06.746][INFO][DomeMesh] 901 vertices
+[10:11:06.746][INFO][ModuleManager] Module initialization complete. Total modules: 9, Active: 9, Failed: 0
+[10:11:06.746][INFO][ModuleManager] Registered module CollisionModule with priority 10
+[10:11:06.746][DEBUG][ModuleManager] Immediately initializing/attaching module CollisionModule after registration
+[10:11:06.746][INFO][CollisionModule] CollisionModule initialize() start
+[10:11:06.746][DEBUG][CollisionModule] CollisionModule: UNLOADED -> LOADING_CONFIG
+[10:11:06.746][DEBUG][CollisionModule] CollisionModule attached to AppStateManager
+[10:11:06.746][DEBUG][CollisionModule] CollisionModule loading config from 'CollisionModule'
+[10:11:06.746][INFO][ModuleManager] Module CollisionModule initialized and attached after registration
+[10:11:06.746][WARN][ModuleManager] Registering module after initialization has started may have no effect.
+[10:11:06.746][INFO][ModuleManager] Registered module RigidBodyModule with priority 20
+[10:11:06.746][DEBUG][ModuleManager] Immediately initializing/attaching module RigidBodyModule after registration
+[10:11:06.747][DEBUG][RigidBodyModule] RigidBodyModule attached to AppStateManager
+[10:11:06.747][INFO][ModuleManager] Module RigidBodyModule initialized and attached after registration
+[10:11:06.747][WARN][ModuleManager] Registering module after initialization has started may have no effect.
+[10:11:06.747][INFO][ModuleManager] Registered module SoftBodyModule with priority 30
+[10:11:06.747][DEBUG][ModuleManager] Immediately initializing/attaching module SoftBodyModule after registration
+[10:11:06.747][INFO][SoftBodyModule] SoftBodyModule initialize() start
+[10:11:06.747][DEBUG][SoftBodyModule] SoftBodyModule: UNLOADED -> LOADING_CONFIG
+[10:11:06.747][DEBUG][SoftBodyModule] SoftBodyModule attached to AppStateManager
+[10:11:06.747][DEBUG][SoftBodyModule] SoftBodyModule loading config from 'SoftBodyModule'
+[10:11:06.747][INFO][ModuleManager] Module SoftBodyModule initialized and attached after registration
+[10:11:06.747][WARN][ModuleManager] Registering module after initialization has started may have no effect.
+[10:11:06.748][INFO][PhysicsModule] Physics world gravity set to (0.0, -9.81, 0.0).
+[10:11:06.748][WARN][ModuleManager] Module CollisionModule already registered, replacing previous instance
+[10:11:06.748][INFO][ModuleManager] Registered module CollisionModule with priority 10
+[10:11:06.748][DEBUG][ModuleManager] Immediately initializing/attaching module CollisionModule after registration
+[10:11:06.748][INFO][CollisionModule] CollisionModule initialize() start
+[10:11:06.748][DEBUG][CollisionModule] CollisionModule: LOADING_CONFIG -> LOADING_CONFIG
+[10:11:06.748][INFO][ModuleManager] Module CollisionModule initialized and attached after registration
+[10:11:06.748][DEBUG][CollisionModule] CollisionModule loading config from 'CollisionModule'
+[10:11:06.748][WARN][ModuleManager] Registering module after initialization has started may have no effect.
+[10:11:06.748][DEBUG][ModuleManager] Module of type SceneModule not found
+[10:11:06.748][WARN][ModuleManager] Module RigidBodyModule already registered, replacing previous instance
+[10:11:06.748][INFO][ModuleManager] Registered module RigidBodyModule with priority 20
+[10:11:06.749][DEBUG][ModuleManager] Immediately initializing/attaching module RigidBodyModule after registration
+[10:11:06.749][INFO][ModuleManager] Module RigidBodyModule initialized and attached after registration
+[10:11:06.749][DEBUG][CollisionModule] CollisionModule: LOADING_CONFIG -> INITIALIZING
+[10:11:06.749][DEBUG][SoftBodyModule] SoftBodyModule: LOADING_CONFIG -> INITIALIZING
+[10:11:06.749][WARN][ModuleManager] Registering module after initialization has started may have no effect.
+[10:11:06.749][DEBUG][CollisionModule] CollisionModule: INITIALIZING -> INITIALIZING
+[10:11:06.749][DEBUG][CollisionModule] CollisionModule calling initModule
+[10:11:06.749][WARN][ModuleManager] Module SoftBodyModule already registered, replacing previous instance
+[10:11:06.749][DEBUG][CollisionModule] CollisionModule calling initModule
+[10:11:06.749][DEBUG][SoftBodyModule] SoftBodyModule calling initModule
+[10:11:06.749][INFO][CollisionModule] CollisionModule initialized and registered listener
+[10:11:06.749][INFO][ModuleManager] Registered module SoftBodyModule with priority 30
+[10:11:06.749][INFO][CollisionModule] CollisionModule initialized and registered listener
+[10:11:06.749][DEBUG][ModuleManager] Immediately initializing/attaching module SoftBodyModule after registration
+[10:11:06.749][DEBUG][CollisionModule] CollisionModule: INITIALIZING -> RUNNING
+[10:11:06.749][DEBUG][CollisionModule] CollisionModule: RUNNING -> RUNNING
+[10:11:06.749][INFO][SoftBodyModule] SoftBodyModule initialize() start
+[10:11:06.749][INFO][CollisionModule] CollisionModule initialized and running
+[10:11:06.749][INFO][CollisionModule] CollisionModule initialized and running
+[10:11:06.749][DEBUG][SoftBodyModule] SoftBodyModule: INITIALIZING -> LOADING_CONFIG
+[10:11:06.749][INFO][ModuleManager] Module SoftBodyModule initialized and attached after registration
+[10:11:06.749][DEBUG][SoftBodyModule] SoftBodyModule loading config from 'SoftBodyModule'
+[10:11:06.749][INFO][PhysicsModule] Physics world gravity set to (0.0, -9.81, 0.0).
+[10:11:06.750][DEBUG][SoftBodyModule] SoftBodyModule: LOADING_CONFIG -> INITIALIZING
+[10:11:06.750][DEBUG][SoftBodyModule] SoftBodyModule calling initModule
+[10:11:06.750][INFO][SoftBodyModule] Initialized SoftBodyModule: mass=1.0, stiffness=1.0, damping=0.01, pressure=0.0, iterations=10
+[10:11:06.750][INFO][SoftBodyModule] Initialized SoftBodyModule: mass=1.0, stiffness=1.0, damping=0.01, pressure=0.0, iterations=10
+[10:11:06.750][DEBUG][SoftBodyModule] SoftBodyModule: INITIALIZING -> RUNNING
+[10:11:06.750][DEBUG][SoftBodyModule] SoftBodyModule: RUNNING -> RUNNING
+[10:11:06.750][INFO][SoftBodyModule] SoftBodyModule initialized and running
+[10:11:06.750][INFO][SoftBodyModule] SoftBodyModule initialized and running
+[10:11:06.733][ERROR][ECSModule] Module ECSModule failed during initialize: Module initialization timed out
+org.foxesworld.cge.core.module.EngineModule$TimeoutException: Module initialization timed out
+	at org.foxesworld.cge.core.module.EngineModule.lambda$initialize$1(EngineModule.java:177) ~[classes/:?]
+	at java.util.concurrent.CompletableFuture$AsyncRun.run(CompletableFuture.java:1804) [?:?]
+	at java.util.concurrent.ThreadPoolExecutor.runWorker(ThreadPoolExecutor.java:1136) [?:?]
+	at java.util.concurrent.ThreadPoolExecutor$Worker.run(ThreadPoolExecutor.java:635) [?:?]
+	at java.lang.Thread.run(Thread.java:840) [?:?]
+[10:11:06.752][DEBUG][ECSModule] ECSModule: RUNNING -> PAUSED
+[10:11:06.752][INFO][PhysicsModule] PhysicsModule initialized successfully.
+[10:11:06.752][INFO][PhysicsModule] PhysicsModule initialized successfully.
+[10:11:06.752][DEBUG][PhysicsModule] PhysicsModule: INITIALIZING -> RUNNING
+[10:11:06.752][DEBUG][PhysicsModule] PhysicsModule: RUNNING -> RUNNING
+[10:11:06.752][INFO][PhysicsModule] PhysicsModule initialized and running
+[10:11:06.752][INFO][PhysicsModule] PhysicsModule initialized and running
+[10:11:06.756][INFO][DomeMesh] coords 900
+[10:11:06.756][DEBUG][PhysicsModule] New BulletAppState attached.
+[10:11:06.756][DEBUG][CollisionModule] CollisionModule constructor: configFile='CollisionModule', configClass=PhysicsConfig, exportsConfig=true
+[10:11:06.756][DEBUG][CollisionModule] Registered config 'CollisionModule' for module CollisionModule
+[10:11:06.757][DEBUG][RigidBodyModule] RigidBodyModule constructor: configFile='RigidBodyModule', configClass=PhysicsConfig, exportsConfig=true
+[10:11:06.757][DEBUG][RigidBodyModule] Registered config 'RigidBodyModule' for module RigidBodyModule
+[10:11:06.757][DEBUG][SoftBodyModule] SoftBodyModule constructor: configFile='SoftBodyModule', configClass=PhysicsConfig, exportsConfig=true
+[10:11:06.757][DEBUG][SoftBodyModule] Registered config 'SoftBodyModule' for module SoftBodyModule
+[10:11:06.757][WARN][ModuleManager] Registering module after initialization has started may have no effect.
+[10:11:06.757][WARN][ModuleManager] Module CollisionModule already registered, replacing previous instance
+[10:11:06.757][INFO][ModuleManager] Registered module CollisionModule with priority 10
+[10:11:06.757][DEBUG][ModuleManager] Immediately initializing/attaching module CollisionModule after registration
+[10:11:06.757][INFO][CollisionModule] CollisionModule initialize() start
+[10:11:06.757][DEBUG][CollisionModule] CollisionModule: UNLOADED -> LOADING_CONFIG
+[10:11:06.757][DEBUG][CollisionModule] CollisionModule attached to AppStateManager
+[10:11:06.757][DEBUG][CollisionModule] CollisionModule loading config from 'CollisionModule'
+[10:11:06.758][INFO][ModuleManager] Module CollisionModule initialized and attached after registration
+[10:11:06.758][WARN][ModuleManager] Registering module after initialization has started may have no effect.
+[10:11:06.758][DEBUG][CollisionModule] CollisionModule: LOADING_CONFIG -> INITIALIZING
+[10:11:06.758][WARN][ModuleManager] Module RigidBodyModule already registered, replacing previous instance
+[10:11:06.758][DEBUG][CollisionModule] CollisionModule calling initModule
+[10:11:06.758][INFO][CollisionModule] CollisionModule initialized and registered listener
+[10:11:06.758][INFO][ModuleManager] Registered module RigidBodyModule with priority 20
+[10:11:06.758][DEBUG][CollisionModule] CollisionModule: INITIALIZING -> RUNNING
+[10:11:06.758][DEBUG][ModuleManager] Immediately initializing/attaching module RigidBodyModule after registration
+[10:11:06.758][INFO][CollisionModule] CollisionModule initialized and running
+[10:11:06.758][DEBUG][RigidBodyModule] RigidBodyModule attached to AppStateManager
+[10:11:06.758][INFO][ModuleManager] Module RigidBodyModule initialized and attached after registration
+[10:11:06.758][WARN][ModuleManager] Registering module after initialization has started may have no effect.
+[10:11:06.758][WARN][ModuleManager] Module SoftBodyModule already registered, replacing previous instance
+[10:11:06.758][INFO][ModuleManager] Registered module SoftBodyModule with priority 30
+[10:11:06.759][DEBUG][ModuleManager] Immediately initializing/attaching module SoftBodyModule after registration
+[10:11:06.759][INFO][SoftBodyModule] SoftBodyModule initialize() start
+[10:11:06.759][DEBUG][SoftBodyModule] SoftBodyModule: UNLOADED -> LOADING_CONFIG
+[10:11:06.759][DEBUG][SoftBodyModule] SoftBodyModule attached to AppStateManager
+[10:11:06.759][DEBUG][SoftBodyModule] SoftBodyModule loading config from 'SoftBodyModule'
+[10:11:06.759][INFO][ModuleManager] Module SoftBodyModule initialized and attached after registration
+[10:11:06.759][DEBUG][SoftBodyModule] SoftBodyModule: LOADING_CONFIG -> INITIALIZING
+[10:11:06.759][INFO][PhysicsModule] Physics world gravity set to (0.0, -9.81, 0.0).
+[10:11:06.759][DEBUG][SoftBodyModule] SoftBodyModule calling initModule
+[10:11:06.759][INFO][PhysicsModule] PhysicsModule initialized successfully.
+[10:11:06.759][INFO][SoftBodyModule] Initialized SoftBodyModule: mass=1.0, stiffness=1.0, damping=0.01, pressure=0.0, iterations=10
+[10:11:06.759][DEBUG][PhysicsModule] PhysicsModule: RUNNING -> RUNNING
+[10:11:06.759][DEBUG][SoftBodyModule] SoftBodyModule: INITIALIZING -> RUNNING
+[10:11:06.759][INFO][PhysicsModule] PhysicsModule initialized and running
+[10:11:06.759][INFO][SoftBodyModule] SoftBodyModule initialized and running
+[10:11:06.759][INFO][SkyMaterial] asset path="MatDefs/skies/dome20/dome20.j3md"
+[10:11:06.765][INFO][SkyMaterial] asset path="MatDefs/skies/dome06/dome06.j3md"
+[10:11:06.773][INFO][AssetLoader] Starting asset loading with 2 loader(s)...
+[10:11:06.777][DEBUG][ModuleManager] Callback executed successfully
+[10:11:06.783][DEBUG][FileReader] Mapped file 'testData.cgtex' [27,2 MB] in mode 'r'
+[10:11:06.783][DEBUG][FileReader] File opened: C:\Users\Aiden\Documents\GitHub\CGE\cge\data\testData.cgtex (size: 27,2 MB, mode: r)
+[10:11:06.791][DEBUG][CGTEXFile] Texture[0]: name='box', size=400x400, format=1
+[10:11:06.791][DEBUG][CGTEXFile] Texture[1]: name='cubemap_0', size=512x512, format=5
+[10:11:06.793][DEBUG][CGTEXFile] Texture[2]: name='cubemap_1', size=1440x1440, format=5
+[10:11:06.793][DEBUG][CGTEXFile] Texture[3]: name='cubemap_2', size=512x512, format=5
+[10:11:06.793][DEBUG][CGTEXFile] Texture[4]: name='cubemap_3', size=512x512, format=5
+[10:11:06.795][DEBUG][CGTEXFile] Texture[5]: name='cubemap_4', size=1440x1440, format=5
+[10:11:06.795][DEBUG][CGTEXFile] Texture[6]: name='cubemap_5', size=480x480, format=5
+[10:11:06.796][DEBUG][CGTEXFile] Texture[7]: name='box_normal', size=400x400, format=1
+[10:11:06.796][DEBUG][CGTEXFile] Texture[8]: name='testgrid', size=512x512, format=1
+[10:11:06.796][DEBUG][CGTEXFile] Texture[9]: name='box_n', size=400x400, format=1
+[10:11:06.796][DEBUG][CGTEXFile] Texture[10]: name='box_ao', size=400x400, format=1
+[10:11:06.796][DEBUG][CGTEXFile] Texture[11]: name='box_height', size=400x400, format=1
+[10:11:06.797][DEBUG][CGTEXFile] Texture[12]: name='box_metal', size=400x400, format=1
+[10:11:06.797][DEBUG][CGTEXFile] Texture[13]: name='box_rough', size=400x400, format=1
+[10:11:06.811][DEBUG][CGTEXFile] Texture[14]: name='explosion', size=4096x4096, format=5
+[10:11:06.811][INFO][CGTEXFile] CGTEX file 'testData.cgtex' successfully read. Entries: 15
+[10:11:06.841][DEBUG][AssetRepo] Added texture 'box' to repository
+[10:11:06.870][DEBUG][AssetRepo] Added texture 'cubemap_0' to repository
+[10:11:06.891][INFO][DomeMesh] 60 triangles
+[10:11:06.891][INFO][DomeMesh] 61 vertices
+[10:11:06.892][INFO][DomeMesh] coords 60
+[10:11:06.904][INFO][SkyMaterial] asset path="MatDefs/skies/dome20/dome20.j3md"
+[10:11:06.904][INFO][SkyMaterial] asset path="MatDefs/skies/dome06/dome06.j3md"
+[10:11:06.905][INFO][DomeMesh] 60 triangles
+[10:11:06.906][INFO][DomeMesh] 61 vertices
+[10:11:06.906][INFO][DomeMesh] coords 60
+[10:11:06.940][DEBUG][AssetRepo] Added texture 'cubemap_1' to repository
+[10:11:06.946][DEBUG][AssetRepo] Added texture 'cubemap_2' to repository
+[10:11:06.951][DEBUG][AssetRepo] Added texture 'cubemap_3' to repository
+[10:11:06.983][DEBUG][AssetRepo] Added texture 'cubemap_4' to repository
+[10:11:06.988][DEBUG][AssetRepo] Added texture 'cubemap_5' to repository
+[10:11:06.993][DEBUG][AssetRepo] Added texture 'box_normal' to repository
+[10:11:07.000][DEBUG][AssetRepo] Added texture 'testgrid' to repository
+[10:11:07.004][DEBUG][AssetRepo] Added texture 'box_n' to repository
+[10:11:07.008][DEBUG][AssetRepo] Added texture 'box_ao' to repository
+[10:11:07.012][DEBUG][AssetRepo] Added texture 'box_height' to repository
+[10:11:07.014][DEBUG][AssetRepo] Added texture 'box_metal' to repository
+[10:11:07.017][DEBUG][AssetRepo] Added texture 'box_rough' to repository
+[10:11:07.309][DEBUG][AssetRepo] Added texture 'explosion' to repository
+[10:11:07.309][DEBUG][FileReader] Closing file reader for: testData.cgtex
+[10:11:07.310][DEBUG][FileReader] Buffer unmapped via Java 9+ method
+[10:11:07.313][DEBUG][FileReader] Mapped file 'road.cgtex' [4,2 MB] in mode 'r'
+[10:11:07.313][DEBUG][FileReader] File opened: C:\Users\Aiden\Documents\GitHub\CGE\cge\data\road.cgtex (size: 4,2 MB, mode: r)
+[10:11:07.315][DEBUG][CGTEXFile] Texture[0]: name='ch2_dor_bushyground', size=1024x1024, format=1
+[10:11:07.315][DEBUG][CGTEXFile] Texture[1]: name='ch2_dor_bushyground_n', size=512x512, format=1
+[10:11:07.315][DEBUG][CGTEXFile] Texture[2]: name='ch2_dor_bushyground_metallic', size=1024x1024, format=1
+[10:11:07.316][DEBUG][CGTEXFile] Texture[3]: name='ch2_dor_bushyground_roughness', size=1024x1024, format=1
+[10:11:07.317][DEBUG][CGTEXFile] Texture[4]: name='ch2_dor_bushyground_ao', size=1024x1024, format=1
+[10:11:07.317][DEBUG][CGTEXFile] Texture[5]: name='ch2_dor_bushyground_height', size=1024x1024, format=1
+[10:11:07.318][DEBUG][CGTEXFile] Texture[6]: name='ch2_dor_bushyground_a', size=1024x1024, format=1
+[10:11:07.318][INFO][CGTEXFile] CGTEX file 'road.cgtex' successfully read. Entries: 7
+[10:11:07.335][DEBUG][AssetRepo] Added texture 'ch2_dor_bushyground' to repository
+[10:11:07.340][DEBUG][AssetRepo] Added texture 'ch2_dor_bushyground_n' to repository
+[10:11:07.354][DEBUG][AssetRepo] Added texture 'ch2_dor_bushyground_metallic' to repository
+[10:11:07.366][DEBUG][AssetRepo] Added texture 'ch2_dor_bushyground_roughness' to repository
+[10:11:07.381][DEBUG][AssetRepo] Added texture 'ch2_dor_bushyground_ao' to repository
+[10:11:07.399][DEBUG][AssetRepo] Added texture 'ch2_dor_bushyground_height' to repository
+[10:11:07.416][DEBUG][AssetRepo] Added texture 'ch2_dor_bushyground_a' to repository
+[10:11:07.416][DEBUG][FileReader] Closing file reader for: road.cgtex
+[10:11:07.417][DEBUG][FileReader] Buffer unmapped via Java 9+ method
+[10:11:07.417][DEBUG][FileReader] Mapped file 'testGrid.cgtex' [4,4 MB] in mode 'r'
+[10:11:07.417][DEBUG][FileReader] File opened: C:\Users\Aiden\Documents\GitHub\CGE\cge\data\testGrid.cgtex (size: 4,4 MB, mode: r)
+[10:11:07.419][DEBUG][CGTEXFile] Texture[0]: name='calista_grid_test_emissive', size=1024x1536, format=1
+[10:11:07.420][DEBUG][CGTEXFile] Texture[1]: name='calista_grid_test_normal', size=1024x1536, format=5
+[10:11:07.421][DEBUG][CGTEXFile] Texture[2]: name='calista_grid_test_roughness', size=1024x1536, format=1
+[10:11:07.421][DEBUG][CGTEXFile] Texture[3]: name='calista_grid_test_specular', size=1024x1536, format=1
+[10:11:07.422][DEBUG][CGTEXFile] Texture[4]: name='calista_grid_test_diff', size=1024x1024, format=1
+[10:11:07.422][INFO][CGTEXFile] CGTEX file 'testGrid.cgtex' successfully read. Entries: 5
+[10:11:07.443][DEBUG][AssetRepo] Added texture 'calista_grid_test_emissive' to repository
+[10:11:07.469][DEBUG][AssetRepo] Added texture 'calista_grid_test_normal' to repository
+[10:11:07.492][DEBUG][AssetRepo] Added texture 'calista_grid_test_roughness' to repository
+[10:11:07.514][DEBUG][AssetRepo] Added texture 'calista_grid_test_specular' to repository
+[10:11:07.530][DEBUG][AssetRepo] Added texture 'calista_grid_test_diff' to repository
+[10:11:07.530][DEBUG][FileReader] Closing file reader for: testGrid.cgtex
+[10:11:07.530][DEBUG][FileReader] Buffer unmapped via Java 9+ method
+[10:11:07.531][DEBUG][FileReader] Mapped file 'lensFlare.cgtex' [16,8 MB] in mode 'r'
+[10:11:07.531][DEBUG][FileReader] File opened: C:\Users\Aiden\Documents\GitHub\CGE\cge\data\lensFlare.cgtex (size: 16,8 MB, mode: r)
+[10:11:07.538][DEBUG][CGTEXFile] Texture[0]: name='flare0', size=3870x2177, format=5
+[10:11:07.542][DEBUG][CGTEXFile] Texture[1]: name='flare1', size=3870x2177, format=5
+[10:11:07.542][DEBUG][CGTEXFile] Texture[2]: name='flare2', size=1200x630, format=1
+[10:11:07.543][DEBUG][CGTEXFile] Texture[3]: name='flare3', size=1024x725, format=1
+[10:11:07.543][INFO][CGTEXFile] CGTEX file 'lensFlare.cgtex' successfully read. Entries: 4
+[10:11:07.659][DEBUG][AssetRepo] Added texture 'flare0' to repository
+[10:11:07.775][DEBUG][AssetRepo] Added texture 'flare1' to repository
+[10:11:07.786][DEBUG][AssetRepo] Added texture 'flare2' to repository
+[10:11:07.797][DEBUG][AssetRepo] Added texture 'flare3' to repository
+[10:11:07.797][DEBUG][FileReader] Closing file reader for: lensFlare.cgtex
+[10:11:07.798][DEBUG][FileReader] Buffer unmapped via Java 9+ method
+[10:11:07.799][DEBUG][FileReader] Mapped file 'graphics.cgtex' [3,0 MB] in mode 'r'
+[10:11:07.799][DEBUG][FileReader] File opened: C:\Users\Aiden\Documents\GitHub\CGE\cge\data\graphics.cgtex (size: 3,0 MB, mode: r)
+[10:11:07.800][DEBUG][CGTEXFile] Texture[0]: name='bikebottom', size=64x64, format=1
+[10:11:07.800][DEBUG][CGTEXFile] Texture[1]: name='bokeh_8sided_iris_4x4sheet', size=512x512, format=1
+[10:11:07.800][DEBUG][CGTEXFile] Texture[2]: name='carbottom', size=64x64, format=5
+[10:11:07.801][DEBUG][CGTEXFile] Texture[3]: name='caustic', size=64x64, format=1
+[10:11:07.801][DEBUG][CGTEXFile] Texture[4]: name='cloudnoise', size=512x512, format=1
+[10:11:07.801][DEBUG][CGTEXFile] Texture[5]: name='dmg_overlay_fade', size=256x256, format=1
+[10:11:07.801][DEBUG][CGTEXFile] Texture[6]: name='flare_animorphic', size=512x64, format=1
+[10:11:07.801][DEBUG][CGTEXFile] Texture[7]: name='flare_artefact', size=256x256, format=1
+[10:11:07.801][DEBUG][CGTEXFile] Texture[8]: name='flare_artefactx2', size=256x512, format=1
+[10:11:07.801][DEBUG][CGTEXFile] Texture[9]: name='flare_chromatic', size=64x64, format=1
+[10:11:07.801][DEBUG][CGTEXFile] Texture[10]: name='flare_corona', size=128x128, format=1
+[10:11:07.801][DEBUG][CGTEXFile] Texture[11]: name='focus_chart', size=512x512, format=1
+[10:11:07.801][DEBUG][CGTEXFile] Texture[12]: name='fow', size=4x4, format=1
+[10:11:07.801][DEBUG][CGTEXFile] Texture[13]: name='headlights', size=64x64, format=1
+[10:11:07.801][DEBUG][CGTEXFile] Texture[14]: name='heat_haze', size=128x128, format=1
+[10:11:07.802][DEBUG][CGTEXFile] Texture[15]: name='helibottom', size=64x64, format=5
+[10:11:07.802][DEBUG][CGTEXFile] Texture[16]: name='lightning', size=64x4, format=1
+[10:11:07.802][DEBUG][CGTEXFile] Texture[17]: name='motorbikebottom', size=64x64, format=1
+[10:11:07.802][DEBUG][CGTEXFile] Texture[18]: name='puddle_layout', size=1024x1024, format=1
+[10:11:07.802][DEBUG][CGTEXFile] Texture[19]: name='puddlenormal_0000', size=32x32, format=5
+[10:11:07.802][DEBUG][CGTEXFile] Texture[20]: name='puddlenormal_0001', size=32x32, format=5
+[10:11:07.802][DEBUG][CGTEXFile] Texture[21]: name='puddlenormal_0002', size=32x32, format=5
+[10:11:07.802][DEBUG][CGTEXFile] Texture[22]: name='puddlenormal_0003', size=32x32, format=5
+[10:11:07.803][DEBUG][CGTEXFile] Texture[23]: name='puddlenormal_0004', size=32x32, format=5
+[10:11:07.803][DEBUG][CGTEXFile] Texture[24]: name='puddlenormal_0005', size=32x32, format=5
+[10:11:07.803][DEBUG][CGTEXFile] Texture[25]: name='puddlenormal_0006', size=32x32, format=5
+[10:11:07.803][DEBUG][CGTEXFile] Texture[26]: name='puddlenormal_0007', size=32x32, format=5
+[10:11:07.803][DEBUG][CGTEXFile] Texture[27]: name='puddlenormal_0008', size=32x32, format=5
+[10:11:07.803][DEBUG][CGTEXFile] Texture[28]: name='puddlenormal_0009', size=32x32, format=5
+[10:11:07.803][DEBUG][CGTEXFile] Texture[29]: name='puddlenormal_0010', size=32x32, format=5
+[10:11:07.803][DEBUG][CGTEXFile] Texture[30]: name='puddlenormal_0011', size=32x32, format=5
+[10:11:07.803][DEBUG][CGTEXFile] Texture[31]: name='puddlenormal_0012', size=32x32, format=5
+[10:11:07.803][DEBUG][CGTEXFile] Texture[32]: name='puddlenormal_0013', size=32x32, format=5
+[10:11:07.803][DEBUG][CGTEXFile] Texture[33]: name='puddlenormal_0014', size=32x32, format=5
+[10:11:07.803][DEBUG][CGTEXFile] Texture[34]: name='puddlenormal_0015', size=32x32, format=5
+[10:11:07.803][DEBUG][CGTEXFile] Texture[35]: name='puddlenormal_0016', size=32x32, format=5
+[10:11:07.803][DEBUG][CGTEXFile] Texture[36]: name='puddlenormal_0017', size=32x32, format=5
+[10:11:07.803][DEBUG][CGTEXFile] Texture[37]: name='puddlenormal_0018', size=32x32, format=5
+[10:11:07.803][DEBUG][CGTEXFile] Texture[38]: name='puddlenormal_0019', size=32x32, format=5
+[10:11:07.803][DEBUG][CGTEXFile] Texture[39]: name='puddlenormal_0020', size=32x32, format=5
+[10:11:07.803][DEBUG][CGTEXFile] Texture[40]: name='puddlenormal_0021', size=32x32, format=5
+[10:11:07.803][DEBUG][CGTEXFile] Texture[41]: name='puddlenormal_0022', size=32x32, format=5
+[10:11:07.803][DEBUG][CGTEXFile] Texture[42]: name='puddlenormal_0023', size=32x32, format=5
+[10:11:07.804][DEBUG][CGTEXFile] Texture[43]: name='puddlenormal_0024', size=32x32, format=5
+[10:11:07.804][DEBUG][CGTEXFile] Texture[44]: name='puddlenormal_0025', size=32x32, format=5
+[10:11:07.804][DEBUG][CGTEXFile] Texture[45]: name='puddlenormal_0026', size=32x32, format=5
+[10:11:07.804][DEBUG][CGTEXFile] Texture[46]: name='puddlenormal_0027', size=32x32, format=5
+[10:11:07.804][DEBUG][CGTEXFile] Texture[47]: name='puddlenormal_0028', size=32x32, format=5
+[10:11:07.804][DEBUG][CGTEXFile] Texture[48]: name='puddlenormal_0029', size=32x32, format=5
+[10:11:07.804][DEBUG][CGTEXFile] Texture[49]: name='puddlenormal_0030', size=32x32, format=5
+[10:11:07.804][DEBUG][CGTEXFile] Texture[50]: name='puddlenormal_0031', size=32x32, format=5
+[10:11:07.804][DEBUG][CGTEXFile] Texture[51]: name='puddlenormal_0032', size=32x32, format=5
+[10:11:07.804][DEBUG][CGTEXFile] Texture[52]: name='puddlenormal_0033', size=32x32, format=5
+[10:11:07.804][DEBUG][CGTEXFile] Texture[53]: name='puddlenormal_0034', size=32x32, format=5
+[10:11:07.804][DEBUG][CGTEXFile] Texture[54]: name='puddlenormal_0035', size=32x32, format=5
+[10:11:07.804][DEBUG][CGTEXFile] Texture[55]: name='puddlenormal_0036', size=32x32, format=5
+[10:11:07.804][DEBUG][CGTEXFile] Texture[56]: name='puddlenormal_0037', size=32x32, format=5
+[10:11:07.804][DEBUG][CGTEXFile] Texture[57]: name='puddlenormal_0038', size=32x32, format=5
+[10:11:07.804][DEBUG][CGTEXFile] Texture[58]: name='puddlenormal_0039', size=32x32, format=5
+[10:11:07.804][DEBUG][CGTEXFile] Texture[59]: name='puddlenormal_0040', size=32x32, format=5
+[10:11:07.804][DEBUG][CGTEXFile] Texture[60]: name='puddlenormal_0041', size=32x32, format=5
+[10:11:07.804][DEBUG][CGTEXFile] Texture[61]: name='puddlenormal_0042', size=32x32, format=5
+[10:11:07.804][DEBUG][CGTEXFile] Texture[62]: name='puddlenormal_0043', size=32x32, format=5
+[10:11:07.804][DEBUG][CGTEXFile] Texture[63]: name='puddlenormal_0044', size=32x32, format=5
+[10:11:07.804][DEBUG][CGTEXFile] Texture[64]: name='puddlenormal_0045', size=32x32, format=5
+[10:11:07.805][DEBUG][CGTEXFile] Texture[65]: name='puddlenormal_0046', size=32x32, format=5
+[10:11:07.805][DEBUG][CGTEXFile] Texture[66]: name='puddlenormal_0047', size=32x32, format=5
+[10:11:07.805][DEBUG][CGTEXFile] Texture[67]: name='puddlenormal_0048', size=32x32, format=5
+[10:11:07.805][DEBUG][CGTEXFile] Texture[68]: name='puddlenormal_0049', size=32x32, format=5
+[10:11:07.805][DEBUG][CGTEXFile] Texture[69]: name='puddlenormal_0050', size=32x32, format=5
+[10:11:07.805][DEBUG][CGTEXFile] Texture[70]: name='puddlenormal_0051', size=32x32, format=5
+[10:11:07.805][DEBUG][CGTEXFile] Texture[71]: name='puddlenormal_0052', size=32x32, format=5
+[10:11:07.805][DEBUG][CGTEXFile] Texture[72]: name='puddlenormal_0053', size=32x32, format=5
+[10:11:07.805][DEBUG][CGTEXFile] Texture[73]: name='puddlenormal_0054', size=32x32, format=5
+[10:11:07.805][DEBUG][CGTEXFile] Texture[74]: name='puddlenormal_0055', size=32x32, format=5
+[10:11:07.805][DEBUG][CGTEXFile] Texture[75]: name='puddlenormal_0056', size=32x32, format=5
+[10:11:07.805][DEBUG][CGTEXFile] Texture[76]: name='puddlenormal_0057', size=32x32, format=5
+[10:11:07.805][DEBUG][CGTEXFile] Texture[77]: name='puddlenormal_0058', size=32x32, format=5
+[10:11:07.805][DEBUG][CGTEXFile] Texture[78]: name='puddlenormal_0059', size=32x32, format=5
+[10:11:07.805][DEBUG][CGTEXFile] Texture[79]: name='puddlenormal_0060', size=32x32, format=5
+[10:11:07.805][DEBUG][CGTEXFile] Texture[80]: name='puddlenormal_0061', size=32x32, format=5
+[10:11:07.805][DEBUG][CGTEXFile] Texture[81]: name='puddlenormal_0062', size=32x32, format=5
+[10:11:07.805][DEBUG][CGTEXFile] Texture[82]: name='puddlenormal_0063', size=32x32, format=5
+[10:11:07.805][DEBUG][CGTEXFile] Texture[83]: name='radarmasklg', size=512x512, format=1
+[10:11:07.806][DEBUG][CGTEXFile] Texture[84]: name='radarmasksm', size=512x256, format=1
+[10:11:07.806][DEBUG][CGTEXFile] Texture[85]: name='terrain_grid', size=64x64, format=1
+[10:11:07.806][DEBUG][CGTEXFile] Texture[86]: name='torch', size=256x256, format=1
+[10:11:07.806][DEBUG][CGTEXFile] Texture[87]: name='traffic_light_glow', size=128x128, format=5
+[10:11:07.806][DEBUG][CGTEXFile] Texture[88]: name='traffic_rail_light', size=128x128, format=5
+[10:11:07.806][DEBUG][CGTEXFile] Texture[89]: name='vehiclelight_bicycle', size=256x256, format=1
+[10:11:07.806][DEBUG][CGTEXFile] Texture[90]: name='vehiclelight_bike_oldround', size=256x256, format=1
+[10:11:07.806][DEBUG][CGTEXFile] Texture[91]: name='vehiclelight_bike_round', size=256x256, format=1
+[10:11:07.806][DEBUG][CGTEXFile] Texture[92]: name='vehiclelight_bike_sport', size=256x256, format=1
+[10:11:07.806][DEBUG][CGTEXFile] Texture[93]: name='vehiclelight_bike_square', size=256x256, format=1
+[10:11:07.806][DEBUG][CGTEXFile] Texture[94]: name='vehiclelight_car_antique', size=256x256, format=1
+[10:11:07.806][DEBUG][CGTEXFile] Texture[95]: name='vehiclelight_car_led1', size=256x256, format=1
+[10:11:07.807][DEBUG][CGTEXFile] Texture[96]: name='vehiclelight_car_led2', size=256x256, format=1
+[10:11:07.807][DEBUG][CGTEXFile] Texture[97]: name='vehiclelight_car_oldsquare', size=256x256, format=1
+[10:11:07.807][DEBUG][CGTEXFile] Texture[98]: name='vehiclelight_car_standard70s', size=256x256, format=1
+[10:11:07.807][DEBUG][CGTEXFile] Texture[99]: name='vehiclelight_car_standardmodern', size=256x256, format=1
+[10:11:07.807][DEBUG][CGTEXFile] Texture[100]: name='vehiclelight_car_utility', size=256x256, format=1
+[10:11:07.807][DEBUG][CGTEXFile] Texture[101]: name='vehiclelight_misc_roundlight', size=256x256, format=1
+[10:11:07.807][DEBUG][CGTEXFile] Texture[102]: name='vehiclelight_misc_searchlight', size=256x256, format=1
+[10:11:07.807][DEBUG][CGTEXFile] Texture[103]: name='vehiclelight_misc_searchlight2', size=256x256, format=1
+[10:11:07.807][DEBUG][CGTEXFile] Texture[104]: name='vehiclelight_misc_squarelight', size=256x256, format=1
+[10:11:07.807][DEBUG][CGTEXFile] Texture[105]: name='vehiclelight_sirenlight', size=256x256, format=1
+[10:11:07.807][DEBUG][CGTEXFile] Texture[106]: name='volume', size=16x256, format=1
+[10:11:07.807][DEBUG][CGTEXFile] Texture[107]: name='waterbump', size=128x128, format=5
+[10:11:07.807][DEBUG][CGTEXFile] Texture[108]: name='waterbump2', size=64x64, format=5
+[10:11:07.808][DEBUG][CGTEXFile] Texture[109]: name='waterfoam', size=1024x1024, format=1
+[10:11:07.808][DEBUG][CGTEXFile] Texture[110]: name='waterfog', size=256x512, format=1
+[10:11:07.808][DEBUG][CGTEXFile] Texture[111]: name='waternoise', size=128x128, format=5
+[10:11:07.808][INFO][CGTEXFile] CGTEX file 'graphics.cgtex' successfully read. Entries: 112
+[10:11:07.808][DEBUG][AssetRepo] Added texture 'bikebottom' to repository
+[10:11:07.811][DEBUG][AssetRepo] Added texture 'bokeh_8sided_iris_4x4sheet' to repository
+[10:11:07.811][DEBUG][AssetRepo] Added texture 'carbottom' to repository
+[10:11:07.812][DEBUG][AssetRepo] Added texture 'caustic' to repository
+[10:11:07.816][DEBUG][AssetRepo] Added texture 'cloudnoise' to repository
+[10:11:07.816][DEBUG][AssetRepo] Added texture 'dmg_overlay_fade' to repository
+[10:11:07.817][DEBUG][AssetRepo] Added texture 'flare_animorphic' to repository
+[10:11:07.818][DEBUG][AssetRepo] Added texture 'flare_artefact' to repository
+[10:11:07.820][DEBUG][AssetRepo] Added texture 'flare_artefactx2' to repository
+[10:11:07.821][DEBUG][AssetRepo] Added texture 'flare_chromatic' to repository
+[10:11:07.821][DEBUG][AssetRepo] Added texture 'flare_corona' to repository
+[10:11:07.826][DEBUG][AssetRepo] Added texture 'focus_chart' to repository
+[10:11:07.826][DEBUG][AssetRepo] Added texture 'fow' to repository
+[10:11:07.827][DEBUG][AssetRepo] Added texture 'headlights' to repository
+[10:11:07.827][DEBUG][AssetRepo] Added texture 'heat_haze' to repository
+[10:11:07.827][DEBUG][AssetRepo] Added texture 'helibottom' to repository
+[10:11:07.827][DEBUG][AssetRepo] Added texture 'lightning' to repository
+[10:11:07.827][DEBUG][AssetRepo] Added texture 'motorbikebottom' to repository
+[10:11:07.841][DEBUG][AssetRepo] Added texture 'puddle_layout' to repository
+[10:11:07.841][DEBUG][AssetRepo] Added texture 'puddlenormal_0000' to repository
+[10:11:07.841][DEBUG][AssetRepo] Added texture 'puddlenormal_0001' to repository
+[10:11:07.841][DEBUG][AssetRepo] Added texture 'puddlenormal_0002' to repository
+[10:11:07.841][DEBUG][AssetRepo] Added texture 'puddlenormal_0003' to repository
+[10:11:07.842][DEBUG][AssetRepo] Added texture 'puddlenormal_0004' to repository
+[10:11:07.842][DEBUG][AssetRepo] Added texture 'puddlenormal_0005' to repository
+[10:11:07.842][DEBUG][AssetRepo] Added texture 'puddlenormal_0006' to repository
+[10:11:07.842][DEBUG][AssetRepo] Added texture 'puddlenormal_0007' to repository
+[10:11:07.842][DEBUG][AssetRepo] Added texture 'puddlenormal_0008' to repository
+[10:11:07.842][DEBUG][AssetRepo] Added texture 'puddlenormal_0009' to repository
+[10:11:07.842][DEBUG][AssetRepo] Added texture 'puddlenormal_0010' to repository
+[10:11:07.842][DEBUG][AssetRepo] Added texture 'puddlenormal_0011' to repository
+[10:11:07.842][DEBUG][AssetRepo] Added texture 'puddlenormal_0012' to repository
+[10:11:07.842][DEBUG][AssetRepo] Added texture 'puddlenormal_0013' to repository
+[10:11:07.842][DEBUG][AssetRepo] Added texture 'puddlenormal_0014' to repository
+[10:11:07.842][DEBUG][AssetRepo] Added texture 'puddlenormal_0015' to repository
+[10:11:07.842][DEBUG][AssetRepo] Added texture 'puddlenormal_0016' to repository
+[10:11:07.842][DEBUG][AssetRepo] Added texture 'puddlenormal_0017' to repository
+[10:11:07.843][DEBUG][AssetRepo] Added texture 'puddlenormal_0018' to repository
+[10:11:07.843][DEBUG][AssetRepo] Added texture 'puddlenormal_0019' to repository
+[10:11:07.843][DEBUG][AssetRepo] Added texture 'puddlenormal_0020' to repository
+[10:11:07.843][DEBUG][AssetRepo] Added texture 'puddlenormal_0021' to repository
+[10:11:07.843][DEBUG][AssetRepo] Added texture 'puddlenormal_0022' to repository
+[10:11:07.843][DEBUG][AssetRepo] Added texture 'puddlenormal_0023' to repository
+[10:11:07.843][DEBUG][AssetRepo] Added texture 'puddlenormal_0024' to repository
+[10:11:07.843][DEBUG][AssetRepo] Added texture 'puddlenormal_0025' to repository
+[10:11:07.843][DEBUG][AssetRepo] Added texture 'puddlenormal_0026' to repository
+[10:11:07.843][DEBUG][AssetRepo] Added texture 'puddlenormal_0027' to repository
+[10:11:07.843][DEBUG][AssetRepo] Added texture 'puddlenormal_0028' to repository
+[10:11:07.843][DEBUG][AssetRepo] Added texture 'puddlenormal_0029' to repository
+[10:11:07.843][DEBUG][AssetRepo] Added texture 'puddlenormal_0030' to repository
+[10:11:07.844][DEBUG][AssetRepo] Added texture 'puddlenormal_0031' to repository
+[10:11:07.844][DEBUG][AssetRepo] Added texture 'puddlenormal_0032' to repository
+[10:11:07.844][DEBUG][AssetRepo] Added texture 'puddlenormal_0033' to repository
+[10:11:07.844][DEBUG][AssetRepo] Added texture 'puddlenormal_0034' to repository
+[10:11:07.844][DEBUG][AssetRepo] Added texture 'puddlenormal_0035' to repository
+[10:11:07.844][DEBUG][AssetRepo] Added texture 'puddlenormal_0036' to repository
+[10:11:07.844][DEBUG][AssetRepo] Added texture 'puddlenormal_0037' to repository
+[10:11:07.844][DEBUG][AssetRepo] Added texture 'puddlenormal_0038' to repository
+[10:11:07.844][DEBUG][AssetRepo] Added texture 'puddlenormal_0039' to repository
+[10:11:07.844][DEBUG][AssetRepo] Added texture 'puddlenormal_0040' to repository
+[10:11:07.844][DEBUG][AssetRepo] Added texture 'puddlenormal_0041' to repository
+[10:11:07.844][DEBUG][AssetRepo] Added texture 'puddlenormal_0042' to repository
+[10:11:07.844][DEBUG][AssetRepo] Added texture 'puddlenormal_0043' to repository
+[10:11:07.844][DEBUG][AssetRepo] Added texture 'puddlenormal_0044' to repository
+[10:11:07.845][DEBUG][AssetRepo] Added texture 'puddlenormal_0045' to repository
+[10:11:07.845][DEBUG][AssetRepo] Added texture 'puddlenormal_0046' to repository
+[10:11:07.845][DEBUG][AssetRepo] Added texture 'puddlenormal_0047' to repository
+[10:11:07.845][DEBUG][AssetRepo] Added texture 'puddlenormal_0048' to repository
+[10:11:07.845][DEBUG][AssetRepo] Added texture 'puddlenormal_0049' to repository
+[10:11:07.845][DEBUG][AssetRepo] Added texture 'puddlenormal_0050' to repository
+[10:11:07.845][DEBUG][AssetRepo] Added texture 'puddlenormal_0051' to repository
+[10:11:07.845][DEBUG][AssetRepo] Added texture 'puddlenormal_0052' to repository
+[10:11:07.845][DEBUG][AssetRepo] Added texture 'puddlenormal_0053' to repository
+[10:11:07.845][DEBUG][AssetRepo] Added texture 'puddlenormal_0054' to repository
+[10:11:07.845][DEBUG][AssetRepo] Added texture 'puddlenormal_0055' to repository
+[10:11:07.845][DEBUG][AssetRepo] Added texture 'puddlenormal_0056' to repository
+[10:11:07.845][DEBUG][AssetRepo] Added texture 'puddlenormal_0057' to repository
+[10:11:07.845][DEBUG][AssetRepo] Added texture 'puddlenormal_0058' to repository
+[10:11:07.846][DEBUG][AssetRepo] Added texture 'puddlenormal_0059' to repository
+[10:11:07.846][DEBUG][AssetRepo] Added texture 'puddlenormal_0060' to repository
+[10:11:07.846][DEBUG][AssetRepo] Added texture 'puddlenormal_0061' to repository
+[10:11:07.846][DEBUG][AssetRepo] Added texture 'puddlenormal_0062' to repository
+[10:11:07.846][DEBUG][AssetRepo] Added texture 'puddlenormal_0063' to repository
+[10:11:07.849][DEBUG][AssetRepo] Added texture 'radarmasklg' to repository
+[10:11:07.851][DEBUG][AssetRepo] Added texture 'radarmasksm' to repository
+[10:11:07.851][DEBUG][AssetRepo] Added texture 'terrain_grid' to repository
+[10:11:07.852][DEBUG][AssetRepo] Added texture 'torch' to repository
+[10:11:07.852][DEBUG][AssetRepo] Added texture 'traffic_light_glow' to repository
+[10:11:07.852][DEBUG][AssetRepo] Added texture 'traffic_rail_light' to repository
+[10:11:07.853][DEBUG][AssetRepo] Added texture 'vehiclelight_bicycle' to repository
+[10:11:07.854][DEBUG][AssetRepo] Added texture 'vehiclelight_bike_oldround' to repository
+[10:11:07.855][DEBUG][AssetRepo] Added texture 'vehiclelight_bike_round' to repository
+[10:11:07.856][DEBUG][AssetRepo] Added texture 'vehiclelight_bike_sport' to repository
+[10:11:07.857][DEBUG][AssetRepo] Added texture 'vehiclelight_bike_square' to repository
+[10:11:07.858][DEBUG][AssetRepo] Added texture 'vehiclelight_car_antique' to repository
+[10:11:07.859][DEBUG][AssetRepo] Added texture 'vehiclelight_car_led1' to repository
+[10:11:07.860][DEBUG][AssetRepo] Added texture 'vehiclelight_car_led2' to repository
+[10:11:07.861][DEBUG][AssetRepo] Added texture 'vehiclelight_car_oldsquare' to repository
+[10:11:07.862][DEBUG][AssetRepo] Added texture 'vehiclelight_car_standard70s' to repository
+[10:11:07.863][DEBUG][AssetRepo] Added texture 'vehiclelight_car_standardmodern' to repository
+[10:11:07.864][DEBUG][AssetRepo] Added texture 'vehiclelight_car_utility' to repository
+[10:11:07.866][DEBUG][AssetRepo] Added texture 'vehiclelight_misc_roundlight' to repository
+[10:11:07.867][DEBUG][AssetRepo] Added texture 'vehiclelight_misc_searchlight' to repository
+[10:11:07.868][DEBUG][AssetRepo] Added texture 'vehiclelight_misc_searchlight2' to repository
+[10:11:07.868][DEBUG][AssetRepo] Added texture 'vehiclelight_misc_squarelight' to repository
+[10:11:07.869][DEBUG][AssetRepo] Added texture 'vehiclelight_sirenlight' to repository
+[10:11:07.870][DEBUG][AssetRepo] Added texture 'volume' to repository
+[10:11:07.870][DEBUG][AssetRepo] Added texture 'waterbump' to repository
+[10:11:07.870][DEBUG][AssetRepo] Added texture 'waterbump2' to repository
+[10:11:07.885][DEBUG][AssetRepo] Added texture 'waterfoam' to repository
+[10:11:07.887][DEBUG][AssetRepo] Added texture 'waterfog' to repository
+[10:11:07.887][DEBUG][AssetRepo] Added texture 'waternoise' to repository
+[10:11:07.887][DEBUG][FileReader] Closing file reader for: graphics.cgtex
+[10:11:07.887][DEBUG][FileReader] Buffer unmapped via Java 9+ method
+[10:11:07.888][INFO][AbstractAssetLoader] Loaded 143 entries from config/data/textures.json
+[10:11:08.647][DEBUG][AssetRepo] Added model 'ParkBench01' to repository
+[10:11:08.843][DEBUG][AssetRepo] Added model 'Streetlight_HighRes' to repository
+[10:11:08.843][INFO][AbstractAssetLoader] Loaded 2 entries from config/data/models.json
+[10:11:08.843][INFO][AssetLoader] All assets loaded successfully.
+[10:11:08.857][DEBUG][MaterialManager] Requested material: assets/MatDefs/grass.j3m
+[10:11:08.857][INFO][MaterialManager] Loading .j3m material: assets/MatDefs/grass.j3m
+[10:11:08.857][INFO][MaterialManager] Deserializing .j3m: assets/MatDefs/grass.j3m
+[10:11:08.859][DEBUG][MaterialManager] Found j3md template: Common/MatDefs/Light/PBRLighting.j3md
+[10:11:08.859][DEBUG][MaterialManager] Parameter: BaseColorMap (type: texture) = ch2_dor_bushyground|Repeat
+[10:11:08.859][DEBUG][MaterialManager] Parameter: RoughnessMap (type: texture) = ch2_dor_bushyground_roughness|Repeat
+[10:11:08.859][DEBUG][MaterialManager] Parameter: UseSpecGloss (type: boolean) = false
+[10:11:08.859][DEBUG][MaterialManager] Parameter: UseSpecularAA (type: boolean) = false
+[10:11:08.859][DEBUG][MaterialManager] Parameter: Glossiness (type: float) = 0.7
+[10:11:08.859][DEBUG][MaterialManager] Parameter: Metallic (type: float) = 0.0
+[10:11:08.859][DEBUG][MaterialManager] Parameter 'Glossiness' (float) = 0.7
+[10:11:08.859][DEBUG][MaterialManager] Parameter 'Metallic' (float) = 0.0
+[10:11:08.860][DEBUG][MaterialManager] Parameter 'UseSpecularAA' (boolean) = false
+[10:11:08.860][DEBUG][MaterialManager] Loading texture 'ch2_dor_bushyground_roughness|Repeat' for 'RoughnessMap'
+[10:11:08.860][DEBUG][MaterialManager] Texture 'ch2_dor_bushyground_roughness' set for 'RoughnessMap' with WrapMode Repeat
+[10:11:08.860][DEBUG][MaterialManager] Loading texture 'ch2_dor_bushyground|Repeat' for 'BaseColorMap'
+[10:11:08.860][DEBUG][MaterialManager] Texture 'ch2_dor_bushyground' set for 'BaseColorMap' with WrapMode Repeat
+[10:11:08.860][DEBUG][MaterialManager] Parameter 'UseSpecGloss' (boolean) = false
+[10:11:08.860][INFO][MaterialManager] Material PBR Lighting successfully built from assets/MatDefs/grass.j3m
+[10:11:08.860][DEBUG][MaterialManager] Material assets/MatDefs/grass.j3m loaded and cached
+[10:11:08.901][INFO][UIModule] Creating UI screen 'hud' from layout 'assets/Interface/stats_config.xml'.
+[10:11:08.903][DEBUG][ElementRegistry] Registered UI element type: Panel
+[10:11:08.903][DEBUG][ElementRegistry] Registered UI element type: Image
+[10:11:08.903][DEBUG][ElementRegistry] Registered UI element type: Text
+[10:11:08.903][DEBUG][ElementRegistry] Registered UI element type: Button
+[10:11:08.903][DEBUG][ElementRegistry] Registered UI element type: Progress
+[10:11:09.087][INFO][Player] AnimComposer found. Animation list:
+[10:11:09.087][INFO][Player]   - Freehang Climb
+[10:11:09.087][INFO][Player]   - Cover To Stand
+[10:11:09.087][INFO][Player]   - Standing React Small From Headshot
+[10:11:09.087][INFO][Player]   - Thoughtful Head Shake
+[10:11:09.087][INFO][Player]   - Standing Death Backward 01
+[10:11:09.087][INFO][Player]   - Standing Disarm Bow
+[10:11:09.087][INFO][Player]   - Standard Walk
+[10:11:09.087][INFO][Player]   - Ninja Idle
+[10:11:09.087][INFO][Player]   - Start Walking
+[10:11:09.087][INFO][Player]   - Crouched Sneaking Right
+[10:11:09.087][INFO][Player]   - Standing Idle 01
+[10:11:09.087][INFO][Player]   - Fall A Land To Run Forward
+[10:11:09.087][INFO][Player]   - Walking Backward Arc Right
+[10:11:09.087][INFO][Player]   - Standing Run Back
+[10:11:09.088][INFO][Player]   - Kick To The Groin
+[10:11:09.088][INFO][Player]   - Sneaking Forward
+[10:11:09.088][INFO][Player]   - Standing To Crouch
+[10:11:09.088][INFO][Player]   - Injured Hurting Idle
+[10:11:09.088][INFO][Player]   - Injured Walk Backwards
+[10:11:09.088][INFO][Player]   - Left Turn
+[10:11:09.088][INFO][Player]   - Running
+[10:11:09.088][INFO][Player]   - Standing To Crouched
+[10:11:09.088][INFO][Player]   - Crouch Idle 03 Looking Over
+[10:11:09.088][INFO][Player]   - Slow Jog Backwards
+[10:11:09.088][INFO][Player]   - Standing Draw Arrow
+[10:11:09.088][INFO][Player]   - Climbing
+[10:11:09.088][INFO][Player]   - Crouched Sneaking Left
+[10:11:09.088][INFO][Player]   - Standing Aim Walk Right
+[10:11:09.088][INFO][Player]   - Stop Walking
+[10:11:09.088][INFO][Player]   - Crouch Idle 02 Looking Around
+[10:11:09.088][INFO][Player]   - Turn To Running
+[10:11:09.088][INFO][Player]   - Injured Run Backwards
+[10:11:09.088][INFO][Player]   - Standing Aim Idle 02 Looking
+[10:11:09.088][INFO][Player]   - Jog Forward
+[10:11:09.088][INFO][Player]   - Crouching Idle
+[10:11:09.088][INFO][Player]   - Running Right Turn
+[10:11:09.088][INFO][Player]   - Standing Run Forward
+[10:11:09.088][INFO][Player]   - Standing Aim Overdraw
+[10:11:09.088][INFO][Player]   - Pain Gesture
+[10:11:09.088][INFO][Player]   - Run
+[10:11:09.088][INFO][Player]   - Jump
+[10:11:09.088][INFO][Player]   - Jogging
+[10:11:09.088][INFO][Player]   - Stand Up
+[10:11:09.088][INFO][Player]   - Looking Around
+[10:11:09.088][INFO][Player]   - Injured Run
+[10:11:09.088][INFO][Player]   - Running Jump
+[10:11:09.088][INFO][Player]   - Zombie Stand Up
+[10:11:09.088][INFO][Player]   - Crouch Turn Left 90
+[10:11:09.088][INFO][Player]   - Shooting Arrow
+[10:11:09.088][INFO][Player]   - Standing Walk Forward
+[10:11:09.088][INFO][Player]   - Standing Aim Recoil
+[10:11:09.088][INFO][Player]   - Standing Aim Walk Back
+[10:11:09.088][INFO][Player]   - Holding Walk
+[10:11:09.088][INFO][Player]   - Jumping Down
+[10:11:09.088][INFO][Player]   - Telling A Secret
+[10:11:09.088][INFO][Player]   - Laying Breathless
+[10:11:09.088][INFO][Player]   - Step Backward
+[10:11:09.088][INFO][Player]   - Fall B Loop
+[10:11:09.088][INFO][Player]   - Unarmed Turn Left 90
+[10:11:09.088][INFO][Player]   - Standing Sprint Forward
+[10:11:09.088][INFO][Player]   - Crawl Backwards
+[10:11:09.088][INFO][Player]   - Injured Walking
+[10:11:09.088][INFO][Player]   - Change Direction
+[10:11:09.088][INFO][Player]   - Standing Run Right
+[10:11:09.089][INFO][Player]   - Female Standing Pose
+[10:11:09.089][INFO][Player]   - Holding Idle
+[10:11:09.089][INFO][Player]   - Standing Up
+[10:11:09.089][INFO][Player]   - Climbing Ladder
+[10:11:09.089][INFO][Player]   - Fall Flat
+[10:11:09.089][INFO][Player]   - Hand Raising
+[10:11:09.089][INFO][Player]   - Standing Dodge Right
+[10:11:09.089][INFO][Player]   - Backward Right Turn
+[10:11:09.089][INFO][Player]   - Walking
+[10:11:09.089][INFO][Player]   - Hard Landing
+[10:11:09.089][INFO][Player]   - Stand To Cover
+[10:11:09.089][INFO][Player]   - Weight Shift
+[10:11:09.089][INFO][Player]   - Look Behind Run
+[10:11:09.089][INFO][Player]   - Standing Death Forward 01
+[10:11:09.089][INFO][Player]   - Walk Forward Arc Right
+[10:11:09.089][INFO][Player]   - Crouched To Standing
+[10:11:09.089][INFO][Player]   - Fall A Loop
+[10:11:09.089][INFO][Player]   - Jumping
+[10:11:09.089][INFO][Player]   - Fall A Land To Standing Idle 01
+[10:11:09.089][INFO][Player]   - Walk Backward
+[10:11:09.089][INFO][Player]   - Fall A Land To Standing Idle 02
+[10:11:09.089][INFO][Player]   - Walk
+[10:11:09.089][INFO][Player]   - Look Over Shoulder
+[10:11:09.089][INFO][Player]   - Walking Turn 180
+[10:11:09.089][INFO][Player]   - Standing Dodge Forward
+[10:11:09.089][INFO][Player]   - Unarmed Idle Looking Ver. 1
+[10:11:09.089][INFO][Player]   - Run Forward
+[10:11:09.089][INFO][Player]   - Standing Walk Back
+[10:11:09.089][INFO][Player]   - Crouch Walk Right
+[10:11:09.089][INFO][Player]   - Crouch Idle 01
+[10:11:09.089][INFO][Player]   - Crouch Walk Left
+[10:11:09.089][INFO][Player]   - Standing Idle 03 Examine
+[10:11:09.089][INFO][Player]   - Right Turn
+[10:11:09.089][INFO][Player]   - Climbing To Top
+[10:11:09.089][INFO][Player]   - Opening
+[10:11:09.089][INFO][Player]   - Idle
+[10:11:09.089][INFO][Player]   - Being Strangled
+[10:11:09.089][INFO][Player]   - Standing Walk Right
+[10:11:09.089][INFO][Player]   - Unarmed Idle 01
+[10:11:09.089][INFO][Player]   - Standing Aim Walk Forward
+[10:11:09.089][INFO][Player]   - Landing
+[10:11:09.090][INFO][Player]   - Dying
+[10:11:09.090][INFO][Player]   - Standing Death Right 02
+[10:11:09.090][INFO][Player]   - Crouch Walk
+[10:11:09.090][INFO][Player]   - Crouch Walk Back
+[10:11:09.093][INFO][Player] Successfully loaded animation mapping from 'assets/meshes/erikaAnimMappings.json'
+[10:11:09.095][INFO][PlayerAnimationController] Play 'Idle' on [Default] (blend=0.15, loop=true)
+[10:11:09.095][INFO][PlayerModule] Player spawned at (50.0, 20.0, 70.0)
+[10:11:09.095][WARN][PlayerModule] Player already exists, skipping spawn.
+[10:11:10.451][DEBUG][RigidBodyModule] Set friction=0.5 for 'Material.000001'
+[10:11:10.451][DEBUG][RigidBodyModule] Set restitution=0.3 for 'Material.000001'
+[10:11:10.451][DEBUG][RigidBodyModule] Set damping l=0.05 a=0.05 for 'Material.000001'
+[10:11:10.451][DEBUG][RigidBodyModule] Added rigid body 'Material.000001' with mass=1.0 and friction=0.5
+[10:11:10.452][DEBUG][RigidBodyModule] Set friction=0.5 for 'my particle effect'
+[10:11:10.452][DEBUG][RigidBodyModule] Set restitution=0.3 for 'my particle effect'
+[10:11:10.452][DEBUG][RigidBodyModule] Set damping l=0.05 a=0.05 for 'my particle effect'
+[10:11:10.452][DEBUG][RigidBodyModule] Added rigid body 'my particle effect' with mass=1.0 and friction=0.5
+[10:11:10.453][INFO][XmlLayoutLoader] Loading UI layout from asset path: assets/Interface/stats_config.xml
+[10:11:10.487][INFO][DataBinder] DataBinder scanned 5 fields from target 'PlayerHud'.
+[10:11:10.487][INFO][NovaUI] NovaUI initialized successfully with root 'rootPanel'.
+[10:11:12.064][INFO][PlayerAnimationController] Play 'Jumping Down' on [Default] (blend=0.18, loop=false)
+[10:11:12.066][INFO][PlayerAnimationController] Play 'Idle' on [Default] (blend=0.18, loop=true)
+[10:12:27.380][DEBUG][UIModule] UIModule disabled, all screens are now inactive.
+[10:12:27.380][INFO][UIModule] UIModule cleanup() start, current state=RUNNING
+[10:12:27.380][DEBUG][UIModule] UIModule: RUNNING -> SHUTTING_DOWN
+[10:12:27.380][INFO][UIModule] Cleaning up UIModule: detaching all UI screens...
+[10:12:27.380][DEBUG][UIModule] UIModule: SHUTTING_DOWN -> CLEANED_UP
+[10:12:27.380][INFO][UIModule] UIModule cleaned up successfully
+[10:12:27.380][INFO][SkyBox] SkyBox cleanup() start, current state=RUNNING
+[10:12:27.380][DEBUG][SkyBox] SkyBox: RUNNING -> SHUTTING_DOWN
+[10:12:27.380][DEBUG][SkyBox] SkyBox: SHUTTING_DOWN -> CLEANED_UP
+[10:12:27.380][INFO][SkyBox] SkyBox cleaned up successfully
+[10:12:27.381][INFO][RendererModule] RendererModule cleanup() start, current state=RUNNING
+[10:12:27.381][DEBUG][RendererModule] RendererModule: RUNNING -> SHUTTING_DOWN
+[10:12:27.381][INFO][RendererModule] Cleaning up RendererModule and sub-modules...
+[10:12:27.381][INFO][RendererModule] RendererModule cleaned up.
+[10:12:27.381][DEBUG][RendererModule] RendererModule: SHUTTING_DOWN -> CLEANED_UP
+[10:12:27.381][INFO][RendererModule] RendererModule cleaned up successfully
+[10:12:27.381][INFO][Terrain] Terrain cleanup() start, current state=RUNNING
+[10:12:27.381][DEBUG][Terrain] Terrain: RUNNING -> SHUTTING_DOWN
+[10:12:27.381][DEBUG][Terrain] Terrain: SHUTTING_DOWN -> CLEANED_UP
+[10:12:27.381][INFO][Terrain] Terrain cleaned up successfully
+[10:12:27.381][INFO][PhysicsModule] PhysicsModule cleanup() start, current state=RUNNING
+[10:12:27.381][DEBUG][PhysicsModule] PhysicsModule: RUNNING -> SHUTTING_DOWN
+[10:12:27.381][INFO][PhysicsModule] Cleaning up PhysicsModule...
+[10:12:27.381][INFO][ModuleManager] Shutting down ModuleManager
+[10:12:27.381][DEBUG][ModuleManager] Detaching module SoundModule
+[10:12:27.381][DEBUG][SoundModule] SoundModule detached from AppStateManager
+[10:12:27.381][DEBUG][ModuleManager] Detached module SoundModule
+[10:12:27.382][DEBUG][ModuleManager] Detaching module ECSModule
+[10:12:27.382][DEBUG][ECSModule] ECSModule detached from AppStateManager
+[10:12:27.382][DEBUG][ModuleManager] Detached module ECSModule
+[10:12:27.382][INFO][ECSModule] Cleaning up ECSModule...
+[10:12:27.382][INFO][ECSModule] ECSModule cleaned up
+[10:12:27.382][DEBUG][ModuleManager] Detaching module PlayerModule
+[10:12:27.382][DEBUG][PlayerModule] PlayerModule detached from AppStateManager
+[10:12:27.382][DEBUG][ModuleManager] Detached module PlayerModule
+[10:12:27.382][DEBUG][ModuleManager] Detaching module PhysicsModule
+[10:12:27.382][DEBUG][PhysicsModule] PhysicsModule detached from AppStateManager
+[10:12:27.382][DEBUG][ModuleManager] Detached module PhysicsModule
+[10:12:27.382][INFO][PhysicsModule] Cleaning up PhysicsModule...
+[10:12:27.382][WARN][ModuleManager] ModuleManager shutdown already in progress
+[10:12:27.382][DEBUG][PhysicsModule] BulletAppState detached.
+[10:12:27.382][DEBUG][ModuleManager] Detaching module SoftBodyModule
+[10:12:27.382][DEBUG][SoftBodyModule] SoftBodyModule detached from AppStateManager
+[10:12:27.382][DEBUG][ModuleManager] Detached module SoftBodyModule
+[10:12:27.382][INFO][SoftBodyModule] Cleaned up all soft bodies
+[10:12:27.383][INFO][RigidBodyModule] RigidBodyModule cleaned up all bodies
+[10:12:27.383][DEBUG][ModuleManager] Detaching module CollisionModule
+[10:12:27.383][DEBUG][CollisionModule] CollisionModule detached from AppStateManager
+[10:12:27.383][DEBUG][ModuleManager] Detached module CollisionModule
+[10:12:27.383][INFO][UIModule] Cleaning up UIModule: detaching all UI screens...
+[10:12:27.383][INFO][ModuleManager] ModuleManager shutdown complete
+[10:12:27.383][DEBUG][PhysicsModule] PhysicsModule: SHUTTING_DOWN -> CLEANED_UP
+[10:12:27.383][INFO][PhysicsModule] PhysicsModule cleaned up successfully
+[10:12:27.383][INFO][PlayerModule] PlayerModule cleanup() start, current state=RUNNING
+[10:12:27.383][DEBUG][PlayerModule] PlayerModule: RUNNING -> SHUTTING_DOWN
+[10:12:27.384][DEBUG][PlayerModule] PlayerModule: SHUTTING_DOWN -> CLEANED_UP
+[10:12:27.384][INFO][PlayerModule] PlayerModule cleaned up successfully
+[10:12:27.384][INFO][ECSModule] ECSModule disabled
+[10:12:27.384][INFO][ECSModule] ECSModule cleanup() start, current state=PAUSED
+[10:12:27.384][DEBUG][ECSModule] ECSModule: PAUSED -> SHUTTING_DOWN
+[10:12:27.384][INFO][ECSModule] Cleaning up ECSModule...
+[10:12:27.384][INFO][ECSModule] ECSModule cleaned up
+[10:12:27.384][DEBUG][ECSModule] ECSModule: SHUTTING_DOWN -> CLEANED_UP
+[10:12:27.384][INFO][ECSModule] ECSModule cleaned up successfully
+[10:12:27.384][INFO][SoundModule] SoundModule cleanup() start, current state=RUNNING
+[10:12:27.384][DEBUG][SoundModule] SoundModule: RUNNING -> SHUTTING_DOWN
+[10:12:27.384][DEBUG][SoundModule] SoundModule: SHUTTING_DOWN -> CLEANED_UP
+[10:12:27.384][INFO][SoundModule] SoundModule cleaned up successfully
+[10:12:27.384][INFO][PostProcessingModule] PostProcessingModule cleanup() start, current state=RUNNING
+[10:12:27.384][DEBUG][PostProcessingModule] PostProcessingModule: RUNNING -> SHUTTING_DOWN
+[10:12:27.384][DEBUG][PostProcessingModule] PostProcessingModule: SHUTTING_DOWN -> CLEANED_UP
+[10:12:27.384][INFO][PostProcessingModule] PostProcessingModule cleaned up successfully
+[10:12:27.384][INFO][PostProcessingModule] PostProcessingModule cleanup() start, current state=RUNNING
+[10:12:27.384][DEBUG][PostProcessingModule] PostProcessingModule: RUNNING -> SHUTTING_DOWN
+[10:12:27.384][DEBUG][PostProcessingModule] PostProcessingModule: SHUTTING_DOWN -> CLEANED_UP
+[10:12:27.384][INFO][PostProcessingModule] PostProcessingModule cleaned up successfully
+[10:12:27.384][INFO][CollisionModule] CollisionModule cleanup() start, current state=RUNNING
+[10:12:27.384][DEBUG][CollisionModule] CollisionModule: RUNNING -> SHUTTING_DOWN
+[10:12:27.384][DEBUG][CollisionModule] CollisionModule: SHUTTING_DOWN -> CLEANED_UP
+[10:12:27.384][INFO][CollisionModule] CollisionModule cleaned up successfully
+[10:12:27.384][INFO][RigidBodyModule] RigidBodyModule cleaned up all bodies
+[10:12:27.384][INFO][RigidBodyModule] RigidBodyModule cleanup() start, current state=UNLOADED
+[10:12:27.384][DEBUG][RigidBodyModule] RigidBodyModule: UNLOADED -> SHUTTING_DOWN
+[10:12:27.384][INFO][RigidBodyModule] RigidBodyModule cleaned up all bodies
+[10:12:27.384][DEBUG][RigidBodyModule] RigidBodyModule: SHUTTING_DOWN -> CLEANED_UP
+[10:12:27.384][INFO][RigidBodyModule] RigidBodyModule cleaned up successfully
+[10:12:27.384][INFO][SoftBodyModule] Cleaned up all soft bodies
+[10:12:27.384][INFO][SoftBodyModule] SoftBodyModule cleanup() start, current state=RUNNING
+[10:12:27.384][DEBUG][SoftBodyModule] SoftBodyModule: RUNNING -> SHUTTING_DOWN
+[10:12:27.385][INFO][SoftBodyModule] Cleaned up all soft bodies
+[10:12:27.385][DEBUG][SoftBodyModule] SoftBodyModule: SHUTTING_DOWN -> CLEANED_UP
+[10:12:27.385][INFO][SoftBodyModule] SoftBodyModule cleaned up successfully
+[10:12:27.385][INFO][CollisionModule] CollisionModule cleanup() start, current state=RUNNING
+[10:12:27.385][DEBUG][CollisionModule] CollisionModule: RUNNING -> SHUTTING_DOWN
+[10:12:27.385][DEBUG][CollisionModule] CollisionModule: SHUTTING_DOWN -> CLEANED_UP
+[10:12:27.385][INFO][CollisionModule] CollisionModule cleaned up successfully
+[10:12:27.385][INFO][RigidBodyModule] RigidBodyModule cleaned up all bodies
+[10:12:27.385][INFO][RigidBodyModule] RigidBodyModule cleanup() start, current state=UNLOADED
+[10:12:27.385][DEBUG][RigidBodyModule] RigidBodyModule: UNLOADED -> SHUTTING_DOWN
+[10:12:27.385][INFO][RigidBodyModule] RigidBodyModule cleaned up all bodies
+[10:12:27.385][DEBUG][RigidBodyModule] RigidBodyModule: SHUTTING_DOWN -> CLEANED_UP
+[10:12:27.385][INFO][RigidBodyModule] RigidBodyModule cleaned up successfully
+[10:12:27.385][INFO][SoftBodyModule] Cleaned up all soft bodies
+[10:12:27.385][INFO][SoftBodyModule] SoftBodyModule cleanup() start, current state=RUNNING
+[10:12:27.385][DEBUG][SoftBodyModule] SoftBodyModule: RUNNING -> SHUTTING_DOWN
+[10:12:27.385][INFO][SoftBodyModule] Cleaned up all soft bodies
+[10:12:27.385][DEBUG][SoftBodyModule] SoftBodyModule: SHUTTING_DOWN -> CLEANED_UP
+[10:12:27.385][INFO][SoftBodyModule] SoftBodyModule cleaned up successfully
+[10:12:27.385][INFO][NovaUI] NovaUI cleaned up.

@@ -1,0 +1,67 @@
+# MTL File переписан для поиска текстур в папке 'assets/Textures/house/'
+
+newmtl A4SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+# Diffuse Map
+map_Kd assets/Textures/house/germany010METAL.jpg
+# Bump Map (Normal Map)
+bump assets/Textures/house/germany010b.jpg -bm 0.01
+Ni 1.00
+Ks 0.50 0.50 0.50
+
+newmtl lambert8SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd assets/Textures/house/germany010grey.jpg
+bump assets/Textures/house/germany010b.jpg -bm 0.05
+Ni 1.00
+
+newmtl lambert14SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd assets/Textures/house/england018.jpg
+bump assets/Textures/house/england018b.jpg -bm 0.1
+Ni 1.00
+
+newmtl lambert15SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd assets/Textures/house/wndw038M.jpg
+bump assets/Textures/house/wndw038M.jpg -bm 1
+Ni 1.00
+
+newmtl lambert16SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd assets/Textures/house/door51L.jpg
+bump assets/Textures/house/door51Lb.jpg -bm 0.1
+Ni 1.00
+
+newmtl lambert18SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd assets/Textures/house/wndw107M.jpg
+bump assets/Textures/house/wndw107Mb.jpg -bm 0.1
+Ni 1.00
+
+newmtl lambert22SG
+illum 4
+Kd 0.00 0.00 0.00
+Ka 0.00 0.00 0.00
+Tf 1.00 1.00 1.00
+map_Kd assets/Textures/house/entr123M.jpg
+bump assets/Textures/house/entr123Mb.jpg -bm 0.1
+Ni 1.00
