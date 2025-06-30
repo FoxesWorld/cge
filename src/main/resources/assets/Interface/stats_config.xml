@@ -18,12 +18,13 @@
     <property name="spacing" value="0"/>
 
     <Image id="logo">
-        <property name="imagePath" value="assets/Textures/nova.png"/>
-        <property name="width" value="64"/>
-        <property name="height" value="64"/>
+        <property name="imagePath" value="assets/Textures/image.png"/>
+        <property name="width" value="162"/>
+        <property name="height" value="128"/>
         <property name="color" value="1,1,1,1"/>
     </Image>
 
+    <!--
     <Text id="test">
         <property name="fontPath" value="assets/Interface/fonts/Aharoni.fnt"/>
         <property name="margin" value="0,0,0,0"/>
@@ -33,8 +34,8 @@
     <Button id="resr2">
         <property name="text" value="left"/>
         <property name="padding" value="5"/>
-
     </Button>
+    -->
 
     <Panel id="barPanel">
         <property name="margin" value="5"/>
@@ -45,7 +46,6 @@
         <property name="align" value="top-right"/>
         <property name="layout" value="horizontal"/>
         <property name="spacing" value="5"/>
-
 
 
         <Progress id="speed">
