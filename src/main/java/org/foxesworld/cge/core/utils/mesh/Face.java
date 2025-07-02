@@ -1,4 +1,4 @@
-package org.foxesworld.cge.importers.obj;
+package org.foxesworld.cge.core.utils.mesh;
 
 import java.util.*;
 

@@ -1,4 +1,4 @@
-package org.foxesworld.cge.importers.obj.utils;
+package org.foxesworld.cge.core.utils.mesh;
 
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
@@ -6,8 +6,6 @@ import com.jme3.scene.Mesh;
 import com.jme3.scene.VertexBuffer;
 import com.jme3.scene.mesh.IndexBuffer;
 import com.jme3.util.BufferUtils;
-import org.foxesworld.cge.importers.obj.Face;
-import org.foxesworld.cge.importers.obj.Vertex; // Предполагается, что Vertex имеет методы vertexIndex() и texCoordIndex()
 
 import java.nio.FloatBuffer;
 import java.util.ArrayList;

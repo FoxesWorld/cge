@@ -20,13 +20,13 @@ import java.util.Objects;
 import java.util.concurrent.Callable;
 
 /**
- * Модуль физики, предоставляющий единый фасад для управления физическим миром в jMonkeyEngine.
+ * The main physics module, acting as a unified facade for managing the physics world in jMonkeyEngine.
  * <p>
- * Агрегирует подсистемы для работы с твердыми телами, мягкими телами и коллизиями,
- * делегируя управление свойствами соответствующим подмодулям.
+ * This module aggregates sub-systems for handling rigid bodies, soft bodies, and collisions,
+ * delegating property management to the respective sub-modules.
  * <p>
- * Обеспечивает потокобезопасность при взаимодействии с физическим миром и графом сцены
- * путем выполнения всех модификаций в основном потоке приложения через {@link Application#enqueue(Callable)}.
+ * It ensures thread safety when interacting with the physics world and the scene graph
+ * by executing all modifications on the main application thread via {@link Application#enqueue(Runnable)}.
  */
 public class PhysicsModule extends EngineModule<PhysicsConfig> {
     private static final Logger logger = LogManager.getLogger(PhysicsModule.class);
@@ -37,11 +37,14 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
     private BulletAppState bulletAppState;
     private BulletDebugAppState debugAppState;
 
-    // Подмодули для делегирования логики
     private RigidBodyModule rigidBodyModule;
     private SoftBodyModule softBodyModule;
     private CollisionModule collisionModule;
 
+    /**
+     * Constructs the PhysicsModule.
+     * @param app The main game engine application instance.
+     */
     public PhysicsModule(CalistaGameEngine app) {
         super(PhysicsModule.class, PhysicsConfig.class, app, false);
         this.app = Objects.requireNonNull(app, "Application cannot be null");
@@ -52,23 +55,18 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
     protected void initModule(CalistaGameEngine app) throws Exception {
         logger.info("Initializing PhysicsModule...");
 
-        // Инициализируем BulletAppState, если он еще не существует
         bulletAppState = app.getStateManager().getState(BulletAppState.class);
         if (bulletAppState == null) {
             bulletAppState = new BulletAppState();
-            // Можно настроить поток для физики, например:
-            // bulletAppState.setThreadingType(BulletAppState.ThreadingType.PARALLEL);
             app.getStateManager().attach(bulletAppState);
             logger.debug("New BulletAppState attached.");
         } else {
             logger.debug("Reusing existing BulletAppState.");
         }
 
-        // Регистрируем и инициализируем подмодули
         registerAndInitSubModules();
         applyConfig();
 
-        // Настраиваем отладку, если включена в конфигурации
         debugAppState = app.getStateManager().getState(BulletDebugAppState.class);
 
         if (getConfig().debug) {
@@ -78,10 +76,8 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
                 app.getStateManager().attach(debugAppState);
                 logger.info("BulletDebugAppState attached with new configuration.");
             }
-
             debugAppState.setEnabled(true);
             logger.info("Bullet physics debug view enabled.");
-
         } else {
             if (debugAppState != null) {
                 debugAppState.setEnabled(false);
@@ -92,7 +88,6 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
                 }
             }
         }
-
         logger.info("PhysicsModule initialized successfully.");
     }
 
@@ -104,9 +99,6 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
         subManager.register(collisionModule, 10);
         subManager.register(rigidBodyModule, 20);
         subManager.register(softBodyModule, 30);
-
-        // Предполагается, что ModuleManager сам вызовет init для зарегистрированных модулей.
-        // Если нет, их нужно инициализировать здесь вручную.
     }
 
     private void applyConfig() {
@@ -119,9 +111,8 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
     public void onConfigReloaded() {
         logger.info("Reloading physics configuration...");
         applyConfig();
-        // Делегируем перезагрузку конфигурации подмодулям
         subManager.getModules().stream()
-                .filter(m -> m instanceof EngineModule) // Убедимся, что это наши подмодули
+                .filter(m -> m instanceof EngineModule)
                 .forEach(m -> {
                     try {
                         ((EngineModule<?>) m).onConfigReloaded();
@@ -134,7 +125,7 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
     @Override
     protected void cleanupModule(Application app) {
         logger.info("Cleaning up PhysicsModule...");
-        subManager.shutdown(app); // Очищаем подмодули
+        subManager.shutdown(app);
 
         if (debugAppState != null && app.getStateManager().hasState(debugAppState)) {
             app.getStateManager().detach(debugAppState);
@@ -147,23 +138,22 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
     }
 
     /**
-     * Обеспечивает выполнение действия в потоке рендеринга jME3 для потокобезопасности.
-     * @param action Действие для выполнения.
+     * Enqueues an action to be executed on the jME3 render thread to ensure thread safety.
+     * @param action The action to be executed.
      */
     private void execute(Runnable action) {
         app.enqueue(action);
     }
 
     /**
-     * Проверяет, инициализирован ли модуль, и выбрасывает исключение, если нет.
+     * Checks if the module has been initialized and throws an exception if not.
+     * @throws IllegalStateException if the module is not initialized.
      */
     private void checkInitialized() {
         if (!isInitialized()) {
             throw new IllegalStateException("PhysicsModule is not initialized. Cannot perform this action.");
         }
     }
-
-    // --- Public API ---
 
     public PhysicsSpace getPhysicsSpace() {
         return bulletAppState.getPhysicsSpace();
@@ -177,34 +167,40 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
         return app;
     }
 
-    // --- Делегирование методов подмодулям с обеспечением потокобезопасности ---
-
     public RigidBodyModule getRigidBodyModule() {
         return rigidBodyModule;
     }
 
     /**
-     * Добавляет твердое тело для указанного Spatial с заданной массой.
-     * Форма столкновения будет сгенерирована автоматически.
-     * @param spatial Объект сцены.
-     * @param mass Масса объекта (0 для статичного тела).
+     * Adds a rigid body to the specified Spatial with a given mass.
+     * The collision shape will be generated automatically. This operation is thread-safe.
+     *
+     * @param spatial The scene object to which the rigid body will be attached.
+     * @param mass    The mass of the object (0 for a static body).
      */
     public void addRigidBody(Spatial spatial, float mass) {
         checkInitialized();
         execute(() -> rigidBodyModule.addRigidBody(spatial, mass));
     }
 
+    /**
+     * Removes the rigid body control from the specified Spatial. This operation is thread-safe.
+     * @param spatial The scene object from which to remove the rigid body.
+     */
     public void removeRigidBody(Spatial spatial) {
         checkInitialized();
         execute(() -> rigidBodyModule.removeRigidBody(spatial));
     }
 
+    /**
+     * Sets the friction for a rigid body on the specified Spatial. This operation is thread-safe.
+     * @param spatial  The target spatial.
+     * @param friction The new friction value.
+     */
     public void setRigidBodyFriction(Spatial spatial, float friction) {
         checkInitialized();
         execute(() -> {
             RigidBodyControl control = rigidBodyModule.getRigidBodyControl(spatial);
-            // Проверяем, что control все еще существует и привязан к миру,
-            // на случай если объект был удален между вызовом и выполнением.
             if (control != null && control.getPhysicsSpace() != null) {
                 control.setFriction(friction);
             } else {
@@ -213,6 +209,11 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
         });
     }
 
+    /**
+     * Sets the restitution (bounciness) for a rigid body on the specified Spatial. This operation is thread-safe.
+     * @param spatial     The target spatial.
+     * @param restitution The new restitution value.
+     */
     public void setRigidBodyRestitution(Spatial spatial, float restitution) {
         checkInitialized();
         execute(() -> {
@@ -223,6 +224,12 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
         });
     }
 
+    /**
+     * Sets the linear and angular damping for a rigid body on the specified Spatial. This operation is thread-safe.
+     * @param spatial The target spatial.
+     * @param linear  The new linear damping value.
+     * @param angular The new angular damping value.
+     */
     public void setRigidBodyDamping(Spatial spatial, float linear, float angular) {
         checkInitialized();
         execute(() -> {
@@ -233,30 +240,33 @@ public class PhysicsModule extends EngineModule<PhysicsConfig> {
         });
     }
 
-    // --- SoftBodyModule Delegation ---
-
     public SoftBodyModule getSoftBodyModule() {
         return softBodyModule;
     }
 
+    /**
+     * Adds a soft body to the specified Spatial. This operation is thread-safe.
+     * @param spatial The scene object to convert into a soft body.
+     */
     public void addSoftBody(Spatial spatial) {
         checkInitialized();
         execute(() -> softBodyModule.addSoftBody(spatial));
     }
 
+    /**
+     * Removes the soft body control from the specified Spatial. This operation is thread-safe.
+     * @param spatial The scene object from which to remove the soft body.
+     */
     public void removeSoftBody(Spatial spatial) {
         checkInitialized();
         execute(() -> softBodyModule.removeSoftBody(spatial));
     }
 
-    // --- CollisionModule Delegation ---
-
     public CollisionModule getCollisionModule() {
         return collisionModule;
     }
 
-    // Остальные методы жизненного цикла, если они не используются, можно оставить пустыми.
-    @Override protected void updateModule(float tpf) { /* Физика обновляется через BulletAppState */ }
-    @Override protected void onEnable() { /* NOP */ }
-    @Override protected void onDisable() { /* NOP */ }
+    @Override protected void updateModule(float tpf) {}
+    @Override protected void onEnable() {}
+    @Override protected void onDisable() {}
 }

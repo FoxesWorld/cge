@@ -16,7 +16,6 @@ import org.foxesworld.cge.core.module.ModuleManager;
 import org.foxesworld.cge.core.io.streaming.ByteBoxingUtils;
 import org.foxesworld.cge.core.io.streaming.StreamingManager;
 import org.foxesworld.cge.core.io.streaming.StreamingParserLoader;
-import org.foxesworld.cge.importers.obj.OBJImporter;
 import org.foxesworld.cge.modules.ModuleConfig;
 import org.foxesworld.cge.modules.ecs.ECSModule;
 import org.foxesworld.cge.modules.ecs.systems.PhysicsSystem;
@@ -28,7 +27,7 @@ import org.foxesworld.cge.modules.renderer.GpuInfo;
 import org.foxesworld.cge.modules.scene.SceneModule;
 import org.foxesworld.cge.modules.sound.SoundModule;
 import org.foxesworld.cge.modules.ui.novaUi.NovaUI;
-import org.foxesworld.cge.tmp.ShapePartySpawner;
+import org.foxesworld.cge.tmp.ShapeParty;
 import org.foxesworld.cge.tmp.menu.MainMenuAppState;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
@@ -180,7 +179,7 @@ public class CalistaGameEngine extends SimpleApplication {
 
         moduleManager.loadAll(this, () -> {
             // Register custom importers
-            this.assetManager.registerLoader(OBJImporter.class, "obj");
+            //this.assetManager.registerLoader(OBJImporter.class, "obj");
             //this.assetManager.registerLoader(FBXImporter.class, "fbx");
 
             this.scene = moduleManager.getModule(SceneModule.class);
@@ -196,9 +195,8 @@ public class CalistaGameEngine extends SimpleApplication {
             assetLoader.loadAllAssets(new StatusProgressBar());
             stateManager.attach(new ConfigEditorState(configService));
             assetLoader.onAssetsLoaded(() -> {
-                ShapePartySpawner spawner = new ShapePartySpawner(this);
-                spawner.preloadAssets();
-                spawner.startParty(10);
+                ShapeParty spawner = new ShapeParty(this);
+                spawner.startParty();
             });
         });
     }

@@ -141,7 +141,7 @@ public class CollisionModule extends EngineModule<PhysicsConfig> implements Phys
 
     @Override
     protected void cleanupModule(Application app) {
-        if (bulletState != null) {
+        if (bulletState.getPhysicsSpace() != null) {
             bulletState.getPhysicsSpace().removeCollisionListener(this);
         }
         previousFramePairs.clear();
