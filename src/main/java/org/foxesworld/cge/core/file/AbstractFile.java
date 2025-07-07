@@ -12,6 +12,8 @@ import java.io.File;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.nio.ByteOrder;
+import java.nio.MappedByteBuffer;
+import java.nio.channels.FileChannel;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
 
@@ -25,14 +27,15 @@ public abstract class AbstractFile<M extends Metadata> implements AutoCloseable 
     private static final Logger logger = LogManager.getLogger(AbstractFile.class);
     protected final HexFormat HEX = HexFormat.of();
     protected M metadata;
-    protected final File file;
+    protected File file;
     protected FileFormatDefinition formatDefinition;
 
     private String MAGIC;
     private int VERSION;
     private ByteOrder BYTE_ORDER = LITTLE_ENDIAN;
 
-    protected final FileReader fileReader;
+    private final FileReader fileReader;
+    private final FileWriter fileWriter;
 
     /**
      * Constructs a new AbstractFile with the given {@code File} and mode.
@@ -44,6 +47,7 @@ public abstract class AbstractFile<M extends Metadata> implements AutoCloseable 
     protected AbstractFile(File file, String mode, String formatDefinition) {
         this.file = file;
         this.fileReader = new FileReader(this, mode);
+        this.fileWriter = new FileWriter(this, mode);
         this.loadFormatDefinition(formatDefinition);
     }
 
@@ -77,19 +81,19 @@ public abstract class AbstractFile<M extends Metadata> implements AutoCloseable 
         }
         int ver = Short.toUnsignedInt(fileReader.readShort());
         if (ver != VERSION) {
-            logger.error("Unsupported version: expected {}, got {}", VERSION, ver);
+            logger.error("Unsupported version of {}: expected {}, got {}",MAGIC, VERSION, ver);
             throw new FileFormatException("Unsupported version: expected " + VERSION + ", got " + ver);
         }
         fileReader.seek(fileReader.position() + 2); // skip 2 bytes
     }
 
-    protected abstract void readFileNew() throws IOException;
+    protected abstract void readFile() throws IOException;
     protected abstract void onEntryRead(Map<String, Object> entry);
 
     /**
      * Reads a field from the file according to its definition.
      */
-    protected Object readField(FieldDefinition field, Map<String, Object> context) throws IOException {
+    protected Object readField(FieldDefinition field, Map<String, Object> context) {
         BYTE_ORDER = field.getByteOrder();
         fileReader.setByteOrder(BYTE_ORDER);
         switch (field.getType()) {
@@ -151,6 +155,58 @@ public abstract class AbstractFile<M extends Metadata> implements AutoCloseable 
         }
     }
 
+
+    /**
+     * Writes a field to the file writer's buffer according to its definition.
+     * @param field The definition of the field to write.
+     * @param value The value to write.
+     * @param context A map containing context values (like length fields).
+     */
+    protected void writeField(FieldDefinition field, Object value, Map<String, Object> context) {
+        if (fileWriter == null) throw new IllegalStateException("Cannot write file in the current mode.");
+
+        fileWriter.setByteOrder(field.getByteOrder() != null ? field.getByteOrder() : this.BYTE_ORDER);
+
+        // Обработка специальных случаев
+        if (value == null) {
+            if (field.getLength() != null && field.getLength() > 0) {
+                fileWriter.writeBytes(new byte[field.getLength()]);
+            }
+            return;
+        }
+
+        // Приведение типов для чисел
+        Number numValue = (value instanceof Number) ? (Number) value : null;
+
+        switch (field.getType()) {
+            case "byte":      fileWriter.writeByte(numValue.byteValue()); break;
+            case "ushort":    fileWriter.writeShort(numValue.shortValue()); break;
+            case "int":
+            case "int32":     fileWriter.writeInt(numValue.intValue()); break;
+            case "uint32":    fileWriter.writeInt(numValue.intValue()); break; // Записывается как обычный int
+            case "long":
+            case "int64":     fileWriter.writeLong(numValue.longValue()); break;
+            case "uint64":    fileWriter.writeLong(((BigInteger)value).longValue()); break;
+            case "float":     fileWriter.writeFloat(numValue.floatValue()); break;
+            case "double":    fileWriter.writeDouble(numValue.doubleValue()); break;
+            case "string": {
+                // Длина строки должна быть уже записана как отдельное поле
+                fileWriter.writeString((String)value);
+                break;
+            }
+            case "bytes":
+            case "byteArray": {
+                fileWriter.writeBytes((byte[])value);
+                break;
+            }
+            case "array": {
+                // Логика записи массива сложнее и требует отдельного метода
+                throw new UnsupportedOperationException("Array writing must be handled by the caller method.");
+            }
+            default:
+                throw new FileFormatException("Unsupported write type: " + field.getType());
+        }
+    }
     /**
      * Writes a variable-length string (with length prefix).
      */
@@ -240,6 +296,10 @@ public abstract class AbstractFile<M extends Metadata> implements AutoCloseable 
 
     public M getMetadata() {
         return metadata;
+    }
+
+    public FileWriter getFileWriter() {
+        return fileWriter;
     }
 
     public long size() {

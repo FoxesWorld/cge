@@ -17,10 +17,13 @@ import com.jme3.scene.Spatial;
 import com.jme3.scene.control.Control;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.modules.physics.PhysicsModule;
-import org.foxesworld.cge.modules.player.animation.AnimLayerControl;
+
+import org.foxesworld.cge.modules.player.camEffects.CameraEffectsConfig;
+import org.foxesworld.cge.modules.player.camEffects.CameraEffectsControl;
 import org.foxesworld.cge.modules.player.config.AnimationMapping;
 import org.foxesworld.cge.modules.player.config.PlayerConfig;
 import org.foxesworld.cge.modules.player.hud.PlayerHud;
+import org.foxesworld.cge.modules.player.inventory.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,10 +50,16 @@ public class Player extends Node implements PlayerContext {
     private final CameraEffectsControl camEffectsControl;
     private final PlayerHud playerHud;
 
+    private static final int HOTBAR_SIZE = 9;
+    private static final float INTERACTION_DISTANCE = 5f;
+    private final Inventory inventory;
+    private final PlayerInteractionControl interactionControl;
+    private final PlayerInputControl inputControl;
+
     private PlayerCameraControl camControl;
     private Spatial playerModel;
     private AnimComposer animComposer;
-    private AnimLayerControl animLayerControl;
+    //private AnimLayerControl animLayerControl;
     private PlayerAnimationController animationController;
     private final Vector3f reuseVec1 = new Vector3f();
     private final Vector3f reuseVec2 = new Vector3f();
@@ -77,6 +86,12 @@ public class Player extends Node implements PlayerContext {
         this.targetEyeHeight = configEyeHeight;
         this.interpEyeHeight = configEyeHeight;
 
+        this.inventory = new Inventory(HOTBAR_SIZE);
+        this.interactionControl = new PlayerInteractionControl(this, INTERACTION_DISTANCE);
+        addControl(interactionControl);
+        this.inputControl = new PlayerInputControl(this);
+        addControl(inputControl);
+
         setLocalTranslation(spawnPos);
         CapsuleCollisionShape shape = new CapsuleCollisionShape(
                 playerModule.getConfig().getPhysics().getRadius(),
@@ -100,7 +115,11 @@ public class Player extends Node implements PlayerContext {
         movementControl = new MovementControl(this, playerModule.getConfig().getMovement());
         addControl(movementControl);
 
-        camEffectsControl = new CameraEffectsControl(this);
+        CameraEffectsConfig effectsConfig = CameraEffectsConfig.load(
+                engine.getAssetManager(),
+                "assets/config/camera_effects.json" // Укажите ваш путь
+        );
+        camEffectsControl = new CameraEffectsControl(this, effectsConfig);
         addControl(camEffectsControl);
 
         // анимация прыжка/приземления с blend
@@ -118,7 +137,7 @@ public class Player extends Node implements PlayerContext {
             }
 
             @Override
-            public void move(float speed) {
+            public void onMove(float speed) {
                 String anim;
                 if (speed == 0f) {
                     anim = "idle";
@@ -194,8 +213,8 @@ public class Player extends Node implements PlayerContext {
                 logger.info("AnimComposer found. Animation list:");
                 animComposer.getAnimClipsNames().forEach(name -> logger.info("  - {}", name));
 
-                animLayerControl = new AnimLayerControl();
-                playerModel.addControl(animLayerControl);
+                //animLayerControl = new AnimLayerControl();
+                //playerModel.addControl(animLayerControl);
 
                 animationController = new PlayerAnimationController(animComposer, loadAnimationMapping());
                 animationController.play("idle", 0.15f, null, true);
@@ -226,14 +245,14 @@ public class Player extends Node implements PlayerContext {
         crouchAmount += ((isCrouching ? 0.7f : 1.0f) - crouchAmount) * 0.15f;
         targetEyeHeight = configEyeHeight * crouchAmount;
 
-        String animName = isGrounded() ? (movementControl.isSprinting() ? "sprint" : movementControl.isWalking() ? "move" : "idle") : "jump";
+        String animName = isGrounded() ? (movementControl.isSprinting() ? "sprint" : movementControl.isMoving() ? "move" : "idle") : "jump";
         if (animationController != null) animationController.play(animName, 0.13f, "", true);
 
         synchronize(true);
         updateModelPosition();
         updateGroundedState(tpf);
         playerHud.update(tpf);
-        animLayerControl.update(tpf);
+        //animLayerControl.update(tpf);
         animationController.update(tpf
         );
     }
@@ -314,6 +333,21 @@ public class Player extends Node implements PlayerContext {
         engine.getFlyByCamera().setEnabled(true);
         input.setCursorVisible(true);
     }
+    /**
+     * Handles the logic for picking up an item from the world.
+     * @param itemControl The control attached to the item's spatial.
+     */
+    public void pickupItem(PickableItemControl itemControl) {
+        ItemStack stack = itemControl.getItemStack();
+        if (inventory.addItem(stack)) {
+            logger.info("Picked up {}x {}", stack.getCount(), stack.getItem().getName());
+            // Item was successfully added to inventory, so remove it from the world
+            itemControl.getSpatial().removeFromParent();
+        } else {
+            logger.info("Inventory is full, cannot pick up {}.", stack.getItem().getName());
+            // Optional: display a "Inventory Full" message on the HUD
+        }
+    }
 
 
     @Override public CharacterControl getCharacter() { return character; }
@@ -331,10 +365,26 @@ public class Player extends Node implements PlayerContext {
         return playerModule.getConfig();
     }
 
+    public BulletAppState getBullet() {
+        return bullet;
+    }
+
+    public Inventory getInventory() {
+        return inventory;
+    }
+
+    public PlayerInteractionControl getInteractionControl() {
+        return interactionControl;
+    }
+
+    public PlayerInputControl getInputControl() {
+        return inputControl;
+    }
+
     public MovementControl getMovementControl() { return movementControl; }
     public CalistaGameEngine getEngine() { return engine; }
     public PlayerHud getPlayerHud() { return playerHud; }
     public AnimComposer getAnimComposer() { return animComposer; }
-    public AnimLayerControl getAnimLayerControl() { return animLayerControl; }
+   //public AnimLayerControl getAnimLayerControl() { return animLayerControl; }
     public PlayerAnimationController getAnimationController() { return animationController; }
 }

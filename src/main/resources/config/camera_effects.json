@@ -1,0 +1,26 @@
+{
+  "positionalSpring": { "stiffness": 200.0, "damping": 25.0 },
+  "rotationalSpring": { "stiffness": 180.0, "damping": 22.0 },
+  "fovSpring": { "stiffness": 100.0, "damping": 18.0 },
+  "leanSpring": { "stiffness": 150.0, "damping": 20.0 },
+
+  "walkProfile": {
+    "strideFactor": 0.45, "bobAmp": 0.015, "swayAmp": 0.020, "rollAmp": 0.08,
+    "curvePower": 1.9, "jitterIntensity": 0.001, "jitterSpeed": 45.0, "fovAdd": 0.0
+  },
+  "sprintProfile": {
+    "strideFactor": 0.72, "bobAmp": 0.038, "swayAmp": 0.028, "rollAmp": 0.10,
+    "curvePower": 2.6, "jitterIntensity": 0.002, "jitterSpeed": 65.0, "fovAdd": 4.0
+  },
+  "aimProfile": {
+    "strideFactor": 0.40, "bobAmp": 0.002, "swayAmp": 0.002, "rollAmp": 0.01,
+    "curvePower": 1.5, "jitterIntensity": 0.0001, "jitterSpeed": 30.0, "fovAdd": -20.0
+  },
+
+  "idleSettings": { "breathFreq": 0.2, "breathAmp": 0.003 },
+  "landingSettings": { "impactFactor": 0.6, "minImpact": 0.1, "maxImpact": 0.7, "fovPunch": 10.0 },
+  "thirdPersonSettings": { "distance": 3.5, "heightOffset": 0.5, "smoothSpeed": 8.0 },
+  "rotationalLagSettings": { "lagIntensity": 0.4, "springSettings": { "stiffness": 150.0, "damping": 24.0 } },
+  "leanSettings": { "leanAngle": 0.05, "leanOffset": 0.08 },
+  "damageSettings": { "shakeIntensity": 1.5, "rollIntensity": 0.2 }
+}

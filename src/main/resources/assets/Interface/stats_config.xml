@@ -23,7 +23,6 @@
         <property name="height" value="128"/>
         <property name="color" value="1,1,1,1"/>
     </Image>
-
     <!--
     <Text id="test">
         <property name="fontPath" value="assets/Interface/fonts/Aharoni.fnt"/>

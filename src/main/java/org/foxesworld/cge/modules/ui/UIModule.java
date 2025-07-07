@@ -65,9 +65,7 @@ public class UIModule extends EngineModule<UIConfig> {
         try {
             LOGGER.info("Creating UI screen '{}' from layout '{}'.", uiId, xmlPath);
             NovaUI newUi = new NovaUI.Builder(calistaGameEngine)
-                    .withLayout(xmlPath)
-                    .withEventHandler(eventHandler)
-                    .build();
+                    .withLayout(xmlPath).withEventHandler(eventHandler).build();
 
             uiInstances.put(uiId, newUi);
             calistaGameEngine.getStateManager().attach(newUi);

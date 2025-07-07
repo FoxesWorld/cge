@@ -9,6 +9,7 @@ import org.foxesworld.cge.core.utils.CallbackLatch;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -21,6 +22,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * @param <E> Entry type parsed from JSON (e.g. file path, descriptor)
  */
 public abstract class AbstractAssetLoader<E> {
+
+    private int entriesCount = 0;
 
     private static final Logger logger = LogManager.getLogger(AbstractAssetLoader.class);
 
@@ -70,10 +73,12 @@ public abstract class AbstractAssetLoader<E> {
                         logger.error("JSON resource '{}' not found.", resourcePath);
                         return 0;
                     }
-                    try (InputStreamReader reader = new InputStreamReader(is)) {
+                    try (InputStreamReader reader = new InputStreamReader(is, StandardCharsets.UTF_8)) {
                         List<E> entries = GSON.fromJson(reader, getListType());
                         if (entries == null || entries.isEmpty()) {
                             return 0;
+                        } else {
+                            entriesCount = entries.size();
                         }
                         Set<E> uniqueEntries = new LinkedHashSet<>(entries);
                         int entryCount = uniqueEntries.size();
@@ -109,9 +114,11 @@ public abstract class AbstractAssetLoader<E> {
      * @param latch latch to signal on completion
      */
     public void loadWithLatch(CallbackLatch latch) {
-        loadAllAsync()
-                .thenAccept(count -> logger.info("Loaded {} entries from {}", count, getJsonResourcePath()))
-                .whenComplete((result, error) -> latch.taskDone());
+        loadAllAsync().thenAccept(count -> logger.info("Loaded {} entries from {}", count, getJsonResourcePath())).whenComplete((result, error) -> latch.taskDone());
+    }
+
+    public int getFileEntries(){
+        return entriesCount;
     }
 
     /**

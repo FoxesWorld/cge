@@ -8,6 +8,7 @@ import org.foxesworld.cge.modules.ecs.ECSModule;
 import org.foxesworld.cge.modules.physics.PhysicsModule;
 import org.foxesworld.cge.modules.player.PlayerModule;
 import org.foxesworld.cge.modules.renderer.RendererModule;
+import org.foxesworld.cge.modules.scene.SceneModule;
 import org.foxesworld.cge.modules.sound.SoundModule;
 import org.foxesworld.cge.modules.terrain.Terrain;
 import org.foxesworld.cge.modules.ui.UIModule;
@@ -24,7 +25,7 @@ public class Game {
         List<ModuleConfig> cfg = List.of(
              new ModuleConfig(RendererModule::new, 20),
              new ModuleConfig(PhysicsModule::new, 35),
-                //new ModuleConfig(SceneModule::new,   10),
+             new ModuleConfig(SceneModule::new,   10),
              new ModuleConfig(UIModule::new,        5),
              new ModuleConfig(PlayerModule::new, 40),
              new ModuleConfig(Terrain::new, 25),

@@ -4,12 +4,14 @@ import com.formdev.flatlaf.FlatDarkLaf;
 import com.formdev.flatlaf.FlatLaf;
 import com.formdev.flatlaf.FlatPropertiesLaf;
 import org.foxesworld.cge.ICOParser;
-import org.foxesworld.cge.core.file.extensions.cgs.writer.CGSFileWriter;
+import org.foxesworld.cge.core.file.extensions.cgs.CGSFile;
+import org.foxesworld.cge.core.file.extensions.cgs.CGSMetadata;
 import org.foxesworld.cge.tools.SceneCGSCreator.util.ChunkControlsPanel;
 import org.foxesworld.cge.tools.SceneCGSCreator.util.ChunkListPanel;
 import org.foxesworld.cge.tools.SceneCGSCreator.util.ChunkViewport;
 
 import javax.swing.*;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
@@ -18,7 +20,7 @@ import java.io.InputStream;
 import java.util.List;
 
 public class SceneCgsCreatorFrame extends JFrame {
-    private CGSFileWriter writer;
+    private CGSFile cgsFile;
     private ChunkListPanel listPanel;
     private ChunkControlsPanel controlsPanel;
     private final ChunkViewport viewport = new ChunkViewport();
@@ -49,12 +51,14 @@ public class SceneCgsCreatorFrame extends JFrame {
         setLayout(new BorderLayout(10, 10));
 
         // Выбор файла сцены в начале
-        File file = promptForFile();
+        File file = promptForFile(this);
         if (file == null) {
             dispose();
             return;
         }
-        writer = new CGSFileWriter(file);
+        cgsFile = new CGSFile(file, "rw");
+        cgsFile.readFile();
+        System.out.println(cgsFile.getMetadata());
 
         // Инициализация панелей
         listPanel = new ChunkListPanel();
@@ -62,14 +66,14 @@ public class SceneCgsCreatorFrame extends JFrame {
             if (idx < 0) viewport.clear();
             else {
                 // получаем spec или данные через writer и передаем в viewport...
-                String desc = writer.getChunkSpec(idx);
-                viewport.showChunk(desc != null ? desc : "No details");
+               // String desc = writer.getChunkSpec(idx);
+               // viewport.showChunk(desc != null ? desc : "No details");
             }
         });
 
         controlsPanel = new ChunkControlsPanel(listPanel);
-        listPanel.setWriter(writer);
-        controlsPanel.setWriter(writer);
+        //listPanel.setWriter(writer);
+        //controlsPanel.setWriter(writer);
 
         // Панель ввода имени сцены
         JPanel topPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
@@ -95,23 +99,30 @@ public class SceneCgsCreatorFrame extends JFrame {
     /**
      * Показывает диалог выбора файла и возвращает файл с расширением .cgs или null при отмене
      */
-    private File promptForFile() {
+    private File promptForFile(Component parent) {
         JFileChooser chooser = new JFileChooser();
-        chooser.setDialogTitle("Select CGS Scene File");
-        if (chooser.showSaveDialog(this) != JFileChooser.APPROVE_OPTION) {
-            return null;
+        chooser.setDialogTitle("Select or Create a CGS Scene File");
+        chooser.setFileFilter(new FileNameExtensionFilter("CGS Scene Files (*.cgs)", "cgs"));
+        chooser.setAcceptAllFileFilterUsed(false);
+
+        if (chooser.showSaveDialog(parent) != JFileChooser.APPROVE_OPTION) {
+            return null; // Пользователь отменил операцию
         }
+
         File file = chooser.getSelectedFile();
-        if (!file.getName().toLowerCase().endsWith(".cgs")) {
-            file = new File(file.getParentFile(), file.getName() + ".cgs");
+        // --- ИЗМЕНЕНИЕ: Более надежная проверка и добавление расширения ---
+        String cgsExtension = ".cgs";
+        if (!file.getName().toLowerCase().endsWith(cgsExtension)) {
+            file = new File(file.getParentFile(), file.getName() + cgsExtension);
         }
         return file;
     }
 
+
     public static void main(String[] args) {
         System.setProperty("log.dir", System.getProperty("user.dir"));
         System.setProperty("log.level", "DEBUG");
-        setupTheme("theme/calista.properties");
+        setupTheme("assets/theme/calista.properties");
         SwingUtilities.invokeLater(SceneCgsCreatorFrame::new);
     }
 

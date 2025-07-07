@@ -141,7 +141,7 @@ public class ModuleManager {
             try {
                 logger.debug("Immediately initializing/attaching module {} after registration", moduleName);
                 if (!module.isLoaded()) module.initialize(stateManager, gameEngine);
-                if (!module.isAttached()) stateManager.attach(module);
+                if (!module.isLoaded()) stateManager.attach(module);
                 moduleHealth.get(moduleName).setStatus(ModuleState.RUNNING);
                 logger.info("Module {} initialized and attached after registration", moduleName);
                 notifyModuleLoaded(module.getClass());
@@ -178,7 +178,7 @@ public class ModuleManager {
             try {
                 logger.debug("Initializing module {} via initModule", moduleName);
                 if (!module.isLoaded()) module.initialize(stateManager, app);
-                if (!module.isAttached()) stateManager.attach(module);
+                if (!module.isLoaded()) stateManager.attach(module);
                 moduleHealth.get(moduleName).setStatus(ModuleState.RUNNING);
                 logger.info("Module {} initialized and attached", moduleName);
                 notifyModuleLoaded(moduleClass);
@@ -462,7 +462,7 @@ public class ModuleManager {
                 logger.info("Attempting to recover module {}", moduleName);
                 moduleHealth.get(moduleName).setStatus(ModuleState.RECOVERING);
                 module.recover();
-                if (!module.isEnabled() && !module.isAttached()) {
+                if (!module.isEnabled() && !module.isLoaded()) {
                     stateManager.attach(module);
                 }
                 moduleHealth.get(moduleName).setStatus(ModuleState.RUNNING, "Recovered from failure");
@@ -613,14 +613,17 @@ public class ModuleManager {
                 String moduleName = module.getClass().getSimpleName();
 
                 try {
-                    if (module.isLoaded() && module.isAttached()) {
-                        logger.debug("Detaching module {}", moduleName);
+                    if (module.isLoaded() && module.isLoaded()) {
                         stateManager.detach(module);
-                        logger.debug("Detached module {}", moduleName);
                     }
-                    module.cleanupModule(gameEngine);
                 } catch (Exception e) {
-                    logger.error("Error detaching/shutting down module {}: {}", moduleName, e.getMessage(), e);
+                    logger.error("Error detaching module {}: {}", moduleName, e.getMessage(), e);
+                } finally {
+                    try {
+                        module.cleanupModule(gameEngine);
+                    } catch (Exception e) {
+                        logger.error("Error cleaning up module {}: {}", moduleName, e.getMessage(), e);
+                    }
                 }
             }
 

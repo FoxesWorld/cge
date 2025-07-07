@@ -11,6 +11,10 @@ public abstract class Metadata {
         return tableOffset;
     }
 
+    public void setTableOffset(long tableOffset) {
+        this.tableOffset = tableOffset;
+    }
+
     public Object get(String path) {
         try {
             String[] parts = path.split("->");

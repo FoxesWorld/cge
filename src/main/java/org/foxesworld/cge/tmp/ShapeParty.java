@@ -33,7 +33,7 @@ public class ShapeParty {
         // Заранее создаем шаблон эффекта частиц
         ParticleEmitter particleTemplate = new ParticleEmitter("my particle effect", ParticleMesh.Type.Triangle, 60);
         Material pmMat = new Material(calistaGameEngine.getAssetManager(), "Common/MatDefs/Misc/Particle.j3md");
-        pmMat.setTexture("Texture", calistaGameEngine.getAssetRepo().getTexture("explosion"));
+        pmMat.setTexture("Texture", calistaGameEngine.getAssetRepo().getTexture("box"));
         particleTemplate.setMaterial(pmMat);
         particleTemplate.setImagesX(1);
         particleTemplate.setImagesY(1);

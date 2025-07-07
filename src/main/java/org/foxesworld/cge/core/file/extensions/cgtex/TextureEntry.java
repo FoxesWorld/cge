@@ -1,54 +1,48 @@
 package org.foxesworld.cge.core.file.extensions.cgtex;
 
-import java.util.Map;
+import java.util.Arrays;
+import java.util.Objects;
 
-public class TextureEntry {
-    private final int width;
-    private final int height;
-    private final String name;
-    private final byte format;
-    private final byte[] compressedData;
+/**
+ * Represents a single texture entry within a CGTEX file.
+ * This is an immutable data carrier class.
+ *
+ * @param width      The width of the texture in pixels.
+ * @param height     The height of the texture in pixels.
+ * @param name       The unique identifier name for this texture.
+ * @param format     The texture format identifier (e.g., 0 for RGBA8, 1 for DXT1).
+ * @param data       The raw byte array of the texture's pixel data.
+ */
+public record TextureEntry(int width, int height, String name, byte format, byte[] data) {
 
-    public TextureEntry(int width, int height, String name, byte format, byte[] compressedData) {
-        this.width = width;
-        this.height = height;
-        this.name = name;
-        this.format = format;
-        this.compressedData = compressedData;
+    public TextureEntry {
+        Objects.requireNonNull(name, "Name cannot be null");
+        Objects.requireNonNull(data, "Data cannot be null");
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        TextureEntry that = (TextureEntry) o;
+        return width == that.width && height == that.height && format == that.format && name.equals(that.name) && Arrays.equals(data, that.data);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = Objects.hash(width, height, name, format);
+        result = 31 * result + Arrays.hashCode(data);
+        return result;
     }
 
     @Override
     public String toString() {
         return "TextureEntry{" +
-                "width=" + width +
+                "name='" + name + '\'' +
+                ", width=" + width +
                 ", height=" + height +
                 ", format=" + format +
-                ", compressedDataSize=" + (compressedData != null ? compressedData.length : 0) +
+                ", data.length=" + data.length +
                 '}';
-    }
-
-    public int getWidth() {
-        return width;
-    }
-
-    public int getHeight() {
-        return height;
-    }
-
-    public byte getFormat() {
-        return format;
-    }
-
-    public byte[] getCompressedData() {
-        return compressedData;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public static TextureEntry fromMap(Map<String, Object> map) {
-        TextureEntry entry = new TextureEntry((Integer) map.get("width"), (Integer) map.get("height"), (String) map.get("name"), (byte) map.get("format"), (byte[]) map.get("data"));
-        return entry;
     }
 }

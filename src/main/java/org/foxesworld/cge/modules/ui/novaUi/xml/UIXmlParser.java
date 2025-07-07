@@ -3,11 +3,11 @@ package org.foxesworld.cge.modules.ui.novaUi.xml;
 import org.foxesworld.cge.modules.ui.novaUi.UINodeDefinition;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
+import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
 
 import javax.xml.parsers.DocumentBuilderFactory;
 import java.io.InputStream;
@@ -17,7 +17,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * Parses an XML UI layout file into a tree of UINodeDefinition objects.
+ * Parses an XML UI layout file into an immutable tree of UINodeDefinition objects.
  * Supports a flexible layout syntax where element properties can be defined
  * either as attributes on the element itself or as child <property> tags.
  */
@@ -32,34 +32,40 @@ public class UIXmlParser {
      * @throws Exception If parsing fails.
      */
     public UINodeDefinition parse(InputStream inputStream) throws Exception {
-        Document doc = DocumentBuilderFactory.newInstance().newDocumentBuilder().parse(inputStream);
+        DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+        // It's good practice to disable DTDs to prevent XXE vulnerabilities
+        factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", true);
+
+        Document doc = factory.newDocumentBuilder().parse(inputStream);
         doc.getDocumentElement().normalize();
         Element rootXmlNode = doc.getDocumentElement();
         return parseRecursive(rootXmlNode);
     }
 
     /**
-     * Recursively parses an XML Element into a UINodeDefinition.
-     * This method distinguishes between child elements that are UI components
-     * (like <Panel>, <Text>) and those that are <property> declarations.
+     * Recursively parses an XML Element into an immutable UINodeDefinition.
+     * This method gathers all properties and then recursively builds a list of
+     * child definitions before creating the final UINodeDefinition object.
      *
      * @param element The XML element to parse.
-     * @return A UINodeDefinition representing the element and its children.
+     * @return A new, immutable UINodeDefinition representing the element and its children.
      */
     private UINodeDefinition parseRecursive(Element element) {
         String type = element.getTagName();
-        Map<String, String> properties = new HashMap<>();
-        List<Element> childUiElements = new ArrayList<>();
+        Map<String, String> attributes = new HashMap<>();
+        List<UINodeDefinition> childDefinitions = new ArrayList<>();
 
-        // --- Stage 1: GATHER ALL PROPERTIES & SEPARATE UI CHILDREN ---
+        // --- Stage 1: GATHER ALL PROPERTIES ---
 
-        // First, read attributes directly from the element tag (for hybrid style, e.g., <Text id="...">)
-        // This makes 'id' a standard attribute, which is common practice.
-        if (element.hasAttribute("id")) {
-            properties.put("id", element.getAttribute("id"));
+        // First, read all attributes directly from the element tag (e.g., <Panel id="..." width="...">)
+        NamedNodeMap attributeNodes = element.getAttributes();
+        for (int i = 0; i < attributeNodes.getLength(); i++) {
+            Node attr = attributeNodes.item(i);
+            attributes.put(attr.getNodeName(), attr.getNodeValue());
         }
 
-        // Now, iterate through all child nodes to find <property> tags and other UI elements
+        // --- Stage 2: PROCESS CHILD NODES ---
+        // Iterate through all child nodes to find <property> tags and other UI elements.
         NodeList childNodes = element.getChildNodes();
         for (int i = 0; i < childNodes.getLength(); i++) {
             Node node = childNodes.item(i);
@@ -77,28 +83,24 @@ public class UIXmlParser {
                     }
 
                     if (name != null && !name.isEmpty() && value != null) {
-                        properties.put(name, value);
+                        if (attributes.containsKey(name)) {
+                            LOGGER.warn("Property '{}' for element <{}> was defined as both an attribute and a <property> tag. The <property> tag will override the attribute.", name, type);
+                        }
+                        attributes.put(name, value);
                     } else {
                         LOGGER.warn("Skipping invalid <property> tag in element <{}>. Missing 'name' or 'value'.", type);
                     }
                 } else {
                     // If it's not a <property> tag, it's a nested UI element.
-                    // Store it for later recursive parsing.
-                    childUiElements.add(childElement);
+                    // Recursively parse it and add the resulting definition to our list.
+                    childDefinitions.add(parseRecursive(childElement));
                 }
             }
         }
 
-        // --- Stage 2: CREATE THE DEFINITION AND PROCESS UI CHILDREN ---
-
-        // Create the definition object with all collected properties
-        UINodeDefinition definition = new UINodeDefinition(type, properties);
-
-        // Recursively parse the stored child UI elements and add them to the definition
-        for (Element uiChild : childUiElements) {
-            definition.addChild(parseRecursive(uiChild));
-        }
-
-        return definition;
+        // --- Stage 3: CREATE THE FINAL IMMUTABLE DEFINITION ---
+        // Create the definition object, passing the collected attributes and the
+        // fully constructed list of child definitions to the constructor.
+        return new UINodeDefinition(type, attributes, childDefinitions);
     }
 }

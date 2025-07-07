@@ -297,6 +297,7 @@ public final class FileReader implements Closeable {
 
         bufferLock.readLock().lock();
         try {
+
             if (length > mappedBuffer.remaining()) {
                 throw new IllegalArgumentException(
                         "Requested length " + length + " exceeds remaining bytes " + mappedBuffer.remaining());

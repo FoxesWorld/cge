@@ -8,7 +8,7 @@ import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.ViewPort;
 import com.jme3.shadow.DirectionalLightShadowRenderer;
-//import com.jme3.shadow.EdgeFilteringMode;
+import com.jme3.shadow.EdgeFilteringMode;
 import jme3utilities.sky.SkyControl;
 import jme3utilities.sky.StarsOption;
 import org.foxesworld.cge.CalistaGameEngine;
@@ -101,7 +101,7 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
         pssmShadowRenderer.setShadowIntensity(0.6f);
         pssmShadowRenderer.setLambda(0.65f);
         pssmShadowRenderer.setShadowZExtend(getConfig().getShadowZExtend());
-        //pssmShadowRenderer.setEdgeFilteringMode(EdgeFilteringMode.PCFPOISSON);
+        pssmShadowRenderer.setEdgeFilteringMode(EdgeFilteringMode.PCFPOISSON);
         viewPort().addProcessor(pssmShadowRenderer);
     }
 

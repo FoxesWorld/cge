@@ -18,12 +18,10 @@ import java.util.*;
 public class CGSFileWriter extends CGSFile {
     private static final Logger logger = LogManager.getLogger(CGSFileWriter.class);
 
-    private final File file;
     private String sceneName = "";
     private final List<ChunkEntry> chunkEntries = new ArrayList<>();
     private final List<byte[]> chunkData = new ArrayList<>();
     private final List<Map<String, Object>> chunkArgs = new ArrayList<>();
-    private long headerTableOffsetPos;
 
     // Для записи в mmap файл
     private FileChannel channel;
@@ -106,7 +104,7 @@ public class CGSFileWriter extends CGSFile {
         ensureBuffer(estimatedSize);
 
         mmapBuffer.position(0);
-        headerTableOffsetPos = writeHeader(sceneName);
+        long headerTableOffsetPos = writeHeader(sceneName);
 
         for (int i = 0; i < chunkEntries.size(); i++) {
             ChunkEntry entry = chunkEntries.get(i);

@@ -4,8 +4,8 @@
     "walk": "Walk",
     "sprint": "Run Forward",
     "jump": "Jump",
-    "fall": "Fall_Loop",
-    "landing": "Jumping Down",
+    "fall": "Fall A Land To Standing Idle 02",
+    "landing": "Landing",
     "crouch_idle": "Crouch_Idle",
     "crouch_walk": "Crouch_Walk_Fwd"
   }

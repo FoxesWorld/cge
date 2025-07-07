@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -23,7 +24,7 @@ public class CGSFile extends AbstractFile<CGSMetadata> {
     public CGSFile(File file, String mode) {
         super(file, mode, "CGS");
         setMAGIC("CGS0");
-        setVERSION(1);
+        setVERSION(0);
         setBYTE_ORDER(ByteOrder.LITTLE_ENDIAN);
     }
 
@@ -54,7 +55,7 @@ public class CGSFile extends AbstractFile<CGSMetadata> {
      * Now expects the new format: chunk type is explicit (int) and fields are little-endian.
      */
     @Override
-    public void readFileNew() throws IOException {
+    public void readFile() {
         if (formatDefinition == null) {
             throw new IllegalStateException("Format definition not loaded");
         }
@@ -87,6 +88,107 @@ public class CGSFile extends AbstractFile<CGSMetadata> {
             onEntryRead(entryMap);
         }
     }
+
+    /*
+    public void writeFile(Map<Integer, ByteBuffer> chunksToWrite) throws IOException {
+        if (formatDefinition == null) {
+            throw new IllegalStateException("Format definition not loaded. Cannot write file.");
+        }
+        if (getMetadata() == null) {
+            throw new IllegalStateException("Metadata must be set before writing. Use setMetadata().");
+        }
+
+        logger.info("Starting to write CGS file: {}", getFile().getName());
+
+        // --- Фаза 1: Подготовка и вычисление смещений ---
+
+        // Вычисляем размер заголовка на основе FieldDefinition
+        int headerSize = 0;
+        byte[] sceneNameBytes = getMetadata().getSceneName().getBytes(StandardCharsets.UTF_8);
+        for (FieldDefinition field : formatDefinition.getHeader()) {
+            if ("string".equals(field.getType()) && "sceneName".equals(field.getName())) {
+                headerSize += sceneNameBytes.length;
+            } else {
+                // Предполагаем, что у FieldType есть метод getSize()
+                // Если нет, вам нужно будет добавить логику для определения размера
+                headerSize += field.getLength();//.getSize();
+            }
+        }
+
+        // Рассчитываем смещения для каждого чанка и общий размер данных
+        long currentDataOffset = headerSize;
+        Map<Integer, ChunkEntry> newChunkTable = new LinkedHashMap<>();
+        for (Map.Entry<Integer, ByteBuffer> entry : chunksToWrite.entrySet()) {
+            int id = entry.getKey();
+            ByteBuffer chunkData = entry.getValue();
+            int length = chunkData.remaining();
+
+            // Получаем тип чанка из существующей таблицы или ставим по умолчанию
+            ChunkType type = this.chunkTable.getOrDefault(id, new ChunkEntry(0, 0, 0, ChunkType.GENERIC_DATA_BLOB)).type();
+
+            newChunkTable.put(id, new ChunkEntry(id, currentDataOffset, length, type));
+            currentDataOffset += length;
+            logger.debug("Planned chunk ID {}: offset={}, length={}, type={}", id, currentDataOffset - length, length, type);
+        }
+
+        // Смещение таблицы чанков - сразу после всех данных
+        long chunkTableOffset = currentDataOffset;
+        getMetadata().setTableOffset(chunkTableOffset);
+        getMetadata().setChunkCount(newChunkTable.size());
+
+        logger.debug("Calculated header size: {}, Data size: {}, Chunk table offset: {}", headerSize, (chunkTableOffset - headerSize), chunkTableOffset);
+
+        // --- Фаза 2: Запись данных в буфер ---
+
+        // 1. Записываем заголовок, используя writeField
+        Map<String, Object> headerContext = new HashMap<>();
+        headerContext.put("magic", getMAGIC());
+        headerContext.put("version", getVERSION());
+        headerContext.put("sceneNameLength", sceneNameBytes.length);
+        headerContext.put("sceneName", getMetadata().getSceneName());
+        headerContext.put("tableOffset", chunkTableOffset);
+        // Добавьте 'reserved' поле, если оно есть в вашем JSON
+        // headerContext.put("reserved", new byte[16]);
+
+        for (FieldDefinition field : formatDefinition.getHeader()) {
+            Object value = headerContext.get(field.getName());
+            writeField(field, value, headerContext);
+        }
+        logger.debug("Header successfully written to buffer.");
+
+        // 2. Записываем данные чанков
+        for (Map.Entry<Integer, ByteBuffer> entry : chunksToWrite.entrySet()) {
+            ByteBuffer chunkData = entry.getValue();
+            chunkData.rewind(); // Важно! Устанавливаем позицию буфера в начало перед записью.
+            getFileWriter().writeBytes(chunkData.array());
+        }
+        logger.debug("{} chunks data successfully written to buffer.", chunksToWrite.size());
+
+        // 3. Записываем таблицу чанков
+        // Сначала количество чанков
+        getFileWriter().writeInt(newChunkTable.size());
+
+        // Затем каждую запись в таблице, используя writeField
+        for (ChunkEntry chunkEntry : newChunkTable.values()) {
+            // Мы не можем напрямую использовать writeField для всей структуры,
+            // так как она не описана как одно поле, а как последовательность.
+            // Поэтому пишем поля по отдельности.
+            getFileWriter().writeInt(chunkEntry.id());
+            getFileWriter().writeLong(chunkEntry.offset());
+            getFileWriter().writeInt(chunkEntry.length());
+            getFileWriter().writeInt(chunkEntry.type().getTypeValue());
+        }
+        logger.debug("Chunk table successfully written to buffer.");
+
+        // --- Фаза 3: Сохранение на диск ---
+        getFileWriter().commit();
+        logger.info("CGS file write operation completed successfully for {}", getFile().getAbsolutePath());
+
+        // Обновляем внутреннее состояние CGSFile
+        this.chunkTable.clear();
+        this.chunkTable.putAll(newChunkTable);
+    }
+     */
 
     /**
      * Reads a scene chunk from the file based on its chunk ID.

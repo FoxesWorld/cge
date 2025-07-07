@@ -1,0 +1,10 @@
+Material Erica : Common/MatDefs/Light/PBRLighting.j3md {
+    MaterialParameters {
+        Texture BaseColorMap : EricaBodyDiffuse|Repeat
+        Texture RoughnessMap : ch2_dor_bushyground_roughness|Repeat
+        Boolean UseSpecGloss : false
+        Boolean UseSpecularAA : false
+        Float Glossiness : 0.7
+        Float Metallic : 0.0
+    }
+}

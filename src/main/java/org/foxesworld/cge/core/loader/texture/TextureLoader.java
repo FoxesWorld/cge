@@ -58,19 +58,19 @@ public class TextureLoader extends AbstractAssetLoader<TextureEntry> implements 
         }
 
         try (CGTEXFile cgtex = new CGTEXFile(file, "r")) {
-            cgtex.readFileNew();
+            cgtex.readFile();
             int count = 0;
             for (org.foxesworld.cge.core.file.extensions.cgtex.TextureEntry te : cgtex.getEntries()) {
                 BufferedImage img = DDSDecoder.decode(
-                        te.getWidth(), te.getHeight(), te.getFormat(), te.getCompressedData()
+                        te.width(), te.height(), te.format(), te.data(), false
                 );
                 ByteBuffer buf = toByteBuffer(img, flipY);
-                Image jmeImage = new Image(Image.Format.RGBA8, te.getWidth(), te.getHeight(), buf, ColorSpace.sRGB);
+                Image jmeImage = new Image(Image.Format.RGBA8, te.width(), te.height(), buf, ColorSpace.sRGB);
                 jmeImage.setMipmapsGenerated(genMipMaps);
 
                 Texture2D tex = new Texture2D(jmeImage);
-                tex.setName(te.getName());
-                engine.getAssetRepo().addTexture(te.getName(), tex);
+                tex.setName(te.name());
+                engine.getAssetRepo().addTexture(te.name(), tex);
                 count++;
             }
             return count;

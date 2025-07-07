@@ -5,7 +5,6 @@ import com.jme3.scene.Node;
 import com.jme3.scene.Spatial;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.file.extensions.cgs.*;
-import org.foxesworld.cge.core.file.extensions.cgs.parser.types.LightingParser;
 import org.foxesworld.cge.core.file.extensions.cgs.parser.types.TerrainParser;
 import org.foxesworld.cge.core.module.EngineModule;
 import org.foxesworld.cge.core.module.health.ModuleHealthMonitor;
@@ -24,7 +23,6 @@ import java.util.function.Consumer;
 public class SceneModule extends EngineModule<SceneConfig> {
     private static final Logger logger = LoggerFactory.getLogger(SceneModule.class);
 
-    private CGSMetadata cgsMetadata;
     private CGSFile sceneFile;
     private List<ChunkEntry> entries;
     private StreamingManager<Integer, SceneChunk> streamingManager;
@@ -65,8 +63,7 @@ public class SceneModule extends EngineModule<SceneConfig> {
                 bytes -> {
                     try {
                         this.sceneFile = new CGSFile(new File(cfg.getScenePath()), "r");
-                        this.sceneFile.readFileNew();
-                        this.cgsMetadata = sceneFile.getMetadata();
+                        this.sceneFile.readFile();
                         // Use explicit ChunkEntry type from CGSFile
                         this.entries = new ArrayList<>(sceneFile.getChunkTable());
                         setupStreamingForChunks(this.sceneFile);
@@ -91,7 +88,7 @@ public class SceneModule extends EngineModule<SceneConfig> {
 
     private void setupStreamingForChunks(CGSFile reader) {
         this.streamingManager = new StreamingManager<>(reader::readChunk, true, 2);
-        this.sceneRoot = new Node(cgsMetadata.getSceneName());
+        this.sceneRoot = new Node(reader.getMetadata().getSceneName());
         chunksRemaining.set(entries.size());
         logger.debug("SceneModule: {} chunks to stream", entries.size());
 
@@ -125,10 +122,10 @@ public class SceneModule extends EngineModule<SceneConfig> {
             ModuleHealthMonitor.getInstance().reportState(getName(), ModuleState.RUNNING);
 
             // Создание ECS-контекста только после завершения загрузки
-            SceneEntityContext ecsContext = new SceneEntityContext(sceneRoot, cgsMetadata, entries, app.getEcsModule().getEntityData());
+            SceneEntityContext ecsContext = new SceneEntityContext(sceneRoot, sceneFile.getMetadata(), entries, app.getEcsModule().getEntityData());
 
             sceneReady = true;
-            readyContext = new SceneReadyContext(sceneRoot, cgsMetadata, entries, ecsContext);
+            readyContext = new SceneReadyContext(sceneRoot, sceneFile.getMetadata(), entries, ecsContext);
 
             for (Consumer<SceneReadyContext> cb : onSceneReadyCallbacks) {
                 safeCallback(cb, readyContext);
@@ -138,6 +135,7 @@ public class SceneModule extends EngineModule<SceneConfig> {
 
     private Spatial parseChunk(CalistaGameEngine app, SceneChunk chunk) {
         logger.debug("Chunk {} data - {}", chunk.getEntry().type(), dumpBufferHex(chunk.getData()));
+        System.out.println(chunk.getData());
 
         return switch (chunk.getEntry().type()) {
             case HEIGHTMAP -> new TerrainParser().parse(app, chunk, configLoader);
