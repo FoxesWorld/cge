@@ -1,4 +1,4 @@
-package org.foxesworld.cge.modules.player.camEffects;
+package org.foxesworld.cge.modules.player.control.camEffects;
 
 import com.google.gson.Gson;
 import com.jme3.asset.AssetManager;

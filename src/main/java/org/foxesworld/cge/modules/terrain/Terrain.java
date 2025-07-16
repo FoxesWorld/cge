@@ -46,7 +46,7 @@ public class Terrain extends EngineModule<TerrainConfig> {
         // 3. Apply material and shadows
         Material mat = gameEngine.getMaterialManager().getMaterial("assets/MatDefs/grass.j3m");
         terrainGeo.setMaterial(mat);
-        terrainGeo.setShadowMode(RenderQueue.ShadowMode.Receive); // Terrain usually just receives shadows
+        terrainGeo.setShadowMode(RenderQueue.ShadowMode.CastAndReceive); // Terrain usually just receives shadows
 
         // 4. Attach to the scene graph and add physics
         getGameEngine().enqueue(() -> {

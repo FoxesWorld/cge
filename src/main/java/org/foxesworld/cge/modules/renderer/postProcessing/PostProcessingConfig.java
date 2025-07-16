@@ -55,6 +55,8 @@ public class PostProcessingConfig extends ModuleConfig {
 
     public static class Dlsf {
         private boolean enable = true;
+        private int shadowMapSize = 16384;
+        private int nbSplits = 4;
         private boolean renderBackFacesShadows = true;
         private boolean stabilization = true;
         private float shadowIntensity = 0.55f;
@@ -66,6 +68,14 @@ public class PostProcessingConfig extends ModuleConfig {
 
         public boolean isRenderBackFacesShadows() {
             return renderBackFacesShadows;
+        }
+
+        public int getNbSplits() {
+            return nbSplits;
+        }
+
+        public int getShadowMapSize() {
+            return shadowMapSize;
         }
 
         public boolean isStabilization() {

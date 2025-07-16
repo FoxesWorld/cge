@@ -20,6 +20,8 @@
   "dlsf": {
     "enable": true,
     "renderBackFacesShadows": true,
+    "shadowMapSize": 16384,
+    "nbSplits": 4,
     "stabilization": true,
     "shadowIntensity": 0.55,
     "edgeFilteringMode": "PCF8",

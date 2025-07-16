@@ -1,4 +1,4 @@
-package org.foxesworld.cge.modules.player.camEffects.springs;
+package org.foxesworld.cge.modules.player.control.camEffects.springs;
 
 import com.jme3.math.Vector3f;
 

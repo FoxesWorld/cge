@@ -1,4 +1,4 @@
-package org.foxesworld.cge.modules.player.camEffects;
+package org.foxesworld.cge.modules.player.control;
 
 import com.jme3.bullet.collision.PhysicsRayTestResult;
 import com.jme3.bullet.collision.shapes.CapsuleCollisionShape;
@@ -10,10 +10,10 @@ import com.jme3.renderer.Camera;
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.ViewPort;
 import com.jme3.scene.control.AbstractControl;
-import org.foxesworld.cge.modules.player.MovementControl;
 import org.foxesworld.cge.modules.player.Player;
-import org.foxesworld.cge.modules.player.camEffects.springs.ScalarDampedSpring;
-import org.foxesworld.cge.modules.player.camEffects.springs.VectorDampedSpring;
+import org.foxesworld.cge.modules.player.control.camEffects.CameraEffectsConfig;
+import org.foxesworld.cge.modules.player.control.camEffects.springs.ScalarDampedSpring;
+import org.foxesworld.cge.modules.player.control.camEffects.springs.VectorDampedSpring;
 
 import java.util.List;
 
@@ -24,7 +24,7 @@ import static com.jme3.math.Vector3f.UNIT_Y;
  * This implementation uses specialized damped spring models for all camera motions,
  * ensuring fluid inertia and a highly configurable, realistic feel.
  */
-public class CameraEffectsControl extends AbstractControl {
+public final class CameraEffectsControl extends AbstractControl {
 
     private final Player player;
     private final Camera cam;

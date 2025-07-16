@@ -1,4 +1,4 @@
-package org.foxesworld.cge.modules.player.camEffects.springs;
+package org.foxesworld.cge.modules.player.control.camEffects.springs;
 
 /**
  * A specialized, highly optimized damped spring for single float values.

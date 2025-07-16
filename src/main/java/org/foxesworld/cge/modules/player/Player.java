@@ -18,12 +18,14 @@ import com.jme3.scene.control.Control;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.modules.physics.PhysicsModule;
 
-import org.foxesworld.cge.modules.player.camEffects.CameraEffectsConfig;
-import org.foxesworld.cge.modules.player.camEffects.CameraEffectsControl;
+import org.foxesworld.cge.modules.player.control.camEffects.CameraEffectsConfig;
+import org.foxesworld.cge.modules.player.control.CameraEffectsControl;
 import org.foxesworld.cge.modules.player.config.AnimationMapping;
 import org.foxesworld.cge.modules.player.config.PlayerConfig;
+import org.foxesworld.cge.modules.player.control.MovementControl;
+import org.foxesworld.cge.modules.player.control.PlayerCameraControl;
 import org.foxesworld.cge.modules.player.hud.PlayerHud;
-import org.foxesworld.cge.modules.player.inventory.*;
+import org.foxesworld.cge.modules.sound.SoundModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,7 +39,7 @@ import java.util.Objects;
 /**
  * Player with animation integration via AnimComposer and animation logging.
  */
-public class Player extends Node implements PlayerContext {
+public class Player extends Node {
 
     private static final Logger logger = LoggerFactory.getLogger(Player.class);
     private final PlayerModule playerModule;
@@ -52,9 +54,6 @@ public class Player extends Node implements PlayerContext {
 
     private static final int HOTBAR_SIZE = 9;
     private static final float INTERACTION_DISTANCE = 5f;
-    private final Inventory inventory;
-    private final PlayerInteractionControl interactionControl;
-    private final PlayerInputControl inputControl;
 
     private PlayerCameraControl camControl;
     private Spatial playerModel;
@@ -86,11 +85,6 @@ public class Player extends Node implements PlayerContext {
         this.targetEyeHeight = configEyeHeight;
         this.interpEyeHeight = configEyeHeight;
 
-        this.inventory = new Inventory(HOTBAR_SIZE);
-        this.interactionControl = new PlayerInteractionControl(this, INTERACTION_DISTANCE);
-        addControl(interactionControl);
-        this.inputControl = new PlayerInputControl(this);
-        addControl(inputControl);
 
         setLocalTranslation(spawnPos);
         CapsuleCollisionShape shape = new CapsuleCollisionShape(
@@ -149,6 +143,11 @@ public class Player extends Node implements PlayerContext {
                 if (animationController != null) {
                     animationController.play(anim, 0.18f, null, true);
                 }
+            }
+
+            @Override
+            public void onStep() {
+                getEngine().getModuleManager().getModule(SoundModule.class).playSound("assets/Sounds/FST_Conc_JumpDown_Player_1st_01.ogg", playerModel.getLocalTranslation(), true, 1.0f);
             }
         });
 
@@ -333,33 +332,32 @@ public class Player extends Node implements PlayerContext {
         engine.getFlyByCamera().setEnabled(true);
         input.setCursorVisible(true);
     }
-    /**
-     * Handles the logic for picking up an item from the world.
-     * @param itemControl The control attached to the item's spatial.
-     */
-    public void pickupItem(PickableItemControl itemControl) {
-        ItemStack stack = itemControl.getItemStack();
-        if (inventory.addItem(stack)) {
-            logger.info("Picked up {}x {}", stack.getCount(), stack.getItem().getName());
-            // Item was successfully added to inventory, so remove it from the world
-            itemControl.getSpatial().removeFromParent();
-        } else {
-            logger.info("Inventory is full, cannot pick up {}.", stack.getItem().getName());
-            // Optional: display a "Inventory Full" message on the HUD
-        }
+
+
+
+    public CharacterControl getCharacter() {
+        return character;
     }
 
-
-    @Override public CharacterControl getCharacter() { return character; }
-    @Override public Camera getCam() { return cam; }
+    public Camera getCam() {
+        return cam;
+    }
 
     public Spatial getPlayerModel() {
         return playerModel;
     }
 
-    @Override public InputManager getInput() { return input; }
-    @Override public CameraEffectsControl getCamEffectsControl() { return camEffectsControl; }
-    @Override public PlayerCameraControl getCamControl() { return camControl; }
+    public InputManager getInput() {
+        return input;
+    }
+
+    public CameraEffectsControl getCamEffectsControl() {
+        return camEffectsControl;
+    }
+
+    public PlayerCameraControl getCamControl() {
+        return camControl;
+    }
 
     public PlayerConfig getPlayerConfig() {
         return playerModule.getConfig();
@@ -369,22 +367,24 @@ public class Player extends Node implements PlayerContext {
         return bullet;
     }
 
-    public Inventory getInventory() {
-        return inventory;
+    public MovementControl getMovementControl() {
+        return movementControl;
     }
 
-    public PlayerInteractionControl getInteractionControl() {
-        return interactionControl;
+    public CalistaGameEngine getEngine() {
+        return engine;
     }
 
-    public PlayerInputControl getInputControl() {
-        return inputControl;
+    public PlayerHud getPlayerHud() {
+        return playerHud;
     }
 
-    public MovementControl getMovementControl() { return movementControl; }
-    public CalistaGameEngine getEngine() { return engine; }
-    public PlayerHud getPlayerHud() { return playerHud; }
-    public AnimComposer getAnimComposer() { return animComposer; }
-   //public AnimLayerControl getAnimLayerControl() { return animLayerControl; }
-    public PlayerAnimationController getAnimationController() { return animationController; }
+    public AnimComposer getAnimComposer() {
+        return animComposer;
+    }
+
+    //public AnimLayerControl getAnimLayerControl() { return animLayerControl; }
+    public PlayerAnimationController getAnimationController() {
+        return animationController;
+    }
 }

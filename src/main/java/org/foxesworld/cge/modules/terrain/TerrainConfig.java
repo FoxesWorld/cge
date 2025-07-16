@@ -6,7 +6,7 @@ public class TerrainConfig {
     // Новые поля для процедурной генерации
     private int size = 129; // 2^n + 1, например 65, 129, 257
     private float patchSize = 32f; // Размер одной ячейки сетки
-    private float heightScale = 0f; // Максимальная высота холмов
+    private float heightScale = 1f; // Максимальная высота холмов
     private float noiseScale = 1.1f; // Масштаб шума (частота холмов)
     private float textureScale = 1024f; // Масштаб текстуры (тайлинг)
     private int octaves = 0;

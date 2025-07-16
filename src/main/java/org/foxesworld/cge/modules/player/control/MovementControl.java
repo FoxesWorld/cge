@@ -1,4 +1,4 @@
-package org.foxesworld.cge.modules.player;
+package org.foxesworld.cge.modules.player.control;
 
 import com.jme3.bullet.control.CharacterControl;
 import com.jme3.input.InputManager;
@@ -11,6 +11,8 @@ import com.jme3.math.FastMath;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.control.AbstractControl;
+import org.foxesworld.cge.modules.player.Player;
+import org.foxesworld.cge.modules.player.PlayerState;
 import org.foxesworld.cge.modules.player.config.PlayerConfig;
 
 import static java.lang.Math.max;
@@ -30,25 +32,14 @@ public final class MovementControl extends AbstractControl implements ActionList
      * This serves as the primary communication channel to other systems, such as an animation controller.
      */
     public interface MovementListener {
-        /**
-         * Called the instant the character initiates a jump from the ground.
-         */
         void onJumpStart();
-
-        /**
-         * Called the instant the character lands after being in the air.
-         *
-         * @param fallHeight The approximate vertical distance the character fell from its peak height.
-         */
         void onLanding(float fallHeight);
-
-        /**
-         * Called every frame to report the character's current *target* speed based on input.
-         * This is not the character's current physical velocity, but the speed they are trying to reach.
-         *
-         * @param targetSpeed The desired speed (e.g., walk speed, sprint speed, or 0 for idle).
-         */
         void onMove(float targetSpeed);
+        /**
+         * Called rhythmically with every step the character takes on the ground.
+         * The frequency is determined by a time interval based on speed (walk/sprint).
+         */
+        void onStep();
     }
 
     private static final String MAP_FORWARD = "MoveForward";
@@ -58,7 +49,11 @@ public final class MovementControl extends AbstractControl implements ActionList
     private static final String MAP_JUMP = "Jump";
     private static final String MAP_SPRINT = "Sprint";
 
-    private final PlayerContext player;
+    // Constants for time-based footstep logic
+    private static final float WALK_STEP_INTERVAL_SECONDS = 0.5f; // Time between steps when walking
+    private static final float SPRINT_STEP_INTERVAL_SECONDS = 0.35f; // Time between steps when sprinting
+
+    private final Player player;
     private final CharacterControl character;
     private final InputManager input;
     private final float walkSpeed;
@@ -77,6 +72,7 @@ public final class MovementControl extends AbstractControl implements ActionList
     private boolean wasInAir = false;
     private float lastY = 0f;
     private float peakY = 0f;
+    private float timeSinceLastStep = 0f; // Timer instead of distance counter
 
     private boolean inputRegistered = false;
     private boolean rawRegistered = false;
@@ -88,7 +84,7 @@ public final class MovementControl extends AbstractControl implements ActionList
      * @param player         The context providing access to core components like the camera and character.
      * @param movementConfig The configuration object containing speed and smoothing values.
      */
-    public MovementControl(PlayerContext player, PlayerConfig.MovementConfig movementConfig) {
+    public MovementControl(Player player, PlayerConfig.MovementConfig movementConfig) {
         this.player = player;
         this.character = player.getCharacter();
         this.input = player.getInput();
@@ -100,6 +96,7 @@ public final class MovementControl extends AbstractControl implements ActionList
         registerRawInput();
     }
 
+    // --- Input registration/unregistration methods (unchanged) ---
     private void registerInput() {
         if (inputRegistered) return;
         inputRegistered = true;
@@ -139,31 +136,16 @@ public final class MovementControl extends AbstractControl implements ActionList
         rawRegistered = true;
     }
 
-    private void unregisterInput() {
-        if (!inputRegistered) return;
-        inputRegistered = false;
-        input.removeListener(this);
-    }
+    private void unregisterInput() { if (!inputRegistered) return; inputRegistered = false; input.removeListener(this); }
+    private void unregisterRawInput() { if (!rawRegistered) return; input.removeRawInputListener(rawListener); rawRegistered = false; }
+    @Override public void setSpatial(Spatial spatial) { super.setSpatial(spatial); if (spatial == null) { unregisterInput(); unregisterRawInput(); } }
 
-    private void unregisterRawInput() {
-        if (!rawRegistered) return;
-        input.removeRawInputListener(rawListener);
-        rawRegistered = false;
-    }
-
-    @Override
-    public void setSpatial(Spatial spatial) {
-        super.setSpatial(spatial);
-        if (spatial == null) {
-            unregisterInput();
-            unregisterRawInput();
-        }
-    }
 
     @Override
     protected void controlUpdate(float tpf) {
         if (spatial == null) return;
 
+        // --- Standard movement calculation (unchanged) ---
         tempDir.set(0, 0, 0);
         if (forward) tempDir.z += 1f;
         if (backward) tempDir.z -= 1f;
@@ -195,6 +177,10 @@ public final class MovementControl extends AbstractControl implements ActionList
             character.setViewDirection(viewDir);
         }
 
+        // --- NEW: Rhythmic, time-based footstep logic ---
+        handleFootsteps(tpf);
+
+        // --- Landing detection logic (unchanged) ---
         boolean inAir = !character.onGround();
         float posY = spatial.getWorldTranslation().y;
         if (inAir) {
@@ -212,6 +198,34 @@ public final class MovementControl extends AbstractControl implements ActionList
         }
     }
 
+    /**
+     * Handles footstep events based on a rhythmic time interval.
+     */
+    private void handleFootsteps(float tpf) {
+        if (character.onGround() && isMoving()) {
+            // Increment the timer
+            timeSinceLastStep += tpf;
+
+            // Determine the required time interval for the next step
+            float requiredInterval = isSprinting() ? SPRINT_STEP_INTERVAL_SECONDS : WALK_STEP_INTERVAL_SECONDS;
+
+            // If the timer has exceeded the interval, trigger a step
+            if (timeSinceLastStep >= requiredInterval) {
+                if (movementListener != null) {
+                    movementListener.onStep();
+                }
+                // Subtract the interval from the timer, preserving any leftover time.
+                // This keeps the rhythm consistent even with fluctuating frame rates.
+                timeSinceLastStep -= requiredInterval;
+            }
+        } else {
+            // Reset the timer if the player is in the air or has stopped.
+            // This ensures the first step after landing or starting to move feels responsive.
+            timeSinceLastStep = 0f;
+        }
+    }
+
+    // --- onAction and other methods (unchanged) ---
     @Override
     public void onAction(String name, boolean isPressed, float tpf) {
         switch (name) {
@@ -232,59 +246,12 @@ public final class MovementControl extends AbstractControl implements ActionList
         }
     }
 
-    /**
-     * A hook for handling raw key presses that should not be consumed by other systems.
-     * This is a guaranteed way to catch a specific key press.
-     */
-    protected void onRawKeyR() {
-        System.out.println("RawInputListener: R was pressed!");
-    }
-
-    @Override
-    protected void controlRender(com.jme3.renderer.RenderManager rm, com.jme3.renderer.ViewPort vp) {
-    }
-
-    /**
-     * @return The magnitude of the character's current horizontal velocity vector.
-     */
-    public float getCurrentSpeed() {
-        return currentVel.length();
-    }
-
-    /**
-     * @return True if the character has any horizontal velocity.
-     */
-    public boolean isMoving() {
-        return getCurrentSpeed() > 1e-4f;
-    }
-
-    /**
-     * @return True if the character is moving but not sprinting.
-     */
-    public boolean isWalking() {
-        return isMoving() && !sprint;
-    }
-
-    /**
-     * @return True if the character is moving and the sprint key is held.
-     */
-    public boolean isSprinting() {
-        return isMoving() && sprint;
-    }
-
-    /**
-     * Registers a listener to receive movement events.
-     * @param movementListener The listener to register.
-     */
-    public void setMovementListener(MovementListener movementListener) {
-        this.movementListener = movementListener;
-    }
-
-    /**
-     * Returns a snapshot of the current player state for UI or other logic systems.
-     * @return A new {@link PlayerState} object containing current motion data.
-     */
-    public PlayerState getPlayerState() {
-        return new PlayerState(isMoving(), isSprinting(), !character.onGround(), getCurrentSpeed(), currentVel.clone(), spatial.getWorldTranslation().clone());
-    }
+    private void onRawKeyR() { System.out.println("RawInputListener: R was pressed!"); }
+    @Override protected void controlRender(com.jme3.renderer.RenderManager rm, com.jme3.renderer.ViewPort vp) {}
+    public float getCurrentSpeed() { return currentVel.length(); }
+    public boolean isMoving() { return getCurrentSpeed() > 1e-4f; }
+    public boolean isWalking() { return isMoving() && !sprint; }
+    public boolean isSprinting() { return isMoving() && sprint; }
+    public void setMovementListener(MovementListener movementListener) { this.movementListener = movementListener; }
+    public PlayerState getPlayerState() { return new PlayerState(isMoving(), isSprinting(), !character.onGround(), getCurrentSpeed(), currentVel.clone(), spatial.getWorldTranslation().clone()); }
 }

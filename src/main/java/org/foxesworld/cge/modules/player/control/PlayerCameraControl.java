@@ -1,6 +1,5 @@
-package org.foxesworld.cge.modules.player;
+package org.foxesworld.cge.modules.player.control;
 
-import com.jme3.collision.CollisionResult;
 import com.jme3.collision.CollisionResults;
 import com.jme3.collision.UnsupportedCollisionException;
 import com.jme3.input.InputManager;
@@ -13,7 +12,7 @@ import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.ViewPort;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.control.AbstractControl;
-import org.foxesworld.cge.modules.player.config.PlayerConfig;
+import org.foxesworld.cge.modules.player.Player;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -23,7 +22,7 @@ import java.util.List;
  * collision handling via spherical raycasting, and smoothing.
  * Добавлена поддержка приближения/отдаления колесом мыши в третьем лице.
  */
-public class PlayerCameraControl extends AbstractControl implements AnalogListener, ActionListener {
+public final class PlayerCameraControl extends AbstractControl implements AnalogListener, ActionListener {
 
     private static final String TOGGLE_VIEW = "Toggle_View";
     private static final String MOUSE_LEFT  = "Mouse_Left";
