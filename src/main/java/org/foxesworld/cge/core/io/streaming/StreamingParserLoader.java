@@ -1,5 +1,10 @@
 package org.foxesworld.cge.core.io.streaming;
 
+import com.jme3.asset.AssetInfo;
+import com.jme3.asset.AssetKey;
+import com.jme3.asset.AssetManager;
+import com.jme3.asset.AssetNotFoundException;
+import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.io.ByteParser;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -25,6 +30,7 @@ public class StreamingParserLoader<T> {
 
     protected final ByteParser<T> parser;
     protected final ByteStreamer fallbackStreamer;
+    private AssetManager assetManager;
 
     /**
      * Constructor for the loader without a fallback streamer.
@@ -33,11 +39,12 @@ public class StreamingParserLoader<T> {
      * @param parser parser, cannot be {@code null}
      * @throws NullPointerException if parser is null
      */
-    public StreamingParserLoader(ByteParser<T> parser) {
+    public StreamingParserLoader(ByteParser<T> parser, AssetManager assetManager) {
         this(parser, path -> {
             logger.warn("No file or resource found for '{}'. Returning empty stream.", path);
             return new ByteArrayInputStream(new byte[0]);
         });
+        this.assetManager = assetManager;
     }
 
     /**
@@ -72,50 +79,41 @@ public class StreamingParserLoader<T> {
         }
     }
 
+
     /**
-     * Opens a stream by path:
-     * <ol>
-     *   <li>File path (checks that the file exists, is not a directory, and is readable)</li>
-     *   <li>Classpath resource</li>
-     *   <li>{@link ByteStreamer} fallback</li>
-     * </ol>
+     * Opens an InputStream for the given path, using the AssetManager as the primary
+     * mechanism and a custom streamer as a fallback.
      *
-     * @param path path to the resource
-     * @return input stream
-     * @throws IOException if an error occurs while opening the stream
-     * @throws NullPointerException if path is null
+     * @param path The path to the resource. The AssetManager will look for it on the classpath and in asset folders.
+     * @return An open InputStream.
+     * @throws IOException If the resource cannot be found by any means.
      */
     protected InputStream openInputStream(String path) throws IOException {
         Objects.requireNonNull(path, "Path cannot be null");
 
-        // Try to open as a file
         try {
-            Path filePath = Paths.get(path);
-            if (Files.exists(filePath) && Files.isRegularFile(filePath) && Files.isReadable(filePath)) {
-                logger.debug("Opening file input stream: {}", filePath.toAbsolutePath());
-                return Files.newInputStream(filePath);
+            AssetKey<?> assetKey = new AssetKey<>(path);
+            AssetInfo assetInfo = assetManager.locateAsset(assetKey);
+
+            if (assetInfo != null) {
+                logger.debug("Opening resource via JME AssetManager: {}", path);
+                return assetInfo.openStream();
             }
-        } catch (Exception e) {
-            logger.debug("Could not open as file: {}", path, e);
-            // Continue to next method
+            logger.debug("AssetManager did not find the resource (locateAsset returned null): {}", path);
+
+        } catch (AssetNotFoundException e) {
+            logger.debug("Resource not found via AssetManager: {}. Trying fallback.", path);
         }
 
-        // Try to open as a classpath resource
-        InputStream resourceStream = getClass().getClassLoader().getResourceAsStream(path);
-        if (resourceStream != null) {
-            logger.debug("Opening classpath resource: {}", path);
-            return resourceStream;
-        }
-
-        // Fall back to ByteStreamer
-        logger.info("Falling back to ByteStreamer for: {}", path);
+        logger.info("Resource not found in standard locations. Using fallback streamer for: {}", path);
         try {
             return fallbackStreamer.stream(path);
         } catch (Exception e) {
-            logger.error("Fallback streamer failed for path: {}", path, e);
-            throw new IOException("Fallback streamer failed for path: " + path, e);
+            logger.error("Fallback streamer also failed to process path: {}", path, e);
+            throw new IOException("Failed to open stream for path: " + path, e);
         }
     }
+
 
     /**
      * Allows manually passing an {@link InputStream} for parsing.

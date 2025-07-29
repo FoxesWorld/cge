@@ -1,8 +1,12 @@
 package org.foxesworld.cge.core.loader;
 
 import com.google.gson.Gson;
+import com.jme3.asset.AssetInfo;
+import com.jme3.asset.AssetKey;
+import com.jme3.asset.AssetNotFoundException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.io.progressBar.ProgressListener;
 import org.foxesworld.cge.core.utils.CallbackLatch;
 
@@ -51,10 +55,10 @@ public abstract class AbstractAssetLoader<E> {
     }
 
     /**
-     * Asynchronously loads JSON resource entries exactly once per loader instance.
-     * Subsequent invocations return the same future.
+     * Asynchronously loads JSON resource entries exactly once per loader instance
+     * using the JME AssetManager. Subsequent invocations return the same future.
      *
-     * @return completable future containing the total number of loaded items
+     * @return A CompletableFuture containing the total number of loaded items.
      */
     public CompletableFuture<Integer> loadAllAsync() {
         if (loaded.get()) {
@@ -65,21 +69,23 @@ public abstract class AbstractAssetLoader<E> {
                 return loadFuture != null ? loadFuture : CompletableFuture.completedFuture(0);
             }
             loaded.set(true);
+
             loadFuture = CompletableFuture.supplyAsync(() -> {
                 int totalLoaded = 0;
                 String resourcePath = getJsonResourcePath();
-                try (InputStream is = getClass().getClassLoader().getResourceAsStream(resourcePath)) {
-                    if (is == null) {
-                        logger.error("JSON resource '{}' not found.", resourcePath);
-                        return 0;
-                    }
-                    try (InputStreamReader reader = new InputStreamReader(is, StandardCharsets.UTF_8)) {
+
+                try {
+                    // 1. Use AssetManager to locate the asset. This is the key change.
+                    AssetInfo assetInfo = CalistaGameEngine.INSTANCE.getAssetManager().locateAsset(new AssetKey<>(resourcePath));
+                    try (InputStream is = assetInfo.openStream();
+                         InputStreamReader reader = new InputStreamReader(is, StandardCharsets.UTF_8)) {
+
                         List<E> entries = GSON.fromJson(reader, getListType());
                         if (entries == null || entries.isEmpty()) {
                             return 0;
-                        } else {
-                            entriesCount = entries.size();
                         }
+                        entriesCount = entries.size();
+
                         Set<E> uniqueEntries = new LinkedHashSet<>(entries);
                         int entryCount = uniqueEntries.size();
                         int loadedCount = 0;
@@ -98,8 +104,13 @@ public abstract class AbstractAssetLoader<E> {
                             }
                         }
                     }
+                } catch (AssetNotFoundException e) {
+                    // 3. This is the idiomatic way to handle a missing resource in JME.
+                    logger.error("JSON resource '{}' not found via AssetManager.", resourcePath);
+                    return 0; // Return 0 as per the original logic for a missing file.
                 } catch (Exception ex) {
-                    logger.error("Error loading resource '{}': {}", resourcePath, ex.getMessage());
+                    // Catch any other exceptions (e.g., IOException, JsonSyntaxException)
+                    logger.error("Error loading resource '{}': {}", resourcePath, ex.getMessage(), ex);
                 }
                 return totalLoaded;
             }, EXECUTOR);

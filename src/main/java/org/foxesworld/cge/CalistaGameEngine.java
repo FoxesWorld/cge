@@ -38,6 +38,7 @@ import java.util.List;
  * Main game engine class with dynamic module loading
  */
 public class CalistaGameEngine extends SimpleApplication {
+    public static CalistaGameEngine INSTANCE;
     private FilterPostProcessor filterPostProcessor;
     private final List<ModuleConfig> modulesToLoad;
     private final AssetRepo assetRepo;
@@ -61,6 +62,7 @@ public class CalistaGameEngine extends SimpleApplication {
      */
     public CalistaGameEngine(List<ModuleConfig> modulesToLoad) throws Exception {
         this.modulesToLoad = modulesToLoad;
+        INSTANCE = this;
 
         // Configure logging
         System.setProperty("log.dir", System.getProperty("user.dir"));
@@ -75,7 +77,7 @@ public class CalistaGameEngine extends SimpleApplication {
 
         // 4. Остальной ваш инициализационный код
         GenericByteParser<Byte[]> parser = new GenericByteParser<>(ByteBoxingUtils::toObject);
-        StreamingParserLoader<Byte[]> loader = new StreamingParserLoader<>(parser);
+        StreamingParserLoader<Byte[]> loader = new StreamingParserLoader<>(parser, assetManager);
         this.byteStreamer = new StreamingManager<>(loader::load, true, 0);
     }
 

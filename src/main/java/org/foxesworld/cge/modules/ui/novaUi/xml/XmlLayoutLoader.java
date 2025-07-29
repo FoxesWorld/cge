@@ -1,5 +1,7 @@
 package org.foxesworld.cge.modules.ui.novaUi.xml;
 
+import com.jme3.asset.AssetInfo;
+import com.jme3.asset.AssetKey;
 import com.jme3.asset.AssetManager;
 import com.jme3.asset.AssetNotFoundException;
 import org.foxesworld.cge.CalistaGameEngine;
@@ -44,18 +46,19 @@ public class XmlLayoutLoader implements UILayoutLoader {
         UIXmlParser parser = new UIXmlParser();
         UINodeDefinition rootDefinition;
 
-        try (InputStream inputStream = XmlLayoutLoader.class.getClassLoader().getResourceAsStream(configPath)) {
-            if (inputStream == null) {
-                throw new AssetNotFoundException("AssetManager returned null for " + configPath);
+        try {
+            AssetKey<Object> assetKey = new AssetKey<>(configPath);
+            AssetInfo assetInfo = assetManager.locateAsset(assetKey);
+            try (InputStream inputStream = assetInfo.openStream()) {
+                rootDefinition = parser.parse(inputStream);
             }
-            rootDefinition = parser.parse(inputStream);
+
         } catch (AssetNotFoundException e) {
-            LOGGER.error("Could not find the UI layout file '{}'.", configPath);
-            throw new AssetNotFoundException("UI layout not found: " + configPath, e);
+            LOGGER.error("Could not find the UI layout file '{}'.", configPath, e);
+            throw new AssetNotFoundException("UI layout not found at path: " + configPath, e);
         }
 
         UILayoutBuilder builder = new UILayoutBuilder(engine, elementRegistry, rootDefinition);
-
         return builder.build();
     }
 }

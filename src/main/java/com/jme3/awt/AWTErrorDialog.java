@@ -141,7 +141,7 @@ public class AWTErrorDialog extends JDialog {
         try {
             Desktop.getDesktop().browse(new URI("https://github.com/your/repo/issues"));
         } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Could not open browser.", "Error", JOptionPane.ERROR_MESSAGE);
+            JOptionPane.showMessageDialog(this, "Could not open browser.", "Calista Game Engine Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
@@ -166,7 +166,7 @@ public class AWTErrorDialog extends JDialog {
 
     public static void showDialog(String message) {
         SwingUtilities.invokeLater(() -> {
-            AWTErrorDialog dialog = new AWTErrorDialog(null, "Error", "We are sorry =(", message);
+            AWTErrorDialog dialog = new AWTErrorDialog(null, "Calista Game Engine Error", "We are sorry =(", message);
             dialog.setVisible(true);
         });
     }

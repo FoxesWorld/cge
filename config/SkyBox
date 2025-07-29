@@ -7,7 +7,7 @@
   "cloudiness": 0.5,
   "cloudYOffset": 0.4,
   "topAngle": 1.78,
-  "cloudsEnabled": true,
+  "cloudsEnabled": false,
   "shadowMode": "CastAndReceive",
   "shadowMapSize": 4096,
   "shadowFrustumCount": 3,

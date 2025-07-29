@@ -32,11 +32,11 @@ public class PlayerHud {
     }
 
     private void createCrosshair() {
-        //ImageElement crosshair = new ImageElement(player.getEngine(), "crosshair", hud.getRootPanel());
-        //crosshair.setProperty("imagepath", "assets/Interface/crosshair.png");
-        //crosshair.setProperty("width", "32");
-        //crosshair.setProperty("height", "32");
-        //crosshair.setProperty("align", "center");
+        ImageElement crosshair = new ImageElement(player.getEngine(), "crosshair", hud.getRootPanel());
+        crosshair.setProperty("imagepath", "assets/Interface/crosshair.png");
+        crosshair.setProperty("width", "32");
+        crosshair.setProperty("height", "32");
+        crosshair.setProperty("align", "center");
     }
 
     public void update(float tpf) {

@@ -21,7 +21,7 @@ import java.util.List;
 import static org.foxesworld.cge.tools.SceneCGSCreator.SceneCgsCreatorFrame.setupTheme;
 
 public class Game {
-    public static void main(String args[]){
+    public static void main(String[] args){
         List<ModuleConfig> cfg = List.of(
              new ModuleConfig(RendererModule::new, 20),
              new ModuleConfig(PhysicsModule::new, 35),
@@ -46,6 +46,7 @@ public class Game {
         settings.setTitle("Calista Game Engine");
         settings.setSettingsDialogImage("assets/theme/logo3.png");
         settings.setRenderer(AppSettings.LWJGL_OPENGL45);
+        //settings.setRenderer(AppSettings.LWJGL_OPENGL2);
         settings.setTitle("Calista Experimental");
         settings.setFrameRate(-1);
         try (InputStream icoStream = CalistaGameEngine.class.getClassLoader().getResourceAsStream("assets/theme/icon/engineLogo.ico")) {

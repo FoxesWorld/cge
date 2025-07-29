@@ -1,7 +1,11 @@
 package org.foxesworld.cge.core.file;
 
+import com.jme3.asset.AssetInfo;
+import com.jme3.asset.AssetKey;
+import com.jme3.asset.AssetNotFoundException;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.file.definition.FieldDefinition;
 import org.foxesworld.cge.core.file.definition.FileFormatDefinition;
 import org.foxesworld.cge.core.file.definition.FileStructureLoader;
@@ -10,6 +14,7 @@ import org.foxesworld.cge.core.file.extensions.cgs.CGSFile;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.math.BigInteger;
 import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
@@ -51,19 +56,32 @@ public abstract class AbstractFile<M extends Metadata> implements AutoCloseable 
         this.loadFormatDefinition(formatDefinition);
     }
 
+    /**
+     * Загружает определение формата файла из JSON-конфига с помощью JME AssetManager.
+     * @param definition Имя определения формата (без расширения).
+     */
     private void loadFormatDefinition(String definition) {
+        // 1. Формируем путь к ассету, как это делает JME
+        String assetPath = "config/fileformats/" + definition.toLowerCase() + ".json";
+
         try {
-            FileStructureLoader loader = new JsonFileStructureLoader(
-                    Objects.requireNonNull(
-                            CGSFile.class.getClassLoader().getResourceAsStream(
-                                    "config/fileformats/" + definition.toLowerCase() + ".json"
-                            ), "Config file not found: " + definition
-                    )
-            );
-            setFormatDefinition(loader.loadFormatDefinition(definition));
-        } catch (IOException | NullPointerException e) {
-            logger.error("Failed to load {} format: {}", definition, e.getMessage(), e);
-            throw new FileFormatException("Failed to load " + definition + " format", e);
+            // 2. Находим ассет по ключу, чтобы получить информацию о нем
+            AssetInfo assetInfo = CalistaGameEngine.INSTANCE.getAssetManager().locateAsset(new AssetKey<>(assetPath));
+
+            // 3. Открываем поток в блоке try-with-resources для автоматического закрытия
+            try (InputStream stream = assetInfo.openStream()) {
+                FileStructureLoader loader = new JsonFileStructureLoader(stream);
+                setFormatDefinition(loader.loadFormatDefinition(definition));
+            }
+
+        } catch (AssetNotFoundException e) {
+            // 4. Это более чистый способ обработки "файл не найден" в JME
+            logger.error("Не удалось загрузить формат {}: файл конфигурации не найден по пути '{}'", definition, assetPath, e);
+            throw new FileFormatException("Не удалось загрузить формат " + definition + ": файл не найден", e);
+        } catch (IOException e) {
+            // 5. Обработка ошибок чтения файла
+            logger.error("Ошибка ввода-вывода при загрузке формата {}: {}", definition, e.getMessage(), e);
+            throw new FileFormatException("Ошибка ввода-вывода при загрузке формата " + definition, e);
         }
     }
 
