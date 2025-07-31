@@ -1,9 +1,13 @@
-[17:31:22.016][INFO][TaskScheduler] TaskScheduler initialized [Compute Threads: 20, IO Pool: Cached, Max IO Threads: 80]
-[17:31:24.378][INFO][ModuleManager] ModuleManager initialized with modules directory: modules
-[17:31:24.400][DEBUG][XmlMenuBuilder] Registered component builder for TitleXml
-[17:31:24.401][DEBUG][XmlMenuBuilder] Registered component builder for ButtonXml
-[17:31:24.402][DEBUG][XmlMenuBuilder] Registered component builder for SliderXml
-[17:31:24.402][DEBUG][XmlMenuBuilder] Registered component builder for CheckboxXml
-[17:31:24.403][DEBUG][XmlMenuBuilder] Registered component builder for TabsXml
-[17:31:25.498][WARN][ViceMenuBackground] No model path provided. Creating a fallback placeholder.
-[17:31:27.765][INFO][OpenSettingsAction] Executing action: Open Settings Screen
+[19:34:38.228][INFO][TaskScheduler] TaskScheduler initialized [Compute Threads: 20, IO Pool: Cached, Max IO Threads: 80]
+[19:34:41.310][INFO][ModuleManager] ModuleManager initialized with modules directory: modules
+[19:34:41.342][DEBUG][ComponentRegistry] Registered component builder for TitleXml
+[19:34:41.343][DEBUG][ComponentRegistry] Registered component builder for ButtonXml
+[19:34:41.343][DEBUG][ComponentRegistry] Registered component builder for SliderXml
+[19:34:41.344][DEBUG][ComponentRegistry] Registered component builder for CheckboxXml
+[19:34:41.345][DEBUG][ComponentRegistry] Registered component builder for TabsXml
+[19:34:41.345][DEBUG][ComponentRegistry] Registered component builder for TitleXml
+[19:34:41.346][DEBUG][ComponentRegistry] Registered component builder for ButtonXml
+[19:34:41.346][DEBUG][ComponentRegistry] Registered component builder for SliderXml
+[19:34:41.346][DEBUG][ComponentRegistry] Registered component builder for CheckboxXml
+[19:34:41.346][DEBUG][ComponentRegistry] Registered component builder for TabsXml
+[19:34:43.533][INFO][OpenSettingsAction] Executing action: Open Settings Screen

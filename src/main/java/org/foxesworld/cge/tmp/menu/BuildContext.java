@@ -1,10 +1,31 @@
 package org.foxesworld.cge.tmp.menu;
 
 import com.jme3.app.Application;
+import org.foxesworld.cge.tmp.menu.components.MenuComponent;
 import org.foxesworld.cge.tmp.menu.components.ViceButton;
 
-// Используем record для простого контейнера
+import java.util.ArrayList;
+import java.util.List;
+
+/**
+ * A context object that holds shared resources and collects generated components
+ * during the menu building process.
+ */
 public record BuildContext(
         Application app,
-        ViceButton.Style buttonStyle
-) {}
+        ViceButton.Style buttonStyle,
+        List<MenuComponent> allComponents
+) {
+    public BuildContext(Application app, ViceButton.Style buttonStyle) {
+        this(app, buttonStyle, new ArrayList<>());
+    }
+
+    /**
+     * Adds a newly created component to the context's collection.
+     */
+    public void addComponent(Object component) {
+        if (component instanceof MenuComponent menuComponent) {
+            allComponents.add(menuComponent);
+        }
+    }
+}

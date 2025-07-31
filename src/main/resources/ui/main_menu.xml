@@ -11,9 +11,9 @@
       - lookAtY: Точка, куда смотрит камера по вертикали.
     -->
     <scene
-            modelPath=""
+            modelPath="assets/meshes/plm.obj"
             skyboxPath="assets/Textures/sky.dds"
-            modelScale="0.01"
+            modelScale="0.5"
             modelOffsetY="-1.0"
             cameraDistance="4.5"
             cameraHeight="1.5"

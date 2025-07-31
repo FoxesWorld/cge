@@ -11,59 +11,36 @@ import com.jme3.scene.Node;
 import com.jme3.scene.shape.Quad;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.Unmarshaller;
-import org.foxesworld.cge.core.utils.ColorUtils; // Предполагается, что у вас есть этот утилитный класс
+import org.foxesworld.cge.core.utils.ColorUtils;
 import org.foxesworld.cge.tmp.menu.actions.MenuAction;
-import org.foxesworld.cge.tmp.menu.components.MenuComponent;
 import org.foxesworld.cge.tmp.menu.components.ViceButton;
 import org.foxesworld.cge.tmp.menu.xml.*;
 import org.foxesworld.cge.tmp.menu.xml.ComponentBuilder;
-import org.foxesworld.cge.tmp.menu.xml.builders.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
 
 /**
  * A highly extensible, registration-based menu builder. It constructs a complete menu scene
- * from an XML file by dispatching build tasks to registered component builders and collects
- * all created interactive components into a unified list.
+ * from an XML file by dispatching build tasks to registered component builders.
  */
 public final class XmlMenuBuilder {
     private static final Logger LOGGER = LoggerFactory.getLogger(XmlMenuBuilder.class);
 
     private final BuildContext context;
-    private final Map<Class<? extends ComponentXml>, ComponentBuilder<?>> componentBuilders = new HashMap<>();
-
-    // A single, unified list for all created interactive components.
-    private final List<MenuComponent> allComponents = new ArrayList<>();
+    private final ComponentRegistry registry;
 
     public XmlMenuBuilder(Application app, ViceButton.Style buttonStyle) {
         this.context = new BuildContext(app, buttonStyle);
-        registerDefaultBuilders();
-    }
-
-    private void registerDefaultBuilders() {
-        registerComponentBuilder(TitleXml.class, new TitleBuilder());
-        registerComponentBuilder(ButtonXml.class, new ButtonBuilder());
-        registerComponentBuilder(SliderXml.class, new SliderBuilder());
-        registerComponentBuilder(CheckboxXml.class, new CheckboxBuilder());
-        registerComponentBuilder(TabsXml.class, new TabsBuilder(this));
-    }
-
-    public <T extends ComponentXml> void registerComponentBuilder(Class<T> modelClass, ComponentBuilder<T> builder) {
-        componentBuilders.put(modelClass, builder);
-        LOGGER.debug("Registered component builder for {}", modelClass.getSimpleName());
+        this.registry = new ComponentRegistry(this);
     }
 
     public MenuData build(String xmlPath) {
-        allComponents.clear();
         Node uiRoot = new Node("XmlUIRoot");
+        context.allComponents().clear(); // Clear components from previous build
 
-        try (InputStream is = XmlMenuBuilder.class.getClassLoader().getResourceAsStream(xmlPath)) {
+        try (InputStream is =XmlMenuBuilder.class.getClassLoader().getResourceAsStream(xmlPath)) {
             JAXBContext jaxbContext = JAXBContext.newInstance(
                     MenuXml.class, ScreenXml.class, SceneXml.class, ButtonXml.class,
                     TitleXml.class, TabsXml.class, TabXml.class, SliderXml.class, CheckboxXml.class
@@ -79,7 +56,7 @@ public final class XmlMenuBuilder {
                     }
                 }
             }
-            return new MenuData(menu.scene, uiRoot, allComponents);
+            return new MenuData(menu.scene, uiRoot, context.allComponents());
         } catch (Exception e) {
             LOGGER.error("Failed to build menu from XML file: {}", xmlPath, e);
             return MenuData.createEmpty();
@@ -87,18 +64,14 @@ public final class XmlMenuBuilder {
     }
 
     /**
-     * The main factory method. It finds the appropriate builder for the given XML model,
-     * delegates the build task, and adds the created component to a unified list if it's a MenuComponent.
+     * The main factory method. It finds the appropriate builder for the given XML model
+     * and delegates the build task to it.
      */
     public Object buildComponent(ComponentXml model, Node parent) {
-        ComponentBuilder builder = componentBuilders.get(model.getClass());
+        ComponentBuilder builder = registry.getBuilderFor(model);
         if (builder != null) {
             Object component = builder.build(model, parent, context);
-
-            // Add the newly created component to the unified list if it implements the interface.
-            if (component instanceof MenuComponent menuComponent) {
-                allComponents.add(menuComponent);
-            }
+            context.addComponent(component); // Add to the context's collection
             return component;
         } else {
             LOGGER.warn("No component builder registered for XML model type: {}", model.getClass().getSimpleName());

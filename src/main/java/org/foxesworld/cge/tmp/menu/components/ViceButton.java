@@ -12,40 +12,29 @@ import com.jme3.scene.Node;
 import com.jme3.scene.shape.Quad;
 
 /**
- * A highly stylized UI button inspired by modern, minimalist game menus with neon aesthetics.
- * <p>
- * This component encapsulates its own state and animation logic. It reacts to selection
- * changes by smoothly interpolating text color and animating a glowing underline.
- * The visual appearance is defined by a {@link Style} object, making it easily themeable.
- * </p>
- * <p>
- * To use, simply create an instance, add its node to the GUI, and call
- * {@link #setSelected(boolean)} and {@link #update(float)} in your menu's main loop.
- * </p>
+ * A highly stylized UI button with advanced visual effects like animated underlines and a "glitch" hover effect.
+ * This component is fully interactive and integrates with a centralized input handling system.
  */
-public final class ViceButton implements MenuComponent {
+public final class ViceButton implements InteractiveComponent, MenuComponent {
 
     private final Node buttonNode;
     private final BitmapText label;
+    private final BitmapText glitchLabel;
     private final Geometry underline;
     private final Runnable action;
     private final Style style;
 
-    private float x, y, width, height;
-    private boolean isSelected = false;
+    private final Vector2f position = new Vector2f();
+    private float width, height;
+    private boolean isSelected = false; // Persistent state (e.g., active tab)
+    private boolean isHovered = false;  // Transient state (cursor over element)
+    private boolean isUnderlineVisible = true;
 
     // Animation state
     private final ColorRGBA currentLabelColor = new ColorRGBA();
     private float currentUnderlineScaleX = 0f;
+    private float time = 0f;
 
-    /**
-     * Constructs a new ViceButton with a specific style.
-     *
-     * @param assetManager The application's AssetManager.
-     * @param text         The text to display on the button.
-     * @param style        The {@link Style} object defining the button's appearance and animations.
-     * @param action       The Runnable to execute when the button is clicked.
-     */
     public ViceButton(AssetManager assetManager, String text, Style style, Runnable action) {
         this.action = action;
         this.style = style;
@@ -56,47 +45,56 @@ public final class ViceButton implements MenuComponent {
         label.setColor(style.defaultColor());
         currentLabelColor.set(style.defaultColor());
 
+        this.glitchLabel = (BitmapText) label.clone();
+        glitchLabel.setColor(style.glowColor().mult(new ColorRGBA(1, 1, 1, 0.7f)));
+        glitchLabel.setAlpha(0);
+
         Material underlineMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
         underlineMat.setColor("Color", style.glowColor());
         underlineMat.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
         this.underline = new Geometry("ButtonUnderline", new Quad(1, style.underlineHeight()));
         underline.setMaterial(underlineMat);
-        underline.setLocalScale(0f, 1f, 1f); // Initially hidden
+        underline.setLocalScale(0f, 1f, 1f);
 
         buttonNode.attachChild(label);
+        buttonNode.attachChild(glitchLabel);
         buttonNode.attachChild(underline);
     }
 
     /**
-     * Sets the selection state of the button, which triggers the hover/unhover animations.
-     *
-     * @param selected True if the button is currently hovered or selected by the user.
+     * Sets the persistent selection state of the button (e.g., for an active tab).
+     * This is different from the transient hover state.
      */
     public void setSelected(boolean selected) {
         this.isSelected = selected;
     }
 
-    /**
-     * Called every frame from the main application loop to update the button's animations.
-     *
-     * @param tpf Time per frame, used for smooth interpolation.
-     */
+    @Override
     public void update(float tpf) {
+        time += tpf;
         float lerpFactor = FastMath.clamp(tpf * style.animationSpeed(), 0, 1);
+        boolean shouldGlow = isSelected || isHovered;
 
-        // Interpolate label color for a smooth transition.
-        ColorRGBA targetColor = isSelected ? style.selectedColor() : style.defaultColor();
+        // Animate label color
+        ColorRGBA targetColor = shouldGlow ? style.selectedColor() : style.defaultColor();
         currentLabelColor.interpolateLocal(targetColor, lerpFactor);
         label.setColor(currentLabelColor);
 
-        // Interpolate underline scale for an animated "reveal" effect.
-        float targetScaleX = isSelected ? 1.0f : 0.0f;
-        currentUnderlineScaleX = FastMath.interpolateLinear(lerpFactor, currentUnderlineScaleX, targetScaleX);
+        // Animate underline
+        float targetUnderlineScale = (shouldGlow && isUnderlineVisible) ? 1.0f : 0.0f;
+        currentUnderlineScaleX = FastMath.interpolateLinear(lerpFactor, currentUnderlineScaleX, targetUnderlineScale);
         underline.setLocalScale(width * currentUnderlineScaleX, 1f, 1f);
-
-        // Keep the underline centered as it scales in or out.
         float underlineX = (width - (width * currentUnderlineScaleX)) / 2f;
         underline.setLocalTranslation(underlineX, style.underlineYOffset(), 0);
+
+        // Animate glitch effect
+        float targetGlitchAlpha = isHovered ? 1.0f : 0.0f;
+        float currentGlitchAlpha = glitchLabel.getAlpha();
+        glitchLabel.setAlpha(FastMath.interpolateLinear(lerpFactor * 1.5f, currentGlitchAlpha, targetGlitchAlpha));
+        if (currentGlitchAlpha > 0.01f) {
+            float glitchOffset = (FastMath.sin(time * 50f) + FastMath.sin(time * 27f)) * 0.5f * style.glitchIntensity();
+            glitchLabel.setLocalTranslation(label.getLocalTranslation().x + glitchOffset, label.getLocalTranslation().y, 0.5f);
+        }
     }
 
     public void setSize(float width, float height) {
@@ -106,30 +104,18 @@ public final class ViceButton implements MenuComponent {
     }
 
     public void setPosition(float x, float y) {
-        this.x = x;
-        this.y = y;
+        this.position.set(x, y);
         this.buttonNode.setLocalTranslation(x, y, 0);
     }
 
     public void setLabelSize(float size) {
         label.setSize(size);
+        glitchLabel.setSize(size);
         centerLabel();
     }
 
-    public Vector2f getPosition() {
-        return new Vector2f(x, y);
-    }
-
-    public float getWidth() {
-        return width;
-    }
-
-    public float getHeight() {
-        return height;
-    }
-
-    public BitmapText getLabel() {
-        return label;
+    public void setUnderlineVisible(boolean visible) {
+        this.isUnderlineVisible = visible;
     }
 
     private void centerLabel() {
@@ -139,34 +125,67 @@ public final class ViceButton implements MenuComponent {
         float textX = (width - textWidth) / 2f;
         float textY = (height + textHeight) / 2f;
         label.setLocalTranslation(textX, textY, 1);
+        glitchLabel.setLocalTranslation(textX, textY, 0.5f);
     }
 
     public void executeAction() {
-        if (action != null) {
-            action.run();
-        }
+        if (!isActive || action == null) return;
+        action.run();
     }
 
-    public boolean intersects(Vector2f point) {
-        return point.x >= this.x && point.x <= (this.x + this.width) &&
-                point.y >= this.y && point.y <= (this.y + this.height);
+    @Override
+    public boolean intersects(Vector2f globalCursorPos) {
+        if (!isActive) return false;
+        Vector2f worldPos = new Vector2f(buttonNode.getWorldTranslation().x, buttonNode.getWorldTranslation().y);
+        return globalCursorPos.x >= worldPos.x && globalCursorPos.x <= worldPos.x + this.width &&
+                globalCursorPos.y >= worldPos.y && globalCursorPos.y <= worldPos.y + this.height;
     }
 
+    @Override
     public Node getNode() {
         return buttonNode;
     }
 
+    // --- Implementation of InteractiveComponent ---
+
+    @Override
+    public void setHovered(boolean hovered) {
+        this.isHovered = hovered;
+    }
+
+    @Override
+    public void handleMousePress(Vector2f cursor) {
+        // Simple buttons execute their action on release, handled by the InputHandler.
+    }
+
+    @Override
+    public void handleMouseDrag(Vector2f cursor) {
+        // Not applicable for a simple button.
+    }
+
+    @Override
+    public void handleMouseRelease() {
+        // Not applicable for a simple button.
+    }
+
+    private boolean isActive = true; // Новое поле
+
+    @Override
+    public void setActive(boolean active) {
+        this.isActive = active;
+        if (!active) {
+            setHovered(false); // Сбрасываем наведение, если компонент стал неактивным
+        }
+    }
+
+    // --- Getters for layout calculations ---
+
+    public Vector2f getPosition() { return position; }
+    public float getWidth() { return width; }
+    public float getHeight() { return height; }
+
     /**
      * A record that encapsulates all visual and animation properties for a {@link ViceButton}.
-     * This allows for easy theme creation and management.
-     *
-     * @param defaultColor     Color of the text when not selected.
-     * @param selectedColor    Color of the text when hovered/selected.
-     * @param glowColor        The color of the underline, typically a brighter version of selectedColor for bloom.
-     * @param fontPath         Path to the .fnt font file.
-     * @param animationSpeed   A multiplier for the interpolation speed of animations.
-     * @param underlineHeight  The thickness of the underline in pixels.
-     * @param underlineYOffset The vertical distance of the underline from the text baseline.
      */
     public record Style(
             ColorRGBA defaultColor,
@@ -175,24 +194,20 @@ public final class ViceButton implements MenuComponent {
             String fontPath,
             float animationSpeed,
             float underlineHeight,
-            float underlineYOffset
+            float underlineYOffset,
+            float glitchIntensity
     ) {
-        /**
-         * @return A default style configuration inspired by the Vice City / GTA 6 aesthetic.
-         */
         public static Style getViceStyle() {
-            // Убедитесь, что этот путь к шрифту существует в вашем проекте.
-            // Рекомендуется жирный, сжатый шрифт без засечек.
             String font = "Interface/Fonts/Default.fnt";
-
             return new Style(
                     ColorRGBA.White.clone(),
                     new ColorRGBA(1f, 0.2f, 0.6f, 1f), // Vibrant Pink
                     new ColorRGBA(1f, 0.2f, 0.6f, 1f).mult(2.5f), // Glowing Pink for Bloom
                     font,
-                    12f, // Animation speed
-                    2f,  // Underline height in pixels
-                    -4f  // Underline offset below the text
+                    15f,
+                    2.5f,
+                    -5f,
+                    2.0f
             );
         }
     }

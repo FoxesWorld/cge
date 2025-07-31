@@ -18,7 +18,7 @@ public class SliderBuilder implements ComponentBuilder<SliderXml> {
         ViceSlider slider = new ViceSlider(
                 context.app().getAssetManager(),
                 model.text,
-                context.buttonStyle().fontPath(),
+                context.buttonStyle(),
                 model.value,
                 model.bind
         );

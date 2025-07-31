@@ -12,10 +12,10 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * A self-contained tab container for settings menus, supporting both horizontal and vertical layouts.
- * This component now correctly handles coordinate systems and layout to prevent visual overlaps.
+ * A self-contained, interactive tab container for settings menus. It manages its
+ * own layout, state, and input delegation to child components.
  */
-public final class ViceTabs implements MenuComponent {
+public final class ViceTabs implements InteractiveComponent, MenuComponent {
 
     private record Tab(
             ViceButton button,
@@ -35,10 +35,10 @@ public final class ViceTabs implements MenuComponent {
 
     private int activeTabIndex = -1;
     private ViceSlider activeSlider = null;
+    private Vector2f buttonBarSize;
+    private float contentWidth, contentHeight;
 
-    // Optimization: Reusable vectors to avoid creating new objects in the update loop
     private final Vector2f tabsWorldPos = new Vector2f();
-    private final Vector2f buttonWorldPos = new Vector2f();
     private final Vector2f contentLocalCursor = new Vector2f();
 
     public ViceTabs(AssetManager assetManager, ViceButton.Style buttonStyle, Orientation orientation) {
@@ -73,11 +73,10 @@ public final class ViceTabs implements MenuComponent {
         tabsNode.attachChild(content);
     }
 
-    /**
-     * Finalizes the layout after all tabs have been added and selects the first tab.
-     */
     public void finalizeLayout(float contentWidth, float contentHeight) {
-        Vector2f buttonBarSize = layoutTabButtons();
+        this.contentWidth = contentWidth;
+        this.contentHeight = contentHeight;
+        this.buttonBarSize = layoutTabButtons();
         layoutContentArea(contentWidth, contentHeight, buttonBarSize);
 
         if (!tabs.isEmpty()) {
@@ -91,7 +90,6 @@ public final class ViceTabs implements MenuComponent {
         float spacing = 10f;
         float btnWidth = 180f, btnHeight = 45f;
         float padding = 10f;
-
         for (Tab tab : tabs) {
             tab.button().setSize(btnWidth, btnHeight);
             tab.button().setLabelSize(28f);
@@ -118,7 +116,6 @@ public final class ViceTabs implements MenuComponent {
 
     private void layoutContentArea(float width, float height, Vector2f buttonBarSize) {
         float xOffset, yOffset;
-
         if (orientation == Orientation.HORIZONTAL) {
             xOffset = 0;
             yOffset = -height; // Контент строго ПОД панелью кнопок
@@ -136,11 +133,30 @@ public final class ViceTabs implements MenuComponent {
     }
 
     private void selectTab(int index, boolean instant) {
-        if (index < 0 || index >= tabs.size()) return;
+        if (index < 0 || index >= tabs.size() || index == activeTabIndex) return;
+
         this.activeTabIndex = index;
+
+        // Проходим по ВСЕМ вкладкам и ВСЕМ их компонентам
         for (int i = 0; i < tabs.size(); i++) {
-            tabs.get(i).button().setSelected(i == index);
-            tabs.get(i).contentNode().setCullHint(i == index ? Node.CullHint.Inherit : Node.CullHint.Always);
+            Tab tab = tabs.get(i);
+            boolean isNowActive = (i == index);
+
+            // Управляем кнопкой-вкладкой
+            tab.button().setSelected(isNowActive);
+            tab.button().setUnderlineVisible(!isNowActive);
+
+            // Управляем видимостью контента
+            tab.contentNode().setCullHint(isNowActive ? Node.CullHint.Inherit : Node.CullHint.Always);
+
+            // --- НОВАЯ КЛЮЧЕВАЯ ЛОГИКА ---
+            // Управляем интерактивностью дочерних компонентов
+            for (ViceSlider slider : tab.sliders()) {
+                slider.setActive(isNowActive);
+            }
+            for (ViceCheckbox checkbox : tab.checkboxes()) {
+                checkbox.setActive(isNowActive);
+            }
         }
     }
 
@@ -148,42 +164,49 @@ public final class ViceTabs implements MenuComponent {
         selectTab(index, false);
     }
 
-    public void update(float tpf, Vector2f cursor) {
-        ViceButton hoveredButton = null;
-        tabsWorldPos.set(tabsNode.getLocalTranslation().x, tabsNode.getLocalTranslation().y);
-
+    @Override
+    public void update(float tpf) {
+        // Делегируем обновление анимации всем дочерним компонентам
         for (Tab tab : tabs) {
-            buttonWorldPos.set(tabsWorldPos).addLocal(tab.button().getPosition());
-            if (isCursorInside(cursor, buttonWorldPos, tab.button().getWidth(), tab.button().getHeight())) {
-                hoveredButton = tab.button();
-                break;
-            }
-        }
-
-        for (int i = 0; i < tabs.size(); i++) {
-            Tab tab = tabs.get(i);
-            tab.button().setSelected(i == activeTabIndex || tab.button() == hoveredButton);
             tab.button().update(tpf);
+            if (tab.contentNode().getCullHint() == Node.CullHint.Inherit) {
+                tab.sliders().forEach(s -> s.update(tpf));
+                tab.checkboxes().forEach(c -> c.update(tpf));
+            }
         }
     }
 
-    public void handleMousePress(Vector2f cursor) {
-        tabsWorldPos.set(tabsNode.getLocalTranslation().x, tabsNode.getLocalTranslation().y);
+    // --- Implementation of InteractiveComponent ---
 
+    @Override
+    public void setActive(boolean active) {
+
+    }
+
+    @Override
+    public void setHovered(boolean hovered) {
+        // Контейнер сам по себе не имеет состояния наведения, он управляет дочерними.
+    }
+
+    @Override
+    public void handleMousePress(Vector2f cursor) {
+        tabsWorldPos.set(tabsNode.getWorldTranslation().x, tabsNode.getWorldTranslation().y);
+
+        // 1. Проверяем клик по кнопкам-вкладкам
         for (Tab tab : tabs) {
-            buttonWorldPos.set(tabsWorldPos).addLocal(tab.button().getPosition());
-            if (isCursorInside(cursor, buttonWorldPos, tab.button().getWidth(), tab.button().getHeight())) {
+            if (tab.button().intersects(cursor)) {
                 tab.button().executeAction();
                 return;
             }
         }
 
+        // 2. Делегируем клик в контент активной вкладки
         Tab activeTab = getActiveTab();
         if (activeTab == null) return;
 
         contentLocalCursor.set(cursor)
                 .subtractLocal(tabsWorldPos)
-                .subtractLocal(activeTab.contentNode().getLocalTranslation().x, activeTab.contentNode().getLocalTranslation().y);
+                .subtractLocal(activeTab.contentNode().getLocalTranslation().x, activeTab.contentNode.getLocalTranslation().y);
 
         for (ViceSlider slider : activeTab.sliders()) {
             if (slider.intersects(contentLocalCursor)) {
@@ -200,11 +223,7 @@ public final class ViceTabs implements MenuComponent {
         }
     }
 
-    private boolean isCursorInside(Vector2f cursor, Vector2f pos, float width, float height) {
-        return cursor.x >= pos.x && cursor.x <= pos.x + width &&
-                cursor.y >= pos.y && cursor.y <= pos.y + height;
-    }
-
+    @Override
     public void handleMouseDrag(Vector2f cursor) {
         if (activeSlider != null) {
             Tab activeTab = getActiveTab();
@@ -216,23 +235,28 @@ public final class ViceTabs implements MenuComponent {
         }
     }
 
+    @Override
     public void handleMouseRelease() {
         activeSlider = null;
+    }
+
+    @Override
+    public boolean intersects(Vector2f cursor) {
+        // Проверяем, находится ли курсор в пределах всего компонента
+        Vector2f worldPos = new Vector2f(tabsNode.getWorldTranslation().x, tabsNode.getWorldTranslation().y);
+        float totalWidth = Math.max(buttonBarSize.x, contentBackground.getLocalTranslation().x + contentWidth);
+        float totalHeight = buttonBarSize.y + contentHeight; // Примерная общая высота
+
+        return cursor.x >= worldPos.x && cursor.x <= worldPos.x + totalWidth &&
+                cursor.y >= worldPos.y - totalHeight && cursor.y <= worldPos.y + buttonBarSize.y;
     }
 
     private Tab getActiveTab() {
         return (activeTabIndex >= 0 && activeTabIndex < tabs.size()) ? tabs.get(activeTabIndex) : null;
     }
 
-    public Node getNode() { return tabsNode; }
-
     @Override
-    public void update(float tpf) {
-
-    }
-
-    @Override
-    public boolean intersects(Vector2f cursor) {
-        return false;
+    public Node getNode() {
+        return tabsNode;
     }
 }
