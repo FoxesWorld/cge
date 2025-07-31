@@ -1,0 +1,20 @@
+{
+  "mouseSensitivity": 1.0,
+  "invertMouseY": false,
+    "keyMappings": {
+      "move_forward": "KEY_W",
+      "move_backward": "KEY_S",
+      "strafe_left": "KEY_A",
+      "strafe_right": "KEY_D",
+      "jump": "KEY_SPACE",
+      "sprint": "KEY_LSHIFT",
+
+          "toggle_view": "KEY_C",
+          "cam_left": "MOUSE_AXIS_X-",
+          "cam_right": "MOUSE_AXIS_X+",
+          "cam_up": "MOUSE_AXIS_Y-",
+          "cam_down": "MOUSE_AXIS_Y+",
+          "zoom_in": "MOUSE_AXIS_WHEEL-",
+          "zoom_out": "MOUSE_AXIS_WHEEL+"
+    }
+}

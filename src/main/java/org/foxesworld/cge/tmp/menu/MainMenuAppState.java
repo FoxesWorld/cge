@@ -3,229 +3,216 @@ package org.foxesworld.cge.tmp.menu;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.BaseAppState;
-import com.jme3.input.KeyInput;
+import com.jme3.input.InputManager;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.AnalogListener;
-import com.jme3.input.controls.KeyTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
-import com.jme3.light.DirectionalLight;
-import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
-import com.jme3.renderer.Camera;
-import com.jme3.renderer.ViewPort;
+import com.jme3.math.Vector3f;
+import com.jme3.post.FilterPostProcessor;
+import com.jme3.post.filters.DepthOfFieldFilter;
 import com.jme3.scene.Node;
-import com.jme3.shadow.DirectionalLightShadowRenderer;
-import org.foxesworld.cge.CalistaGameEngine;
+import org.foxesworld.cge.tmp.menu.components.ViceButton;
+import org.foxesworld.cge.tmp.menu.components.ViceMenuBackground;
+import org.foxesworld.cge.tmp.menu.components.ViceTabs;
+import org.foxesworld.cge.tmp.menu.xml.SceneXml;
+import org.foxesworld.cge.tmp.menu.XmlMenuBuilder;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 
-public class MainMenuAppState extends BaseAppState implements ActionListener, AnalogListener {
+/**
+ * Manages the high-level state for the main menu, which is built declaratively from an XML file.
+ * This AppState coordinates the 3D background, the XML-driven UI, and user input,
+ * functioning as a state machine to switch between different menu screens.
+ */
+public final class MainMenuAppState extends BaseAppState implements ActionListener, AnalogListener {
 
-    // ... поля остаются без изменений ...
-    private ViewPort sceneViewPort;
-    private MenuBackground background;
-    private Node menuRootNode;
-    private final List<SimpleButton> buttons = new ArrayList<>();
-    private int selectedIndex = 0;
-    private boolean isMouseSelectionActive = false; // Флаг для предотвращения конфликтов с клавиатурой
+    private static final String MAIN_MENU_XML = "ui/main_menu.xml";
+    private static final String SETTINGS_MENU_XML = "ui/settings_menu.xml";
+    private static final String MOUSE_CLICK = "MenuMouseClick";
+    private static final String MOUSE_MOVE = "MenuMouseMove";
 
-    private static final String FONT_PATH = "Interface/Fonts/Default.fnt";
-    private static final String KEY_NAV_UP = "MenuUp", KEY_NAV_DOWN = "MenuDown", KEY_CONFIRM = "MenuEnter";
-    private static final String MOUSE_MOVE = "MenuMouseMove", MOUSE_CLICK = "MenuMouseClick";
+    private XmlMenuBuilder menuBuilder;
+    private ViceMenuBackground background;
+    private Node currentMenuNode;
+
+    // UI elements for the current screen
+    private List<ViceButton> currentButtons;
+    private List<ViceTabs> currentTabGroups;
+    private ViceButton selectedButton;
+
+    private boolean inSettings = false;
+    private boolean isMouseDragging = false;
+
+    private FilterPostProcessor fpp;
+    private DepthOfFieldFilter dofFilter;
 
     @Override
     protected void initialize(Application app) {
-        setupInputListeners();
+        this.menuBuilder = new XmlMenuBuilder(app, ViceButton.Style.getViceStyle());
+
+        fpp = new FilterPostProcessor(app.getAssetManager());
+        dofFilter = new DepthOfFieldFilter();
+        dofFilter.setFocusDistance(0);
+        dofFilter.setFocusRange(10);
+        dofFilter.setBlurScale(1.4f);
+        dofFilter.setEnabled(false);
+        fpp.addFilter(dofFilter);
+        setupInput();
     }
 
     @Override
     protected void onEnable() {
-        SimpleApplication calistaGameEngine = (CalistaGameEngine) getApplication();
-        calistaGameEngine.getFlyByCamera().setEnabled(false);
+        SimpleApplication simpleApp = (SimpleApplication) getApplication();
+        simpleApp.getFlyByCamera().setEnabled(false);
+        simpleApp.getInputManager().setCursorVisible(true);
+        simpleApp.getViewPort().addProcessor(fpp);
 
-        // УЛУЧШЕНО: Показываем курсор мыши, когда меню активно
-        getApplication().getInputManager().setCursorVisible(true);
-
-        // ... остальная часть onEnable без изменений ...
-        Camera sceneCam = calistaGameEngine.getCamera().clone();
-        sceneViewPort = calistaGameEngine.getRenderManager().createPreView("MenuBackgroundView", sceneCam);
-        sceneViewPort.setClearFlags(true, true, true);
-        background = new MenuBackground(calistaGameEngine);
-        calistaGameEngine.getRootNode().attachChild(background.getSceneNode());
-        addShadows(calistaGameEngine, sceneViewPort, background.getSceneNode());
-        menuRootNode = new Node("MainMenuUINode");
-        createMenuButtons();
-        createTitle();
-        updateSelection();
-        calistaGameEngine.getGuiNode().attachChild(menuRootNode);
+        showMainMenuScreen();
     }
 
-    @Override
-    protected void onDisable() {
-        // УЛУЧШЕНО: Прячем курсор мыши, когда выходим из меню
-        getApplication().getInputManager().setCursorVisible(false);
+    /**
+     * Builds and displays the main menu UI and 3D background.
+     */
+    public void showMainMenuScreen() {
+        if (background == null) {
+            MenuData menuData = menuBuilder.build(MAIN_MENU_XML);
+            this.background = createBackgroundFromConfig(menuData.sceneConfig());
+            ((SimpleApplication) getApplication()).getRootNode().attachChild(background.getSceneNode());
+        }
+        switchToScreen(MAIN_MENU_XML);
+        inSettings = false;
+        dofFilter.setEnabled(false);
+    }
 
-        // ... остальная часть onDisable без изменений ...
-        SimpleApplication simpleApp = (SimpleApplication) getApplication();
-        if (menuRootNode != null) {
-            menuRootNode.removeFromParent();
-            menuRootNode = null;
+    /**
+     * Builds and displays the settings menu UI over the existing background.
+     */
+    public void showSettingsScreen() {
+        switchToScreen(SETTINGS_MENU_XML);
+        inSettings = true;
+        dofFilter.setEnabled(true);
+    }
+
+    private void switchToScreen(String xmlPath) {
+        if (currentMenuNode != null) {
+            currentMenuNode.removeFromParent();
         }
-        buttons.clear();
-        if (sceneViewPort != null) {
-            simpleApp.getRenderManager().removePreView(sceneViewPort);
-            sceneViewPort = null;
-        }
-        if (background != null) {
-            background.cleanup();
-            background = null;
-        }
+        MenuData menuData = menuBuilder.build(xmlPath);
+        this.currentMenuNode = menuData.uiNode();
+        this.currentButtons = menuData.getButtons();
+        this.currentTabGroups = menuData.getTabGroups(); // Сохраняем вкладки
+        ((SimpleApplication) getApplication()).getGuiNode().attachChild(currentMenuNode);
     }
 
     @Override
     public void update(float tpf) {
-        if (isEnabled() && background != null) {
-            background.update(tpf);
+        if (!isEnabled()) return;
+        if (background != null) background.update(tpf);
+
+        Vector2f cursor = getApplication().getInputManager().getCursorPosition();
+
+        if (inSettings) {
+            if (currentTabGroups != null) {
+                currentTabGroups.forEach(tabs -> tabs.update(tpf, cursor));
+            }
+        } else {
+            handleMainMenuInteraction(tpf, cursor);
         }
+    }
+
+    private void handleMainMenuInteraction(float tpf, Vector2f cursor) {
+        if (currentButtons == null) return;
+        selectedButton = currentButtons.stream()
+                .filter(button -> button.intersects(cursor))
+                .findFirst()
+                .orElse(null);
+
+        currentButtons.forEach(button -> {
+            button.setSelected(button == selectedButton);
+            button.update(tpf);
+        });
+    }
+
+    @Override
+    public void onAction(String name, boolean isPressed, float tpf) {
+        if (!MOUSE_CLICK.equals(name)) return;
+        Vector2f cursor = getApplication().getInputManager().getCursorPosition();
+
+        if (inSettings) {
+            if (isPressed) {
+                isMouseDragging = true;
+                if (currentTabGroups != null) {
+                    currentTabGroups.forEach(tabs -> tabs.handleMousePress(cursor));
+                }
+            } else {
+                isMouseDragging = false;
+                if (currentTabGroups != null) {
+                    currentTabGroups.forEach(ViceTabs::handleMouseRelease);
+                }
+            }
+        } else {
+            if (isPressed && selectedButton != null) {
+                selectedButton.executeAction();
+            }
+        }
+    }
+
+    @Override
+    public void onAnalog(String name, float value, float tpf) {
+        if (MOUSE_MOVE.equals(name) && inSettings && isMouseDragging) {
+            if (currentTabGroups != null) {
+                Vector2f cursor = getApplication().getInputManager().getCursorPosition();
+                currentTabGroups.forEach(tabs -> tabs.handleMouseDrag(cursor));
+            }
+        }
+    }
+
+    private void setupInput() {
+        InputManager inputManager = getApplication().getInputManager();
+        if (!inputManager.hasMapping(MOUSE_CLICK)) {
+            inputManager.addMapping(MOUSE_CLICK, new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
+        }
+        if (!inputManager.hasMapping(MOUSE_MOVE)) {
+            inputManager.addMapping(MOUSE_MOVE, new com.jme3.input.controls.MouseAxisTrigger(MouseInput.AXIS_X, false), new com.jme3.input.controls.MouseAxisTrigger(MouseInput.AXIS_Y, false));
+        }
+        inputManager.addListener(this, MOUSE_CLICK, MOUSE_MOVE);
+    }
+
+    private ViceMenuBackground createBackgroundFromConfig(SceneXml sceneConfig) {
+        if (sceneConfig == null || sceneConfig.modelPath == null) {
+            throw new IllegalStateException("Scene configuration or modelPath is missing in XML file.");
+        }
+        ViceMenuBackground.Builder builder = new ViceMenuBackground.Builder(sceneConfig.modelPath);
+        Optional.ofNullable(sceneConfig.skyboxPath).ifPresent(builder::skybox);
+        Optional.ofNullable(sceneConfig.modelScale).ifPresent(builder::modelScale);
+        Vector3f offset = new Vector3f(
+                Optional.ofNullable(sceneConfig.modelOffsetX).orElse(0f),
+                Optional.ofNullable(sceneConfig.modelOffsetY).orElse(0f),
+                Optional.ofNullable(sceneConfig.modelOffsetZ).orElse(0f)
+        );
+        builder.modelOffset(offset);
+        Optional.ofNullable(sceneConfig.lookAtY).ifPresent(y -> builder.cameraLookAt(new Vector3f(0, y, 0)));
+        if (sceneConfig.cameraDistance != null && sceneConfig.cameraHeight != null) {
+            builder.cameraAnimation(0.08f, sceneConfig.cameraDistance, sceneConfig.cameraHeight);
+        }
+        return builder.build(getApplication());
+    }
+
+    @Override
+    protected void onDisable() {
+        if (background != null) background.cleanup();
+        if (currentMenuNode != null) currentMenuNode.removeFromParent();
+
+        SimpleApplication simpleApp = (SimpleApplication) getApplication();
+        simpleApp.getViewPort().removeProcessor(fpp);
+        simpleApp.getInputManager().setCursorVisible(false);
     }
 
     @Override
     protected void cleanup(Application app) {
-        if (isEnabled()) {
-            onDisable();
-        }
         app.getInputManager().removeListener(this);
-    }
-
-    // --- Методы для создания UI без изменений ---
-    private void createMenuButtons() {
-        addButton("SINGLE PLAYER", () -> ((CalistaGameEngine) getApplication()).startGameFromMenu());
-        addButton("OPTIONS", () -> System.out.println("Opening Options..."));
-        addButton("QUIT", () -> getApplication().stop());
-        for (SimpleButton button : buttons) menuRootNode.attachChild(button.getNode());
-    }
-    private void addButton(String text, Runnable action) {
-        float MENU_X_OFFSET=60f, MENU_Y_START=500f, BTN_W=420f, BTN_H=55f, SPACING=5f;
-        float yPos = MENU_Y_START - buttons.size() * (BTN_H + SPACING);
-        SimpleButton button = new SimpleButton(getApplication().getAssetManager(), text, FONT_PATH, action);
-        button.setSize(BTN_W, BTN_H);
-        button.setPosition(MENU_X_OFFSET, yPos);
-        buttons.add(button);
-    }
-    private void createTitle() {
-        SimpleButton title = new SimpleButton(getApplication().getAssetManager(), "CALISTA TEST", FONT_PATH, null);
-        title.getLabel().setColor(ColorRGBA.Brown);
-        title.getLabel().setSize(title.getLabel().getFont().getCharSet().getRenderedSize() * 2.5f);
-        title.setPosition(60f, 650f);
-        title.setBackgroundVisibility(false);
-        menuRootNode.attachChild(title.getNode());
-    }
-    private void updateSelection() {
-        ColorRGBA BG_COLOR = ColorRGBA.White.clone(), TXT_SEL = ColorRGBA.Black.clone(), TXT_NORM = ColorRGBA.LightGray.clone();
-        for (int i=0; i < buttons.size(); i++) {
-            buttons.get(i).setStyle(i == selectedIndex ? BG_COLOR : ColorRGBA.BlackNoAlpha, i == selectedIndex ? TXT_SEL : TXT_NORM);
-        }
-    }
-
-    // --- Методы для обработки ввода ---
-
-    /**
-     * УЛУЧШЕНО: Добавляем маппинги для мыши.
-     */
-    private void setupInputListeners() {
-        var inputManager = getApplication().getInputManager();
-        // Клавиатура
-        inputManager.addMapping(KEY_NAV_UP, new KeyTrigger(KeyInput.KEY_UP));
-        inputManager.addMapping(KEY_NAV_DOWN, new KeyTrigger(KeyInput.KEY_DOWN));
-        inputManager.addMapping(KEY_CONFIRM, new KeyTrigger(KeyInput.KEY_RETURN), new KeyTrigger(KeyInput.KEY_SPACE));
-        // Мышь
-        inputManager.addMapping(MOUSE_MOVE, new com.jme3.input.controls.MouseAxisTrigger(MouseInput.AXIS_X, false), new com.jme3.input.controls.MouseAxisTrigger(MouseInput.AXIS_Y, false));
-        inputManager.addMapping(MOUSE_CLICK, new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
-
-        // Регистрируем этот класс как слушатель для всех событий
-        inputManager.addListener(this, KEY_NAV_UP, KEY_NAV_DOWN, KEY_CONFIRM, MOUSE_CLICK, MOUSE_MOVE);
-    }
-
-    /**
-     * УЛУЧШЕНО: Обработка нажатий (клавиатура и клик мыши).
-     */
-    @Override
-    public void onAction(String name, boolean isPressed, float tpf) {
-        if (!isPressed || !isEnabled() || buttons.isEmpty()) return;
-
-        int oldIndex = selectedIndex;
-
-        switch (name) {
-            case KEY_NAV_DOWN -> {
-                isMouseSelectionActive = false; // Пользователь нажал клавишу, отключаем "залипание" мыши
-                selectedIndex = (selectedIndex + 1) % buttons.size();
-            }
-            case KEY_NAV_UP -> {
-                isMouseSelectionActive = false;
-                selectedIndex = (selectedIndex - 1 + buttons.size()) % buttons.size();
-            }
-            case KEY_CONFIRM -> {
-                buttons.get(selectedIndex).executeAction();
-                return; // Выходим, чтобы не вызывать updateSelection()
-            }
-            case MOUSE_CLICK -> {
-                // Если клик произошел, когда мышь была над кнопкой, выполняем действие
-                if (isMouseSelectionActive) {
-                    buttons.get(selectedIndex).executeAction();
-                }
-                return;
-            }
-        }
-
-        if (oldIndex != selectedIndex) {
-            updateSelection();
-        }
-    }
-
-    /**
-     * УЛУЧШЕНО: Новый метод для обработки движения мыши.
-     */
-    @Override
-    public void onAnalog(String name, float value, float tpf) {
-        if (!isEnabled() || !MOUSE_MOVE.equals(name)) return;
-
-        // Получаем текущие координаты курсора
-        Vector2f cursor = getApplication().getInputManager().getCursorPosition();
-        int newSelectedIndex = -1;
-
-        // Проверяем, находится ли курсор над какой-либо кнопкой
-        for (int i = 0; i < buttons.size(); i++) {
-            if (buttons.get(i).intersects(cursor)) {
-                newSelectedIndex = i;
-                break;
-            }
-        }
-
-        if (newSelectedIndex != -1) {
-            // Если курсор над кнопкой
-            isMouseSelectionActive = true;
-            if (selectedIndex != newSelectedIndex) {
-                selectedIndex = newSelectedIndex;
-                updateSelection();
-            }
-        } else {
-            // Если курсор не над кнопкой
-            isMouseSelectionActive = false;
-        }
-    }
-
-
-    // --- Вспомогательный метод для теней без изменений ---
-    private void addShadows(SimpleApplication app, ViewPort viewPort, Node scene) {
-        for (com.jme3.light.Light light : scene.getWorldLightList()) {
-            if (light instanceof DirectionalLight) {
-                DirectionalLightShadowRenderer dlsr = new DirectionalLightShadowRenderer(app.getAssetManager(), 1024, 3);
-                dlsr.setLight((DirectionalLight) light);
-                viewPort.addProcessor(dlsr);
-                break;
-            }
-        }
     }
 }

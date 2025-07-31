@@ -30,7 +30,6 @@ public class StreamingParserLoader<T> {
 
     protected final ByteParser<T> parser;
     protected final ByteStreamer fallbackStreamer;
-    private AssetManager assetManager;
 
     /**
      * Constructor for the loader without a fallback streamer.
@@ -39,12 +38,11 @@ public class StreamingParserLoader<T> {
      * @param parser parser, cannot be {@code null}
      * @throws NullPointerException if parser is null
      */
-    public StreamingParserLoader(ByteParser<T> parser, AssetManager assetManager) {
+    public StreamingParserLoader(ByteParser<T> parser) {
         this(parser, path -> {
             logger.warn("No file or resource found for '{}'. Returning empty stream.", path);
             return new ByteArrayInputStream(new byte[0]);
         });
-        this.assetManager = assetManager;
     }
 
     /**
@@ -93,7 +91,7 @@ public class StreamingParserLoader<T> {
 
         try {
             AssetKey<?> assetKey = new AssetKey<>(path);
-            AssetInfo assetInfo = assetManager.locateAsset(assetKey);
+            AssetInfo assetInfo = CalistaGameEngine.INSTANCE.getAssetManager().locateAsset(assetKey);
 
             if (assetInfo != null) {
                 logger.debug("Opening resource via JME AssetManager: {}", path);

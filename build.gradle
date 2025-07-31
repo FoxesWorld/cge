@@ -29,6 +29,11 @@ dependencies {
 
     // GSON для загрузки конфигурации из JSON
     implementation 'com.google.code.gson:gson:2.11.0'
+    implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.1'
+
+    // JAXB Runtime - Реализация (движок), которая выполняет парсинг XML.
+    // Это код, который *делает* работу.
+    implementation 'org.glassfish.jaxb:jaxb-runtime:4.0.5'
     implementation 'com.simsilica:zay-es:1.6.0'
 
     // https://mvnrepository.com/artifact/com.github.ben-manes.caffeine/caffeine

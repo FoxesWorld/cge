@@ -77,7 +77,7 @@ public class CalistaGameEngine extends SimpleApplication {
 
         // 4. Остальной ваш инициализационный код
         GenericByteParser<Byte[]> parser = new GenericByteParser<>(ByteBoxingUtils::toObject);
-        StreamingParserLoader<Byte[]> loader = new StreamingParserLoader<>(parser, assetManager);
+        StreamingParserLoader<Byte[]> loader = new StreamingParserLoader<>(parser);
         this.byteStreamer = new StreamingManager<>(loader::load, true, 0);
     }
 

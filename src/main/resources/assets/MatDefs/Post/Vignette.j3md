@@ -1,0 +1,36 @@
+// JME3 Material Definition
+// Файл: Common/MatDefs/Post/Vignette.j3md
+
+MaterialDef Vignette {
+
+    MaterialParameters {
+        // Карта текстуры, содержащая отрендеренную сцену, к которой будет применен эффект.
+        // JME3 передает ее автоматически.
+        Texture2D VignetteMap
+
+        // Цвет виньетки (затемнения по краям).
+        // В Java: filter.setVignetteColor(new ColorRGBA(...))
+        Color Color
+
+        // Начало затухания. Расстояние от центра (0.0), где виньетка начинает появляться.
+        // В Java: filter.setStart(0.2f)
+        Float Start
+
+        // Конец затухания. Расстояние от центра (1.0), где виньетка достигает полной силы.
+        // В Java: filter.setEnd(0.7f)
+        Float End
+    }
+
+    Technique {
+        // Вершинный шейдер - стандартный для всех пост-эффектов.
+        // Он просто рисует прямоугольник на весь экран.
+        VertexShader GLSL100: Common/MatDefs/Post/Post.vert
+
+        // Фрагментный шейдер - здесь происходит вся магия виньетирования.
+        FragmentShader GLSL100: assets/MatDefs/Post/Vignette.frag
+
+        // Определения, которые будут переданы в шейдер. В данном случае их нет.
+        Defines {
+        }
+    }
+}

@@ -5,6 +5,7 @@ import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.ICOParser;
 import org.foxesworld.cge.modules.ModuleConfig;
 import org.foxesworld.cge.modules.ecs.ECSModule;
+import org.foxesworld.cge.modules.inputManager.InputManagerModule;
 import org.foxesworld.cge.modules.physics.PhysicsModule;
 import org.foxesworld.cge.modules.player.PlayerModule;
 import org.foxesworld.cge.modules.renderer.RendererModule;
@@ -23,6 +24,7 @@ import static org.foxesworld.cge.tools.SceneCGSCreator.SceneCgsCreatorFrame.setu
 public class Game {
     public static void main(String[] args){
         List<ModuleConfig> cfg = List.of(
+             new ModuleConfig(InputManagerModule::new, 100),
              new ModuleConfig(RendererModule::new, 20),
              new ModuleConfig(PhysicsModule::new, 35),
              new ModuleConfig(SceneModule::new,   10),
@@ -46,7 +48,7 @@ public class Game {
         settings.setTitle("Calista Game Engine");
         settings.setSettingsDialogImage("assets/theme/logo3.png");
         settings.setRenderer(AppSettings.LWJGL_OPENGL45);
-        //settings.setRenderer(AppSettings.LWJGL_OPENGL2);
+
         settings.setTitle("Calista Experimental");
         settings.setFrameRate(-1);
         try (InputStream icoStream = CalistaGameEngine.class.getClassLoader().getResourceAsStream("assets/theme/icon/engineLogo.ico")) {

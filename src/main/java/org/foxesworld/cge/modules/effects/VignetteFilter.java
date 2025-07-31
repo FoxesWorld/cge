@@ -17,7 +17,7 @@ public class VignetteFilter extends Filter {
 
     @Override
     protected void initFilter(AssetManager assetManager, RenderManager rm, ViewPort vp, int w, int h) {
-        material = new Material(assetManager, "MatDefs/Post/Vignette.j3md");
+        material = new Material(assetManager, "assets/MatDefs/Post/Vignette.j3md");
         material.setVector2("Resolution", new Vector2f(w, h));
         material.setFloat("Radius", radius);
         material.setFloat("Softness", softness);

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<menu>
+    <!--
+      БЛОК 3D-СЦЕНЫ: Конфигурирует ViceMenuBackground.
+      - modelPath: Путь к 3D-модели.
+      - skyboxPath: Путь к текстуре неба.
+      - modelScale: Масштаб модели.
+      - modelOffsetY: Смещение модели по вертикали.
+      - cameraDistance/Height: Настройки положения камеры.
+      - lookAtY: Точка, куда смотрит камера по вертикали.
+    -->
+    <scene
+            modelPath=""
+            skyboxPath="assets/Textures/sky.dds"
+            modelScale="0.01"
+            modelOffsetY="-1.0"
+            cameraDistance="4.5"
+            cameraHeight="1.5"
+            lookAtY="2.0"
+    />
+
+    <!-- БЛОК 2D-ИНТЕРФЕЙСА: Конфигурирует кнопки и заголовки. -->
+    <screen>
+        <title text="Calista TEST" fontSize="96" y="95%" align="CENTER_X" />
+
+        <!-- Атрибут action теперь содержит полный путь к классу-действию -->
+        <button action="org.foxesworld.cge.tmp.menu.actions.StartGameAction"
+                text="START GAME" y="60%" align="CENTER_X" />
+
+        <button action="org.foxesworld.cge.tmp.menu.actions.OpenSettingsAction"
+                text="SETTINGS"   y="50%" align="CENTER_X" />
+
+        <button action="org.foxesworld.cge.tmp.menu.actions.QuitGameAction"
+                text="QUIT"       y="40%" align="CENTER_X" />
+    </screen>
+</menu>

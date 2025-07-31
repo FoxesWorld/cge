@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu>
+    <!-- 3D-сцена остается та же, поэтому тег <scene> здесь не нужен -->
+    <screen>
+
+
+        <!-- КОНТЕЙНЕР ДЛЯ ВКЛАДОК -->
+        <tabs x="0%" y="35%" width="900" align="CENTER_X" orientation="VERTICAL">
+
+            <!-- ПЕРВАЯ ВКЛАДКА: ГРАФИКА -->
+            <tab title="GRAPHICS">
+                <checkbox text="V-Sync" y="200" x="50" checked="true" bind="graphics.vsync" />
+                <checkbox text="Shadows" y="150" x="50" checked="true" bind="graphics.shadows" />
+                <checkbox text="Bloom Effect" y="100" x="50" checked="true" bind="graphics.bloom" />
+            </tab>
+
+            <!-- ВТОРАЯ ВКЛАДКА: АУДИО -->
+            <tab title="AUDIO">
+                <slider text="MASTER VOLUME" y="200" x="50" width="400" value="0.8" bind="audio.master" />
+                <slider text="MUSIC" y="100" x="50" width="400" value="0.6" bind="audio.music" />
+            </tab>
+
+            <!-- ТРЕТЬЯ ВКЛАДКА: УПРАВЛЕНИЕ -->
+            <tab title="CONTROLS">
+                <title text="MOUSE SENSITIVITY" fontSize="28" y="200" x="50" />
+                <title text="KEY BINDINGS..." fontSize="28" y="150" x="50" />
+            </tab>
+
+        </tabs>
+
+        <!-- Кнопка "Назад" теперь ниже -->
+        <button action="org.foxesworld.cge.tmp.menu.actions.GoBackToMainMenuAction" text="BACK" y="15%" align="CENTER_X" />
+    </screen>
+</menu>
