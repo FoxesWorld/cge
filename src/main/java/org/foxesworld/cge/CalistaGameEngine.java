@@ -95,8 +95,7 @@ public class CalistaGameEngine extends SimpleApplication {
         this.assetLoader = new AssetLoader(this);
         this.materialManager = new MaterialManager(this);
         filterPostProcessor = new FilterPostProcessor(getAssetManager());
-        MainMenuAppState mainMenuAppState = new MainMenuAppState();
-        stateManager.attach(mainMenuAppState);
+        stateManager.attach(new LoadingAppState());
     }
 
     /**

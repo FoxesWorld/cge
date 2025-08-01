@@ -9,8 +9,8 @@
 
             <!-- ТРЕТЬЯ ВКЛАДКА: УПРАВЛЕНИЕ -->
             <tab iconPath="assets/Interface/Icons/process.png" title="CONTROLS">
-                <title text="MOUSE SENSITIVITY" fontSize="28" y="200" x="50" />
-                <title text="KEY BINDINGS..." fontSize="28" y="150" x="50" />
+                <slider text="MOUSE SENSITIVITY" y="200" x="50" width="400" value="0.8" bind="audio.master" />
+                <title text="KEY BINDINGS..." fontSize="28" y="200" x="50" />
             </tab>
 
             <!-- ВТОРАЯ ВКЛАДКА: АУДИО -->
