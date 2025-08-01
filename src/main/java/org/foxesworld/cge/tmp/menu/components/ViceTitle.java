@@ -6,7 +6,7 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.scene.Node;
 
-public class ViceTitle implements MenuComponent {
+public class ViceTitle implements InteractiveComponent, MenuComponent {
     private final Node titleNode;
     private final BitmapText label;
 
@@ -39,5 +39,29 @@ public class ViceTitle implements MenuComponent {
     @Override
     public boolean intersects(Vector2f cursor) {
         return false;
+    }
+
+    @Override
+    public void setActive(boolean active) {
+    }
+
+    @Override
+    public void setHovered(boolean hovered) {
+
+    }
+
+    @Override
+    public void handleMousePress(Vector2f cursor) {
+
+    }
+
+    @Override
+    public void handleMouseDrag(Vector2f cursor) {
+
+    }
+
+    @Override
+    public void handleMouseRelease() {
+
     }
 }

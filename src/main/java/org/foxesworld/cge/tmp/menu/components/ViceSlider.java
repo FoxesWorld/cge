@@ -1,6 +1,7 @@
 package org.foxesworld.cge.tmp.menu.components;
 
 import com.jme3.asset.AssetManager;
+import com.jme3.audio.AudioNode;
 import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
 import com.jme3.font.Rectangle;
@@ -9,269 +10,255 @@ import com.jme3.material.RenderState.BlendMode;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector2f;
+import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.shape.Quad;
-import org.foxesworld.cge.CalistaGameEngine;
+import org.foxesworld.cge.core.utils.ColorUtils;
 
 /**
- * A stylized slider UI component with a border, hover effects, and a synchronized numeric spinner.
+ * Стильный слайдер UI-компонент с поддержкой кастомизации и плавной анимацией.
+ * Значение меняется по клику/перетаскиванию по полосе слайдера.
+ * При нажатии воспроизводится звук, как в GTA V.
  */
 public final class ViceSlider implements InteractiveComponent, MenuComponent {
 
-    // --- Style & Animation Constants ---
-    private static final ColorRGBA COLOR_BORDER_DEFAULT = new ColorRGBA(0.3f, 0.3f, 0.3f, 0.8f);
-    private static final ColorRGBA COLOR_BORDER_HOVER = new ColorRGBA(0.6f, 0.6f, 0.6f, 1f);
-    private static final ColorRGBA COLOR_FILL_DEFAULT = ColorRGBA.White.clone();
-    private static final ColorRGBA COLOR_FILL_HOVER = new ColorRGBA(1f, 0.2f, 0.6f, 1f).mult(1.5f);
+    private static final float DEFAULT_HEIGHT = 12f;
+    private static final float DEFAULT_FONT_SIZE = 24f;
     private static final float ANIMATION_SPEED = 10f;
-    private static final float SPINNER_GAP = 20f;
-    private static final float SPINNER_BUTTON_SIZE = 24f;
-    private static final float BORDER_THICKNESS = 1f;
-    private static final float STEP_VALUE = 0.01f; // 1% increment/decrement
+    private static final float BORDER_THICKNESS = 2f;
+    private static final float VALUE_LABEL_WIDTH = 60f;
+    private static final float VALUE_LABEL_HEIGHT = 24f;
+    private static final ColorRGBA DEFAULT_FILL_COLOR = new ColorRGBA(0f, 1f, 0.3f, 1f);
+    private static final ColorRGBA DEFAULT_BORDER_COLOR = new ColorRGBA(1f, 1f, 1f, 0.5f);
 
     private final Node sliderNode;
     private final Geometry barFill;
     private final Node borderNode;
     private final BitmapText label;
-    private final BitmapText valueLabel; // For the spinner
-    private final ViceButton spinnerDecrement;
-    private final ViceButton spinnerIncrement;
-    private final String bind;
+    private final BitmapText valueLabel;
+    private final AudioNode clickSound;
+
     private final AssetManager assetManager;
+    private final String bind;
 
-    private float width, height = 12f;
+    private float width;
+    private float height = DEFAULT_HEIGHT;
+
     private float value;
-    private boolean isHovered = false;
+    private float displayedValue;
 
-    private final ColorRGBA currentFillColor = new ColorRGBA();
-    private final ColorRGBA currentBorderColor = new ColorRGBA();
+    private final ColorRGBA fillColor;
+    private final ColorRGBA borderColor;
 
-    public ViceSlider(AssetManager assetManager, String text, ViceButton.Style buttonStyle, float initialValue, String bind) {
-        this.value = initialValue;
+    private ValueChangeListener valueChangeListener;
+
+    public interface ValueChangeListener {
+        void onValueChanged(float newValue);
+    }
+
+    public ViceSlider(AssetManager assetManager, String text, String hexColor, ViceButton.Style buttonStyle,
+                      float initialValue, String bind) {
         this.assetManager = assetManager;
         this.bind = bind;
+        this.value = FastMath.clamp(initialValue, 0f, 1f);
+        this.displayedValue = this.value;
+        this.fillColor = hexColor.isEmpty() ? DEFAULT_FILL_COLOR.clone() : ColorUtils.fromHexString(hexColor);
+        this.borderColor = DEFAULT_BORDER_COLOR.clone();
+
+        // Инициализация узла
         this.sliderNode = new Node("ViceSlider: " + text);
 
-        this.label = new BitmapText(assetManager.loadFont(buttonStyle.fontPath()));
+        // Звук клика
+        clickSound = new AudioNode(assetManager, "assets/Sounds/ui/pop.ogg", false);
+        clickSound.setPositional(false);
+        clickSound.setLooping(false);
+        clickSound.setVolume(1);
+        sliderNode.attachChild(clickSound);
+
+        // Текстовая метка
+        BitmapFont font = assetManager.loadFont(buttonStyle.fontPath());
+        this.label = new BitmapText(font);
         label.setText(text.toUpperCase());
         label.setColor(ColorRGBA.White);
-        label.setSize(24f);
+        label.setSize(DEFAULT_FONT_SIZE);
 
+        // Бордер
         this.borderNode = new Node("SliderBorder");
         createBorder();
 
+        // Заливка
         Material fillMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-        fillMat.setColor("Color", COLOR_FILL_DEFAULT);
+        fillMat.setColor("Color", fillColor);
         fillMat.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
+
         this.barFill = new Geometry("SliderFill", new Quad(1, height - BORDER_THICKNESS * 2));
         barFill.setMaterial(fillMat);
-        currentFillColor.set(COLOR_FILL_DEFAULT);
 
-        // --- Spinner Setup ---
-        this.valueLabel = (BitmapText) label.clone();
-        valueLabel.setBox(new Rectangle(0, 0, 60, 30)); // Give it a fixed width box
+        // Значение
+        this.valueLabel = label.clone();
+        valueLabel.setBox(new Rectangle(0, 0, VALUE_LABEL_WIDTH, VALUE_LABEL_HEIGHT));
         valueLabel.setAlignment(BitmapFont.Align.Center);
+        valueLabel.setVerticalAlignment(BitmapFont.VAlign.Center);
 
-        ViceButton.Style spinnerStyle = buttonStyle; // Can be a different style if needed
-        this.spinnerDecrement = new ViceButton(assetManager, "<", spinnerStyle, () -> setValue(value - STEP_VALUE));
-        this.spinnerIncrement = new ViceButton(assetManager, ">", spinnerStyle, () -> setValue(value + STEP_VALUE));
-
+        // Сборка
         sliderNode.attachChild(label);
         sliderNode.attachChild(borderNode);
         sliderNode.attachChild(barFill);
         sliderNode.attachChild(valueLabel);
-        sliderNode.attachChild(spinnerDecrement.getNode());
-        sliderNode.attachChild(spinnerIncrement.getNode());
 
-        updateValueLabel();
+        updateLayout();
+        updateVisuals();
+    }
+
+    public void setValueChangeListener(ValueChangeListener listener) {
+        this.valueChangeListener = listener;
     }
 
     private void createBorder() {
-        Material borderMat = new Material(this.assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-        borderMat.setColor("Color", COLOR_BORDER_DEFAULT);
-        currentBorderColor.set(COLOR_BORDER_DEFAULT);
+        Material borderMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        borderMat.setColor("Color", borderColor);
+        borderMat.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
 
-        // Создаем геометрию для каждой части рамки
-        Geometry top = new Geometry("BorderTop", new Quad(1, BORDER_THICKNESS));
-        Geometry bottom = new Geometry("BorderBottom", new Quad(1, BORDER_THICKNESS));
-        Geometry left = new Geometry("BorderLeft", new Quad(BORDER_THICKNESS, 1));
-        Geometry right = new Geometry("BorderRight", new Quad(BORDER_THICKNESS, 1));
-
-        // Применяем ОДИН И ТОТ ЖЕ материал ко всем частям.
-        // Мы будем менять цвет прямо в материале, и он обновится для всех.
-        top.setMaterial(borderMat);
-        bottom.setMaterial(borderMat);
-        left.setMaterial(borderMat);
-        right.setMaterial(borderMat);
-
-        borderNode.attachChild(top);
-        borderNode.attachChild(bottom);
-        borderNode.attachChild(left);
-        borderNode.attachChild(right);
+        for (String name : new String[]{"Top", "Bottom", "Left", "Right"}) {
+            Geometry geom = new Geometry("Border" + name, new Quad(1, 1));
+            geom.setMaterial(borderMat.clone());
+            borderNode.attachChild(geom);
+        }
     }
 
-    /**
-     * Updates the size and position of the four quads that form the border.
-     */
     private void updateBorder() {
-        // ИСПРАВЛЕНИЕ: Получаем дочерние элементы как Geometry, а не Node
-        Geometry top = (Geometry) borderNode.getChild("BorderTop");
-        Geometry bottom = (Geometry) borderNode.getChild("BorderBottom");
-        Geometry left = (Geometry) borderNode.getChild("BorderLeft");
-        Geometry right = (Geometry) borderNode.getChild("BorderRight");
+        ((Quad) ((Geometry) borderNode.getChild("BorderTop")).getMesh()).updateGeometry(width, BORDER_THICKNESS);
+        ((Quad) ((Geometry) borderNode.getChild("BorderBottom")).getMesh()).updateGeometry(width, BORDER_THICKNESS);
+        ((Quad) ((Geometry) borderNode.getChild("BorderLeft")).getMesh()).updateGeometry(BORDER_THICKNESS, height);
+        ((Quad) ((Geometry) borderNode.getChild("BorderRight")).getMesh()).updateGeometry(BORDER_THICKNESS, height);
 
-        // Обновляем геометрию (меш) каждого прямоугольника
-        ((Quad) top.getMesh()).updateGeometry(width, BORDER_THICKNESS);
-        ((Quad) bottom.getMesh()).updateGeometry(width, BORDER_THICKNESS);
-        ((Quad) left.getMesh()).updateGeometry(BORDER_THICKNESS, height);
-        ((Quad) right.getMesh()).updateGeometry(BORDER_THICKNESS, height);
-
-        // Позиционируем каждую часть рамки, чтобы они образовали прямоугольник
-        top.setLocalTranslation(0, height - BORDER_THICKNESS, 0.05f);
-        bottom.setLocalTranslation(0, 0, 0.05f);
-        left.setLocalTranslation(0, 0, 0.05f);
-        right.setLocalTranslation(width - BORDER_THICKNESS, 0, 0.05f);
+        borderNode.getChild("BorderTop").setLocalTranslation(0, height - BORDER_THICKNESS, 0.05f);
+        borderNode.getChild("BorderBottom").setLocalTranslation(0, 0, 0.05f);
+        borderNode.getChild("BorderLeft").setLocalTranslation(0, 0, 0.05f);
+        borderNode.getChild("BorderRight").setLocalTranslation(width - BORDER_THICKNESS, 0, 0.05f);
     }
 
     public void setSize(float width) {
         this.width = width;
-        label.setLocalTranslation(0, height + 28, 0);
-        //updateBorder();
-        updateFill();
-        layoutSpinner();
+        updateLayout();
+        updateVisuals();
     }
 
-// В классе ViceSlider.java
-
-    /**
-     * Positions and configures the numeric spinner components (decrement button,
-     * value label, and increment button) to the right of the slider bar.
-     */
-    private void layoutSpinner() {
-        // Начальная позиция для первого элемента спиннера (кнопки '<')
-        float spinnerStartX = width + SPINNER_GAP;
-
-        // 1. Настраиваем и позиционируем кнопку декремента ("<")
-        spinnerDecrement.setSize(SPINNER_BUTTON_SIZE, SPINNER_BUTTON_SIZE);
-        spinnerDecrement.setLabelSize(20f);
-        spinnerDecrement.setPosition(spinnerStartX, height / 2f - SPINNER_BUTTON_SIZE / 2f);
-
-        // 2. Настраиваем текстовую метку со значением
-        // Устанавливаем ширину "слота" для текста, чтобы он не "прыгал"
-        float valueLabelWidth = 60f; // Фиксированная ширина для текста (e.g., "100")
-        valueLabel.setBox(new Rectangle(0, 0, valueLabelWidth, SPINNER_BUTTON_SIZE));
-        valueLabel.setAlignment(BitmapFont.Align.Center);
-        valueLabel.setVerticalAlignment(BitmapFont.VAlign.Center); // Центрируем и по вертикали
-
-        // Позиционируем текстовую метку после кнопки '<'
-        float valueLabelX = spinnerStartX + SPINNER_BUTTON_SIZE;
-        valueLabel.setLocalTranslation(valueLabelX, height, 0);
-
-        // 3. Настраиваем и позиционируем кнопку инкремента (">")
-        spinnerIncrement.setSize(SPINNER_BUTTON_SIZE, SPINNER_BUTTON_SIZE);
-        spinnerIncrement.setLabelSize(20f);
-        // Позиционируем после текстовой метки
-        spinnerIncrement.setPosition(valueLabelX + valueLabelWidth, height / 2f - SPINNER_BUTTON_SIZE / 2f);
+    private void updateLayout() {
+        label.setLocalTranslation(0, height + DEFAULT_FONT_SIZE + 4, 0);
+        updateBorder();
+        valueLabel.setLocalTranslation(width + 10f, height, 0);
     }
 
     public void setPosition(float x, float y) {
         sliderNode.setLocalTranslation(x, y, 0);
     }
 
-    private void updateFill() {
-        barFill.setLocalScale(width * value, 1, 1);
+    private void updateVisuals() {
+        barFill.setLocalScale(width * displayedValue, 1, 1);
         barFill.setLocalTranslation(BORDER_THICKNESS, BORDER_THICKNESS, 0.1f);
+        updateValueLabel();
     }
 
     private void updateValueLabel() {
-        int percentValue = (int) (value * 100);
-        valueLabel.setText(String.valueOf(percentValue));
+        int percent = (int) (displayedValue * 100);
+        valueLabel.setText(String.valueOf(percent));
     }
 
     public void setValue(float newValue) {
-        this.value = FastMath.clamp(newValue, 0f, 1f);
-        updateFill();
-        updateValueLabel();
-        System.out.println("Setting '" + bind + "' changed to: " + this.value);
+        if (Float.isNaN(newValue)) return;
+        newValue = FastMath.clamp(newValue, 0f, 1f);
+        if (Math.abs(newValue - value) > 0.0001f) {
+            value = newValue;
+            displayedValue = value;
+            updateVisuals();
+            if (valueChangeListener != null) {
+                valueChangeListener.onValueChanged(value);
+            }
+        }
+    }
+
+    public float getValue() {
+        return value;
+    }
+
+    public void setFillColor(ColorRGBA color) {
+        fillColor.set(color);
+        barFill.getMaterial().setColor("Color", fillColor);
+    }
+
+    public void setBorderColor(ColorRGBA color) {
+        borderColor.set(color);
+        for (int i = 0; i < borderNode.getQuantity(); i++) {
+            ((Geometry) borderNode.getChild(i)).getMaterial().setColor("Color", borderColor);
+        }
     }
 
     @Override
-    public boolean intersects(Vector2f localCursorPos) {
-        Vector2f pos = new Vector2f(sliderNode.getLocalTranslation().x, sliderNode.getLocalTranslation().y);
-        // Check main bar, then spinner buttons
-        boolean inBar = localCursorPos.x >= pos.x && localCursorPos.x <= pos.x + width &&
-                localCursorPos.y >= pos.y && localCursorPos.y <= pos.y + height;
-        return inBar || spinnerDecrement.intersects(localCursorPos) || spinnerIncrement.intersects(localCursorPos);
+    public boolean intersects(Vector2f cursorPos) {
+        Vector3f worldPos3 = sliderNode.localToWorld(Vector3f.ZERO, null);
+        Vector2f worldPos = new Vector2f(worldPos3.x, worldPos3.y);
+        return cursorPos.x >= worldPos.x && cursorPos.x <= worldPos.x + width
+                && cursorPos.y >= worldPos.y && cursorPos.y <= worldPos.y + height;
     }
 
-    public void handleDrag(Vector2f localCursorPos) {
-        float relativeX = localCursorPos.x - sliderNode.getLocalTranslation().x;
+    public void handleDrag(Vector2f cursorPos) {
+        Vector3f worldPos3 = sliderNode.localToWorld(Vector3f.ZERO, null);
+        Vector2f worldPos = new Vector2f(worldPos3.x, worldPos3.y);
+        float relativeX = cursorPos.x - worldPos.x;
         setValue(relativeX / width);
     }
 
     @Override
-    public Node getNode() {
-        return this.sliderNode;
-    }
-
-    @Override
-    public void update(float tpf) {
-        float lerpFactor = FastMath.clamp(tpf * ANIMATION_SPEED, 0, 1);
-
-        ColorRGBA targetBorderColor = isHovered ? COLOR_BORDER_HOVER : COLOR_BORDER_DEFAULT;
-        currentBorderColor.interpolateLocal(targetBorderColor, lerpFactor);
-        ((Geometry)borderNode.getChild("BorderTop")).getMaterial().setColor("Color", currentBorderColor);
-        // ... set color for other border parts ...
-
-        ColorRGBA targetFillColor = isHovered ? COLOR_FILL_HOVER : COLOR_FILL_DEFAULT;
-        currentFillColor.interpolateLocal(targetFillColor, lerpFactor);
-        barFill.getMaterial().setColor("Color", currentFillColor);
-
-        spinnerDecrement.update(tpf);
-        spinnerIncrement.update(tpf);
-    }
-
-    @Override
-    public void setActive(boolean active) {
-
-    }
-
-    @Override
-    public void setHovered(boolean hovered) {
-        this.isHovered = hovered;
-    }
-
-    @Override
     public void handleMousePress(Vector2f cursor) {
-        if(spinnerDecrement.intersects(cursor)) spinnerDecrement.executeAction();
-        else if(spinnerIncrement.intersects(cursor)) spinnerIncrement.executeAction();
+        Vector3f worldPos3 = sliderNode.localToWorld(Vector3f.ZERO, null);
+        Vector2f worldPos = new Vector2f(worldPos3.x, worldPos3.y);
+        float relativeX = cursor.x - worldPos.x;
+        if (relativeX >= 0 && relativeX <= width) {
+            //clickSound.playInstance();
+            setValue(relativeX / width);
+            System.out.println("Pressed: " + this + " | Value: " + value + " | RelX: " + relativeX + " | Width: " + width);
+        }
     }
 
     @Override
     public void handleMouseDrag(Vector2f cursor) {
-
+        handleDrag(cursor);
     }
 
     @Override
     public void handleMouseRelease() {
-
+        // no-op
     }
 
-    /**
-     * Updates the interaction state of the component based on the cursor position.
-     * @param localCursorPos The cursor position in the local coordinate space of this slider's parent node.
-     */
-
     public void updateInteraction(Vector2f localCursorPos) {
-        // Проверяем наведение на основную полосу
-        Vector2f pos = new Vector2f(sliderNode.getLocalTranslation().x, sliderNode.getLocalTranslation().y);
-        this.isHovered = localCursorPos.x >= pos.x && localCursorPos.x <= pos.x + width &&
-                localCursorPos.y >= pos.y && localCursorPos.y <= pos.y + height;
+        // hover handled elsewhere
+    }
 
-        // Проверяем наведение на кнопки спиннера (передавая им локальные координаты относительно ИХ родителя - sliderNode)
-        Vector2f spinnerLocalCursor = localCursorPos.subtract(pos);
-        spinnerDecrement.setHovered(spinnerDecrement.intersects(spinnerLocalCursor));
-        spinnerIncrement.setHovered(spinnerIncrement.intersects(spinnerLocalCursor));
+    @Override
+    public Node getNode() {
+        return sliderNode;
+    }
+
+    @Override
+    public void update(float tpf) {
+        if (Math.abs(displayedValue - value) > 0.001f) {
+            displayedValue = FastMath.interpolateLinear(
+                    FastMath.clamp(ANIMATION_SPEED * tpf, 0f, 1f),
+                    displayedValue,
+                    value);
+            updateVisuals();
+        }
+    }
+
+    @Override
+    public void setActive(boolean active) {
+        // noop
+    }
+
+    @Override
+    public void setHovered(boolean hovered) {
+        // noop
     }
 }

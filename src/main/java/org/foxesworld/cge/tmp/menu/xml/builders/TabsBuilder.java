@@ -3,6 +3,7 @@ package org.foxesworld.cge.tmp.menu.xml.builders;
 import com.jme3.math.Vector2f;
 import com.jme3.scene.Node;
 import org.foxesworld.cge.tmp.menu.BuildContext;
+import org.foxesworld.cge.tmp.menu.MenuUtils;
 import org.foxesworld.cge.tmp.menu.XmlMenuBuilder;
 import org.foxesworld.cge.tmp.menu.components.ViceCheckbox;
 import org.foxesworld.cge.tmp.menu.components.ViceSlider;
@@ -42,12 +43,13 @@ public class TabsBuilder implements ComponentBuilder<TabsXml> {
             Node contentNode = new Node("TabContent: " + tabModel.title);
             List<ViceSlider> tabSliders = new ArrayList<>();
             List<ViceCheckbox> tabCheckboxes = new ArrayList<>();
+            List<Object> createdObjects = new ArrayList<>();
 
             if (tabModel.components != null) {
                 for (ComponentXml componentModel : tabModel.components) {
                     // Recursive call to the main builder to create content
                     Object createdComponent = mainBuilder.buildComponent(componentModel, contentNode);
-
+                    createdObjects.add(createdComponent);
                     // Collect interactive components for the current tab
                     if (createdComponent instanceof ViceSlider slider) {
                         tabSliders.add(slider);
@@ -56,13 +58,13 @@ public class TabsBuilder implements ComponentBuilder<TabsXml> {
                     }
                 }
             }
-            tabComponent.addTab(tabModel.title, contentNode, tabSliders, tabCheckboxes);
+            tabComponent.addTab(tabModel.title, contentNode, createdObjects);
         }
 
         tabComponent.finalizeLayout(model.contentWidth, model.contentHeight);
 
-        Vector2f pos = XmlMenuBuilder.calculatePosition(model.x, model.y, model.align, context.app().getCamera());
-        float width = XmlMenuBuilder.parseSize(model.width, context.app().getCamera().getWidth());
+        Vector2f pos = MenuUtils.calculatePosition(model.x, model.y, model.align, context.app().getCamera());
+        float width = MenuUtils.parseSize(model.width, context.app().getCamera().getWidth());
         pos.x -= width / 2f;
         tabComponent.getNode().setLocalTranslation(pos.x, pos.y, 0);
 

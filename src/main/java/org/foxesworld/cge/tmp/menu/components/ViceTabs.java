@@ -20,8 +20,7 @@ public final class ViceTabs implements InteractiveComponent, MenuComponent {
     private record Tab(
             ViceButton button,
             Node contentNode,
-            List<ViceSlider> sliders,
-            List<ViceCheckbox> checkboxes
+            List<Object> content
     ) {}
 
     private final Node tabsNode = new Node("ViceTabs");
@@ -65,10 +64,10 @@ public final class ViceTabs implements InteractiveComponent, MenuComponent {
         return mat;
     }
 
-    public void addTab(String title, Node content, List<ViceSlider> sliders, List<ViceCheckbox> checkboxes) {
+    public void addTab(String title, Node content, List<Object> createdObjects) {
         int index = tabs.size();
         ViceButton tabButton = new ViceButton(assetManager, title, buttonStyle, () -> selectTab(index));
-        tabs.add(new Tab(tabButton, content, sliders, checkboxes));
+        tabs.add(new Tab(tabButton, content, createdObjects));
         tabsNode.attachChild(tabButton.getNode());
         tabsNode.attachChild(content);
     }
@@ -151,11 +150,12 @@ public final class ViceTabs implements InteractiveComponent, MenuComponent {
 
             // --- НОВАЯ КЛЮЧЕВАЯ ЛОГИКА ---
             // Управляем интерактивностью дочерних компонентов
-            for (ViceSlider slider : tab.sliders()) {
-                slider.setActive(isNowActive);
-            }
-            for (ViceCheckbox checkbox : tab.checkboxes()) {
-                checkbox.setActive(isNowActive);
+
+            //for (ViceSlider slider : tab.content()) {
+            //    slider.setActive(isNowActive);
+            //}
+            for (Object checkbox : tab.content()) {
+                ((InteractiveComponent)checkbox).setActive(isNowActive);
             }
         }
     }
@@ -170,8 +170,8 @@ public final class ViceTabs implements InteractiveComponent, MenuComponent {
         for (Tab tab : tabs) {
             tab.button().update(tpf);
             if (tab.contentNode().getCullHint() == Node.CullHint.Inherit) {
-                tab.sliders().forEach(s -> s.update(tpf));
-                tab.checkboxes().forEach(c -> c.update(tpf));
+                //tab.content().forEach(s -> s.update(tpf));
+                //tab.checkboxes().forEach(c -> c.update(tpf));
             }
         }
     }
@@ -208,19 +208,19 @@ public final class ViceTabs implements InteractiveComponent, MenuComponent {
                 .subtractLocal(tabsWorldPos)
                 .subtractLocal(activeTab.contentNode().getLocalTranslation().x, activeTab.contentNode.getLocalTranslation().y);
 
-        for (ViceSlider slider : activeTab.sliders()) {
-            if (slider.intersects(contentLocalCursor)) {
-                activeSlider = slider;
-                activeSlider.handleDrag(contentLocalCursor);
-                return;
-            }
-        }
-        for (ViceCheckbox checkbox : activeTab.checkboxes()) {
-            if (checkbox.intersects(contentLocalCursor)) {
-                checkbox.toggle();
-                return;
-            }
-        }
+        //for (ViceSlider slider : activeTab.content()) {
+         //   if (slider.intersects(contentLocalCursor)) {
+          //      activeSlider = slider;
+          //      activeSlider.handleDrag(contentLocalCursor);
+           //     return;
+            //}
+        //}
+        //for (ViceCheckbox checkbox : activeTab.checkboxes()) {
+        //    if (checkbox.intersects(contentLocalCursor)) {
+        //        checkbox.toggle();
+        //        return;
+        //    }
+        //}
     }
 
     @Override
@@ -242,7 +242,6 @@ public final class ViceTabs implements InteractiveComponent, MenuComponent {
 
     @Override
     public boolean intersects(Vector2f cursor) {
-        // Проверяем, находится ли курсор в пределах всего компонента
         Vector2f worldPos = new Vector2f(tabsNode.getWorldTranslation().x, tabsNode.getWorldTranslation().y);
         float totalWidth = Math.max(buttonBarSize.x, contentBackground.getLocalTranslation().x + contentWidth);
         float totalHeight = buttonBarSize.y + contentHeight; // Примерная общая высота

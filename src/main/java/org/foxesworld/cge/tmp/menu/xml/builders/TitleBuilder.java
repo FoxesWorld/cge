@@ -3,6 +3,7 @@ package org.foxesworld.cge.tmp.menu.xml.builders;
 import com.jme3.math.Vector2f;
 import com.jme3.scene.Node;
 import org.foxesworld.cge.tmp.menu.BuildContext;
+import org.foxesworld.cge.tmp.menu.MenuUtils;
 import org.foxesworld.cge.tmp.menu.components.ViceTitle;
 import org.foxesworld.cge.tmp.menu.xml.ComponentBuilder;
 import org.foxesworld.cge.tmp.menu.xml.TitleXml;
@@ -23,7 +24,7 @@ public class TitleBuilder implements ComponentBuilder<TitleXml> {
 
         title.setSize(model.fontSize);
 
-        Vector2f pos = XmlMenuBuilder.calculatePosition(
+        Vector2f pos = MenuUtils.calculatePosition(
                 model.x,
                 model.y,
                 model.align,

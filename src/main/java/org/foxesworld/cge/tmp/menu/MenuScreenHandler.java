@@ -2,161 +2,160 @@ package org.foxesworld.cge.tmp.menu;
 
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
+import com.jme3.audio.AudioNode;
 import com.jme3.input.InputManager;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
 import com.jme3.input.controls.AnalogListener;
+import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.math.Vector2f;
 import com.jme3.scene.Node;
+import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.tmp.menu.components.InteractiveComponent;
-import org.foxesworld.cge.tmp.menu.components.MenuComponent;
 import org.foxesworld.cge.tmp.menu.components.ViceButton;
 import org.foxesworld.cge.tmp.menu.components.ViceCheckbox;
 
 import java.util.Comparator;
-import java.util.List;
 
 /**
- * Manages the state, rendering, and input for all 2D UI screens in the menu.
- * This class acts as the central controller for the UI, switching between different
- * XML-defined screens and delegating events.
+ * Управляет UI-меню: загрузка экранов, обновление, ввод.
  */
-public class MenuScreenHandler {
+public final class MenuScreenHandler {
     private static final String MAIN_MENU_XML = "ui/main_menu.xml";
     private static final String SETTINGS_MENU_XML = "ui/settings_menu.xml";
 
-    private final Application app;
     private final Node guiNode;
-    private final XmlMenuBuilder menuBuilder;
+    private final CalistaGameEngine engine;
+    private final XmlMenuBuilder builder;
     private final InputHandler inputHandler;
-    private MenuData currentMenuData;
+    private MenuData currentMenu;
+    private AudioNode clickSound;
 
+    /**
+     * Создаёт обработчик экранов.
+     */
     public MenuScreenHandler(Application app) {
-        this.app = app;
+        this.engine = (CalistaGameEngine) app;
         this.guiNode = ((SimpleApplication) app).getGuiNode();
-        this.menuBuilder = new XmlMenuBuilder(app, ViceButton.Style.getViceStyle());
+        this.builder = new XmlMenuBuilder(app, ViceButton.Style.getViceStyle());
         this.inputHandler = new InputHandler(app.getInputManager());
     }
 
+    /**
+     * Инициализирует звук и слушатели.
+     */
     public void initialize() {
-        inputHandler.registerListeners();
+        clickSound = new AudioNode(engine.getAssetManager(), "assets/Sounds/ui/pop.ogg", false);
+        clickSound.setPositional(false);
+        clickSound.setLooping(false);
+        clickSound.setVolume(1f);
+        inputHandler.register();
         showMainMenu();
     }
 
-    public void showMainMenu() {
-        switchToScreen(MAIN_MENU_XML);
-    }
+    /** Переход к главному экрану. */
+    public void showMainMenu() { switchScreen(MAIN_MENU_XML); }
 
-    public void showSettings() {
-        switchToScreen(SETTINGS_MENU_XML);
-    }
+    /** Переход к настройкам. */
+    public void showSettings() { switchScreen(SETTINGS_MENU_XML); }
 
-    private void switchToScreen(String xmlPath) {
-        if (currentMenuData != null && currentMenuData.uiNode() != null) {
-            currentMenuData.uiNode().removeFromParent();
+    private void switchScreen(String xml) {
+        if (currentMenu != null && currentMenu.uiNode() != null) {
+            currentMenu.uiNode().removeFromParent();
         }
-        this.currentMenuData = menuBuilder.build(xmlPath);
-        this.inputHandler.setCurrentMenuData(currentMenuData);
-        guiNode.attachChild(currentMenuData.uiNode());
+        currentMenu = builder.build(xml);
+        inputHandler.setMenu(currentMenu);
+        guiNode.attachChild(currentMenu.uiNode());
     }
 
+    /** Обновляет все компоненты и ввод. */
     public void update(float tpf) {
-        if (currentMenuData != null) {
-            currentMenuData.allComponents().forEach(c -> c.update(tpf));
-            inputHandler.updateInteraction();
-        }
+        if (currentMenu == null) return;
+        currentMenu.allComponents().forEach(c -> c.update(tpf));
+        inputHandler.updateHover();
     }
 
+    /** Освобождает ресурсы и слушатели. */
     public void cleanup() {
-        if (currentMenuData != null && currentMenuData.uiNode() != null) {
-            currentMenuData.uiNode().removeFromParent();
+        if (currentMenu != null && currentMenu.uiNode() != null) {
+            currentMenu.uiNode().removeFromParent();
         }
-        inputHandler.unregisterListeners();
+        inputHandler.unregister();
     }
 
-    /**
-     * A dedicated inner class to handle all menu-related input.
-     */
-    private static class InputHandler implements ActionListener, AnalogListener {
-        private static final String MOUSE_CLICK = "MenuMouseClick";
-        private static final String MOUSE_MOVE = "MenuMouseMove";
+    private class InputHandler implements ActionListener, AnalogListener {
+        private static final String CLICK = "MenuClick";
+        private static final String MOVE = "MenuMove";
 
-        private final InputManager inputManager;
-        private MenuData currentMenuData;
-        private MenuComponent focusedComponent; // Component the mouse was pressed on
-        private MenuComponent hoveredComponent; // Component the mouse is currently over
-        private boolean isMouseDragging = false;
+        private final InputManager im;
+        private MenuData menu;
+        private InteractiveComponent focused;
+        private InteractiveComponent hovered;
+        private boolean dragging;
 
-        public InputHandler(InputManager inputManager) { this.inputManager = inputManager; }
-        public void setCurrentMenuData(MenuData menuData) { this.currentMenuData = menuData; this.focusedComponent = null; }
+        InputHandler(InputManager im) { this.im = im; }
 
-        public void registerListeners() {
-            if (!inputManager.hasMapping(MOUSE_CLICK)) inputManager.addMapping(MOUSE_CLICK, new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
-            if (!inputManager.hasMapping(MOUSE_MOVE)) inputManager.addMapping(MOUSE_MOVE, new com.jme3.input.controls.MouseAxisTrigger(MouseInput.AXIS_X, true), new com.jme3.input.controls.MouseAxisTrigger(MouseInput.AXIS_Y, true));
-            inputManager.addListener(this, MOUSE_CLICK, MOUSE_MOVE);
+        void setMenu(MenuData m) {
+            this.menu = m;
+            this.focused = null;
+            this.hovered = null;
         }
-        public void unregisterListeners() { inputManager.removeListener(this); }
 
-        public void updateInteraction() {
-            if (currentMenuData == null) return;
-            Vector2f cursor = inputManager.getCursorPosition();
+        void register() {
+            if (!im.hasMapping(CLICK)) im.addMapping(CLICK, new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
+            if (!im.hasMapping(MOVE)) im.addMapping(MOVE,
+                    new MouseAxisTrigger(MouseInput.AXIS_X, true),
+                    new MouseAxisTrigger(MouseInput.AXIS_Y, true)
+            );
+            im.addListener(this, CLICK, MOVE);
+        }
 
-            MenuComponent newlyHovered = findHoveredComponent(cursor);
-            if (newlyHovered != hoveredComponent) {
-                // Reset old hover state
-                if (hoveredComponent instanceof InteractiveComponent ic) ic.setHovered(false);
-                // Set new hover state
-                if (newlyHovered instanceof InteractiveComponent ic) ic.setHovered(true);
-                hoveredComponent = newlyHovered;
+        void unregister() { im.removeListener(this); }
+
+        void updateHover() {
+            if (menu == null) return;
+            Vector2f c = im.getCursorPosition();
+            InteractiveComponent now = findComponent(c);
+            if (now != hovered) {
+                if (hovered != null) hovered.setHovered(false);
+                if (now != null) now.setHovered(true);
+                hovered = now;
             }
         }
 
-        private MenuComponent findHoveredComponent(Vector2f cursor) {
-            if (currentMenuData == null) return null;
-            // Search hierarchically: check containers first, and let them check their children.
-            // Sort by Z-order to check topmost components first.
-            return currentMenuData.allComponents().stream()
-                    .sorted(Comparator.comparing(c -> -c.getNode().getLocalTranslation().z))
-                    .filter(c -> c.intersects(cursor))
-                    .findFirst()
+        private InteractiveComponent findComponent(Vector2f c) {
+            return menu.allComponents().stream()
+                    .filter(InteractiveComponent.class::isInstance)
+                    .map(InteractiveComponent.class::cast)
+                    .filter(ic -> ic.intersects(c))
+                    .max(Comparator.comparing(ic -> ic.getNode().getWorldTranslation().z))
                     .orElse(null);
         }
 
         @Override
-        public void onAction(String name, boolean isPressed, float tpf) {
-            Vector2f cursor = inputManager.getCursorPosition();
-
-            if (isPressed) {
-                isMouseDragging = true;
-                focusedComponent = findHoveredComponent(cursor); // Remember what we clicked on
-                if (focusedComponent instanceof InteractiveComponent ic) {
-                    ic.handleMousePress(cursor);
-                }
+        public void onAction(String name, boolean pressed, float tpf) {
+            Vector2f c = im.getCursorPosition();
+            if (pressed) {
+                dragging = true;
+                focused = findComponent(c);
+                if (focused != null) focused.handleMousePress(c);
             } else {
-                isMouseDragging = false;
-                MenuComponent releaseComponent = findHoveredComponent(cursor);
-
-                // If we released on the same component we clicked on, it's a "click"
-                if (focusedComponent != null && focusedComponent == releaseComponent) {
-                    if (focusedComponent instanceof ViceButton button) button.executeAction();
-                    else if (focusedComponent instanceof ViceCheckbox checkbox) checkbox.toggle();
+                dragging = false;
+                InteractiveComponent release = findComponent(c);
+                if (focused != null && focused == release) {
+                    clickSound.playInstance();
+                    if (focused instanceof ViceButton vb) vb.executeAction();
+                    else if (focused instanceof ViceCheckbox cb) cb.toggle();
                 }
-
-                // Always send release event to the component we originally clicked on
-                if (focusedComponent instanceof InteractiveComponent ic) {
-                    ic.handleMouseRelease();
-                }
-                focusedComponent = null;
+                if (focused != null) focused.handleMouseRelease();
+                focused = null;
             }
         }
 
         @Override
         public void onAnalog(String name, float value, float tpf) {
-            // Drag events are only sent to the component that was initially clicked on
-            if (isMouseDragging && focusedComponent instanceof InteractiveComponent ic) {
-                ic.handleMouseDrag(inputManager.getCursorPosition());
-            }
+            if (dragging && focused != null) focused.handleMouseDrag(im.getCursorPosition());
         }
     }
 }

@@ -4,15 +4,14 @@ import com.jme3.app.Application;
 import com.jme3.material.Material;
 import com.jme3.material.RenderState.BlendMode;
 import com.jme3.math.ColorRGBA;
-import com.jme3.math.Vector2f;
 import com.jme3.renderer.Camera;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.shape.Quad;
 import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
 import org.foxesworld.cge.core.utils.ColorUtils;
-import org.foxesworld.cge.tmp.menu.actions.MenuAction;
 import org.foxesworld.cge.tmp.menu.components.ViceButton;
 import org.foxesworld.cge.tmp.menu.xml.*;
 import org.foxesworld.cge.tmp.menu.xml.ComponentBuilder;
@@ -30,21 +29,33 @@ public final class XmlMenuBuilder {
 
     private final BuildContext context;
     private final ComponentRegistry registry;
+    private final JAXBContext jaxbContext; // Cached for performance
 
     public XmlMenuBuilder(Application app, ViceButton.Style buttonStyle) {
         this.context = new BuildContext(app, buttonStyle);
         this.registry = new ComponentRegistry(this);
+        this.jaxbContext = createJaxbContext();
     }
 
-    public MenuData build(String xmlPath) {
-        Node uiRoot = new Node("XmlUIRoot");
-        context.allComponents().clear(); // Clear components from previous build
-
-        try (InputStream is =XmlMenuBuilder.class.getClassLoader().getResourceAsStream(xmlPath)) {
-            JAXBContext jaxbContext = JAXBContext.newInstance(
+    /**
+     * Creates and caches the JAXBContext. This is a heavy operation and should only be done once.
+     */
+    private JAXBContext createJaxbContext() {
+        try {
+            return JAXBContext.newInstance(
                     MenuXml.class, ScreenXml.class, SceneXml.class, ButtonXml.class,
                     TitleXml.class, TabsXml.class, TabXml.class, SliderXml.class, CheckboxXml.class
             );
+        } catch (JAXBException e) {
+            throw new RuntimeException("Failed to initialize JAXBContext for menu building.", e);
+        }
+    }
+
+    public MenuData build(String xmlPath) {
+        context.allComponents().clear();
+        Node uiRoot = new Node("XmlUIRoot");
+
+        try (InputStream is = XmlMenuBuilder.class.getClassLoader().getResourceAsStream(xmlPath)) {
             Unmarshaller unmarshaller = jaxbContext.createUnmarshaller();
             MenuXml menu = (MenuXml) unmarshaller.unmarshal(is);
 
@@ -71,7 +82,7 @@ public final class XmlMenuBuilder {
         ComponentBuilder builder = registry.getBuilderFor(model);
         if (builder != null) {
             Object component = builder.build(model, parent, context);
-            context.addComponent(component); // Add to the context's collection
+            context.addComponent(component);
             return component;
         } else {
             LOGGER.warn("No component builder registered for XML model type: {}", model.getClass().getSimpleName());
@@ -96,41 +107,5 @@ public final class XmlMenuBuilder {
         backgroundGeom.setMaterial(mat);
         backgroundGeom.setLocalTranslation(0, 0, -1);
         parent.attachChild(backgroundGeom);
-    }
-
-    // --- UTILITY METHODS (public static for access from builders) ---
-
-    public static float parseSize(String sizeStr, float totalSize) {
-        if (sizeStr == null || sizeStr.isBlank()) return 0;
-        if (sizeStr.endsWith("%")) {
-            float percent = Float.parseFloat(sizeStr.substring(0, sizeStr.length() - 1));
-            return totalSize * (percent / 100f);
-        } else {
-            return Float.parseFloat(sizeStr);
-        }
-    }
-
-    public static Vector2f calculatePosition(String xStr, String yStr, String align, Camera camera) {
-        float screenWidth = camera.getWidth();
-        float screenHeight = camera.getHeight();
-        float x;
-        if ("CENTER_X".equalsIgnoreCase(align)) x = screenWidth / 2f;
-        else if ("RIGHT".equalsIgnoreCase(align)) x = screenWidth;
-        else x = 0;
-        x += parseSize(xStr, screenWidth);
-        float y = parseSize(yStr, screenHeight);
-        return new Vector2f(x, y);
-    }
-
-    public static Runnable createActionFromClassName(String className, Application app) {
-        if (className == null || className.isBlank()) return () -> {};
-        try {
-            Class<?> actionClass = Class.forName(className);
-            MenuAction menuAction = (MenuAction) actionClass.getDeclaredConstructor().newInstance();
-            return () -> menuAction.execute(app);
-        } catch (Exception e) {
-            LOGGER.error("Failed to create action from class name: '{}'. Button will be inactive.", className, e);
-            return () -> {};
-        }
     }
 }
