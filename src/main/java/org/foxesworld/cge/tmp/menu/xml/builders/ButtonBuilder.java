@@ -13,7 +13,7 @@ public class ButtonBuilder implements ComponentBuilder<ButtonXml> {
     @Override
     public Object build(ButtonXml model, Node parent, BuildContext context) {
         Runnable action = MenuUtils.createActionFromClassName(model.action, context.app());
-        ViceButton button = new ViceButton(context.app().getAssetManager(), model.text, context.buttonStyle(), action);
+        ViceButton button = new ViceButton(context.app().getAssetManager(), model.text, context.buttonStyle(), action,  model.iconPath, model.iconSize);
 
         float width = MenuUtils.parseSize(model.width, context.app().getCamera().getWidth());
         float height = MenuUtils.parseSize(model.height, context.app().getCamera().getHeight());

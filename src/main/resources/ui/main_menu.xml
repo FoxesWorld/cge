@@ -25,8 +25,7 @@
         <title text="Calista TEST" fontSize="96" y="95%" align="CENTER_X" />
 
         <!-- Атрибут action теперь содержит полный путь к классу-действию -->
-        <button action="org.foxesworld.cge.tmp.menu.actions.StartGameAction"
-                text="START GAME" y="60%" align="CENTER_X" />
+        <button action="org.foxesworld.cge.tmp.menu.actions.StartGameAction" iconPath="assets/Interface/Icons/bug.png" text="START GAME" y="60%" align="CENTER_X" />
 
         <button action="org.foxesworld.cge.tmp.menu.actions.OpenSettingsAction"
                 text="SETTINGS"   y="50%" align="CENTER_X" />

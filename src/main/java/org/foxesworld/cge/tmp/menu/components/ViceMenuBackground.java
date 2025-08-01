@@ -98,11 +98,9 @@ public final class ViceMenuBackground {
             if (shadowRenderer != null) viewPort.removeProcessor(shadowRenderer);
             if (postProcessor != null) viewPort.removeProcessor(postProcessor);
 
-            if (sceneNode != null) {
-                sceneNode.detachAllChildren();
-                sceneNode.getLocalLightList().clear();
-                if (sceneNode.getParent() != null) sceneNode.removeFromParent();
-            }
+            sceneNode.detachAllChildren();
+            sceneNode.getLocalLightList().clear();
+            if (sceneNode.getParent() != null) sceneNode.removeFromParent();
             // Restore camera FOV to a standard value
             sceneCam.setFrustumPerspective(45f, (float) sceneCam.getWidth() / sceneCam.getHeight(), 1f, 1000f);
             LOGGER.info("ViceMenuBackground scene cleaned up successfully.");

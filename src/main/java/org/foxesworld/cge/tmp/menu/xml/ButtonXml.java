@@ -10,7 +10,13 @@ public class ButtonXml extends ComponentXml {
     public String action;
 
     @XmlAttribute
+    public float iconSize = 100f;
+
+    @XmlAttribute
     public float fontSize = 42;
+
+    @XmlAttribute
+    public String iconPath;
 
     /**
      * Constructor to set default values for button dimensions.

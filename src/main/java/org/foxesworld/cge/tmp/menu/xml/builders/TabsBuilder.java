@@ -58,7 +58,7 @@ public class TabsBuilder implements ComponentBuilder<TabsXml> {
                     }
                 }
             }
-            tabComponent.addTab(tabModel.title, contentNode, createdObjects);
+            tabComponent.addTab(tabModel, contentNode, createdObjects);
         }
 
         tabComponent.finalizeLayout(model.contentWidth, model.contentHeight);
