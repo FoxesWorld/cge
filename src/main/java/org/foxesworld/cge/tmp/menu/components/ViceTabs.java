@@ -97,7 +97,7 @@ public final class ViceTabs implements InteractiveComponent, MenuComponent {
             }
         }
 
-        float barWidth = (orientation == Orientation.HORIZONTAL) ? (offset - spacing + 2 * padding) : (maxDim + 2 * padding);
+        float barWidth = (orientation == Orientation.HORIZONTAL) ? this.contentWidth : (maxDim + 2 * padding);
         float barHeight = (orientation == Orientation.HORIZONTAL) ? (maxDim + 2 * padding) : (offset - spacing + 2 * padding);
 
         ((Quad) tabBarBackground.getMesh()).updateGeometry(barWidth, barHeight);

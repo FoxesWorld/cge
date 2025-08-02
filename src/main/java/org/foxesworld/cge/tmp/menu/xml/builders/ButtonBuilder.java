@@ -10,8 +10,9 @@ import org.foxesworld.cge.tmp.menu.xml.ComponentBuilder;
 import org.foxesworld.cge.tmp.menu.XmlMenuBuilder;
 
 public class ButtonBuilder implements ComponentBuilder<ButtonXml> {
+
     @Override
-    public Object build(ButtonXml model, Node parent, BuildContext context) {
+    public ViceButton build(ButtonXml model, Node parent, BuildContext context) {
         Runnable action = MenuUtils.createActionFromClassName(model.action, context.app());
         ViceButton button = new ViceButton(context.app().getAssetManager(), model.text, context.buttonStyle(), action,  model.iconPath, model.iconSize);
 

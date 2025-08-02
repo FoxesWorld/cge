@@ -2,6 +2,7 @@ package org.foxesworld.cge.tmp.menu.xml;
 
 import com.jme3.scene.Node;
 import org.foxesworld.cge.tmp.menu.BuildContext;
+import org.foxesworld.cge.tmp.menu.components.MenuComponent;
 
 /**
  * A functional interface for a factory that builds a specific UI component
@@ -19,5 +20,5 @@ public interface ComponentBuilder<T extends ComponentXml> {
      * @param context The build context, providing access to shared resources like AssetManager.
      * @return The created UI component instance if it's interactive, otherwise null.
      */
-    Object build(T model, Node parent, BuildContext context);
+    MenuComponent build(T model, Node parent, BuildContext context);
 }

@@ -5,10 +5,7 @@ import com.jme3.scene.Node;
 import org.foxesworld.cge.tmp.menu.BuildContext;
 import org.foxesworld.cge.tmp.menu.MenuUtils;
 import org.foxesworld.cge.tmp.menu.XmlMenuBuilder;
-import org.foxesworld.cge.tmp.menu.components.ViceCheckbox;
-import org.foxesworld.cge.tmp.menu.components.ViceSlider;
-import org.foxesworld.cge.tmp.menu.components.ViceTabs;
-import org.foxesworld.cge.tmp.menu.components.Orientation;
+import org.foxesworld.cge.tmp.menu.components.*;
 import org.foxesworld.cge.tmp.menu.xml.*;
 import org.foxesworld.cge.tmp.menu.xml.ComponentBuilder;
 
@@ -48,7 +45,7 @@ public class TabsBuilder implements ComponentBuilder<TabsXml> {
             if (tabModel.components != null) {
                 for (ComponentXml componentModel : tabModel.components) {
                     // Recursive call to the main builder to create content
-                    Object createdComponent = mainBuilder.buildComponent(componentModel, contentNode);
+                    MenuComponent createdComponent = mainBuilder.buildComponent(componentModel, contentNode);
                     createdObjects.add(createdComponent);
                     // Collect interactive components for the current tab
                     if (createdComponent instanceof ViceSlider slider) {
