@@ -34,6 +34,9 @@ import org.slf4j.bridge.SLF4JBridgeHandler;
 import java.util.Comparator;
 import java.util.List;
 
+import static org.foxesworld.cge.core.loadingLogos.LoadingAppState.buildLogoChainFromJson;
+
+
 /**
  * Main game engine class with dynamic module loading
  */
@@ -95,7 +98,7 @@ public class CalistaGameEngine extends SimpleApplication {
         this.assetLoader = new AssetLoader(this);
         this.materialManager = new MaterialManager(this);
         filterPostProcessor = new FilterPostProcessor(getAssetManager());
-        stateManager.attach(new LoadingAppState());
+        stateManager.attach(buildLogoChainFromJson(getAssetManager(), "ui/logos.json"));
     }
 
     /**

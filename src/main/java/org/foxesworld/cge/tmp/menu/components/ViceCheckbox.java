@@ -9,8 +9,11 @@ import com.jme3.material.RenderState.BlendMode;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.FastMath;
 import com.jme3.math.Vector2f;
+import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.ui.Picture;
+
+import static com.jme3.math.Vector3f.UNIT_XYZ;
 
 public final class ViceCheckbox implements InteractiveComponent, MenuComponent {
 
@@ -129,23 +132,39 @@ public final class ViceCheckbox implements InteractiveComponent, MenuComponent {
     public void update(float tpf) {
         float lerp = FastMath.clamp(tpf * ANIM_SPEED, 0f, 1f);
 
+        // Цвет рамки (учёт наведения и деактивации)
         ColorRGBA targetFrameColor = active ? (hovered ? COLOR_HOVER : COLOR_FRAME) : COLOR_DISABLED_FRAME;
         frameColor.interpolateLocal(targetFrameColor, lerp);
         frame.getMaterial().setColor("Color", frameColor);
 
-        float targetScale = (active && checked) ? 1f : 0f;
+        // Цели для анимации чек-марка
+        float targetScale = (active && checked) ? 1.15f : 0f;
         float targetAlpha = (active && checked) ? 1f : 0f;
 
+        // Анимация масштаба с "пружинкой"
         checkScale = FastMath.interpolateLinear(lerp, checkScale, targetScale);
-        checkAlpha = FastMath.interpolateLinear(lerp, checkAlpha, targetAlpha);
-        check.setLocalScale(checkScale);
+        if (checked && Math.abs(checkScale - 1.15f) < 0.02f) {
+            targetScale = 1f; // Возврат к нормальному размеру
+        }
 
+        // Применяем масштаб и вращение
+        check.setLocalScale(checkScale);
+        float rotation = checked ? FastMath.interpolateLinear(lerp, 30f * FastMath.DEG_TO_RAD, 0f) : 0f;
+        check.setLocalRotation(new com.jme3.math.Quaternion().fromAngleAxis(rotation, new Vector3f(UNIT_XYZ.x, UNIT_XYZ.y, UNIT_XYZ.z)));
+
+        // Прозрачность чек-марка
+        checkAlpha = FastMath.interpolateLinear(lerp, checkAlpha, targetAlpha);
         check.getMaterial().setColor("Color", new ColorRGBA(
                 COLOR_CHECK.r, COLOR_CHECK.g, COLOR_CHECK.b, checkAlpha
         ));
 
+        // Анимация метки
         float targetLabelScale = hovered ? 1.05f : 1f;
         labelScale = FastMath.interpolateLinear(lerp, labelScale, targetLabelScale);
         label.setSize(baseLabelSize * labelScale);
+
+        // Цвет текста (приглушённый при неактивном состоянии)
+        label.setColor(active ? ColorRGBA.White : new ColorRGBA(0.6f, 0.6f, 0.6f, 0.7f));
     }
+
 }

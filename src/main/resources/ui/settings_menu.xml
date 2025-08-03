@@ -8,19 +8,19 @@
         <tabs x="-30%" y="90%" contentWidth="1600" contentHeight="900" align="CENTER_X" orientation="HORIZONTAL">
 
             <!-- ТРЕТЬЯ ВКЛАДКА: УПРАВЛЕНИЕ -->
-            <tab iconPath="assets/Interface/Icons/process.png" title="CONTROLS">
+            <tab iconPath="assets/Interface/ui/icons/process.png" title="CONTROLS">
                 <slider text="MOUSE SENSITIVITY" y="200" x="50" width="400" value="0.8" bind="audio.master" />
                 <title text="KEY BINDINGS..." fontSize="28" y="200" x="50" />
             </tab>
 
             <!-- ВТОРАЯ ВКЛАДКА: АУДИО -->
-            <tab iconPath="assets/Interface/Icons/sound.png" title="AUDIO">
+            <tab iconPath="assets/Interface/ui/icons/sound.png" title="AUDIO">
                 <slider text="MASTER VOLUME" y="200" x="50" width="400" value="0.8" bind="audio.master" />
                 <slider text="MUSIC" y="100" x="50" width="400" value="0.6" bind="audio.music" fillColor="#cb2020" />
             </tab>
 
             <!-- ПЕРВАЯ ВКЛАДКА: ГРАФИКА -->
-        <tab iconPath="assets/Interface/Icons/graphic-card.png" title="GRAPHICS">
+        <tab iconPath="assets/Interface/ui/icons/graphic-card.png" title="GRAPHICS">
             <checkbox text="V-Sync" y="200" x="50" checked="true" bind="graphics.vsync" />
             <checkbox text="Shadows" y="150" x="50" checked="true" bind="graphics.shadows" />
             <checkbox text="Bloom Effect" y="100" x="50" checked="true" bind="graphics.bloom" />

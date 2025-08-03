@@ -4,7 +4,6 @@ import org.foxesworld.cge.modules.player.Player;
 import org.foxesworld.cge.modules.ui.UIModule;
 import org.foxesworld.cge.modules.ui.novaUi.NovaUI;
 import org.foxesworld.cge.modules.ui.novaUi.elements.image.ImageElement;
-import org.foxesworld.cge.modules.ui.novaUi.elements.panel.PanelElement;
 
 /**
  * Manages the player's Heads-Up Display (HUD), showing player stats like speed, armor, etc.
@@ -33,7 +32,7 @@ public class PlayerHud {
 
     private void createCrosshair() {
         ImageElement crosshair = new ImageElement(player.getEngine(), "crosshair", hud.getRootPanel());
-        crosshair.setProperty("imagepath", "assets/Interface/crosshair.png");
+        crosshair.setProperty("imagepath", "assets/Interface/ui/crosshair.png");
         crosshair.setProperty("width", "32");
         crosshair.setProperty("height", "32");
         crosshair.setProperty("align", "center");

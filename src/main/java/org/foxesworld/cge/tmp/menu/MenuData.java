@@ -2,6 +2,7 @@ package org.foxesworld.cge.tmp.menu;
 
 import com.jme3.scene.Node;
 import org.foxesworld.cge.tmp.menu.components.*;
+import org.foxesworld.cge.tmp.menu.components.ViceButton;
 import org.foxesworld.cge.tmp.menu.xml.SceneXml;
 
 import java.util.List;

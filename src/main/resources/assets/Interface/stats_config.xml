@@ -18,7 +18,7 @@
     <property name="spacing" value="0"/>
 
     <Image id="logo">
-        <property name="imagePath" value="assets/Textures/image.png"/>
+        <property name="imagePath" value="assets/Interface/ui/novaui.png"/>
         <property name="width" value="162"/>
         <property name="height" value="128"/>
         <property name="color" value="1,1,1,1"/>

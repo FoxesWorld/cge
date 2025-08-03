@@ -1,14 +1,12 @@
-[12:20:06.367][INFO][TaskScheduler] TaskScheduler initialized [Compute Threads: 20, IO Pool: Cached, Max IO Threads: 80]
-[12:20:09.899][INFO][ModuleManager] ModuleManager initialized with modules directory: modules
-[12:20:12.060][DEBUG][ComponentRegistry] Registered component builder for TitleXml
-[12:20:12.061][DEBUG][ComponentRegistry] Registered component builder for ButtonXml
-[12:20:12.061][DEBUG][ComponentRegistry] Registered component builder for SliderXml
-[12:20:12.062][DEBUG][ComponentRegistry] Registered component builder for CheckboxXml
-[12:20:12.062][DEBUG][ComponentRegistry] Registered component builder for TabsXml
-[12:20:12.159][DEBUG][ComponentRegistry] Registered component builder for TitleXml
-[12:20:12.159][DEBUG][ComponentRegistry] Registered component builder for ButtonXml
-[12:20:12.159][DEBUG][ComponentRegistry] Registered component builder for SliderXml
-[12:20:12.159][DEBUG][ComponentRegistry] Registered component builder for CheckboxXml
-[12:20:12.160][DEBUG][ComponentRegistry] Registered component builder for TabsXml
-[12:20:13.483][INFO][OpenSettingsAction] Executing action: Open Settings Screen
-[12:20:30.354][INFO][GoBackToMainMenuAction] Executing action: Go Back To Main Menu
+[15:01:11.097][INFO][TaskScheduler] TaskScheduler initialized [Compute Threads: 20, IO Pool: Cached, Max IO Threads: 80]
+[15:01:13.929][INFO][ModuleManager] ModuleManager initialized with modules directory: modules
+[15:01:19.129][DEBUG][ComponentRegistry] Registered component builder for TitleXml
+[15:01:19.129][DEBUG][ComponentRegistry] Registered component builder for ButtonXml
+[15:01:19.130][DEBUG][ComponentRegistry] Registered component builder for SliderXml
+[15:01:19.130][DEBUG][ComponentRegistry] Registered component builder for CheckboxXml
+[15:01:19.131][DEBUG][ComponentRegistry] Registered component builder for TabsXml
+[15:01:19.222][DEBUG][ComponentRegistry] Registered component builder for TitleXml
+[15:01:19.222][DEBUG][ComponentRegistry] Registered component builder for ButtonXml
+[15:01:19.222][DEBUG][ComponentRegistry] Registered component builder for SliderXml
+[15:01:19.223][DEBUG][ComponentRegistry] Registered component builder for CheckboxXml
+[15:01:19.223][DEBUG][ComponentRegistry] Registered component builder for TabsXml

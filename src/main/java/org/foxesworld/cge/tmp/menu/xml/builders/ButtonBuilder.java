@@ -7,7 +7,6 @@ import org.foxesworld.cge.tmp.menu.MenuUtils;
 import org.foxesworld.cge.tmp.menu.components.ViceButton;
 import org.foxesworld.cge.tmp.menu.xml.ButtonXml;
 import org.foxesworld.cge.tmp.menu.xml.ComponentBuilder;
-import org.foxesworld.cge.tmp.menu.XmlMenuBuilder;
 
 public class ButtonBuilder implements ComponentBuilder<ButtonXml> {
 
