@@ -124,6 +124,16 @@ public final class ViceCheckbox implements InteractiveComponent, MenuComponent {
     @Override public void handleMouseDrag(Vector2f cursor) {}
     @Override public void handleMouseRelease() {}
 
+    @Override
+    public float getHeight() {
+        return 0;
+    }
+
+    @Override
+    public float getWidth() {
+        return 0;
+    }
+
     public void toggle() {
         if (active) checked = !checked;
     }

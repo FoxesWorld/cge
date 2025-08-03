@@ -43,4 +43,7 @@ public interface InteractiveComponent extends MenuComponent {
      * Handles a mouse release event that originated on this component.
      */
     void handleMouseRelease();
+
+    float getHeight();
+    float getWidth();
 }

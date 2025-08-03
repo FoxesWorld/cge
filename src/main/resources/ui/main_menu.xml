@@ -1,17 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 
 <menu>
-    <!--
-      БЛОК 3D-СЦЕНЫ: Конфигурирует ViceMenuBackground.
-      - modelPath: Путь к 3D-модели.
-      - skyboxPath: Путь к текстуре неба.
-      - modelScale: Масштаб модели.
-      - modelOffsetY: Смещение модели по вертикали.
-      - cameraDistance/Height: Настройки положения камеры.
-      - lookAtY: Точка, куда смотрит камера по вертикали.
-    -->
     <scene
-            modelPath="assets/meshes/plm.obj"
+            modelPath=""
             skyboxPath="assets/Textures/sky.dds"
             modelScale="0.5"
             modelOffsetY="-1.0"
@@ -20,17 +11,16 @@
             lookAtY="2.0"
     />
 
-    <!-- БЛОК 2D-ИНТЕРФЕЙСА: Конфигурирует кнопки и заголовки. -->
     <screen>
-        <title text="Calista TEST" fontSize="96" y="95%" align="CENTER_X" />
+        <title text="Calista Game Engine" color="#1baade" fontSize="96" y="95%" align="CENTER_X" />
+        <title text="ALPHA PreBuild 0.0.1" fontSize="80" y="89%" align="CENTER_X" />
+        <title text="EXPERIMENTAL" color="#c027a9" fontSize="75" y="84%" align="CENTER_X" />
 
         <!-- Атрибут action теперь содержит полный путь к классу-действию -->
-        <button action="org.foxesworld.cge.tmp.menu.actions.StartGameAction" iconPath="assets/Interface/Icons/bug.png" text="START GAME" y="60%" align="CENTER_X" />
+        <button action="org.foxesworld.cge.tmp.menu.actions.StartGameAction" iconPath="assets/Interface/Icons/bug.png" height="75" iconSize="40" text="START GAME" y="55%" align="CENTER_X" />
 
-        <button action="org.foxesworld.cge.tmp.menu.actions.OpenSettingsAction"
-                text="SETTINGS"   y="50%" align="CENTER_X" />
+        <button action="org.foxesworld.cge.tmp.menu.actions.OpenSettingsAction" iconPath="assets/Interface/ui/icons/settings.png" iconSize="40" height="75" text="SETTINGS"   y="50%" align="CENTER_X" />
 
-        <button action="org.foxesworld.cge.tmp.menu.actions.QuitGameAction"
-                text="QUIT"       y="40%" align="CENTER_X" />
+        <button action="org.foxesworld.cge.tmp.menu.actions.QuitGameAction" iconPath="assets/Interface/ui/icons/quit.png" iconSize="40" height="75" text="QUIT" y="45%" align="CENTER_X" />
     </screen>
 </menu>

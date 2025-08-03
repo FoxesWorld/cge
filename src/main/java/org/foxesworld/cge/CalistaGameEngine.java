@@ -7,6 +7,7 @@ import org.foxesworld.cge.core.AssetRepo;
 import org.foxesworld.cge.core.ConfigEditorState;
 import org.foxesworld.cge.core.ConfigService;
 import org.foxesworld.cge.core.TaskScheduler;
+import org.foxesworld.cge.core.io.TTFrenderer;
 import org.foxesworld.cge.core.io.GenericByteParser;
 import org.foxesworld.cge.core.loader.AssetLoader;
 import org.foxesworld.cge.core.io.progressBar.StatusProgressBar;
@@ -46,6 +47,7 @@ public class CalistaGameEngine extends SimpleApplication {
     private final List<ModuleConfig> modulesToLoad;
     private final AssetRepo assetRepo;
     private final PopCycle popCycle;
+    private TTFrenderer TTFrenderer;
     private final ConfigService configService;
     private final TaskScheduler taskScheduler;
     private final StreamingManager<String, Byte[]> byteStreamer;
@@ -99,6 +101,8 @@ public class CalistaGameEngine extends SimpleApplication {
         this.materialManager = new MaterialManager(this);
         filterPostProcessor = new FilterPostProcessor(getAssetManager());
         stateManager.attach(buildLogoChainFromJson(getAssetManager(), "ui/logos.json"));
+        this.TTFrenderer = new TTFrenderer(assetManager);
+        assetManager.registerLoader(com.atr.jme.font.asset.TrueTypeLoader.class, "ttf");
     }
 
     /**
@@ -175,6 +179,10 @@ public class CalistaGameEngine extends SimpleApplication {
 
     public FilterPostProcessor getFilterPostProcessor() {
         return filterPostProcessor;
+    }
+
+    public TTFrenderer getFontFactory() {
+        return TTFrenderer;
     }
 
     public void startGameFromMenu() {

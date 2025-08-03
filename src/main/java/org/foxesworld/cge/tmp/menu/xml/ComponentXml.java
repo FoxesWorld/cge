@@ -52,4 +52,7 @@ public abstract class ComponentXml {
      */
     @XmlAttribute
     public String height;
+
+    @XmlAttribute
+    public String color;
 }

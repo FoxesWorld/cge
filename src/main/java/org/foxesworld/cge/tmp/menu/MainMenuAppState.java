@@ -6,6 +6,7 @@ import com.jme3.app.state.BaseAppState;
 import com.jme3.math.Vector3f;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.DepthOfFieldFilter;
+import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.tmp.menu.components.ViceButton;
 import org.foxesworld.cge.tmp.menu.components.ViceMenuBackground;
 import org.foxesworld.cge.tmp.menu.xml.SceneXml;
@@ -30,7 +31,7 @@ public final class MainMenuAppState extends BaseAppState {
     @Override
     protected void initialize(Application app) {
         // AppState теперь создает только свои прямые зависимости.
-        this.screenHandler = new MenuScreenHandler(app);
+        this.screenHandler = new MenuScreenHandler((CalistaGameEngine) app);
 
         // Пост-эффекты остаются здесь, так как они влияют на весь ViewPort.
         fpp = new FilterPostProcessor(app.getAssetManager());
@@ -62,7 +63,7 @@ public final class MainMenuAppState extends BaseAppState {
     private void setupBackground() {
         // Фон создается один раз. Его конфигурация может быть загружена из XML.
         // Для простоты, здесь можно использовать временный XmlMenuBuilder.
-        XmlMenuBuilder tempBuilder = new XmlMenuBuilder(getApplication(), ViceButton.Style.getViceStyle());
+        XmlMenuBuilder tempBuilder = new XmlMenuBuilder((CalistaGameEngine) getApplication(), ViceButton.Style.getViceStyle());
         MenuData menuData = tempBuilder.build(MAIN_MENU_XML);
         this.background = createBackgroundFromConfig(menuData.sceneConfig());
         ((SimpleApplication) getApplication()).getRootNode().attachChild(background.getSceneNode());

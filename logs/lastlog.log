@@ -1,12 +1,13 @@
-[15:01:11.097][INFO][TaskScheduler] TaskScheduler initialized [Compute Threads: 20, IO Pool: Cached, Max IO Threads: 80]
-[15:01:13.929][INFO][ModuleManager] ModuleManager initialized with modules directory: modules
-[15:01:19.129][DEBUG][ComponentRegistry] Registered component builder for TitleXml
-[15:01:19.129][DEBUG][ComponentRegistry] Registered component builder for ButtonXml
-[15:01:19.130][DEBUG][ComponentRegistry] Registered component builder for SliderXml
-[15:01:19.130][DEBUG][ComponentRegistry] Registered component builder for CheckboxXml
-[15:01:19.131][DEBUG][ComponentRegistry] Registered component builder for TabsXml
-[15:01:19.222][DEBUG][ComponentRegistry] Registered component builder for TitleXml
-[15:01:19.222][DEBUG][ComponentRegistry] Registered component builder for ButtonXml
-[15:01:19.222][DEBUG][ComponentRegistry] Registered component builder for SliderXml
-[15:01:19.223][DEBUG][ComponentRegistry] Registered component builder for CheckboxXml
-[15:01:19.223][DEBUG][ComponentRegistry] Registered component builder for TabsXml
+[21:27:57.449][INFO][TaskScheduler] TaskScheduler initialized [Compute Threads: 20, IO Pool: Cached, Max IO Threads: 80]
+[21:27:59.901][INFO][ModuleManager] ModuleManager initialized with modules directory: modules
+[21:28:00.938][DEBUG][ComponentRegistry] Registered component builder for TitleXml
+[21:28:00.938][DEBUG][ComponentRegistry] Registered component builder for ButtonXml
+[21:28:00.939][DEBUG][ComponentRegistry] Registered component builder for SliderXml
+[21:28:00.939][DEBUG][ComponentRegistry] Registered component builder for CheckboxXml
+[21:28:00.940][DEBUG][ComponentRegistry] Registered component builder for TabsXml
+[21:28:01.038][DEBUG][ComponentRegistry] Registered component builder for TitleXml
+[21:28:01.039][DEBUG][ComponentRegistry] Registered component builder for ButtonXml
+[21:28:01.039][DEBUG][ComponentRegistry] Registered component builder for SliderXml
+[21:28:01.039][DEBUG][ComponentRegistry] Registered component builder for CheckboxXml
+[21:28:01.039][DEBUG][ComponentRegistry] Registered component builder for TabsXml
+[21:28:02.330][WARN][ViceMenuBackground] No model path provided. Creating a fallback placeholder.

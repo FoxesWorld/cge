@@ -232,6 +232,16 @@ public final class ViceSlider implements InteractiveComponent, MenuComponent {
         // no-op
     }
 
+    @Override
+    public float getHeight() {
+        return height;
+    }
+
+    @Override
+    public float getWidth() {
+        return width;
+    }
+
     public void updateInteraction(Vector2f localCursorPos) {
         // hover handled elsewhere
     }

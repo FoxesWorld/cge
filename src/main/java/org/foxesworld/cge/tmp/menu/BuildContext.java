@@ -1,6 +1,7 @@
 package org.foxesworld.cge.tmp.menu;
 
 import com.jme3.app.Application;
+import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.tmp.menu.components.MenuComponent;
 import org.foxesworld.cge.tmp.menu.components.ViceButton;
 
@@ -12,11 +13,11 @@ import java.util.List;
  * during the menu building process.
  */
 public record BuildContext(
-        Application app,
+        CalistaGameEngine app,
         ViceButton.Style buttonStyle,
         List<MenuComponent> allComponents
 ) {
-    public BuildContext(Application app, ViceButton.Style buttonStyle) {
+    public BuildContext(CalistaGameEngine app, ViceButton.Style buttonStyle) {
         this(app, buttonStyle, new ArrayList<>());
     }
 

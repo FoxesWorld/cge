@@ -19,10 +19,10 @@ public class TitleBuilder implements ComponentBuilder<TitleXml> {
         ViceTitle title = new ViceTitle(
                 context.app().getAssetManager(),
                 model.text,
+                (int) model.fontSize,
+                model.color,
                 context.buttonStyle().fontPath()
         );
-
-        title.setSize(model.fontSize);
 
         Vector2f pos = MenuUtils.calculatePosition(
                 model.x,

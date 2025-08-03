@@ -21,7 +21,9 @@ dependencies {
     implementation "org.jmonkeyengine:jme3-lwjgl3:$jmeVersion"
     implementation "org.jmonkeyengine:jme3-effects:$jmeVersion"
     implementation files("lib/SkyControl-1.1.0.jar")
-    implementation files("lib/jme_phonon-0.3.7.jar")
+    implementation files("lib/jme-ttf-3.0.1.jar")
+    // https://mvnrepository.com/artifact/com.atr/jme-ttf
+    implementation("com.atr:jme-ttf:2.2.2")
     implementation "org.jmonkeyengine:jme3-jogg:$jmeVersion"
     implementation "org.jmonkeyengine:jme3-awt-dialogs:$jmeVersion"
     implementation "org.jmonkeyengine:jme3-niftygui:3.9.0-alpha1"
@@ -29,6 +31,8 @@ dependencies {
 
     // GSON для загрузки конфигурации из JSON
     implementation 'com.google.code.gson:gson:2.11.0'
+    // https://mvnrepository.com/artifact/fr.opensagres.xdocreport.sfntly/sfntly
+    implementation("fr.opensagres.xdocreport.sfntly:sfntly:1.0.0")
     implementation 'jakarta.xml.bind:jakarta.xml.bind-api:4.0.1'
 
     // JAXB Runtime - Реализация (движок), которая выполняет парсинг XML.
@@ -52,7 +56,6 @@ dependencies {
     // UI: FlatLaf
     implementation 'com.formdev:flatlaf:3.4.1'
     implementation 'com.formdev:flatlaf-extras:3.4.1'
-    implementation 'uk.co.caprica:vlcj:4.7.1'
 }
 
 application {

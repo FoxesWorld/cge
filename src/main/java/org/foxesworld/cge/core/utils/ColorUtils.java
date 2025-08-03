@@ -30,7 +30,8 @@ public final class ColorUtils {
      */
     public static ColorRGBA fromHexString(String hex) {
         if (hex == null || hex.isBlank()) {
-            throw new IllegalArgumentException("Hex string cannot be null or empty.");
+            //throw new IllegalArgumentException("Hex string cannot be null or empty.");
+            return new ColorRGBA(255,255,255,1);
         }
 
         // Remove the leading '#' if it exists for uniform processing.

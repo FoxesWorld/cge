@@ -130,7 +130,7 @@ public final class ViceTabs implements InteractiveComponent, MenuComponent {
             boolean isActive = (i == index);
 
             tab.button().setSelected(isActive);
-            tab.button().setUnderlineVisible(!isActive);
+            //tab.button().setUnderlineVisible(!isActive);
 
             tab.contentNode().setCullHint(isActive ? Node.CullHint.Inherit : Node.CullHint.Always);
             if (isActive) {
@@ -214,6 +214,16 @@ public final class ViceTabs implements InteractiveComponent, MenuComponent {
     @Override
     public void handleMouseRelease() {
         activeSlider = null;
+    }
+
+    @Override
+    public float getHeight() {
+        return contentHeight;
+    }
+
+    @Override
+    public float getWidth() {
+        return contentWidth;
     }
 
     private void transformToContentSpace(Vector2f cursor, Tab activeTab) {

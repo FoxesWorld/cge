@@ -1,18 +1,20 @@
 [
   {
-    "imagePath": "assets/Interface/Icons/check-mark.png",
-    "width": 256,
-    "height": 256,
-    "duration": 2.0,
+    "imagePath": "assets/Interface/ui/logo.png",
+    "width": 685,
+    "height": 226,
+    "duration": 3.5,
+    "startScale": 0.9,
+    "endScale": 1.0,
     "skippable": true
   },
   {
     "imagePath": "assets/Interface/ui/engine.png",
-    "width": 1024,
-    "height": 1072,
+    "width": 815,
+    "height": 1196,
     "duration": 3.5,
-    "startScale": 0.2,
+    "startScale": 0.8,
     "endScale": 1.0,
-    "skippable": false
+    "skippable": true
   }
 ]

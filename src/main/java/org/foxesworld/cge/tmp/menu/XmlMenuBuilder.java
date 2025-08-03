@@ -11,6 +11,7 @@ import com.jme3.scene.shape.Quad;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
+import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.utils.ColorUtils;
 import org.foxesworld.cge.tmp.menu.components.MenuComponent;
 import org.foxesworld.cge.tmp.menu.components.ViceButton;
@@ -32,7 +33,7 @@ public final class XmlMenuBuilder {
     private final ComponentRegistry registry;
     private final JAXBContext jaxbContext; // Cached for performance
 
-    public XmlMenuBuilder(Application app, ViceButton.Style buttonStyle) {
+    public XmlMenuBuilder(CalistaGameEngine app, ViceButton.Style buttonStyle) {
         this.context = new BuildContext(app, buttonStyle);
         this.registry = new ComponentRegistry(this);
         this.jaxbContext = createJaxbContext();

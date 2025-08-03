@@ -26,6 +26,7 @@ public class ComponentRegistry {
         register(SliderXml.class, new SliderBuilder());
         register(CheckboxXml.class, new CheckboxBuilder());
         register(TabsXml.class, new TabsBuilder(mainBuilder)); // Tabs builder needs recursion
+
     }
 
     public <T extends ComponentXml> void register(Class<T> modelClass, org.foxesworld.cge.tmp.menu.xml.ComponentBuilder<T> builder) {

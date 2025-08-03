@@ -1,29 +1,30 @@
 package org.foxesworld.cge.tmp.menu.components;
 
+import com.atr.jme.font.shape.TrueTypeContainer;
+import com.atr.jme.font.util.Style;
 import com.jme3.asset.AssetManager;
-import com.jme3.font.BitmapText;
-import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.scene.Node;
+import org.foxesworld.cge.core.io.TTFrenderer;
+import org.foxesworld.cge.core.utils.ColorUtils;
 
 public class ViceTitle implements InteractiveComponent, MenuComponent {
     private final Node titleNode;
-    private final BitmapText label;
+    private final TrueTypeContainer ttc;
+    private final TTFrenderer ttfRenderer;
 
-    public ViceTitle(AssetManager assetManager, String text, String fontPath) {
+    public ViceTitle(AssetManager assetManager, String text, int fontSize, String color, String fontPath) {
         this.titleNode = new Node("ViceTitle: " + text);
-        this.label = new BitmapText(assetManager.loadFont(fontPath));
-        label.setText(text);
-        label.setColor(ColorRGBA.White);
-        titleNode.attachChild(label);
+        ttfRenderer = new TTFrenderer(assetManager);
+        ttfRenderer.genTTF("assets/Interface/fonts/Docker One.ttf", Style.Plain, fontSize);
+        ttfRenderer.genTTC(ColorUtils.fromHexString(color), text);
+        ttc = ttfRenderer.getTtc();
+        titleNode.attachChild(ttc);
     }
 
-    public void setSize(float size) {
-        label.setSize(size);
-    }
 
     public void setPosition(float x, float y) {
-        float textWidth = label.getLineWidth();
+        float textWidth = ttc.getWidth();
         titleNode.setLocalTranslation(x - textWidth / 2f, y, 0);
     }
 
@@ -63,5 +64,15 @@ public class ViceTitle implements InteractiveComponent, MenuComponent {
     @Override
     public void handleMouseRelease() {
 
+    }
+
+    @Override
+    public float getHeight() {
+        return ttc.getHeight();
+    }
+
+    @Override
+    public float getWidth() {
+        return ttc.getWidth();
     }
 }
