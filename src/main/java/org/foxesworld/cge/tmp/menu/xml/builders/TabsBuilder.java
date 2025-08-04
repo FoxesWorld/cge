@@ -39,35 +39,22 @@ public class TabsBuilder implements ComponentBuilder<TabsXml> {
 
         for (TabXml tabModel : model.tabs) {
             Node contentNode = new Node("TabContent: " + tabModel.title);
-            List<ViceSlider> tabSliders = new ArrayList<>();
-            List<ViceCheckbox> tabCheckboxes = new ArrayList<>();
             List<Object> createdObjects = new ArrayList<>();
 
             if (tabModel.components != null) {
-
                 for (ComponentXml componentModel : tabModel.components) {
-                    // Recursive call to the main builder to create content
                     MenuComponent createdComponent = mainBuilder.buildComponent(componentModel, contentNode);
                     createdObjects.add(createdComponent);
-                    innerHeight+=createdComponent.getHeight() * 2.4;
-                    // Collect interactive components for the current tab
-                    if (createdComponent instanceof ViceSlider slider) {
-                        tabSliders.add(slider);
-                    } else if (createdComponent instanceof ViceCheckbox checkbox) {
-                        tabCheckboxes.add(checkbox);
-                    }
+                    innerHeight+= (float) (createdComponent.getHeight() * 2.4);
                 }
             }
             tabComponent.addTab(tabModel, contentNode, createdObjects);
         }
-        System.out.println(innerHeight);
         tabComponent.finalizeLayout(model.contentWidth, model.contentHeight - innerHeight);
-
         Vector2f pos = MenuUtils.calculatePosition(model.x, model.y, model.align, context.app().getCamera());
         float width = MenuUtils.parseSize(model.width, context.app().getCamera().getWidth());
         pos.x -= width / 2f;
         tabComponent.getNode().setLocalTranslation(pos.x, pos.y, 0);
-
         parent.attachChild(tabComponent.getNode());
         return tabComponent;
     }

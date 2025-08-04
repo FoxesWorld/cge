@@ -71,7 +71,7 @@ public final class ViceTabs implements InteractiveComponent, MenuComponent {
         layoutContentArea(contentWidth, contentHeight, buttonBarSize);
 
         if (!tabs.isEmpty()) {
-            selectTab(0, true);
+            selectTab(0);
         }
     }
 
@@ -119,10 +119,6 @@ public final class ViceTabs implements InteractiveComponent, MenuComponent {
     }
 
     private void selectTab(int index) {
-        selectTab(index, false);
-    }
-
-    private void selectTab(int index, boolean instant) {
         if (index < 0 || index >= tabs.size() || index == activeTabIndex) return;
 
         for (int i = 0; i < tabs.size(); i++) {
