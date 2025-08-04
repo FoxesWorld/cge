@@ -18,7 +18,7 @@ import com.jme3.ui.Picture;
 import org.foxesworld.cge.core.io.TTFrenderer;
 import org.foxesworld.cge.core.utils.ColorUtils;
 
-public final class ViceButton implements InteractiveComponent, MenuComponent {
+public final class ViceButton implements InteractiveComponent, MenuComponent, SoundComponent {
 
     private final Node buttonNode;
     private final Node contentNode; // Node to group moving parts (icon, text)
@@ -39,10 +39,6 @@ public final class ViceButton implements InteractiveComponent, MenuComponent {
     private final Vector2f currentNudge = new Vector2f(); // Current nudge offset for content
     private float time = 0f;
 
-    public ViceButton(AssetManager assetManager, String text, Style style, Runnable action) {
-        this(assetManager, text, style, action, null, 0);
-    }
-
     public ViceButton(AssetManager assetManager, String text, Style style, Runnable action, String iconPath, float iconSize) {
         this.action = action;
         this.style = style;
@@ -52,7 +48,7 @@ public final class ViceButton implements InteractiveComponent, MenuComponent {
         buttonNode.attachChild(contentNode);
 
         ttfRenderer = new TTFrenderer(assetManager);
-        ttfRenderer.genTTF("assets/Interface/fonts/FSElliotPro.ttf", com.atr.jme.font.util.Style.Plain, 35);
+        ttfRenderer.genTTF("assets/Interface/fonts/FSElliotPro.ttf", com.atr.jme.font.util.Style.Plain, 16);
 
         // --- Background Setup ---
         Material bgMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
@@ -210,5 +206,9 @@ public final class ViceButton implements InteractiveComponent, MenuComponent {
     @Override
     public float getHeight() {
         return height;
+    }
+
+    public TTFrenderer getTtfRenderer() {
+        return ttfRenderer;
     }
 }

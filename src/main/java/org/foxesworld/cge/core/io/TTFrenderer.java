@@ -48,7 +48,7 @@ public class TTFrenderer {
         this.fontPath = fontPath;
         this.style = style;
         String key = fontPath + '|' + style.name() + '|' + size;
-        this.ttf = (TrueTypeFont<?, ?>) fontCache.computeIfAbsent(key, k -> {
+        this.ttf = fontCache.computeIfAbsent(key, k -> {
             TrueTypeKeyMesh ttk = new TrueTypeKeyMesh(fontPath, style, size);
             return assetManager.loadAsset(ttk);
         });

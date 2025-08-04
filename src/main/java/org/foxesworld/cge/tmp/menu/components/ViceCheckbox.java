@@ -15,7 +15,7 @@ import com.jme3.ui.Picture;
 
 import static com.jme3.math.Vector3f.UNIT_XYZ;
 
-public final class ViceCheckbox implements InteractiveComponent, MenuComponent {
+public final class ViceCheckbox implements InteractiveComponent, MenuComponent, SoundComponent {
 
     private static final float ANIM_SPEED = 12f;
     private static final float LABEL_GAP_PCT = 0.5f;

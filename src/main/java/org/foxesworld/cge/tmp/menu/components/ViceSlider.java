@@ -21,7 +21,7 @@ import org.foxesworld.cge.core.utils.ColorUtils;
  * Значение меняется по клику/перетаскиванию по полосе слайдера.
  * При нажатии воспроизводится звук, как в GTA V.
  */
-public final class ViceSlider implements InteractiveComponent, MenuComponent {
+public final class ViceSlider implements InteractiveComponent, MenuComponent, SoundComponent {
 
     private static final float DEFAULT_HEIGHT = 12f;
     private static final float DEFAULT_FONT_SIZE = 24f;
@@ -37,7 +37,6 @@ public final class ViceSlider implements InteractiveComponent, MenuComponent {
     private final Node borderNode;
     private final BitmapText label;
     private final BitmapText valueLabel;
-    private final AudioNode clickSound;
 
     private final AssetManager assetManager;
     private final String bind;
@@ -68,13 +67,6 @@ public final class ViceSlider implements InteractiveComponent, MenuComponent {
 
         // Инициализация узла
         this.sliderNode = new Node("ViceSlider: " + text);
-
-        // Звук клика
-        clickSound = new AudioNode(assetManager, "assets/Sounds/ui/pop.ogg", false);
-        clickSound.setPositional(false);
-        clickSound.setLooping(false);
-        clickSound.setVolume(1);
-        sliderNode.attachChild(clickSound);
 
         // Текстовая метка
         BitmapFont font = assetManager.loadFont(buttonStyle.fontPath());

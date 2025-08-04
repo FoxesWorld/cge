@@ -30,6 +30,7 @@ public class TabsBuilder implements ComponentBuilder<TabsXml> {
 
     @Override
     public ViceTabs build(TabsXml model, Node parent, BuildContext context) {
+        float innerHeight = 0;
         Orientation orientation = "VERTICAL".equalsIgnoreCase(model.orientation)
                 ? Orientation.VERTICAL
                 : Orientation.HORIZONTAL;
@@ -43,10 +44,12 @@ public class TabsBuilder implements ComponentBuilder<TabsXml> {
             List<Object> createdObjects = new ArrayList<>();
 
             if (tabModel.components != null) {
+
                 for (ComponentXml componentModel : tabModel.components) {
                     // Recursive call to the main builder to create content
                     MenuComponent createdComponent = mainBuilder.buildComponent(componentModel, contentNode);
                     createdObjects.add(createdComponent);
+                    innerHeight+=createdComponent.getHeight() * 2.4;
                     // Collect interactive components for the current tab
                     if (createdComponent instanceof ViceSlider slider) {
                         tabSliders.add(slider);
@@ -57,8 +60,8 @@ public class TabsBuilder implements ComponentBuilder<TabsXml> {
             }
             tabComponent.addTab(tabModel, contentNode, createdObjects);
         }
-
-        tabComponent.finalizeLayout(model.contentWidth, model.contentHeight);
+        System.out.println(innerHeight);
+        tabComponent.finalizeLayout(model.contentWidth, model.contentHeight - innerHeight);
 
         Vector2f pos = MenuUtils.calculatePosition(model.x, model.y, model.align, context.app().getCamera());
         float width = MenuUtils.parseSize(model.width, context.app().getCamera().getWidth());

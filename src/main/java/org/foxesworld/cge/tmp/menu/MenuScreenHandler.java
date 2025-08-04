@@ -13,6 +13,7 @@ import com.jme3.math.Vector2f;
 import com.jme3.scene.Node;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.tmp.menu.components.InteractiveComponent;
+import org.foxesworld.cge.tmp.menu.components.SoundComponent;
 import org.foxesworld.cge.tmp.menu.components.ViceButton;
 import org.foxesworld.cge.tmp.menu.components.ViceCheckbox;
 
@@ -143,11 +144,11 @@ public final class MenuScreenHandler {
             } else {
                 dragging = false;
                 InteractiveComponent release = findComponent(c);
-                if (focused != null && focused == release) {
+                if (focused != null && focused == release && release instanceof SoundComponent) {
                     clickSound.playInstance();
-                    if (focused instanceof ViceButton vb) vb.executeAction();
-                    else if (focused instanceof ViceCheckbox cb) cb.toggle();
                 }
+                if (focused instanceof ViceButton vb) vb.executeAction();
+                else if (focused instanceof ViceCheckbox cb) cb.toggle();
                 if (focused != null) focused.handleMouseRelease();
                 focused = null;
             }
