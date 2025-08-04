@@ -25,9 +25,8 @@ public class ComponentRegistry {
         register(ButtonXml.class, new ButtonBuilder());
         register(SliderXml.class, new SliderBuilder());
         register(CheckboxXml.class, new CheckboxBuilder());
-        register(TabsXml.class, new TabsBuilder(mainBuilder)); // Tabs builder needs recursion
+        register(TabsXml.class, new TabsBuilder(mainBuilder));
         register(PanelXml.class, new PanelBuilder(mainBuilder));
-
     }
 
     public <T extends ComponentXml> void register(Class<T> modelClass, org.foxesworld.cge.tmp.menu.xml.ComponentBuilder<T> builder) {
@@ -35,7 +34,7 @@ public class ComponentRegistry {
         LOGGER.debug("Registered component builder for {}", modelClass.getSimpleName());
     }
 
-    public org.foxesworld.cge.tmp.menu.xml.ComponentBuilder<?> getBuilderFor(ComponentXml model) {
+    public ComponentBuilder<? extends ComponentXml> getBuilderFor(ComponentXml model) {
         return builders.get(model.getClass());
     }
 }

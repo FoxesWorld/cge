@@ -1,6 +1,5 @@
 package org.foxesworld.cge.tmp.menu;
 
-import com.jme3.app.Application;
 import com.jme3.material.Material;
 import com.jme3.material.RenderState.BlendMode;
 import com.jme3.math.ColorRGBA;
@@ -14,7 +13,6 @@ import jakarta.xml.bind.Unmarshaller;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.utils.ColorUtils;
 import org.foxesworld.cge.tmp.menu.components.MenuComponent;
-import org.foxesworld.cge.tmp.menu.components.Panel;
 import org.foxesworld.cge.tmp.menu.components.ViceButton;
 import org.foxesworld.cge.tmp.menu.xml.*;
 import org.foxesworld.cge.tmp.menu.xml.ComponentBuilder;
@@ -32,7 +30,7 @@ public final class XmlMenuBuilder {
 
     private final BuildContext context;
     private final ComponentRegistry registry;
-    private final JAXBContext jaxbContext; // Cached for performance
+    private final JAXBContext jaxbContext;
 
     public XmlMenuBuilder(CalistaGameEngine app, ViceButton.Style buttonStyle) {
         this.context = new BuildContext(app, buttonStyle);
@@ -82,7 +80,7 @@ public final class XmlMenuBuilder {
      * and delegates the build task to it.
      */
     public MenuComponent buildComponent(ComponentXml model, Node parent) {
-        ComponentBuilder builder = registry.getBuilderFor(model);
+        ComponentBuilder<ComponentXml> builder = (ComponentBuilder<ComponentXml>) registry.getBuilderFor(model);
         if (builder != null) {
             MenuComponent component = builder.build(model, parent, context);
             context.addComponent(component);

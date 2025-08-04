@@ -5,7 +5,7 @@
 
 
         <!-- КОНТЕЙНЕР ДЛЯ ВКЛАДОК -->
-        <tabs x="-30%" y="70%" contentWidth="1600" contentHeight="900" align="CENTER_X" orientation="VERTICAL">
+        <tabs x="-30%" y="65%" contentWidth="1600" contentHeight="900" align="CENTER_X" orientation="VERTICAL">
 
             <!-- ТРЕТЬЯ ВКЛАДКА: УПРАВЛЕНИЕ -->
             <tab iconPath="assets/Interface/ui/icons/process.png" title="CONTROLS">

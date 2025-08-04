@@ -23,7 +23,7 @@ public final class MainMenuAppState extends BaseAppState {
     private static final String MAIN_MENU_XML = "ui/main_menu.xml";
 
     private ViceMenuBackground background;
-    private MenuScreenHandler screenHandler; // Делегат для всего 2D UI
+    private MenuScreenHandler screenHandler;
 
     private FilterPostProcessor fpp;
     private DepthOfFieldFilter dofFilter;
