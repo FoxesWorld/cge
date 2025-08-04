@@ -1,59 +1,43 @@
-[18:23:43.553][INFO][TaskScheduler] TaskScheduler initialized [Compute Threads: 20, IO Pool: Cached, Max IO Threads: 80]
-[18:23:45.355][INFO][ModuleManager] ModuleManager initialized with modules directory: modules
-[18:23:46.262][DEBUG][ComponentRegistry] Registered component builder for TitleXml
-[18:23:46.263][DEBUG][ComponentRegistry] Registered component builder for ButtonXml
-[18:23:46.263][DEBUG][ComponentRegistry] Registered component builder for SliderXml
-[18:23:46.264][DEBUG][ComponentRegistry] Registered component builder for CheckboxXml
-[18:23:46.264][DEBUG][ComponentRegistry] Registered component builder for TabsXml
-[18:23:46.265][DEBUG][ComponentRegistry] Registered component builder for PanelXml
-[18:23:46.365][DEBUG][ComponentRegistry] Registered component builder for TitleXml
-[18:23:46.365][DEBUG][ComponentRegistry] Registered component builder for ButtonXml
-[18:23:46.365][DEBUG][ComponentRegistry] Registered component builder for SliderXml
-[18:23:46.365][DEBUG][ComponentRegistry] Registered component builder for CheckboxXml
-[18:23:46.365][DEBUG][ComponentRegistry] Registered component builder for TabsXml
-[18:23:46.365][DEBUG][ComponentRegistry] Registered component builder for PanelXml
-[18:23:46.387][DEBUG][PanelBuilder] Building Panel with id='titlePanel'.
-[18:23:46.390][DEBUG][Panel] Panel 'titlePanel' created with padding=10.0, spacing=8.0
-[18:23:46.391][DEBUG][PanelBuilder] Panel 'titlePanel' has 3 child components to build.
-[18:23:46.401][DEBUG][Panel] Adding component 'ViceTitle: Calista Game Engine (Node)' of type ViceTitle to Panel 'titlePanel'.
-[18:23:46.411][DEBUG][Panel] Adding component 'ViceTitle: ALPHA PreBuild 0.0.2-r (Node)' of type ViceTitle to Panel 'titlePanel'.
-[18:23:46.417][DEBUG][Panel] Adding component 'ViceTitle: EXPERIMENTAL (Node)' of type ViceTitle to Panel 'titlePanel'.
-[18:23:46.417][DEBUG][PanelBuilder] Panel 'titlePanel' built and attached to parent 'XmlUIRoot'.
-[18:23:46.417][DEBUG][PanelBuilder] Building Panel with id='main_panel'.
-[18:23:46.417][DEBUG][Panel] Panel 'main_panel' created with padding=10.0, spacing=8.0
-[18:23:46.418][DEBUG][PanelBuilder] Panel 'main_panel' has 3 child components to build.
-[18:23:46.425][DEBUG][Panel] Adding component 'ViceButton: START GAME (Node)' of type ViceButton to Panel 'main_panel'.
-[18:23:46.433][DEBUG][Panel] Adding component 'ViceButton: SETTINGS (Node)' of type ViceButton to Panel 'main_panel'.
-[18:23:46.461][DEBUG][Panel] Adding component 'ViceButton: QUIT (Node)' of type ViceButton to Panel 'main_panel'.
-[18:23:46.461][DEBUG][PanelBuilder] Panel 'main_panel' built and attached to parent 'XmlUIRoot'.
-[18:23:46.531][DEBUG][PanelBuilder] Building Panel with id='titlePanel'.
-[18:23:46.531][DEBUG][Panel] Panel 'titlePanel' created with padding=10.0, spacing=8.0
-[18:23:46.531][DEBUG][PanelBuilder] Panel 'titlePanel' has 3 child components to build.
-[18:23:46.533][DEBUG][Panel] Adding component 'ViceTitle: Calista Game Engine (Node)' of type ViceTitle to Panel 'titlePanel'.
-[18:23:46.535][DEBUG][Panel] Adding component 'ViceTitle: ALPHA PreBuild 0.0.2-r (Node)' of type ViceTitle to Panel 'titlePanel'.
-[18:23:46.536][DEBUG][Panel] Adding component 'ViceTitle: EXPERIMENTAL (Node)' of type ViceTitle to Panel 'titlePanel'.
-[18:23:46.536][DEBUG][PanelBuilder] Panel 'titlePanel' built and attached to parent 'XmlUIRoot'.
-[18:23:46.536][DEBUG][PanelBuilder] Building Panel with id='main_panel'.
-[18:23:46.536][DEBUG][Panel] Panel 'main_panel' created with padding=10.0, spacing=8.0
-[18:23:46.537][DEBUG][PanelBuilder] Panel 'main_panel' has 3 child components to build.
-[18:23:46.539][DEBUG][Panel] Adding component 'ViceButton: START GAME (Node)' of type ViceButton to Panel 'main_panel'.
-[18:23:46.545][DEBUG][Panel] Adding component 'ViceButton: SETTINGS (Node)' of type ViceButton to Panel 'main_panel'.
-[18:23:46.559][DEBUG][Panel] Adding component 'ViceButton: QUIT (Node)' of type ViceButton to Panel 'main_panel'.
-[18:23:46.559][DEBUG][PanelBuilder] Panel 'main_panel' built and attached to parent 'XmlUIRoot'.
-[18:23:47.576][WARN][ViceMenuBackground] No model path provided. Creating a fallback placeholder.
-[18:23:48.098][INFO][OpenSettingsAction] Executing action: Open Settings Screen
-[18:24:06.424][INFO][GoBackToMainMenuAction] Executing action: Go Back To Main Menu
-[18:24:06.426][DEBUG][PanelBuilder] Building Panel with id='titlePanel'.
-[18:24:06.426][DEBUG][Panel] Panel 'titlePanel' created with padding=10.0, spacing=8.0
-[18:24:06.427][DEBUG][PanelBuilder] Panel 'titlePanel' has 3 child components to build.
-[18:24:06.427][DEBUG][Panel] Adding component 'ViceTitle: Calista Game Engine (Node)' of type ViceTitle to Panel 'titlePanel'.
-[18:24:06.427][DEBUG][Panel] Adding component 'ViceTitle: ALPHA PreBuild 0.0.2-r (Node)' of type ViceTitle to Panel 'titlePanel'.
-[18:24:06.428][DEBUG][Panel] Adding component 'ViceTitle: EXPERIMENTAL (Node)' of type ViceTitle to Panel 'titlePanel'.
-[18:24:06.428][DEBUG][PanelBuilder] Panel 'titlePanel' built and attached to parent 'XmlUIRoot'.
-[18:24:06.428][DEBUG][PanelBuilder] Building Panel with id='main_panel'.
-[18:24:06.428][DEBUG][Panel] Panel 'main_panel' created with padding=10.0, spacing=8.0
-[18:24:06.428][DEBUG][PanelBuilder] Panel 'main_panel' has 3 child components to build.
-[18:24:06.430][DEBUG][Panel] Adding component 'ViceButton: START GAME (Node)' of type ViceButton to Panel 'main_panel'.
-[18:24:06.435][DEBUG][Panel] Adding component 'ViceButton: SETTINGS (Node)' of type ViceButton to Panel 'main_panel'.
-[18:24:06.444][DEBUG][Panel] Adding component 'ViceButton: QUIT (Node)' of type ViceButton to Panel 'main_panel'.
-[18:24:06.444][DEBUG][PanelBuilder] Panel 'main_panel' built and attached to parent 'XmlUIRoot'.
+[18:57:25.998][INFO][TaskScheduler] TaskScheduler initialized [Compute Threads: 20, IO Pool: Cached, Max IO Threads: 80]
+[18:57:27.800][INFO][ModuleManager] ModuleManager initialized with modules directory: modules
+[18:57:36.690][DEBUG][ComponentRegistry] Registered component builder for TitleXml
+[18:57:36.691][DEBUG][ComponentRegistry] Registered component builder for ButtonXml
+[18:57:36.691][DEBUG][ComponentRegistry] Registered component builder for SliderXml
+[18:57:36.692][DEBUG][ComponentRegistry] Registered component builder for CheckboxXml
+[18:57:36.692][DEBUG][ComponentRegistry] Registered component builder for TabsXml
+[18:57:36.693][DEBUG][ComponentRegistry] Registered component builder for PanelXml
+[18:57:36.788][DEBUG][ComponentRegistry] Registered component builder for TitleXml
+[18:57:36.789][DEBUG][ComponentRegistry] Registered component builder for ButtonXml
+[18:57:36.789][DEBUG][ComponentRegistry] Registered component builder for SliderXml
+[18:57:36.789][DEBUG][ComponentRegistry] Registered component builder for CheckboxXml
+[18:57:36.789][DEBUG][ComponentRegistry] Registered component builder for TabsXml
+[18:57:36.789][DEBUG][ComponentRegistry] Registered component builder for PanelXml
+[18:57:36.808][DEBUG][PanelBuilder] Building Panel with id='titlePanel'.
+[18:57:36.812][DEBUG][Panel] Panel 'titlePanel' created with padding=10.0, spacing=8.0
+[18:57:36.812][DEBUG][PanelBuilder] Panel 'titlePanel' has 3 child components to build.
+[18:57:36.821][DEBUG][Panel] Adding component 'ViceTitle: Calista Game Engine (Node)' of type ViceTitle to Panel 'titlePanel'.
+[18:57:36.829][DEBUG][Panel] Adding component 'ViceTitle: ALPHA PreBuild 0.0.2-r (Node)' of type ViceTitle to Panel 'titlePanel'.
+[18:57:36.834][DEBUG][Panel] Adding component 'ViceTitle: EXPERIMENTAL (Node)' of type ViceTitle to Panel 'titlePanel'.
+[18:57:36.834][DEBUG][PanelBuilder] Panel 'titlePanel' built and attached to parent 'XmlUIRoot'.
+[18:57:36.834][DEBUG][PanelBuilder] Building Panel with id='main_panel'.
+[18:57:36.834][DEBUG][Panel] Panel 'main_panel' created with padding=10.0, spacing=8.0
+[18:57:36.834][DEBUG][PanelBuilder] Panel 'main_panel' has 3 child components to build.
+[18:57:36.841][DEBUG][Panel] Adding component 'ViceButton: START GAME (Node)' of type ViceButton to Panel 'main_panel'.
+[18:57:36.850][DEBUG][Panel] Adding component 'ViceButton: SETTINGS (Node)' of type ViceButton to Panel 'main_panel'.
+[18:57:36.878][DEBUG][Panel] Adding component 'ViceButton: QUIT (Node)' of type ViceButton to Panel 'main_panel'.
+[18:57:36.879][DEBUG][PanelBuilder] Panel 'main_panel' built and attached to parent 'XmlUIRoot'.
+[18:57:36.950][DEBUG][PanelBuilder] Building Panel with id='titlePanel'.
+[18:57:36.951][DEBUG][Panel] Panel 'titlePanel' created with padding=10.0, spacing=8.0
+[18:57:36.951][DEBUG][PanelBuilder] Panel 'titlePanel' has 3 child components to build.
+[18:57:36.951][DEBUG][Panel] Adding component 'ViceTitle: Calista Game Engine (Node)' of type ViceTitle to Panel 'titlePanel'.
+[18:57:36.952][DEBUG][Panel] Adding component 'ViceTitle: ALPHA PreBuild 0.0.2-r (Node)' of type ViceTitle to Panel 'titlePanel'.
+[18:57:36.952][DEBUG][Panel] Adding component 'ViceTitle: EXPERIMENTAL (Node)' of type ViceTitle to Panel 'titlePanel'.
+[18:57:36.952][DEBUG][PanelBuilder] Panel 'titlePanel' built and attached to parent 'XmlUIRoot'.
+[18:57:36.952][DEBUG][PanelBuilder] Building Panel with id='main_panel'.
+[18:57:36.953][DEBUG][Panel] Panel 'main_panel' created with padding=10.0, spacing=8.0
+[18:57:36.953][DEBUG][PanelBuilder] Panel 'main_panel' has 3 child components to build.
+[18:57:36.955][DEBUG][Panel] Adding component 'ViceButton: START GAME (Node)' of type ViceButton to Panel 'main_panel'.
+[18:57:36.961][DEBUG][Panel] Adding component 'ViceButton: SETTINGS (Node)' of type ViceButton to Panel 'main_panel'.
+[18:57:36.973][DEBUG][Panel] Adding component 'ViceButton: QUIT (Node)' of type ViceButton to Panel 'main_panel'.
+[18:57:36.974][DEBUG][PanelBuilder] Panel 'main_panel' built and attached to parent 'XmlUIRoot'.
+[18:57:38.027][WARN][ViceMenuBackground] No model path provided. Creating a fallback placeholder.
