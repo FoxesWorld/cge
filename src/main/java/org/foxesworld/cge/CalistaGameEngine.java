@@ -7,6 +7,7 @@ import org.foxesworld.cge.core.AssetRepo;
 import org.foxesworld.cge.core.ConfigEditorState;
 import org.foxesworld.cge.core.ConfigService;
 import org.foxesworld.cge.core.TaskScheduler;
+import org.foxesworld.cge.core.io.FpsCounterState;
 import org.foxesworld.cge.core.io.TTFrenderer;
 import org.foxesworld.cge.core.io.GenericByteParser;
 import org.foxesworld.cge.core.loader.AssetLoader;
@@ -88,10 +89,12 @@ public class CalistaGameEngine extends SimpleApplication {
 
     @Override
     public void simpleInitApp() {
-        // Disable stats view
         StatsAppState stats = stateManager.getState(StatsAppState.class);
         if (stats != null) {
             stats.setDisplayStatView(false);
+            setDisplayFps(false);
+            FpsCounterState fpsState = new FpsCounterState();
+            stateManager.attach(fpsState);
         }
 
         // Initialize modules

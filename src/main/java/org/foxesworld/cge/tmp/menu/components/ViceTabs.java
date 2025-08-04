@@ -84,7 +84,7 @@ public final class ViceTabs implements InteractiveComponent, MenuComponent {
 
         for (Tab tab : tabs) {
             tab.button().setSize(btnWidth, btnHeight);
-            tab.button().setLabelSize(28f);
+            //tab.button().setLabelSize(28f);
 
             if (orientation == Orientation.HORIZONTAL) {
                 tab.button().setPosition(padding + offset, padding);

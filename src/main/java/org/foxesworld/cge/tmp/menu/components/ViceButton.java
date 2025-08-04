@@ -105,18 +105,12 @@ public final class ViceButton implements InteractiveComponent, MenuComponent, So
 
         background.setMesh(new RoundedQuad(width, height, style.cornerRadius(), 16));
         background.setLocalTranslation(width / 2f, height / 2f, -1);
-
         centerContent();
     }
 
     public void setPosition(float x, float y) {
         position.set(x, y);
         buttonNode.setLocalTranslation(x, y, 0);
-    }
-
-    public void setLabelSize(float size) {
-        //ttfRenderer.setScale((int) size);
-        centerContent();
     }
 
     /**
