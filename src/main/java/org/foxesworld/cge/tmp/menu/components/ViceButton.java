@@ -21,7 +21,7 @@ import org.foxesworld.cge.core.utils.ColorUtils;
 public final class ViceButton implements InteractiveComponent, MenuComponent {
 
     private final Node buttonNode;
-    private final Node contentNode; // NEW: Node to group moving parts (icon, text)
+    private final Node contentNode; // Node to group moving parts (icon, text)
     private final Picture icon;
     private AssetManager assetManager;
     private TTFrenderer ttfRenderer;
@@ -36,7 +36,7 @@ public final class ViceButton implements InteractiveComponent, MenuComponent {
     // --- State Variables for Animation ---
     private final ColorRGBA currentLabelColor = new ColorRGBA();
     private final ColorRGBA currentBackgroundColor = new ColorRGBA();
-    private final Vector2f currentNudge = new Vector2f(); // NEW: Current nudge offset for content
+    private final Vector2f currentNudge = new Vector2f(); // Current nudge offset for content
     private float time = 0f;
 
     public ViceButton(AssetManager assetManager, String text, Style style, Runnable action) {
@@ -48,7 +48,7 @@ public final class ViceButton implements InteractiveComponent, MenuComponent {
         this.style = style;
         this.assetManager = assetManager;
         this.buttonNode = new Node("ViceButton: " + text);
-        this.contentNode = new Node("ButtonContent"); // NEW: Initialize content node
+        this.contentNode = new Node("ButtonContent"); // Initialize content node
         buttonNode.attachChild(contentNode);
 
         ttfRenderer = new TTFrenderer(assetManager);
@@ -97,7 +97,7 @@ public final class ViceButton implements InteractiveComponent, MenuComponent {
         currentBackgroundColor.interpolateLocal(targetBackgroundColor, lerp);
         background.getMaterial().setColor("Color", currentBackgroundColor);
 
-        // NEW: Animate content nudge
+        // Animate content nudge
         Vector2f targetNudge = glow ? style.hoverNudge() : Vector2f.ZERO;
         currentNudge.interpolateLocal(targetNudge, lerp);
         contentNode.setLocalTranslation(currentNudge.x, currentNudge.y, 0);
@@ -106,10 +106,10 @@ public final class ViceButton implements InteractiveComponent, MenuComponent {
     public void setSize(float width, float height) {
         this.width = width;
         this.height = height;
-        // Recreate the background mesh with the new size
+
         background.setMesh(new RoundedQuad(width, height, style.cornerRadius(), 16));
-        // Center the background mesh
-        background.setLocalTranslation(width / 1.15f, height / 2.2f, -1);
+        background.setLocalTranslation(width / 2f, height / 2f, -1);
+
         centerContent();
     }
 
@@ -124,7 +124,7 @@ public final class ViceButton implements InteractiveComponent, MenuComponent {
     }
 
     /**
-     * Renamed from centerElements to clarify it only centers the content now.
+     * Centers the content (icon and text) inside the button's bounds.
      */
     private void centerContent() {
         float iconW = icon.getWidth();
@@ -132,12 +132,23 @@ public final class ViceButton implements InteractiveComponent, MenuComponent {
         float textW = ttfRenderer.getTtc().getWidth();
         float totalW = iconW + gap + textW;
 
-        float startX = (width - totalW)/2f;
-        float y = (height - ttfRenderer.getTtc().getHeight())/2f + ttfRenderer.getTtc().getHeight(); // Center text vertically
+        // --- Horizontal Centering ---
+        // Calculate the starting X coordinate to center the entire content block.
+        float startX = (width - totalW) / 10f;
 
-        if (iconW > 0) icon.setLocalTranslation(startX, (height - icon.getHeight())/2f, 0);
+        // --- Vertical Centering (CORRECTED) ---
+        // To center an element with a bottom-left origin, we calculate the
+        // required bottom margin. The formula is (containerHeight - elementHeight) / 2.
+        float iconY = (height - icon.getHeight()) / 2f;
+        float textY = (height - ttfRenderer.getTtc().getHeight()) / 2f;
 
-        ttfRenderer.getTtc().setLocalTranslation(startX + iconW + gap, y, 1);
+        if (iconW > 0) {
+            // Set position for the icon
+            icon.setLocalTranslation(startX, iconY, 0);
+        }
+
+        // Set position for the text, using the correct Y coordinate.
+        ttfRenderer.getTtc().setLocalTranslation(startX + iconW + gap, textY, 1);
     }
 
     public void executeAction() {
@@ -159,7 +170,7 @@ public final class ViceButton implements InteractiveComponent, MenuComponent {
     @Override public void setActive(boolean active) { this.isActive = active; if(!active) isHovered=false; }
 
     /**
-     * UPDATED Style record with hoverNudge property. Removed underline properties.
+     * UPDATED Style record with hoverNudge property.
      */
     public record Style(
             ColorRGBA defaultColor,
@@ -169,9 +180,8 @@ public final class ViceButton implements InteractiveComponent, MenuComponent {
             String hoverBackgroundColor,
             String fontPath,
             float cornerRadius,
-            Vector2f hoverNudge, // NEW: How much to move content on hover
+            Vector2f hoverNudge, // How much to move content on hover
             float animationSpeed,
-
             float iconGap
     ) {
         public static Style getViceStyle() {
@@ -185,7 +195,7 @@ public final class ViceButton implements InteractiveComponent, MenuComponent {
                     "#f2f5f7a8",
                     font,
                     15f, // cornerRadius
-                    new Vector2f(15f, 0f), // hoverNudge: 5px right, 2px up
+                    new Vector2f(15f, 0f), // hoverNudge: 15px right
                     15f,  // animationSpeed
                     8f    // iconGap
             );

@@ -7,6 +7,8 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -18,16 +20,19 @@ public class Panel implements MenuComponent, InteractiveComponent {
     private final Style style;
     private final List<MenuComponent> children = new ArrayList<>();
     private final Vector2f position = new Vector2f();
+    private static final Logger LOGGER = LoggerFactory.getLogger(Panel.class);
 
+    private final String id; // Добавим ID для более информативного логирования
     private float width, height;
     private float padding, spacing;
     private float nextY; // Y-координата для следующего компонента
 
-    public Panel(AssetManager assetManager, Style style, float padding, float spacing) {
+    public Panel(String id, AssetManager assetManager, Style style, float padding, float spacing) {
+        this.id = id;
         this.style = style;
         this.padding = padding;
         this.spacing = spacing;
-        this.panelNode = new Node("Panel");
+        this.panelNode = new Node("Panel_" + id);
 
         Material bgMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
         bgMat.setColor("Color", style.backgroundColor);
@@ -35,30 +40,84 @@ public class Panel implements MenuComponent, InteractiveComponent {
         this.background = new Geometry("PanelBackground");
         this.background.setMaterial(bgMat);
         panelNode.attachChild(background);
+
+        // --- 2. Логируем создание панели ---
+        LOGGER.debug("Panel '{}' created with padding={}, spacing={}", id, padding, spacing);
     }
 
+// В классе Panel.java
+
     /**
-     * Adds a component to the panel and positions it according to the layout.
-     * @param component The component to add (e.g., a ViceButton).
+     * Adds a component to this panel. The panel will take control of the component's
+     * size and position according to its internal layout rules.
+     * @param component The component to add. Must not be null.
      */
     public void addComponent(MenuComponent component) {
-        if (!(component instanceof ViceButton button)) {
-            // Можно расширить для поддержки других типов, если нужно
+        if (component == null) {
+            LOGGER.warn("Attempted to add a null component to Panel '{}'.", this.id);
             return;
         }
 
+        // Логируем по ID, это информативнее, чем по узлу
+        LOGGER.debug("Adding component '{}' of type {} to Panel '{}'.",
+                component.getNode(), component.getClass().getSimpleName(), this.id);
+
+        // Добавляем в список и на сцену
         children.add(component);
         panelNode.attachChild(component.getNode());
 
-        // Layout logic (simple vertical stack)
-        float buttonHeight = button.getHeight();
-        float buttonWidth = this.width - (padding * 2); // Кнопка занимает всю ширину панели минус отступы
+        // Делегируем всю сложную работу по компоновке отдельному методу
+        layoutChild(component);
+    }
 
-        button.setSize(buttonWidth, buttonHeight);
-        button.setPosition(padding, nextY - buttonHeight);
+    /**
+     * Calculates and applies the size and position for a single child component
+     * based on the panel's layout rules (vertical stack).
+     *
+     * @param child The component to be laid out.
+     */
+    private void layoutChild(MenuComponent child) {
+        // 1. Определяем ширину компонента.
+        // Она всегда равна ширине панели минус боковые отступы.
+        float componentWidth = this.width - (padding * 2);
 
-        // Обновляем Y для следующего компонента
-        nextY -= (buttonHeight + spacing);
+        // 2. Определяем высоту компонента.
+        // Это значение берется из самого компонента.
+        // Он должен сам знать свою предпочтительную высоту.
+        float componentHeight = child.getHeight();
+        if (componentHeight <= 0) {
+            LOGGER.warn("Component '{}' has a height of 0 or less. It may not be visible.", child.getNode());
+        }
+
+        // 3. Устанавливаем итоговый размер компонента.
+        child.setSize(componentWidth, componentHeight);
+
+        // 4. Вычисляем позицию внутри локальных координат панели.
+        // X-координата - это просто левый отступ (padding).
+        float localX = this.padding;
+        // Y-координата - это текущая "каретка" минус высота самого компонента.
+        float localY = this.nextY - componentHeight;
+
+        // 5. Устанавливаем позицию.
+        child.getNode().setLocalTranslation(localX, localY, 0);
+
+        // 6. Сдвигаем "каретку" вниз для следующего компонента.
+        this.nextY -= (componentHeight + this.spacing);
+    }
+
+    /**
+     * Recalculates the layout for all existing child components.
+     * This should be called whenever the panel's size changes.
+     */
+    private void relayout() {
+        LOGGER.trace("Performing relayout for {} children in Panel '{}'.", children.size(), id);
+        // Сбрасываем каретку в начальное положение (верхний край панели минус отступ)
+        this.nextY = this.height - this.padding;
+
+        // Просто вызываем layoutChild для каждого уже добавленного элемента.
+        for (MenuComponent child : children) {
+            layoutChild(child);
+        }
     }
 
     public void setSize(float width, float height) {

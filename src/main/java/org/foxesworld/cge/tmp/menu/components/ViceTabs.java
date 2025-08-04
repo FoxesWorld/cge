@@ -222,6 +222,11 @@ public final class ViceTabs implements InteractiveComponent, MenuComponent {
     }
 
     @Override
+    public void setSize(float width, float height) {
+
+    }
+
+    @Override
     public float getWidth() {
         return contentWidth;
     }

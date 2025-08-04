@@ -1,13 +1,43 @@
-[21:27:57.449][INFO][TaskScheduler] TaskScheduler initialized [Compute Threads: 20, IO Pool: Cached, Max IO Threads: 80]
-[21:27:59.901][INFO][ModuleManager] ModuleManager initialized with modules directory: modules
-[21:28:00.938][DEBUG][ComponentRegistry] Registered component builder for TitleXml
-[21:28:00.938][DEBUG][ComponentRegistry] Registered component builder for ButtonXml
-[21:28:00.939][DEBUG][ComponentRegistry] Registered component builder for SliderXml
-[21:28:00.939][DEBUG][ComponentRegistry] Registered component builder for CheckboxXml
-[21:28:00.940][DEBUG][ComponentRegistry] Registered component builder for TabsXml
-[21:28:01.038][DEBUG][ComponentRegistry] Registered component builder for TitleXml
-[21:28:01.039][DEBUG][ComponentRegistry] Registered component builder for ButtonXml
-[21:28:01.039][DEBUG][ComponentRegistry] Registered component builder for SliderXml
-[21:28:01.039][DEBUG][ComponentRegistry] Registered component builder for CheckboxXml
-[21:28:01.039][DEBUG][ComponentRegistry] Registered component builder for TabsXml
-[21:28:02.330][WARN][ViceMenuBackground] No model path provided. Creating a fallback placeholder.
+[10:32:21.641][INFO][TaskScheduler] TaskScheduler initialized [Compute Threads: 20, IO Pool: Cached, Max IO Threads: 80]
+[10:32:23.436][INFO][ModuleManager] ModuleManager initialized with modules directory: modules
+[10:32:24.025][DEBUG][ComponentRegistry] Registered component builder for TitleXml
+[10:32:24.026][DEBUG][ComponentRegistry] Registered component builder for ButtonXml
+[10:32:24.027][DEBUG][ComponentRegistry] Registered component builder for SliderXml
+[10:32:24.027][DEBUG][ComponentRegistry] Registered component builder for CheckboxXml
+[10:32:24.028][DEBUG][ComponentRegistry] Registered component builder for TabsXml
+[10:32:24.028][DEBUG][ComponentRegistry] Registered component builder for PanelXml
+[10:32:24.131][DEBUG][ComponentRegistry] Registered component builder for TitleXml
+[10:32:24.131][DEBUG][ComponentRegistry] Registered component builder for ButtonXml
+[10:32:24.131][DEBUG][ComponentRegistry] Registered component builder for SliderXml
+[10:32:24.131][DEBUG][ComponentRegistry] Registered component builder for CheckboxXml
+[10:32:24.131][DEBUG][ComponentRegistry] Registered component builder for TabsXml
+[10:32:24.131][DEBUG][ComponentRegistry] Registered component builder for PanelXml
+[10:32:24.150][DEBUG][PanelBuilder] Building Panel with id='titlePanel'.
+[10:32:24.152][DEBUG][Panel] Panel 'titlePanel' created with padding=10.0, spacing=8.0
+[10:32:24.153][DEBUG][PanelBuilder] Panel 'titlePanel' has 3 child components to build.
+[10:32:24.215][DEBUG][Panel] Adding component 'ViceTitle: Calista Game Engine (Node)' of type ViceTitle to Panel 'titlePanel'.
+[10:32:24.228][DEBUG][Panel] Adding component 'ViceTitle: ALPHA PreBuild 0.0.2-r (Node)' of type ViceTitle to Panel 'titlePanel'.
+[10:32:24.234][DEBUG][Panel] Adding component 'ViceTitle: EXPERIMENTAL (Node)' of type ViceTitle to Panel 'titlePanel'.
+[10:32:24.235][DEBUG][PanelBuilder] Panel 'titlePanel' built and attached to parent 'XmlUIRoot'.
+[10:32:24.235][DEBUG][PanelBuilder] Building Panel with id='main_panel'.
+[10:32:24.235][DEBUG][Panel] Panel 'main_panel' created with padding=10.0, spacing=8.0
+[10:32:24.235][DEBUG][PanelBuilder] Panel 'main_panel' has 3 child components to build.
+[10:32:24.244][DEBUG][Panel] Adding component 'ViceButton: START GAME (Node)' of type ViceButton to Panel 'main_panel'.
+[10:32:24.251][DEBUG][Panel] Adding component 'ViceButton: SETTINGS (Node)' of type ViceButton to Panel 'main_panel'.
+[10:32:24.282][DEBUG][Panel] Adding component 'ViceButton: QUIT (Node)' of type ViceButton to Panel 'main_panel'.
+[10:32:24.282][DEBUG][PanelBuilder] Panel 'main_panel' built and attached to parent 'XmlUIRoot'.
+[10:32:24.356][DEBUG][PanelBuilder] Building Panel with id='titlePanel'.
+[10:32:24.356][DEBUG][Panel] Panel 'titlePanel' created with padding=10.0, spacing=8.0
+[10:32:24.356][DEBUG][PanelBuilder] Panel 'titlePanel' has 3 child components to build.
+[10:32:24.358][DEBUG][Panel] Adding component 'ViceTitle: Calista Game Engine (Node)' of type ViceTitle to Panel 'titlePanel'.
+[10:32:24.360][DEBUG][Panel] Adding component 'ViceTitle: ALPHA PreBuild 0.0.2-r (Node)' of type ViceTitle to Panel 'titlePanel'.
+[10:32:24.362][DEBUG][Panel] Adding component 'ViceTitle: EXPERIMENTAL (Node)' of type ViceTitle to Panel 'titlePanel'.
+[10:32:24.362][DEBUG][PanelBuilder] Panel 'titlePanel' built and attached to parent 'XmlUIRoot'.
+[10:32:24.362][DEBUG][PanelBuilder] Building Panel with id='main_panel'.
+[10:32:24.362][DEBUG][Panel] Panel 'main_panel' created with padding=10.0, spacing=8.0
+[10:32:24.362][DEBUG][PanelBuilder] Panel 'main_panel' has 3 child components to build.
+[10:32:24.364][DEBUG][Panel] Adding component 'ViceButton: START GAME (Node)' of type ViceButton to Panel 'main_panel'.
+[10:32:24.370][DEBUG][Panel] Adding component 'ViceButton: SETTINGS (Node)' of type ViceButton to Panel 'main_panel'.
+[10:32:24.382][DEBUG][Panel] Adding component 'ViceButton: QUIT (Node)' of type ViceButton to Panel 'main_panel'.
+[10:32:24.383][DEBUG][PanelBuilder] Panel 'main_panel' built and attached to parent 'XmlUIRoot'.
+[10:32:25.438][WARN][ViceMenuBackground] No model path provided. Creating a fallback placeholder.

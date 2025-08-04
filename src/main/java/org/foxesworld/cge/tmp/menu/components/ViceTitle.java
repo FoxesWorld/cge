@@ -68,11 +68,16 @@ public class ViceTitle implements InteractiveComponent, MenuComponent {
 
     @Override
     public float getHeight() {
-        return ttc.getHeight();
+        return ttfRenderer.getTtc().getTextHeight();
+    }
+
+    @Override
+    public void setSize(float width, float height) {
+
     }
 
     @Override
     public float getWidth() {
-        return ttc.getWidth();
+        return ttfRenderer.getTtc().getTextWidth();
     }
 }

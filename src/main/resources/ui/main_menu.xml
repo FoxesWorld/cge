@@ -12,15 +12,23 @@
     />
 
     <screen>
-        <title text="Calista Game Engine" color="#1baade" fontSize="96" y="95%" align="CENTER_X" />
-        <title text="ALPHA PreBuild 0.0.1" fontSize="80" y="89%" align="CENTER_X" />
-        <title text="EXPERIMENTAL" color="#c027a9" fontSize="75" y="84%" align="CENTER_X" />
+        <panel id="titlePanel" x="1300" y="1120" width="1200" height="420" bgColor="#1d84de" cornerRadius="0" bgAlpha="0.5">
+            <components>
+                <title text="Calista Game Engine" color="#1baade" fontSize="96" y="95%" align="CENTER_X"/>
+                <title text="ALPHA PreBuild 0.0.2-r" fontSize="80" y="89%" align="CENTER_X"/>
+                <title text="EXPERIMENTAL" color="#c027a9" fontSize="75" y="84%" align="CENTER_X"/>
+            </components>
+        </panel>
 
         <!-- Атрибут action теперь содержит полный путь к классу-действию -->
-        <button action="org.foxesworld.cge.tmp.menu.actions.StartGameAction" iconPath="assets/Interface/Icons/bug.png" height="75" iconSize="40" text="START GAME" y="55%" align="CENTER_X" />
+        <panel id="main_panel" x="60" y="520" width="500" height="600" bgColor="#000000" bgAlpha="0.5">
+            <components>
+                <button action="org.foxesworld.cge.tmp.menu.actions.StartGameAction" iconPath="assets/Interface/Icons/bug.png" height="95" iconSize="40" text="START GAME" y="55%" align="CENTER_X"/>
+                <button action="org.foxesworld.cge.tmp.menu.actions.OpenSettingsAction" iconPath="assets/Interface/ui/icons/settings.png" iconSize="40" height="95" text="SETTINGS" y="50%" align="CENTER_X"/>
+                <button action="org.foxesworld.cge.tmp.menu.actions.QuitGameAction" iconPath="assets/Interface/ui/icons/quit.png" iconSize="40" height="95" text="QUIT" y="45%" align="CENTER_X"/>
+            </components>
+        </panel>
 
-        <button action="org.foxesworld.cge.tmp.menu.actions.OpenSettingsAction" iconPath="assets/Interface/ui/icons/settings.png" iconSize="40" height="75" text="SETTINGS"   y="50%" align="CENTER_X" />
 
-        <button action="org.foxesworld.cge.tmp.menu.actions.QuitGameAction" iconPath="assets/Interface/ui/icons/quit.png" iconSize="40" height="75" text="QUIT" y="45%" align="CENTER_X" />
     </screen>
 </menu>

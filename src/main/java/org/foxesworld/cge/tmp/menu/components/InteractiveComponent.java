@@ -44,6 +44,4 @@ public interface InteractiveComponent extends MenuComponent {
      */
     void handleMouseRelease();
 
-    float getHeight();
-    float getWidth();
 }

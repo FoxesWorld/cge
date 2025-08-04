@@ -21,4 +21,9 @@ public interface MenuComponent {
      * Checks if a point (like a cursor) is within the component's bounds.
      */
     boolean intersects(Vector2f cursor);
+
+    float getWidth();
+    float getHeight();
+
+    void setSize(final float width, final float height);
 }

@@ -234,7 +234,12 @@ public final class ViceSlider implements InteractiveComponent, MenuComponent {
 
     @Override
     public float getHeight() {
-        return height;
+        return (int) height;
+    }
+
+    @Override
+    public void setSize(float width, float height) {
+
     }
 
     @Override

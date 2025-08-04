@@ -126,12 +126,17 @@ public final class ViceCheckbox implements InteractiveComponent, MenuComponent {
 
     @Override
     public float getHeight() {
-        return 0;
+        return 64;
     }
 
     @Override
     public float getWidth() {
-        return 0;
+        return 64;
+    }
+
+    @Override
+    public void setSize(float width, float height) {
+
     }
 
     public void toggle() {
