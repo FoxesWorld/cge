@@ -1,6 +1,7 @@
 package org.foxesworld.cge.modules.renderer.postProcessing;
 
 import com.jme3.app.Application;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.post.FilterPostProcessor;
@@ -36,6 +37,8 @@ import org.foxesworld.cge.modules.renderer.skyBox.SkyBox;
 public class PostProcessingModule extends EngineModule<PostProcessingConfig> {
     private static final Logger log = LogManager.getLogger(PostProcessingModule.class);
 
+    private SkyBox skyBox;
+    Vector3f sunDirection;
     private FilterPostProcessor fpp;
     private BloomFilter bloom;
     private SSAOFilter ssaoFilter;
@@ -56,6 +59,7 @@ public class PostProcessingModule extends EngineModule<PostProcessingConfig> {
     protected void initModule(CalistaGameEngine app) {
         app.getAssetLoader().onAssetsLoaded(() -> {
             cleanupFilters(app);
+            skyBox = app.getModuleManager().getModule(RendererModule.class).getSkyBox();
             fpp = new FilterPostProcessor(app.getAssetManager());
             int samples = app.getContext().getSettings().getSamples();
             if (samples > 0) {
@@ -63,6 +67,7 @@ public class PostProcessingModule extends EngineModule<PostProcessingConfig> {
             }
 
             PostProcessingConfig cfg = getConfig();
+
 
             // BLOOM
             if (cfg.getBloom().isEnable()) {
@@ -75,6 +80,16 @@ public class PostProcessingModule extends EngineModule<PostProcessingConfig> {
             } else {
                 bloom = null;
             }
+
+            Texture2D dirtTexture = (Texture2D) app.getAssetManager().loadTexture("assets/Textures/flare.png");
+            Texture2D lensColorTexture = (Texture2D) app.getAssetManager().loadTexture("assets/Textures/flare_chromatic.png");
+            flare = new LensFlareFilter(dirtTexture, lensColorTexture);
+            flare.setGlobalIntensity(1.2f);
+            flare.setGhostCount(8);
+            flare.setGhostDispersal(0.35f);
+            flare.setDirtIntensity(3.0f);
+            flare.setAnamorphicIntensity(2.0f);
+            fpp.addFilter(flare);
 
             // SSAO
             if (cfg.getSsaOfilter().isEnable()) {
@@ -102,7 +117,6 @@ public class PostProcessingModule extends EngineModule<PostProcessingConfig> {
 
             // SHADOWS
             if (getConfig().getDlsf().isEnable()) {
-                SkyBox skyBox = app.getModuleManager().getModule(RendererModule.class).getSkyBox();
                 dlsf = new DirectionalLightShadowFilter(app.getAssetManager(), getConfig().getDlsf().getShadowMapSize(), getConfig().getDlsf().getNbSplits());
 
                 dlsf.setRenderBackFacesShadows(getConfig().getDlsf().isRenderBackFacesShadows());           // Мягкие края теней, меньше артефактов на тонких объектах
@@ -192,7 +206,24 @@ public class PostProcessingModule extends EngineModule<PostProcessingConfig> {
     }
 
     @Override
+    public void update(float tpf) {
+        if(skyBox != null) {
+            sunDirection = skyBox.getSunLight().getDirection();
+            Vector2f sunScreenPos2D = new Vector2f(
+                    sunDirection.x / getApplication().getCamera().getWidth(),
+                    sunDirection.y / getApplication().getCamera().getHeight()
+            );
+            if(flare != null) {
+                flare.setEnabled(true);
+                flare.setLightPosition(sunScreenPos2D);
+                //flare.setBloomTexture(bloom.getBloomTexture());
+            }
+        }
+    }
+
+    @Override
     protected void updateModule(float tpf) {
+
 
     }
 

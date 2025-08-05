@@ -1,0 +1,22 @@
+// Файл: assets/Shaders/SoftShadow.j3m
+MaterialDef SoftShadow {
+
+    MaterialParameters {
+        // Цвет тени (обычно полупрозрачный черный)
+        Color ShadowColor : 0.0 0.0 0.0 0.5
+        // Радиус скругления углов (от 0.0 до 0.5)
+        Float CornerRadius : 0.1
+        // Сила размытия края (например, 0.05)
+        Float Blur : 0.05
+    }
+
+    Technique {
+        VertexShader GLSL310 GLSL300 GLSL150 GLSL100 : assets/Shaders/Gradient/Gradient.vert
+        FragmentShader GLSL310 GLSL300 GLSL150 GLSL100 : assets/Shaders/SoftShadow.frag
+
+        RenderState {
+            Blend Alpha
+            FaceCull Off
+        }
+    }
+}

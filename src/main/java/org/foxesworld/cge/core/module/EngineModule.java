@@ -193,7 +193,7 @@ public abstract class EngineModule<ModuleConfig> extends BaseAppState {
      * @param tpf Time per frame in seconds.
      */
     @Override
-    public final void update(float tpf) {
+    public void update(float tpf) {
         if (state.get() != ModuleState.RUNNING) {
             return;
         }

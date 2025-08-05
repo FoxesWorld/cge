@@ -1,0 +1,21 @@
+// Файл: assets/Shaders/Gradient.j3m
+MaterialDef Gradient {
+
+    MaterialParameters {
+        // Цвет в нижней части градиента
+        Color Color1 : 1.0 1.0 1.0 1.0
+        // Цвет в верхней части градиента
+        Color Color2 : 0.0 0.0 0.0 1.0
+    }
+
+    Technique {
+        VertexShader GLSL310 GLSL300 GLSL150 GLSL100 : assets/Shaders/Gradient/Gradient.vert
+        FragmentShader GLSL310 GLSL300 GLSL150 GLSL100 : assets/Shaders/Gradient/Gradient.frag
+
+        // Важно для прозрачности
+        RenderState {
+            Blend Alpha
+            FaceCull Off // Для 2D-элементов лучше отключать
+        }
+    }
+}

@@ -2,130 +2,155 @@ package org.foxesworld.cge.modules.effects;
 
 import com.jme3.asset.AssetManager;
 import com.jme3.material.Material;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.post.Filter;
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.ViewPort;
+import com.jme3.texture.Texture;
 import com.jme3.texture.Texture2D;
 
-/**
- * AAA-style cinematic Lens Flare Filter.
- * This corrected version follows jMonkeyEngine's best practices for filters:
- * 1. The material is created only once in initFilter.
- * 2. getMaterial() simply returns the existing material.
- * 3. Uniforms that change per frame are updated in preFrame().
- * 4. It uses the inherited assetManager from the parent Filter class, avoiding redundancy.
- */
 public class LensFlareFilter extends Filter {
 
-    private Texture2D dirtTex;
-    private Texture2D bloomTex;
+    private Texture bloomTexture;
     private Vector2f lightPos = new Vector2f(0.5f, 0.5f);
-    private Vector2f resolution; // Initialized in constructor/initFilter
 
-    /**
-     * Default constructor for serialization.
-     */
+    private Texture2D dirtTexture;
+    private Texture2D lensColorTexture;
+
+    private float globalIntensity = 1.0f;
+    private ColorRGBA tint = ColorRGBA.White.clone();
+
+    private float anamorphicIntensity = 3.0f;
+    private float anamorphicStretch = 0.2f;
+    private ColorRGBA anamorphicTint = new ColorRGBA(0.3f, 0.5f, 1.0f, 1.0f);
+
+    private int ghostCount = 6;
+    private float ghostIntensity = 1.0f;
+    private float ghostDispersal = 0.4f;
+
+    private float dirtIntensity = 2.5f;
+    private float chromaticAberration = 0.5f;
+    private float filmGrainAmount = 0.02f;
+
     public LensFlareFilter() {
-        super("LensFlare");
+        super("CinematicLensFlare");
     }
 
-    /**
-     * Creates a new LensFlareFilter.
-     *
-     * @param dirtTexture The texture for the "dirty lens" effect. Can be null.
-     * @param screenSize  The initial screen size. Will be updated when the filter is added to a viewport.
-     */
-    public LensFlareFilter(Texture2D dirtTexture, Vector2f screenSize) {
-        super("LensFlare");
-        this.dirtTex = dirtTexture;
-        this.resolution = screenSize != null ? screenSize.clone() : new Vector2f(1, 1);
+    public LensFlareFilter(Texture2D dirtTexture, Texture2D lensColorTexture) {
+        super("CinematicLensFlare");
+        this.dirtTexture = dirtTexture;
+        this.lensColorTexture = lensColorTexture;
     }
-
-    /**
-     * Creates a new LensFlareFilter with just the dirt texture.
-     *
-     * @param dirtTexture The texture for the "dirty lens" effect. Can be null.
-     */
-    public LensFlareFilter(Texture2D dirtTexture) {
-        this(dirtTexture, null);
-    }
-
 
     @Override
     protected void initFilter(AssetManager manager, RenderManager renderManager, ViewPort vp, int w, int h) {
-        // The material is created here ONCE.
-        // The 'assetManager' field from the parent class is automatically set by JME.
-        material = new Material(manager, "assets/MatDefs/LensFlare.j3md");
-
-        if (dirtTex != null) {
-            material.setTexture("Dirt", dirtTex);
-        }
-
-        // Update the resolution based on the actual viewport dimensions.
-        if (this.resolution == null) {
-            this.resolution = new Vector2f(w, h);
-        } else {
-            this.resolution.set(w, h);
-        }
+        material = new Material(manager, "assets/MatDefs/LensFlareCinematic.j3md");
+        material.setTexture("Dirt", dirtTexture);
+        material.setTexture("LensColor", lensColorTexture);
+        updateAllMaterialParameters();
     }
 
     @Override
     protected Material getMaterial() {
-        // This method should simply return the material created in initFilter.
-        // Do not create new materials here.
-        return material;
+        return this.material.clone();
     }
 
     @Override
     protected void preFrame(float tpf) {
-        // This method is called before rendering the filter each frame.
-        // This is the correct place to update shader uniforms that can change.
-        if (material == null) {
-            return;
-        }
-
-        // The bloom texture comes from a previous pass and must be updated every frame.
-        if (bloomTex != null) {
-            material.setTexture("Bloom", bloomTex);
-        }
-
-        // Using a try-catch block for compatibility with older JME versions is acceptable,
-        // but it's better to stick to one API if possible.
-        // The logic is moved here from getMaterial().
-        try {
-            material.setVector2("LightPos", lightPos);
-            material.setVector2("Resolution", resolution);
-        } catch (NoSuchMethodError e) {
-            // Fallback for older JME versions
-            //material.setParam("LightPos", Vector2, lightPos);
-            //material.setParam("Resolution", Vector2, resolution);
-        }
+        if (material == null) return;
+        material.setTexture("Bloom", bloomTexture);
+        material.setVector2("LightPos", lightPos);
     }
 
-    /**
-     * Sets the screen position of the light source.
-     * @param pos The position in screen coordinates (0.0 to 1.0).
-     */
-    public void setLightScreenPosition(Vector2f pos) {
-        this.lightPos.set(pos);
+    private void updateAllMaterialParameters() {
+        if (material == null) return;
+        material.setFloat("GlobalIntensity", globalIntensity);
+        material.setColor("Tint", tint);
+        material.setFloat("AnamorphicIntensity", anamorphicIntensity);
+        material.setFloat("AnamorphicStretch", anamorphicStretch);
+        material.setColor("AnamorphicTint", anamorphicTint);
+        material.setInt("GhostCount", ghostCount);
+        material.setFloat("GhostIntensity", ghostIntensity);
+        material.setFloat("GhostDispersal", ghostDispersal);
+        material.setFloat("DirtIntensity", dirtIntensity);
+        material.setFloat("ChromaticAberration", chromaticAberration);
+        material.setFloat("FilmGrainAmount", filmGrainAmount);
     }
 
-
-    /**
-     * Sets the bloom texture, which is typically the output of a preceding bloom filter.
-     * @param bloom The bloom texture.
-     */
-    public void setBloomTexture(Texture2D bloom) {
-        this.bloomTex = bloom;
+    public LensFlareFilter setBloomTexture(Texture bloomTexture) {
+        this.bloomTexture = bloomTexture;
+        return this;
     }
 
-    /**
-     * Sets the resolution of the screen.
-     * Note: This is usually handled automatically by the filter system in initFilter.
-     * @param resolution The screen resolution.
-     */
-    public void setResolution(Vector2f resolution) {
-        this.resolution.set(resolution);
+    public LensFlareFilter setLightPosition(Vector2f lightPos) {
+        this.lightPos.set(lightPos);
+        return this;
+    }
+
+    public LensFlareFilter setGlobalIntensity(float intensity) {
+        this.globalIntensity = intensity;
+        if (material != null) material.setFloat("GlobalIntensity", intensity);
+        return this;
+    }
+
+    public LensFlareFilter setTint(ColorRGBA tint) {
+        this.tint.set(tint);
+        if (material != null) material.setColor("Tint", tint);
+        return this;
+    }
+
+    public LensFlareFilter setAnamorphicIntensity(float intensity) {
+        this.anamorphicIntensity = intensity;
+        if (material != null) material.setFloat("AnamorphicIntensity", intensity);
+        return this;
+    }
+
+    public LensFlareFilter setAnamorphicStretch(float stretch) {
+        this.anamorphicStretch = stretch;
+        if (material != null) material.setFloat("AnamorphicStretch", stretch);
+        return this;
+    }
+
+    public LensFlareFilter setAnamorphicTint(ColorRGBA color) {
+        this.anamorphicTint.set(color);
+        if (material != null) material.setColor("AnamorphicTint", color);
+        return this;
+    }
+
+    public LensFlareFilter setGhostCount(int count) {
+        this.ghostCount = count;
+        if (material != null) material.setInt("GhostCount", count);
+        return this;
+    }
+
+    public LensFlareFilter setGhostIntensity(float intensity) {
+        this.ghostIntensity = intensity;
+        if (material != null) material.setFloat("GhostIntensity", intensity);
+        return this;
+    }
+
+    public LensFlareFilter setGhostDispersal(float dispersal) {
+        this.ghostDispersal = dispersal;
+        if (material != null) material.setFloat("GhostDispersal", dispersal);
+        return this;
+    }
+
+    public LensFlareFilter setDirtIntensity(float intensity) {
+        this.dirtIntensity = intensity;
+        if (material != null) material.setFloat("DirtIntensity", intensity);
+        return this;
+    }
+
+    public LensFlareFilter setChromaticAberration(float amount) {
+        this.chromaticAberration = amount;
+        if (material != null) material.setFloat("ChromaticAberration", amount);
+        return this;
+    }
+
+    public LensFlareFilter setFilmGrainAmount(float amount) {
+        this.filmGrainAmount = amount;
+        if (material != null) material.setFloat("FilmGrainAmount", amount);
+        return this;
     }
 }

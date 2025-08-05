@@ -1,22 +1,22 @@
-// Passthrough.vert
-// Стандартный вершинный шейдер для пост-эффектов.
-// Просто отрисовывает полноэкранный прямоугольник и передает координаты текстуры.
+#version 150 core
 
-#version 120
+out vec2 texCoord;
 
-// Атрибуты вершины, приходящие из JME
-attribute vec3 inPosition;
-attribute vec2 inTexCoord;
+const vec2 positions[4] = vec2[](
+vec2(-1.0, -1.0),
+vec2( 1.0, -1.0),
+vec2(-1.0,  1.0),
+vec2( 1.0,  1.0)
+);
 
-// Матрица проекции, приходящая из JME
-uniform mat4 g_WorldViewProjectionMatrix;
-
-// Переменная для передачи данных во фрагментный шейдер
-varying vec2 texCoord;
+const vec2 texCoords[4] = vec2[](
+vec2(0.0, 0.0),
+vec2(1.0, 0.0),
+vec2(0.0, 1.0),
+vec2(1.0, 1.0)
+);
 
 void main() {
-    // Преобразуем позицию вершины в экранные координаты
-    gl_Position = g_WorldViewProjectionMatrix * vec4(inPosition, 1.0);
-    // Просто передаем текстурные координаты дальше
-    texCoord = inTexCoord;
+    gl_Position = vec4(positions[gl_VertexID], 0.0, 1.0);
+    texCoord = texCoords[gl_VertexID];
 }

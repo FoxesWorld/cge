@@ -1,3 +1,5 @@
+// РЕКОМЕНДАЦИЯ: Избегайте использования пакетов чужих библиотек.
+// Лучше использовать свой, например: org.foxesworld.cge.ui
 package com.jme3.awt;
 
 import com.formdev.flatlaf.FlatDarkLaf;
@@ -9,176 +11,264 @@ import java.awt.datatransfer.StringSelection;
 import java.awt.event.ActionEvent;
 import java.awt.event.InputEvent;
 import java.awt.event.KeyEvent;
+import java.awt.image.BufferedImage;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.PrintWriter;
+import java.io.StringWriter;
 import java.net.URI;
-import java.util.Objects;
+import java.net.URISyntaxException;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 /**
- * AAA-style error dialog using modern Swing rendering techniques.
- * Features a unified custom-painted panel for performance, and reusable components.
+ * Продвинутое диалоговое окно для отображения ошибок, оптимизированное
+ * для работы с полными, вложенными исключениями (например, из JMonkeyEngine).
+ * Автоматически анализирует причину ошибки (root cause) и предоставляет
+ * полный стектрейс для диагностики.
+ *
+ * @version 2.0
  */
 public class AWTErrorDialog extends JDialog {
 
-    private final ModernDialogPanel mainPanel;
-    private final JTextArea stackArea;
-    private final AtomicReference<ModernButton> copyBtnRef = new AtomicReference<>();
+    // --- Константы для легкой настройки и поддержки ---
+    private static final String DEFAULT_TITLE = "Calista Game Engine: Fatal Error";
+    private static final String REPORT_ISSUE_URI = "https://github.com/your/repo/issues"; // ЗАМЕНИТЕ НА ВАШ РЕПОЗИТОРИЙ
+    private static final String ICON_PATH = "/assets/theme/icon/engineLogo.ico";
+    private static final int ICON_SIZE = 24;
 
-    public AWTErrorDialog(Frame owner, String title, String message, String stackTrace) {
+    private static final String COPY_BTN_TEXT = "Copy Full Trace";
+    private static final String COPIED_BTN_TEXT = "✔ Copied!";
+    private static final String CLOSE_BTN_TEXT = "Close";
+
+    private final ModernDialogPanel mainPanel;
+    private JTextArea stackTraceArea;
+    private final AtomicReference<ModernButton> copyButtonRef = new AtomicReference<>();
+
+    /**
+     * Приватный конструктор. Используйте статические методы showDialog() для создания.
+     */
+    private AWTErrorDialog(Frame owner, String title, String message, String stackTrace) {
         super(owner, true);
-        FlatDarkLaf.setup(); // Ensure FlatLaf is set up
+        FlatDarkLaf.setup();
 
         setUndecorated(true);
-        setBackground(new Color(0, 0, 0, 0)); // Transparent dialog
-        setSize(800, 550);
+        setBackground(new Color(0, 0, 0, 0));
+        setSize(850, 600); // Немного увеличим размер для полных логов
         setLocationRelativeTo(owner);
 
         mainPanel = new ModernDialogPanel();
         mainPanel.setLayout(new BorderLayout());
         setContentPane(mainPanel);
 
-        // --- Build UI Components ---
-        ImageIcon icon = loadIcon();
+        // --- Сборка UI из логических блоков ---
+        ImageIcon icon = loadDialogIcon();
         ModernTitleBar titleBar = new ModernTitleBar(title, icon, e -> mainPanel.fadeOut());
-
-        JPanel contentPanel = new JPanel(new BorderLayout(0, 15));
-        contentPanel.setOpaque(false);
-        contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 25, 20, 25));
-
-        // Message Area
-        JTextArea msgArea = new JTextArea(message);
-        msgArea.setFont(Theme.FONT_REGULAR);
-        msgArea.setForeground(Theme.TEXT_COLOR);
-        msgArea.setOpaque(false);
-        msgArea.setEditable(false);
-        msgArea.setLineWrap(true);
-        msgArea.setWrapStyleWord(true);
-
-        // Stack Trace Area
-        stackArea = new JTextArea(stackTrace);
-        stackArea.setFont(Theme.FONT_MONO);
-        stackArea.setForeground(Theme.TEXT_MUTED_COLOR);
-        stackArea.setBackground(Theme.TEXT_AREA_BG);
-        stackArea.setCaretPosition(0);
-        stackArea.setEditable(false);
-        stackArea.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Theme.BORDER_COLOR_LIGHT),
-                BorderFactory.createEmptyBorder(8, 12, 8, 12)
-        ));
-
-        JScrollPane stackScroll = new JScrollPane(stackArea);
-        stackScroll.setBorder(null);
-        stackScroll.setOpaque(false);
-        stackScroll.getViewport().setOpaque(false);
-
-        // Split Pane
-        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, msgArea, stackScroll);
-        splitPane.setOpaque(false);
-        splitPane.setBorder(null);
-        splitPane.setDividerSize(8);
-        splitPane.setDividerLocation(100);
-        splitPane.setResizeWeight(0.15);
-
-        // Bottom Actions
-        JPanel actionsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
-        actionsPanel.setOpaque(false);
-
-        ModernButton copyButton = new ModernButton("Copy Trace", ModernButton.ButtonStyle.SECONDARY);
-        copyButton.addActionListener(e -> copyStackTrace());
-        copyBtnRef.set(copyButton);
-
-        ModernButton reportButton = new ModernButton("Report Issue", ModernButton.ButtonStyle.SECONDARY);
-        reportButton.addActionListener(e -> openReportURI());
-
-        ModernButton closeButton = new ModernButton("Close", ModernButton.ButtonStyle.PRIMARY);
-        closeButton.addActionListener(e -> mainPanel.fadeOut());
-
-        actionsPanel.add(copyButton);
-        //actionsPanel.add(reportButton); // Optional
-        actionsPanel.add(closeButton);
-
-        contentPanel.add(splitPane, BorderLayout.CENTER);
-        contentPanel.add(actionsPanel, BorderLayout.SOUTH);
+        JPanel contentPanel = createContentPanel(message, stackTrace);
 
         mainPanel.add(titleBar, BorderLayout.NORTH);
         mainPanel.add(contentPanel, BorderLayout.CENTER);
 
         setupShortcuts();
-
-        // Start fade-in animation
         mainPanel.fadeIn();
     }
 
-    private ImageIcon loadIcon() {
-        try {
-            var parser = new ICOParser();
-            var icons = parser.parse(Objects.requireNonNull(
-                    AWTErrorDialog.class.getResourceAsStream("/assets/theme/icon/engineLogo.ico")));
-            if (icons != null && icons.size() > 2) {
-                return new ImageIcon(icons.get(2).getScaledInstance(24, 24, Image.SCALE_SMOOTH));
+    private JPanel createContentPanel(String message, String stackTrace) {
+        JPanel contentPanel = new JPanel(new BorderLayout(0, 15));
+        contentPanel.setOpaque(false);
+        contentPanel.setBorder(BorderFactory.createEmptyBorder(20, 25, 20, 25));
+
+        JTextArea messageArea = createStyledTextArea(message, Theme.FONT_REGULAR, Theme.TEXT_COLOR);
+        this.stackTraceArea = createStyledTextArea(stackTrace, Theme.FONT_MONO, Theme.TEXT_MUTED_COLOR);
+        this.stackTraceArea.setBackground(Theme.TEXT_AREA_BG);
+        this.stackTraceArea.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Theme.BORDER_COLOR_LIGHT),
+                BorderFactory.createEmptyBorder(10, 15, 10, 15)
+        ));
+
+        JScrollPane stackScroll = new JScrollPane(this.stackTraceArea);
+        stackScroll.setBorder(null);
+        stackScroll.setOpaque(false);
+        stackScroll.getViewport().setOpaque(false);
+
+        JSplitPane splitPane = new JSplitPane(JSplitPane.VERTICAL_SPLIT, messageArea, stackScroll);
+        splitPane.setOpaque(false);
+        splitPane.setBorder(null);
+        splitPane.setDividerSize(10);
+        splitPane.setDividerLocation(120);
+        splitPane.setResizeWeight(0.2);
+
+        JPanel actionsPanel = createActionsPanel();
+
+        contentPanel.add(splitPane, BorderLayout.CENTER);
+        contentPanel.add(actionsPanel, BorderLayout.SOUTH);
+        return contentPanel;
+    }
+
+    private JTextArea createStyledTextArea(String text, Font font, Color foreground) {
+        JTextArea textArea = new JTextArea(text);
+        textArea.setFont(font);
+        textArea.setForeground(foreground);
+        textArea.setOpaque(false);
+        textArea.setEditable(false);
+        textArea.setLineWrap(true);
+        textArea.setWrapStyleWord(true);
+        textArea.setCaretPosition(0);
+        return textArea;
+    }
+
+    private JPanel createActionsPanel() {
+        JPanel actionsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 0));
+        actionsPanel.setOpaque(false);
+
+        ModernButton copyButton = new ModernButton(COPY_BTN_TEXT, ModernButton.ButtonStyle.SECONDARY);
+        copyButton.addActionListener(e -> copyStackTraceToClipboard());
+        copyButtonRef.set(copyButton);
+
+        ModernButton closeButton = new ModernButton(CLOSE_BTN_TEXT, ModernButton.ButtonStyle.PRIMARY);
+        closeButton.addActionListener(e -> mainPanel.fadeOut());
+
+        actionsPanel.add(copyButton);
+        actionsPanel.add(closeButton);
+        return actionsPanel;
+    }
+
+    private ImageIcon loadDialogIcon() {
+        try (InputStream stream = AWTErrorDialog.class.getResourceAsStream(ICON_PATH)) {
+            if (stream == null) {
+                System.err.println("Warning: Dialog icon not found at " + ICON_PATH);
+                return null;
             }
-        } catch (IOException | NullPointerException e) {
-            System.err.println("Icon load failed: " + e.getMessage());
+            List<BufferedImage> icons = new ICOParser().parse(stream);
+            if (icons != null && icons.size() > 2) {
+                Image sourceImage = icons.get(2); // Берем иконку среднего размера
+                BufferedImage resizedImg = new BufferedImage(ICON_SIZE, ICON_SIZE, BufferedImage.TYPE_INT_ARGB);
+                Graphics2D g2d = resizedImg.createGraphics();
+                g2d.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                g2d.drawImage(sourceImage, 0, 0, ICON_SIZE, ICON_SIZE, null);
+                g2d.dispose();
+                return new ImageIcon(resizedImg);
+            }
+        } catch (IOException e) {
+            System.err.println("Error loading dialog icon: " + e.getMessage());
         }
         return null;
     }
 
-    private void copyStackTrace() {
-        ModernButton copyButton = copyBtnRef.get();
-        if (copyButton == null) return;
-
+    private void copyStackTraceToClipboard() {
+        final ModernButton copyButton = copyButtonRef.get();
+        if (copyButton == null || !copyButton.getText().equals(COPY_BTN_TEXT)) {
+            return;
+        }
         Toolkit.getDefaultToolkit().getSystemClipboard()
-                .setContents(new StringSelection(stackArea.getText()), null);
-
-        String originalText = copyButton.getText();
-        copyButton.setText("✔ Copied!");
-        Timer timer = new Timer(1500, e -> copyButton.setText(originalText));
+                .setContents(new StringSelection(stackTraceArea.getText()), null);
+        copyButton.setText(COPIED_BTN_TEXT);
+        Timer timer = new Timer(2000, e -> copyButton.setText(COPY_BTN_TEXT));
         timer.setRepeats(false);
         timer.start();
     }
 
-    private void openReportURI() {
-        try {
-            Desktop.getDesktop().browse(new URI("https://github.com/your/repo/issues"));
-        } catch (Exception ex) {
-            JOptionPane.showMessageDialog(this, "Could not open browser.", "Calista Game Engine Error", JOptionPane.ERROR_MESSAGE);
-        }
-    }
-
     private void setupShortcuts() {
-        Action closeAction = new AbstractAction() {
-            public void actionPerformed(ActionEvent e) {
-                mainPanel.fadeOut();
-            }
-        };
-        Action copyAction = new AbstractAction() {
-            public void actionPerformed(ActionEvent e) {
-                copyStackTrace();
-            }
-        };
+        JRootPane rootPane = getRootPane();
+        InputMap inputMap = rootPane.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        ActionMap actionMap = rootPane.getActionMap();
 
-        JRootPane root = getRootPane();
-        root.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "close");
-        root.getActionMap().put("close", closeAction);
-        root.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW).put(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK), "copy");
-        root.getActionMap().put("copy", copyAction);
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "closeAction");
+        actionMap.put("closeAction", new AbstractAction() {
+            @Override public void actionPerformed(ActionEvent e) { mainPanel.fadeOut(); }
+        });
+
+        inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK), "copyAction");
+        actionMap.put("copyAction", new AbstractAction() {
+            @Override public void actionPerformed(ActionEvent e) { copyStackTraceToClipboard(); }
+        });
     }
 
-    public static void showDialog(String message) {
+    // --- НОВЫЙ, УЛУЧШЕННЫЙ ПУБЛИЧНЫЙ API ---
+
+    /**
+     * Показывает диалог ошибки, анализируя предоставленное исключение.
+     * Этот метод потокобезопасен.
+     *
+     * @param throwable Исключение, которое нужно отобразить.
+     */
+    public static void showDialog(Throwable throwable) {
+        showDialog(null, DEFAULT_TITLE, throwable);
+    }
+
+    /**
+     * Показывает диалог ошибки с кастомным заголовком и родительским компонентом.
+     * Этот метод потокобезопасен.
+     *
+     * @param parent    Родительский компонент для центрирования диалога.
+     * @param title     Заголовок окна.
+     * @param throwable Исключение, которое нужно отобразить.
+     */
+    public static void showDialog(Component parent, String title, Throwable throwable) {
+        final Frame owner = (parent instanceof Frame) ? (Frame) parent : null;
+        final String message = formatErrorMessage(throwable);
+        final String stackTrace = getFullStackTrace(throwable);
+
         SwingUtilities.invokeLater(() -> {
-            AWTErrorDialog dialog = new AWTErrorDialog(null, "Calista Game Engine Error", "We are sorry =(", message);
+            AWTErrorDialog dialog = new AWTErrorDialog(owner, title, message, stackTrace);
             dialog.setVisible(true);
         });
     }
 
+    /**
+     * Форматирует сообщение об ошибке, уделяя особое внимание основной причине (root cause).
+     */
+    private static String formatErrorMessage(Throwable throwable) {
+        Throwable rootCause = findRootCause(throwable);
+        String mainMessage = throwable.getClass().getSimpleName() + ": " + throwable.getLocalizedMessage();
+
+        if (rootCause != throwable) {
+            String causeMessage = rootCause.getClass().getSimpleName() + ": " + rootCause.getLocalizedMessage();
+            return "An error occurred, see details below.\n" +
+                    "Message: " + mainMessage + "\n\n" +
+                    "Root Cause: " + causeMessage;
+        } else {
+            return "An unexpected error occurred:\n" + mainMessage;
+        }
+    }
+
+    /**
+     * Рекурсивно находит самую глубокую причину исключения.
+     */
+    private static Throwable findRootCause(Throwable throwable) {
+        Throwable cause = throwable.getCause();
+        if (cause == null) {
+            return throwable;
+        }
+        return findRootCause(cause);
+    }
+
+    /**
+     * Преобразует ПОЛНЫЙ стектрейс, включая все 'Caused by', в одну строку.
+     */
+    private static String getFullStackTrace(Throwable throwable) {
+        StringWriter sw = new StringWriter();
+        PrintWriter pw = new PrintWriter(sw);
+        throwable.printStackTrace(pw);
+        return sw.toString();
+    }
+
+    /**
+     * Пример использования для тестирования.
+     */
     public static void main(String[] args) {
-        System.setProperty("log.dir", System.getProperty("user.dir"));
-        System.setProperty("log.level", "DEBUG");
-        java.util.logging.LogManager.getLogManager().reset();
+        // Имитируем типичную ошибку JME: одна оборачивает другую
         try {
-            int x = 5 / 0;
+            try {
+                // Внутренняя, реальная причина
+                throw new NullPointerException("Cannot find material parameter 'ColorMap'");
+            } catch (Exception e) {
+                // Обертка от AssetManager
+                throw new RuntimeException("AssetLoadException: An exception has occurred while loading asset: Materials/Player.j3m", e);
+            }
         } catch (Exception e) {
-            showDialog(e.getMessage());
+            // Используем наш новый умный диалог
+            AWTErrorDialog.showDialog(e);
         }
     }
 }

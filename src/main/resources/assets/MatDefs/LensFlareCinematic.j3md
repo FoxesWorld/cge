@@ -1,0 +1,34 @@
+MaterialDef LensFlareCinematic {
+
+    Technique {
+        VertexShader   GLSL150: "assets/Shaders/LensFlare/Passthrough.vert"
+        FragmentShader GLSL150: "assets/Shaders/LensFlare/LensFlare_Cinematic.frag"
+    }
+
+    WorldParameters {
+        Time
+    }
+
+    MaterialParameters {
+        Texture2D Bloom
+        Texture2D Dirt
+        Texture2D LensColor (Anisotropic)
+        Texture2D Texture
+
+        Vector2 LightPos
+        Float   GlobalIntensity (Default = 1.0)
+        Color   Tint (Default = 1.0 1.0 1.0 1.0)
+
+        Float AnamorphicIntensity (Default = 3.0)
+        Float AnamorphicStretch (Default = 0.2)
+        Color AnamorphicTint (Default = 0.3 0.5 1.0 1.0)
+
+        Int   GhostCount (Default = 6)
+        Float GhostIntensity (Default = 1.0)
+        Float GhostDispersal (Default = 0.4)
+
+        Float DirtIntensity (Default = 2.5)
+        Float ChromaticAberration (Default = 0.5)
+        Float FilmGrainAmount (Default = 0.02)
+    }
+}

@@ -2,6 +2,7 @@ package org.foxesworld.cge;
 
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.StatsAppState;
+import com.jme3.awt.AWTErrorDialog;
 import com.jme3.post.FilterPostProcessor;
 import org.foxesworld.cge.core.AssetRepo;
 import org.foxesworld.cge.core.ConfigEditorState;
@@ -129,6 +130,13 @@ public class CalistaGameEngine extends SimpleApplication {
         } else {
             System.err.println("No module found for config file: " + configFileName);
         }
+    }
+
+    @Override
+    public void handleError(String errMsg, Throwable t) {
+        t.printStackTrace();
+        AWTErrorDialog.showDialog(t);
+        stop();
     }
 
     @Override
