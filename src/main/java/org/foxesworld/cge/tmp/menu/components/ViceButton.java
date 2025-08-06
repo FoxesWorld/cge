@@ -48,7 +48,7 @@ public final class ViceButton implements InteractiveComponent, MenuComponent, So
         buttonNode.attachChild(contentNode);
 
         ttfRenderer = new TTFrenderer(assetManager);
-        ttfRenderer.genTTF("assets/Interface/fonts/FSElliotPro.ttf", com.atr.jme.font.util.Style.Plain, 16);
+        ttfRenderer.generateFont("assets/Interface/fonts/FSElliotPro.ttf", com.atr.jme.font.util.Style.Plain, 16);
 
         // --- Background Setup ---
         Material bgMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
@@ -69,9 +69,9 @@ public final class ViceButton implements InteractiveComponent, MenuComponent, So
             contentNode.attachChild(icon);
         }
 
-        ttfRenderer.genTTC(style.defaultColor, text);
+        ttfRenderer.generateText(style.defaultColor, text);
         currentLabelColor.set(style.defaultColor());
-        contentNode.attachChild(ttfRenderer.getTtc());
+        contentNode.attachChild(ttfRenderer.getTextGeometry());
     }
 
     public void setSelected(boolean selected) {
@@ -119,7 +119,7 @@ public final class ViceButton implements InteractiveComponent, MenuComponent, So
     private void centerContent() {
         float iconW = icon.getWidth();
         float gap = iconW > 0 ? style.iconGap() : 0;
-        float textW = ttfRenderer.getTtc().getWidth();
+        float textW = ttfRenderer.getTextGeometry().getWidth();
         float totalW = iconW + gap + textW;
 
         // --- Horizontal Centering ---
@@ -130,7 +130,7 @@ public final class ViceButton implements InteractiveComponent, MenuComponent, So
         // To center an element with a bottom-left origin, we calculate the
         // required bottom margin. The formula is (containerHeight - elementHeight) / 2.
         float iconY = (height - icon.getHeight()) / 2f;
-        float textY = (height - ttfRenderer.getTtc().getHeight()) / 2f;
+        float textY = (height - ttfRenderer.getTextGeometry().getHeight()) / 2f;
 
         if (iconW > 0) {
             // Set position for the icon
@@ -138,7 +138,7 @@ public final class ViceButton implements InteractiveComponent, MenuComponent, So
         }
 
         // Set position for the text, using the correct Y coordinate.
-        ttfRenderer.getTtc().setLocalTranslation(startX + iconW + gap, textY, 1);
+        ttfRenderer.getTextGeometry().setLocalTranslation(startX + iconW + gap, textY, 1);
     }
 
     public void executeAction() {

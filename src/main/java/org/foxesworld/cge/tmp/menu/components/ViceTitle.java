@@ -16,9 +16,9 @@ public class ViceTitle implements InteractiveComponent, MenuComponent {
     public ViceTitle(AssetManager assetManager, String text, int fontSize, String color, String fontPath) {
         this.titleNode = new Node("ViceTitle: " + text);
         ttfRenderer = new TTFrenderer(assetManager);
-        ttfRenderer.genTTF("assets/Interface/fonts/Docker One.ttf", Style.Plain, fontSize);
-        ttfRenderer.genTTC(ColorUtils.fromHexString(color), text);
-        ttc = ttfRenderer.getTtc();
+        ttfRenderer.generateFont("assets/Interface/fonts/Docker One.ttf", Style.Plain, fontSize);
+        ttfRenderer.generateText(ColorUtils.fromHexString(color), text);
+        ttc = ttfRenderer.getTextGeometry();
         titleNode.attachChild(ttc);
     }
 
@@ -68,7 +68,7 @@ public class ViceTitle implements InteractiveComponent, MenuComponent {
 
     @Override
     public float getHeight() {
-        return ttfRenderer.getTtc().getTextHeight();
+        return ttfRenderer.getTextGeometry().getTextHeight();
     }
 
     @Override
@@ -78,6 +78,6 @@ public class ViceTitle implements InteractiveComponent, MenuComponent {
 
     @Override
     public float getWidth() {
-        return ttfRenderer.getTtc().getTextWidth();
+        return ttfRenderer.getTextGeometry().getTextWidth();
     }
 }

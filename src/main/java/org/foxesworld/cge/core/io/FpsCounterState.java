@@ -15,6 +15,7 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.renderer.Camera;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
 import com.jme3.scene.shape.Quad;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.utils.ColorUtils;
@@ -34,21 +35,25 @@ public class FpsCounterState extends AbstractAppState implements ActionListener 
     private boolean isShown = true;
     private static final String TOGGLE_FPS_ACTION = "ToggleFPS";
 
+    private int lastWidth = 0;
+    private int lastHeight = 0;
+    private final float baseFontSize = 18f;
+
     @Override
     public void initialize(AppStateManager stateManager, Application app) {
         super.initialize(stateManager, app);
         this.app = (CalistaGameEngine) app;
+        Camera cam = this.app.getCamera();
+
+        lastWidth = cam.getWidth();
+        lastHeight = cam.getHeight();
 
         containerNode = new Node("FPS Counter Node");
-
         setupBackground();
         setupText();
         setupInput();
-
+        updatePosition();
         updateTextAndBackground("FPS: ...");
-
-        Camera cam = this.app.getCamera();
-        containerNode.setLocalTranslation(10, cam.getHeight() - ttc.getHeight() - 10, 0);
 
         this.app.getGuiNode().attachChild(containerNode);
     }
@@ -66,10 +71,18 @@ public class FpsCounterState extends AbstractAppState implements ActionListener 
 
     private void setupText() {
         fpsTtf = new TTFrenderer(this.app.getAssetManager());
-        fpsTtf.genTTF("assets/Interface/fonts/Docker One.ttf", Style.Plain, 18);
-        fpsTtf.genTTC(ColorUtils.fromHexString("#ffffff"), "text");
-        ttc = fpsTtf.getTtc();
+        float fontSize = calculateFontSize();
+        fpsTtf.generateFont("assets/Interface/fonts/Docker One.ttf", Style.Plain, (int) fontSize);
+        fpsTtf.generateText(ColorUtils.fromHexString("#ffffff"), "text");
+        ttc = fpsTtf.getTextGeometry();
         containerNode.attachChild(ttc);
+    }
+
+    private float calculateFontSize() {
+        Camera cam = app.getCamera();
+        float baseDPI = 96f;
+        float currentDPI = Math.max(cam.getWidth(), cam.getHeight()) / 10.8f;
+        return Math.max(14f, baseFontSize * (currentDPI / baseDPI));
     }
 
     private void setupInput() {
@@ -77,21 +90,45 @@ public class FpsCounterState extends AbstractAppState implements ActionListener 
         app.getInputManager().addListener(this, TOGGLE_FPS_ACTION);
     }
 
+    /**
+     * Обновление позиции счетчика в левом верхнем углу
+     */
+    private void updatePosition() {
+        if (app == null) return;
+
+        Camera cam = app.getCamera();
+        int width = cam.getWidth();
+        int height = cam.getHeight();
+
+        float paddingX = width * 0.015f;
+        float paddingY = height * 0.015f;
+
+        // Левый верхний угол: x = paddingX, y = height - paddingY
+        containerNode.setLocalTranslation(
+                paddingX,
+                height - paddingY,
+                0
+        );
+    }
+
     @Override
     public void onAction(String name, boolean isPressed, float tpf) {
-        if (name.equals(TOGGLE_FPS_ACTION) && isPressed) {
+        if (TOGGLE_FPS_ACTION.equals(name) && isPressed) {
             isShown = !isShown;
-            if (isShown) {
-                this.app.getGuiNode().attachChild(containerNode);
-            } else {
-                this.app.getGuiNode().detachChild(containerNode);
-            }
+            containerNode.setCullHint(isShown ? Spatial.CullHint.Never : Spatial.CullHint.Always);
         }
     }
 
     @Override
     public void update(float tpf) {
         if (!isShown) return;
+
+        Camera cam = app.getCamera();
+        if (cam.getWidth() != lastWidth || cam.getHeight() != lastHeight) {
+            lastWidth = cam.getWidth();
+            lastHeight = cam.getHeight();
+            updatePosition();
+        }
 
         secondCounter += tpf;
         frameCounter++;
@@ -107,12 +144,18 @@ public class FpsCounterState extends AbstractAppState implements ActionListener 
     private void updateTextAndBackground(String text) {
         fpsTtf.setText(text);
 
-        float padding = 8f; // Отступы для фона
-        float bgWidth = fpsTtf.getTtc().getTextWidth() + padding * 2;
-        float bgHeight = fpsTtf.getTtc().getTextHeight() + padding; // Сверху и снизу
+        float padding = calculatePadding();
+        float bgWidth = ttc.getTextWidth() + padding * 2;
+        float bgHeight = ttc.getTextHeight() + padding;
 
         backgroundGeom.setMesh(new Quad(bgWidth, bgHeight));
-        backgroundGeom.setLocalTranslation(-padding, -padding / 2, -1);
+        backgroundGeom.setLocalTranslation(0, -ttc.getHeight(), -1);
+
+        updatePosition();
+    }
+
+    private float calculatePadding() {
+        return Math.max(4f, baseFontSize * 0.2f);
     }
 
     @Override

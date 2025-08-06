@@ -5,156 +5,151 @@ import com.atr.jme.font.asset.TrueTypeKeyMesh;
 import com.atr.jme.font.asset.TrueTypeLoader;
 import com.atr.jme.font.shape.TrueTypeContainer;
 import com.atr.jme.font.util.StringContainer;
+import com.atr.jme.font.util.Style;
 import com.jme3.asset.AssetManager;
 import com.jme3.material.Material;
 import com.jme3.math.ColorRGBA;
 
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * Улучшенный сервис для работы с TTF шрифтами.
- * Сохраняет оригинальную семантику, но с исправленными внутренними механизмами.
+ * Enhanced service for working with TrueType fonts (TTF).
+ * <p>
+ * Provides global caching, efficient updates, and thread-safe loader registration.
  */
 public class TTFrenderer {
 
-    // --- УЛУЧШЕНИЕ 1: Кеш шрифтов сделан статическим и общим для всех экземпляров ---
-    // Это ключевое исправление. Теперь шрифты действительно кешируются на уровне всего приложения.
+    /** Global cache keyed by "fontPath|style|masterSize" */
     private static final Map<String, TrueTypeFont<?, ?>> FONT_CACHE = new ConcurrentHashMap<>();
-    private static boolean isLoaderRegistered = false;
+    private static volatile boolean loaderRegistered = false;
 
     private final AssetManager assetManager;
 
-    // --- Поля состояния экземпляра ---
-    private TrueTypeFont<?, ?> ttf;
-    private StringContainer stringContainer;
-    private TrueTypeContainer ttc; // "Rendered" текстовый объект
+    // Track current font parameters for reloading
+    private String fontPath;
+    private Style fontStyle;
+    private int fontMasterSize;
+
+    private TrueTypeFont<?, ?> font;
+    private StringContainer textData;
+    private TrueTypeContainer textGeometry;
 
     public TTFrenderer(AssetManager assetManager) {
         this.assetManager = Objects.requireNonNull(assetManager, "AssetManager cannot be null");
+        registerLoaderOnce();
+    }
 
-        // --- УЛУЧШЕНИЕ 2: Регистрация загрузчика происходит только один раз ---
-        if (!isLoaderRegistered) {
-            assetManager.registerLoader(TrueTypeLoader.class, "ttf");
-            isLoaderRegistered = true;
+    private void registerLoaderOnce() {
+        if (!loaderRegistered) {
+            synchronized (TTFrenderer.class) {
+                if (!loaderRegistered) {
+                    assetManager.registerLoader(TrueTypeLoader.class, "ttf");
+                    loaderRegistered = true;
+                }
+            }
         }
     }
 
     /**
-     * Получает шрифт из ОБЩЕГО кеша или загружает его.
-     *
-     * @param fontPath Путь к TTF-файлу в assets.
-     * @param style    Стиль шрифта.
-     * @param masterSize "Мастер-размер" для рендеринга в атлас (качество).
+     * Loads or retrieves a cached TrueTypeFont atlas.
+     * @param fontPath   path to the TTF file in assets (non-null)
+     * @param style      font style (non-null)
+     * @param masterSize base size for atlas generation (must be >0)
      */
-    public void genTTF(String fontPath, com.atr.jme.font.util.Style style, int masterSize) {
-        // Проверяем аргументы на входе для предотвращения ошибок
+    public void generateFont(String fontPath, Style style, int masterSize) {
         Objects.requireNonNull(fontPath, "fontPath cannot be null");
         Objects.requireNonNull(style, "style cannot be null");
         if (masterSize <= 0) {
             throw new IllegalArgumentException("masterSize must be positive");
         }
+        this.fontPath = fontPath;
+        this.fontStyle = style;
+        this.fontMasterSize = masterSize;
 
-        String key = fontPath + '|' + style.name() + '|' + masterSize;
-        // Используем статический кеш
-        this.ttf = FONT_CACHE.computeIfAbsent(key, k -> {
-            TrueTypeKeyMesh ttk = new TrueTypeKeyMesh(fontPath, style, masterSize);
-            return (TrueTypeFont<?, ?>) assetManager.loadAsset(ttk);
+        String cacheKey = fontPath + '|' + style.name() + '|' + masterSize;
+        this.font = FONT_CACHE.computeIfAbsent(cacheKey, key -> {
+            TrueTypeKeyMesh keyMesh = new TrueTypeKeyMesh(fontPath, style, masterSize);
+            return (TrueTypeFont<?, ?>) assetManager.loadAsset(keyMesh);
         });
     }
 
     /**
-     * Генерирует или обновляет текстовой контейнер (TrueTypeContainer).
-     *
-     * @param colorRGBA Цвет текста.
-     * @param text      Сам текст.
+     * Creates or updates the rendered text geometry.
+     * @param color text color (non-null)
+     * @param text  string to render (non-null)
      */
-    public void genTTC(ColorRGBA colorRGBA, String text) {
-        if (ttf == null) {
-            throw new IllegalStateException("genTTF must be called before genTTC");
-        }
-
-        if (stringContainer == null) {
-            // Первоначальное создание
-            stringContainer = new StringContainer(ttf, text);
-            ttc = ttf.getFormattedText(stringContainer, colorRGBA);
+    public void generateText(ColorRGBA color, String text) {
+        Objects.requireNonNull(color, "color cannot be null");
+        Objects.requireNonNull(text, "text cannot be null");
+        ensureFontLoaded();
+        if (textData == null) {
+            textData = new StringContainer(font, text);
+            textGeometry = font.getFormattedText(textData, color);
         } else {
-            // Обновление существующего
-            stringContainer.setText(text);
-            setColor(colorRGBA); // Эффективно меняем цвет
-            ttc.updateGeometry(); // Пересобираем меш
+            textData.setText(text);
+            textGeometry.updateGeometry();
+            setColor(color);
         }
     }
 
-    /**
-     * Обновляет текст в существующем контейнере и перерисовывает его.
-     */
+    /** Update text and rebuild mesh. */
     public void setText(String text) {
-        if (stringContainer == null || ttc == null) {
-            throw new IllegalStateException("genTTC must be called first to create a text object.");
-        }
-        stringContainer.setText(text);
-        ttc.updateGeometry();
+        ensureTextGenerated();
+        Objects.requireNonNull(text, "text cannot be null");
+        textData.setText(text);
+        textGeometry.updateGeometry();
     }
 
-    /**
-     * Меняет "мастер-размер" шрифта.
-     * ВНИМАНИЕ: Этот метод неэффективен по своей природе. Он заново генерирует атлас.
-     * Лучше использовать setScale(float).
-     * Логика сохранена для обратной совместимости.
-     */
-    public void setScale(int newMasterSize) {
-        if (ttf == null || stringContainer == null) {
-            throw new IllegalStateException("genTTC must be called first.");
-        }
-        // Получаем параметры текущего шрифта
-        //String currentFontPath = (String) ttf.getKey().getFontFile();
-        //com.atr.jme.font.util.Style currentStyle = ttf.getKey().getStyle();
-        ColorRGBA currentColor = (ColorRGBA) ttc.getMaterial().getParam("Color").getValue();
-
-        // Загружаем новый шрифт
-        //genTTF(currentFontPath, currentStyle, newMasterSize);
-        // Пересоздаем текстовый объект с новым шрифтом
-        genTTC(currentColor, stringContainer.getText());
-    }
-
-    /**
-     * Меняет визуальный масштаб текста. Это предпочтительный способ изменения размера.
-     */
+    /** Adjust geometry scale without regenerating atlas. */
     public void setScale(float scaleFactor) {
-        if (ttf == null) {
-            throw new IllegalStateException("genTTF must be called first.");
-        }
-        ttf.setScale(scaleFactor);
-        if (ttc != null) {
-            ttc.updateGeometry(); // Пересобрать меш под новым scale
+        ensureFontLoaded();
+        font.setScale(scaleFactor);
+        if (textGeometry != null) {
+            textGeometry.updateGeometry();
         }
     }
 
     /**
-     * Устанавливает новый цвет контейнера.
-     * --- УЛУЧШЕНИЕ 4: Теперь не создает новый материал, а изменяет параметр в существующем.
+     * Rebuilds atlas at a different master size. Use sparingly.
+     * @param newMasterSize new base size (must be >0)
      */
-    public void setColor(ColorRGBA color) {
-        if (ttc == null) {
-            throw new IllegalStateException("genTTC must be called first.");
+    public void setMasterSize(int newMasterSize) {
+        ensureTextGenerated();
+        if (newMasterSize <= 0) {
+            throw new IllegalArgumentException("newMasterSize must be positive");
         }
-        // Это гораздо эффективнее, чем new Material(...)
-        ttc.getMaterial().setColor("Color", color);
+        // Preserve current text and color
+        ColorRGBA currentColor = (ColorRGBA) textGeometry.getMaterial().getParam("Color").getValue();
+        String currentText = textData.getText();
+        // Regenerate font atlas with new size
+        generateFont(fontPath, fontStyle, newMasterSize);
+        // Regenerate text geometry
+        generateText(currentColor, currentText);
     }
 
-    // --- Геттеры остаются без изменений ---
-
-    public TrueTypeFont<?, ?> getTtf() {
-        return ttf;
+    /** Change text color efficiently. */
+    public void setColor(ColorRGBA color) {
+        ensureTextGenerated();
+        Objects.requireNonNull(color, "color cannot be null");
+        Material mat = textGeometry.getMaterial();
+        mat.setColor("Color", color);
     }
 
-    public StringContainer getStringContainer() {
-        return stringContainer;
+    private void ensureFontLoaded() {
+        if (font == null) {
+            throw new IllegalStateException("generateFont() must be called first");
+        }
     }
 
-    public TrueTypeContainer getTtc() {
-        return ttc;
+    private void ensureTextGenerated() {
+        if (textData == null || textGeometry == null) {
+            throw new IllegalStateException("generateText() must be called first");
+        }
     }
+
+    public TrueTypeFont<?, ?> getFont() { return font; }
+    public StringContainer getTextData() { return textData; }
+    public TrueTypeContainer getTextGeometry() { return textGeometry; }
 }
