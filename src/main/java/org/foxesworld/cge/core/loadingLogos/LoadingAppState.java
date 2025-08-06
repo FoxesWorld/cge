@@ -16,6 +16,7 @@ import com.jme3.material.Material;
 import com.jme3.material.RenderState.BlendMode;
 import com.jme3.math.ColorRGBA;
 import com.jme3.scene.Node;
+import com.jme3.texture.Texture2D;
 import com.jme3.ui.Picture;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.tmp.menu.MainMenuAppState;
@@ -27,9 +28,14 @@ import java.nio.charset.StandardCharsets;
 import java.util.List;
 
 /**
- * An AppState that displays a single logo with configurable animation and fade-out transition.
+ * Оптимизированный AppState для отображения логотипов с адаптивным масштабированием
+ * и плавными анимациями появления/исчезновения.
  */
 public class LoadingAppState extends BaseAppState {
+    // Константы
+    private static final String ACTION_SKIP = "SkipLogoAnimation";
+    private static final float MAX_SCREEN_COVERAGE = 0.8f;
+    private static final float MIN_SCALE = 0.01f;
 
     private final LogoConfig config;
     private final AppState nextState;
@@ -37,38 +43,29 @@ public class LoadingAppState extends BaseAppState {
     private final float endScale;
     private final float animationDuration;
     private final boolean isSkippable;
+    private final float fadeDuration;
 
+    // Системные зависимости
     private Node guiNode;
     private Picture logo;
     private InputManager inputManager;
 
-    private float elapsedTime = 0f;
-    private boolean isTransitioning = false;
-
-    // Fade-out variables
-    private float fadeDuration;
-    private float fadeProgress = 0f;
-    private boolean isFadingOut = false;
-
-    private static final String ACTION_SKIP = "SkipLogoAnimation";
+    // Состояние анимации
+    private float aspectRatio;
+    private float elapsedTime;
+    private float fadeProgress;
+    private boolean isTransitioning;
+    private boolean isFadingOut;
 
     private final ActionListener skipListener = (name, isPressed, tpf) -> {
-        if (name.equals(ACTION_SKIP) && isPressed) {
-            startFadeOut();
-        }
+        if (isPressed && ACTION_SKIP.equals(name)) startFadeOut();
     };
 
-    /**
-     * Creates a loading/logo screen state from a configuration object.
-     *
-     * @param config    The configuration object containing all display and animation parameters.
-     * @param nextState The AppState to attach after this one finishes.
-     */
     public LoadingAppState(LogoConfig config, AppState nextState) {
         this.config = config;
         this.nextState = nextState;
         this.animationDuration = config.duration != null ? config.duration : 3.0f;
-        this.startScale = config.startScale != null ? config.startScale : 0.1f;
+        this.startScale = config.startScale != null ? Math.max(config.startScale, MIN_SCALE) : MIN_SCALE;
         this.endScale = config.endScale != null ? config.endScale : 1.0f;
         this.isSkippable = config.skippable != null ? config.skippable : true;
         this.fadeDuration = config.fadeDuration != null ? config.fadeDuration : 1.0f;
@@ -76,21 +73,36 @@ public class LoadingAppState extends BaseAppState {
 
     @Override
     protected void initialize(Application app) {
-        this.guiNode = ((CalistaGameEngine) app).getGuiNode();
+        CalistaGameEngine engine = (CalistaGameEngine) app;
+        this.guiNode = engine.getGuiNode();
         this.inputManager = app.getInputManager();
 
+        initializeLogo(app);
+        registerInputs();
+    }
+
+    private void initializeLogo(Application app) {
         logo = new Picture("Logo");
-        logo.setImage(app.getAssetManager(), config.imagePath, true);
+        Texture2D texture = (Texture2D) app.getAssetManager().loadTexture(config.imagePath);
 
-        // Enable transparency
-        Material mat = logo.getMaterial();
+        // Рассчитываем пропорции изображения
+        aspectRatio = (float) texture.getImage().getWidth() / texture.getImage().getHeight();
+        logo.setTexture(app.getAssetManager(), texture, true);
+
+        // Настройка материала с прозрачностью
+        Material mat = new Material(app.getAssetManager(), "Common/MatDefs/Gui/Gui.j3md");
+        mat.setTexture("Texture", texture);
         mat.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
-        mat.setColor("Color", new ColorRGBA(1, 1, 1, 1));
+        mat.setColor("Color", ColorRGBA.White);
+        logo.setMaterial(mat);
 
-        updateLogoTransform(this.startScale);
+        // Первоначальное позиционирование
+        updateLogoSizeAndPosition(startScale);
         guiNode.attachChild(logo);
+    }
 
-        if (this.isSkippable) {
+    private void registerInputs() {
+        if (isSkippable) {
             inputManager.addMapping(ACTION_SKIP, new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
             inputManager.addListener(skipListener, ACTION_SKIP);
         }
@@ -101,120 +113,142 @@ public class LoadingAppState extends BaseAppState {
         if (isTransitioning) return;
 
         if (isFadingOut) {
-            fadeProgress += tpf;
-            float alpha = 1.0f - (fadeProgress / fadeDuration);
-            if (alpha < 0) alpha = 0;
-            logo.getMaterial().setColor("Color", new ColorRGBA(1, 1, 1, alpha));
+            updateFadeOut(tpf);
+        } else {
+            updateScaleAnimation(tpf);
+        }
+    }
 
-            // Optionally scale down during fade-out
-            //float fadeScale = endScale * (alpha);
-            //if (fadeScale < 0.1f) fadeScale = 0.1f;
-            //updateLogoTransform(fadeScale);
+    private void updateFadeOut(float tpf) {
+        fadeProgress += tpf;
+        float alpha = Math.max(1.0f - (fadeProgress / fadeDuration), 0);
+        logo.getMaterial().setColor("Color", new ColorRGBA(1, 1, 1, alpha));
 
-            if (fadeProgress >= fadeDuration) {
-                transitionToNextState();
-            }
+        if (fadeProgress >= fadeDuration) {
+            transitionToNextState();
+        }
+    }
+
+    private void updateScaleAnimation(float tpf) {
+        elapsedTime += tpf;
+
+        if (elapsedTime >= animationDuration) {
+            updateLogoSizeAndPosition(endScale);
+            startFadeOut();
             return;
         }
 
-        // Normal logo animation (scale up)
-        elapsedTime += tpf;
-        if (elapsedTime >= this.animationDuration) {
-            updateLogoTransform(this.endScale);
-            startFadeOut();
-        } else {
-            float progress = elapsedTime / this.animationDuration;
-            float currentScale = startScale + (endScale - startScale) * progress;
-            updateLogoTransform(currentScale);
-        }
+        float progress = elapsedTime / animationDuration;
+        float currentScale = interpolateScale(progress);
+        updateLogoSizeAndPosition(currentScale);
     }
 
-    /**
-     * Updates the logo's size and centers it on the screen by animating width and height.
-     */
-    private void updateLogoTransform(float scale) {
-        float currentWidth = config.width * scale;
-        float currentHeight = config.height * scale;
+    private float interpolateScale(float progress) {
+        return startScale + (endScale - startScale) * progress;
+    }
 
-        logo.setWidth(currentWidth);
-        logo.setHeight(currentHeight);
-
+    private void updateLogoSizeAndPosition(float scale) {
         float screenWidth = getApplication().getContext().getSettings().getWidth();
         float screenHeight = getApplication().getContext().getSettings().getHeight();
 
+        // Рассчитываем максимальные размеры с учетом процента покрытия экрана
+        float maxWidth = screenWidth * MAX_SCREEN_COVERAGE;
+        float maxHeight = screenHeight * MAX_SCREEN_COVERAGE;
+
+        // Вычисляем размеры с сохранением пропорций
+        float targetWidth = maxWidth * scale;
+        float targetHeight = targetWidth / aspectRatio;
+
+        // Корректировка при превышении максимальной высоты
+        if (targetHeight > maxHeight) {
+            targetHeight = maxHeight;
+            targetWidth = targetHeight * aspectRatio;
+        }
+
+        // Устанавливаем размеры и позицию
+        logo.setWidth(targetWidth);
+        logo.setHeight(targetHeight);
         logo.setPosition(
-                (screenWidth - currentWidth) / 2f,
-                (screenHeight - currentHeight) / 2f
+                (screenWidth - targetWidth) * 0.5f,
+                (screenHeight - targetHeight) * 0.5f
         );
     }
 
-    /**
-     * Starts the fade-out transition.
-     */
     private void startFadeOut() {
         if (!isFadingOut) {
             isFadingOut = true;
             fadeProgress = 0f;
-            logo.getMaterial().getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
         }
     }
 
-    /**
-     * Detaches this state and attaches the next one.
-     */
     private void transitionToNextState() {
         if (isTransitioning) return;
         isTransitioning = true;
+
         getApplication().enqueue(() -> {
             getStateManager().detach(this);
-            getStateManager().attach(this.nextState);
+            getStateManager().attach(nextState);
         });
     }
 
     @Override
     protected void cleanup(Application app) {
-        if (this.isSkippable) {
+        cleanupInputs();
+        if (logo != null && guiNode != null) {
+            guiNode.detachChild(logo);
+        }
+    }
+
+    private void cleanupInputs() {
+        if (isSkippable && inputManager != null) {
             if (inputManager.hasMapping(ACTION_SKIP)) {
                 inputManager.deleteMapping(ACTION_SKIP);
             }
             inputManager.removeListener(skipListener);
         }
-        guiNode.detachChild(logo);
     }
 
     @Override
     protected void onEnable() {
+        resetState();
+        if (logo != null) {
+            updateLogoSizeAndPosition(startScale);
+            logo.getMaterial().setColor("Color", ColorRGBA.White);
+        }
+    }
+
+    private void resetState() {
         elapsedTime = 0f;
+        fadeProgress = 0f;
         isTransitioning = false;
         isFadingOut = false;
-        fadeProgress = 0f;
-        if (logo != null) {
-            updateLogoTransform(this.startScale);
-            logo.getMaterial().setColor("Color", new ColorRGBA(1, 1, 1, 1));
-        }
     }
 
     @Override
     protected void onDisable() {}
 
     /**
-     * Builds a chain of logo screens from a JSON file.
+     * Создает цепочку состояний загрузки из JSON-конфигурации
      */
     public static AppState buildLogoChainFromJson(AssetManager assetManager, String jsonPath) {
-        Gson gson = new Gson();
-        Type listType = new TypeToken<List<LogoConfig>>() {}.getType();
-        List<LogoConfig> logoConfigs;
-        AssetInfo assetInfo = assetManager.locateAsset(new AssetKey<>(jsonPath));
-        try (InputStreamReader reader = new InputStreamReader(assetInfo.openStream(), StandardCharsets.UTF_8)) {
-            logoConfigs = gson.fromJson(reader, listType);
-            AppState nextStateInChain = new MainMenuAppState();
-            for (int i = logoConfigs.size() - 1; i >= 0; i--) {
-                LogoConfig config = logoConfigs.get(i);
-                nextStateInChain = new LoadingAppState(config, nextStateInChain);
+        try {
+            AssetInfo assetInfo = assetManager.locateAsset(new AssetKey<>(jsonPath));
+            Type listType = new TypeToken<List<LogoConfig>>() {}.getType();
+
+            try (InputStreamReader reader = new InputStreamReader(assetInfo.openStream(), StandardCharsets.UTF_8)) {
+                List<LogoConfig> configs = new Gson().fromJson(reader, listType);
+                return createStateChain(configs);
             }
-            return nextStateInChain;
         } catch (IOException e) {
-            throw new RuntimeException("Failed to build logo chain from JSON", e);
+            throw new RuntimeException("Failed to build logo chain: " + e.getMessage(), e);
         }
+    }
+
+    private static AppState createStateChain(List<LogoConfig> configs) {
+        AppState nextState = new MainMenuAppState();
+        for (int i = configs.size() - 1; i >= 0; i--) {
+            nextState = new LoadingAppState(configs.get(i), nextState);
+        }
+        return nextState;
     }
 }

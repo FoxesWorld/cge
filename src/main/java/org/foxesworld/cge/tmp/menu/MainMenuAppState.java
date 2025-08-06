@@ -22,6 +22,7 @@ public final class MainMenuAppState extends BaseAppState {
 
     private static final String MAIN_MENU_XML = "ui/main_menu.xml";
 
+
     private ViceMenuBackground background;
     private MenuScreenHandler screenHandler;
 
@@ -97,6 +98,7 @@ public final class MainMenuAppState extends BaseAppState {
         if (screenHandler != null) {
             screenHandler.update(tpf);
         }
+        //System.out.println("Screen Size - "+screenHandler.getScreenSize().getHeight() +'x'+screenHandler.getScreenSize().getWidth());
     }
 
     /**
@@ -153,5 +155,9 @@ public final class MainMenuAppState extends BaseAppState {
         SimpleApplication simpleApp = (SimpleApplication) getApplication();
         simpleApp.getViewPort().removeProcessor(fpp);
         simpleApp.getInputManager().setCursorVisible(false);
+    }
+
+    public MenuScreenHandler getScreenHandler() {
+        return screenHandler;
     }
 }

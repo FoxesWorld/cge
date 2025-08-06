@@ -11,6 +11,7 @@ import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.math.Vector2f;
 import com.jme3.scene.Node;
+import com.jme3.scene.shape.Quad;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.tmp.menu.components.InteractiveComponent;
 import org.foxesworld.cge.tmp.menu.components.SoundComponent;
@@ -25,7 +26,7 @@ import java.util.Comparator;
 public final class MenuScreenHandler {
     private static final String MAIN_MENU_XML = "ui/main_menu.xml";
     private static final String SETTINGS_MENU_XML = "ui/settings_menu.xml";
-
+    private Quad screenSize;
     private final Node guiNode;
     private final CalistaGameEngine engine;
     private final XmlMenuBuilder builder;
@@ -75,6 +76,8 @@ public final class MenuScreenHandler {
         if (currentMenu == null) return;
         currentMenu.allComponents().forEach(c -> c.update(tpf));
         inputHandler.updateHover();
+        screenSize = new Quad(engine.getContext().getSettings().getWindowWidth(), engine.getContext().getSettings().getWindowHeight());
+
     }
 
     /** Освобождает ресурсы и слушатели. */
@@ -158,5 +161,9 @@ public final class MenuScreenHandler {
         public void onAnalog(String name, float value, float tpf) {
             if (dragging && focused != null) focused.handleMouseDrag(im.getCursorPosition());
         }
+    }
+
+    public Quad getScreenSize() {
+        return screenSize;
     }
 }

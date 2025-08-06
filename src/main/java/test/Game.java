@@ -46,6 +46,7 @@ public class Game {
 
         AppSettings settings = new AppSettings(false);
         settings.setTitle("Calista Game Engine");
+        settings.setResizable(true);
         settings.setSettingsDialogImage("assets/theme/logo3.png");
         settings.setRenderer(AppSettings.LWJGL_OPENGL45);
 
