@@ -86,4 +86,8 @@ public class PlayerModule extends EngineModule<PlayerConfig> {
             }
         });
     }
+
+    public Player getPlayer() {
+        return player;
+    }
 }

@@ -1,34 +1,53 @@
-MaterialDef LensFlareCinematic {
-
-    Technique {
-        VertexShader   GLSL150: "assets/Shaders/LensFlare/Passthrough.vert"
-        FragmentShader GLSL150: "assets/Shaders/LensFlare/LensFlare_Cinematic.frag"
-    }
-
-    WorldParameters {
-        Time
-    }
+MaterialDef Shockwave2D {
 
     MaterialParameters {
-        Texture2D Bloom
-        Texture2D Dirt
-        Texture2D LensColor (Anisotropic)
-        Texture2D Texture
+        // --- Textures ---
+        Texture2D MainTex
+        Texture2D Texture         // Scene color buffer
+        Int NumSamples
 
-        Vector2 LightPos
-        Float   GlobalIntensity (Default = 1.0)
-        Color   Tint (Default = 1.0 1.0 1.0 1.0)
+        // --- Common ---
+        Vector2    Resolution     // Screen resolution (pixels)
+        Boolean    Enabled        (Default = true)
+        Float      StartTime      (Default = 0.0)
+        Vector2    ClickPoint     // Normalized [0,1] screen coordinate
+        Float      Duration       (Default = 1.0, Min = 0.0, Max = 10.0)
 
-        Float AnamorphicIntensity (Default = 3.0)
-        Float AnamorphicStretch (Default = 0.2)
-        Color AnamorphicTint (Default = 0.3 0.5 1.0 1.0)
+        // --- Bloom (Fake) ---
+        Boolean    BloomFadeOut   (Default = false)
+        Boolean    EnabledFakeBloom (Default = false)
+        Float      BloomStrength      (Default = 0.5, Min = 0.0, Max = 5.0)
+        Float      BloomStrengthDynamic (Default = 1.0, Min = 0.0, Max = 5.0)
+        Float      BloomRange         (Default = 1.5, Min = 0.0, Max = 10.0)
+        Color      ColorBloom         (Default = 1.0 0.5 0.25 1.0)
 
-        Int   GhostCount (Default = 6)
-        Float GhostIntensity (Default = 1.0)
-        Float GhostDispersal (Default = 0.4)
+        // --- Anamorphic Flare ---
+        Boolean    EnabledAnamorphic  (Default = false)
+        Float      AnamStrength       (Default = 0.5, Min = 0.0, Max = 5.0)
+        Float      AnamStrengthDynamic (Default = 1.0, Min = 0.0, Max = 5.0)
+        Float      AnamRange          (Default = 1.5, Min = 0.0, Max = 10.0)
+        Color      ColorAnam          (Default = 1.0 0.5 0.25 1.0)
 
-        Float DirtIntensity (Default = 2.5)
-        Float ChromaticAberration (Default = 0.5)
-        Float FilmGrainAmount (Default = 0.02)
+        // --- Ghosts ---
+        Boolean    EnabledGhosts      (Default = false)
+        Boolean    EnabledDistortion  (Default = false)
+        Color      ColorGhosts        (Default = 1.0 0.5 0.25 1.0)
+
+        // --- Streaks ---
+        Boolean    EnabledStreaks     (Default = false)
+        Int        StreaksType        (Default = 0, Min = 0, Max = 1)
+        Float      StreaksCount       (Default = 7.0, Min = 0.0, Max = 50.0)
+        Float      StreaksLength      (Default = 0.5, Min = 0.0, Max = 10.0)
+        Float      StreaksStrengthDynamic (Default = 0.0, Min = 0.0, Max = 5.0)
+        Color      ColorStreaks       (Default = 1.0 0.5 0.25 1.0)
+    }
+
+    Technique {
+        VertexShader   GLSL110: assets/Shaders/LensFlare/Passthrough.vert
+        FragmentShader GLSL110: assets/Shaders/LensFlare/LensFlare_Cinematic.frag
+
+        WorldParameters {
+            Time
+        }
     }
 }

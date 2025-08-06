@@ -29,7 +29,7 @@ public class CheckboxBuilder implements ComponentBuilder<CheckboxXml> {
         Vector2f pos = MenuUtils.calculatePosition(
                 model.x,
                 model.y,
-                model.align,
+                model.alignX,
                 context.app().getCamera()
         );
         checkbox.setPosition(pos.x, pos.y);

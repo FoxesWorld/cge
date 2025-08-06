@@ -54,11 +54,13 @@ public class ImageRenderer {
             return null;
         }
         try {
-            TextureKey key = new TextureKey(imagePath, true);
-            Texture tex = assetManager.loadTexture(key);
-            material.setTexture("ColorMap", tex);
+            if(material != null) {
+                TextureKey key = new TextureKey(imagePath, true);
+                Texture tex = assetManager.loadTexture(key);
+                material.setTexture("ColorMap", tex);
 
-            originalImageSize.set(tex.getImage().getWidth(), tex.getImage().getHeight());
+                originalImageSize.set(tex.getImage().getWidth(), tex.getImage().getHeight());
+            }
             return originalImageSize;
 
         } catch (Exception e) {

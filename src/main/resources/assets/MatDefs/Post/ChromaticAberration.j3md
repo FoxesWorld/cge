@@ -1,0 +1,17 @@
+MaterialDef ChromaticAberration {
+    MaterialParameters {
+        Texture2D Texture
+        Int NumSamples
+        Float Strength
+        Vector2 Resolution
+    }
+
+    Technique {
+        VertexShader   GLSL100:   assets/MatDefs/Post/Default.vert
+        FragmentShader GLSL100:   assets/MatDefs/Post/ChromaticAberration.frag
+
+        WorldParameters {
+            WorldViewProjectionMatrix
+        }
+    }
+}

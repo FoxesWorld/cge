@@ -20,7 +20,7 @@ public class ButtonBuilder implements ComponentBuilder<ButtonXml> {
         button.setSize(width, height);
         //button.setLabelSize(model.fontSize);
 
-        Vector2f pos = MenuUtils.calculatePosition(model.x, model.y, model.align, context.app().getCamera());
+        Vector2f pos = MenuUtils.calculatePosition(model.x, model.y, model.alignX, context.app().getCamera());
         pos.x -= width / 2f;
         button.setPosition(pos.x, pos.y);
 

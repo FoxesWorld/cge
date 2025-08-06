@@ -113,7 +113,7 @@ public final class MainMenuAppState extends BaseAppState {
         // Fail-fast: Проверяем наличие критически важных данных. Если их нет,
         // нет смысла продолжать, и мы сразу сообщаем об ошибке.
         if (sceneConfig == null || sceneConfig.modelPath == null) {
-            throw new IllegalStateException("Scene configuration or modelPath is missing in the XML file.");
+            //throw new IllegalStateException("Scene configuration or modelPath is missing in the XML file.");
         }
 
         // 1. Начинаем создание объекта с помощью Builder, передавая обязательный параметр.

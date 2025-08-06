@@ -5,5 +5,5 @@ import jakarta.xml.bind.annotation.XmlRootElement;
 
 @XmlRootElement(name = "title")
 public class TitleXml extends ComponentXml {
-    @XmlAttribute public float fontSize = 96;
+    @XmlAttribute public String fontSize = "20%";
 }

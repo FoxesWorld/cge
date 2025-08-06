@@ -12,19 +12,24 @@ import java.util.List;
 public class PanelXml extends ComponentXml {// Важно: наследуемся от ComponentXml
 
     @XmlAttribute
+    private float dpiScale;
+
+    @XmlAttribute
+    private String anchor;
+    @XmlAttribute
     private String id;
 
     @XmlAttribute
-    public String bgColor; // e.g., "#333333"
+    public String bgColor;
 
     @XmlAttribute
-    public Float bgAlpha; // e.g., 0.8
+    public Float bgAlpha;
 
     @XmlAttribute
-    public Float padding; // Отступы внутри панели
+    public Float padding;
 
     @XmlAttribute
-    public Float spacing; // Расстояние между элементами
+    public Float spacing;
 
     @XmlAttribute
     public Float cornerRadius;
@@ -50,5 +55,13 @@ public class PanelXml extends ComponentXml {// Важно: наследуемс�
 
     public String getId() {
         return id;
+    }
+
+    public String getAnchor() {
+        return anchor;
+    }
+
+    public float getDpiScale() {
+        return dpiScale;
     }
 }

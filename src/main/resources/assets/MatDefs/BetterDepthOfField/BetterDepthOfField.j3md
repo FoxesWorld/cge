@@ -1,0 +1,20 @@
+MaterialDef BetterDepthOfField {
+    MaterialParameters {
+        Texture2D Texture
+        Texture2D DepthTexture
+        Int NumSamples
+        Int NumSamplesDepth
+        Float Width
+        Float Height
+        Float FocalDepth
+        Float FocalLength
+        Float Fstop
+        Boolean ShowFocus
+        Boolean AutoFocus
+        Vector2 FrustumNearFar
+    }
+    Technique {
+        VertexShader   GLSL100: assets/MatDefs/BetterDepthOfField/BetterDepthOfField.vert
+        FragmentShader GLSL100: assets/MatDefs/BetterDepthOfField/BetterDepthOfField.frag
+    }
+}

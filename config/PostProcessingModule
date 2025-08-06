@@ -1,55 +1,74 @@
 {
   "bloom": {
     "enable": true,
-    "intensity": 0.85,
+    "intensity": 1.2,
     "threshold": 1.1,
-    "radius": 0.92,
-    "exposurePower": 65
+    "radius": 0.95,
+    "exposurePower": 80
   },
   "lsf": {
-    "enable": false,
-    "lightDir": [
-      10.0,
-      3.0,
-      7.0
-    ],
-    "ghostCount": 0,
-    "haloWidth": 0.5,
-    "destiny": 0.25
+    "enable": true,
+    "lightDir": [10.0, 3.0, 7.0],
+    "ghostCount": 4,
+    "haloWidth": 0.65,
+    "destiny": 0.35
   },
   "dlsf": {
     "enable": true,
     "renderBackFacesShadows": true,
-    "shadowMapSize": 16384,
-    "nbSplits": 4,
+    "shadowMapSize": 8192,
+    "nbSplits": 3,
     "stabilization": true,
-    "shadowIntensity": 0.55,
+    "shadowIntensity": 0.6,
     "edgeFilteringMode": "PCF8",
     "shadowCompareMode": "Hardware"
   },
   "dof": {
     "enable": true,
-    "focus": 18.0,
-    "range": 60.0,
-    "aperture": 1.8,
-    "maxBlur": 2.2
+    "focus": 15.0,
+    "range": 45.0,
+    "aperture": 1.4,
+    "maxBlur": 3.0
   },
   "colorGrading": {
     "enable": true,
-    "lut": "Assets/LUTs/Cinematic.cube",
-    "exposure": 1.22,
-    "contrast": 1.29,
-    "saturation": 1.18
+    "lut": "assets/LUTs/Cinematic.cube",
+    "exposure": 1.3,
+    "contrast": 1.35,
+    "saturation": 1.2
   },
   "fxaa": {
     "enable": true,
-    "quality": 3
+    "quality": 2
   },
   "ssaOfilter": {
     "enable": true,
-    "sampleRadius": 2.9299974,
-    "intensity": 25.0,
-    "scale": 5.8100376,
-    "bias": 0.091000035
+    "sampleRadius": 3.5,
+    "intensity": 20.0,
+    "scale": 6.0,
+    "bias": 0.08
+  },
+  "vignette": {
+    "enable": true,
+    "intensity": 0.6,
+    "smoothness": 0.85,
+    "roundness": 1.0
+  },
+  "toneMap": {
+    "enable": true,
+    "contrast": 1.1,
+    "exposure": 1.0,
+    "saturation": 1.0
+  },
+  "lensFlare": {
+    "enable": true,
+    "globalIntensity": 1.1,
+    "ghostCount": 6,
+    "ghostDispersal": 0.4,
+    "dirtIntensity": 2.5,
+    "anamorphicIntensity": 2.0,
+    "anamorphicStretch": 0.25,
+    "chromaticAberration": 0.6,
+    "filmGrainAmount": 0.02
   }
 }

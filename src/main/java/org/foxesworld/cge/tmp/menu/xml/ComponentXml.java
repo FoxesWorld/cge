@@ -3,56 +3,63 @@ package org.foxesworld.cge.tmp.menu.xml;
 import jakarta.xml.bind.annotation.XmlAttribute;
 
 /**
- * An abstract base class for all UI components defined in the menu XML.
+ * Abstract base class for all UI components defined in menu XML.
  * <p>
- * This class holds common attributes that are shared across all components,
- * such as positioning (x, y), alignment, and dimensions (width, height).
- * Using string types for these attributes allows for flexible values, including
- * absolute pixels and percentages.
+ * Provides common attributes such as position, size, alignment, and color.
+ * Position and size can be specified in absolute pixels or percentages (e.g., "50%").
+ * When width or height are omitted, components may auto-fit based on their content or container.
  */
 public abstract class ComponentXml {
 
-    /**
-     * The display text for the component (e.g., a button's label, a title's content).
-     */
+    /** Optional text content (e.g., button label, title). */
     @XmlAttribute
     public String text;
 
     /**
-     * The horizontal position or offset of the component.
-     * Can be an absolute value. Defaults to "0".
+     * Horizontal position or offset.
+     * Can be an absolute value (e.g., "100") or percentage (e.g., "50%").
+     * Defaults to "0".
      */
     @XmlAttribute
     public String x = "0";
 
     /**
-     * The vertical position of the component.
-     * Can be an absolute value or a percentage (e.g., "80%"). Defaults to "0".
+     * Vertical position or offset.
+     * Can be an absolute value or percentage (e.g., "80%").
+     * Defaults to "0".
      */
     @XmlAttribute
     public String y = "0";
 
     /**
-     * The horizontal alignment of the component.
-     * Common values are "CENTER_X", "LEFT", "RIGHT".
+     * Horizontal alignment relative to the container.
+     * Common values: "LEFT", "CENTER_X", "RIGHT".
      */
     @XmlAttribute
-    public String align;
+    public String alignX;
 
     /**
-     * The width of the component.
-     * Can be an absolute value or a percentage. Can be null if not specified.
+     * Vertical alignment relative to the container.
+     * Common values: "TOP", "CENTER_Y", "BOTTOM".
+     */
+    @XmlAttribute
+    public String alignY;
+
+    /**
+     * Width of the component.
+     * Can be an absolute value, percentage (e.g., "100%"), or omitted for auto-fit.
      */
     @XmlAttribute
     public String width;
 
     /**
-     * The height of the component.
-     * Can be an absolute value or a percentage. Can be null if not specified.
+     * Height of the component.
+     * Can be an absolute value, percentage, or omitted for auto-fit.
      */
     @XmlAttribute
     public String height;
 
+    /** Optional foreground or main color in HEX format (e.g., "#FFFFFF"). */
     @XmlAttribute
     public String color;
 }

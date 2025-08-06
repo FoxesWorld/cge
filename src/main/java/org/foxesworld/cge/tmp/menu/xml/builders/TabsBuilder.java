@@ -51,7 +51,7 @@ public class TabsBuilder implements ComponentBuilder<TabsXml> {
             tabComponent.addTab(tabModel, contentNode, createdObjects);
         }
         tabComponent.finalizeLayout(model.contentWidth, model.contentHeight - innerHeight);
-        Vector2f pos = MenuUtils.calculatePosition(model.x, model.y, model.align, context.app().getCamera());
+        Vector2f pos = MenuUtils.calculatePosition(model.x, model.y, model.alignX, context.app().getCamera());
         float width = MenuUtils.parseSize(model.width, context.app().getCamera().getWidth());
         pos.x -= width / 2f;
         tabComponent.getNode().setLocalTranslation(pos.x, pos.y, 0);

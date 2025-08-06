@@ -31,7 +31,7 @@ public class SliderBuilder implements ComponentBuilder<SliderXml> {
         Vector2f pos = MenuUtils.calculatePosition(
                 model.x,
                 model.y,
-                model.align,
+                model.alignX,
                 context.app().getCamera()
         );
         slider.setPosition(pos.x, pos.y);
