@@ -1,37 +1,37 @@
-[16:15:35.995][INFO][TaskScheduler] TaskScheduler initialized [Compute Threads: 4, IO Pool: Cached, Max IO Threads: 16]
-[16:15:38.503][INFO][ModuleManager] ModuleManager initialized with modules directory: modules
-[16:15:40.794][DEBUG][ComponentRegistry] Registered component builder for TextXml
-[16:15:40.795][DEBUG][ComponentRegistry] Registered component builder for ButtonXml
-[16:15:40.795][DEBUG][ComponentRegistry] Registered component builder for SliderXml
-[16:15:40.796][DEBUG][ComponentRegistry] Registered component builder for CheckboxXml
-[16:15:40.796][DEBUG][ComponentRegistry] Registered component builder for TabsXml
-[16:15:40.797][DEBUG][ComponentRegistry] Registered component builder for PanelXml
-[16:15:40.933][DEBUG][PanelBuilder] --- Building Panel id='titlePanel ---'.
-[16:15:40.937][DEBUG][Panel] Panel 'titlePanel' created
-[16:15:40.937][DEBUG][PanelBuilder] Panel 'titlePanel' has 3 children.
-[16:15:40.954][INFO][PanelBuilder] Child title
-[16:15:40.969][INFO][PanelBuilder] Child version
-[16:15:40.976][INFO][PanelBuilder] Child type
-[16:15:40.977][DEBUG][PanelBuilder] Panel 'titlePanel' attached to parent 'XmlUIRoot'.
-[16:15:40.977][DEBUG][PanelBuilder] --- Building Panel id='main_panel ---'.
-[16:15:40.977][DEBUG][Panel] Panel 'main_panel' created
-[16:15:40.978][DEBUG][PanelBuilder] Panel 'main_panel' has 3 children.
-[16:15:40.987][INFO][PanelBuilder] Child play
-[16:15:40.995][INFO][PanelBuilder] Child settings
-[16:15:41.079][INFO][PanelBuilder] Child quit
-[16:15:41.080][DEBUG][PanelBuilder] Panel 'main_panel' attached to parent 'XmlUIRoot'.
-[16:15:41.177][DEBUG][PanelBuilder] --- Building Panel id='titlePanel ---'.
-[16:15:41.177][DEBUG][Panel] Panel 'titlePanel' created
-[16:15:41.177][DEBUG][PanelBuilder] Panel 'titlePanel' has 3 children.
-[16:15:41.179][INFO][PanelBuilder] Child title
-[16:15:41.181][INFO][PanelBuilder] Child version
-[16:15:41.182][INFO][PanelBuilder] Child type
-[16:15:41.182][DEBUG][PanelBuilder] Panel 'titlePanel' attached to parent 'XmlUIRoot'.
-[16:15:41.183][DEBUG][PanelBuilder] --- Building Panel id='main_panel ---'.
-[16:15:41.183][DEBUG][Panel] Panel 'main_panel' created
-[16:15:41.183][DEBUG][PanelBuilder] Panel 'main_panel' has 3 children.
-[16:15:41.184][INFO][PanelBuilder] Child play
-[16:15:41.186][INFO][PanelBuilder] Child settings
-[16:15:41.187][INFO][PanelBuilder] Child quit
-[16:15:41.187][DEBUG][PanelBuilder] Panel 'main_panel' attached to parent 'XmlUIRoot'.
-[16:15:42.280][WARN][ViceMenuBackground] No model path provided. Creating a fallback placeholder.
+[17:03:06.118][INFO][TaskScheduler] TaskScheduler initialized [Compute Threads: 4, IO Pool: Cached, Max IO Threads: 16]
+[17:03:08.200][INFO][ModuleManager] ModuleManager initialized with modules directory: modules
+[17:03:11.102][DEBUG][ComponentRegistry] Registered component builder for TextXml
+[17:03:11.103][DEBUG][ComponentRegistry] Registered component builder for ButtonXml
+[17:03:11.104][DEBUG][ComponentRegistry] Registered component builder for SliderXml
+[17:03:11.104][DEBUG][ComponentRegistry] Registered component builder for CheckboxXml
+[17:03:11.105][DEBUG][ComponentRegistry] Registered component builder for TabsXml
+[17:03:11.107][DEBUG][ComponentRegistry] Registered component builder for PanelXml
+[17:03:11.231][DEBUG][PanelBuilder] --- Building Panel id='titlePanel ---'.
+[17:03:11.233][DEBUG][Panel] Panel 'titlePanel' created
+[17:03:11.233][DEBUG][PanelBuilder] Panel 'titlePanel' has 3 children.
+[17:03:11.251][INFO][PanelBuilder] Child title
+[17:03:11.263][INFO][PanelBuilder] Child version
+[17:03:11.269][INFO][PanelBuilder] Child type
+[17:03:11.269][DEBUG][PanelBuilder] Panel 'titlePanel' attached to parent 'XmlUIRoot'.
+[17:03:11.269][DEBUG][PanelBuilder] --- Building Panel id='main_panel ---'.
+[17:03:11.270][DEBUG][Panel] Panel 'main_panel' created
+[17:03:11.270][DEBUG][PanelBuilder] Panel 'main_panel' has 3 children.
+[17:03:11.280][INFO][PanelBuilder] Child play
+[17:03:11.290][INFO][PanelBuilder] Child settings
+[17:03:11.369][INFO][PanelBuilder] Child quit
+[17:03:11.371][DEBUG][PanelBuilder] Panel 'main_panel' attached to parent 'XmlUIRoot'.
+[17:03:11.474][DEBUG][PanelBuilder] --- Building Panel id='titlePanel ---'.
+[17:03:11.475][DEBUG][Panel] Panel 'titlePanel' created
+[17:03:11.475][DEBUG][PanelBuilder] Panel 'titlePanel' has 3 children.
+[17:03:11.477][INFO][PanelBuilder] Child title
+[17:03:11.479][INFO][PanelBuilder] Child version
+[17:03:11.481][INFO][PanelBuilder] Child type
+[17:03:11.481][DEBUG][PanelBuilder] Panel 'titlePanel' attached to parent 'XmlUIRoot'.
+[17:03:11.481][DEBUG][PanelBuilder] --- Building Panel id='main_panel ---'.
+[17:03:11.481][DEBUG][Panel] Panel 'main_panel' created
+[17:03:11.482][DEBUG][PanelBuilder] Panel 'main_panel' has 3 children.
+[17:03:11.483][INFO][PanelBuilder] Child play
+[17:03:11.484][INFO][PanelBuilder] Child settings
+[17:03:11.485][INFO][PanelBuilder] Child quit
+[17:03:11.486][DEBUG][PanelBuilder] Panel 'main_panel' attached to parent 'XmlUIRoot'.
+[17:03:12.533][WARN][ViceMenuBackground] No model path provided. Creating a fallback placeholder.

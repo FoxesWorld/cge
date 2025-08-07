@@ -165,27 +165,31 @@ public class Panel extends UIComponent implements MenuComponent, InteractiveComp
         h *= dpiScale;
 
         if (!autoSize) setSize(w, h);
+
         applyAnchorPosition(x, y);
     }
 
+
     private void applyAnchorPosition(float x, float y) {
-        Vector2f anchorOffset = getAnchorOffset(anchor, width, height);
-        node.setLocalTranslation(x + anchorOffset.x, y + anchorOffset.y, 0);
+        Camera cam = app.getGuiViewPort().getCamera(); // Лучше использовать actual resolution GUI ViewPort'а
+        float sw = cam.getWidth();
+        float sh = cam.getHeight();
+
+        float finalX = switch (anchor) {
+            case TOP_LEFT, CENTER_LEFT, BOTTOM_LEFT      -> 0;
+            case TOP_CENTER, CENTER, BOTTOM_CENTER       -> (sw - width) / 2f;
+            case TOP_RIGHT, CENTER_RIGHT, BOTTOM_RIGHT   -> sw - width;
+        };
+
+        float finalY = switch (anchor) {
+            case TOP_LEFT, TOP_CENTER, TOP_RIGHT         -> sh - height;
+            case CENTER_LEFT, CENTER, CENTER_RIGHT       -> (sh - height) / 2f;
+            case BOTTOM_LEFT, BOTTOM_CENTER, BOTTOM_RIGHT-> 0;
+        };
+
+        node.setLocalTranslation(finalX + x, finalY + y, 0);
     }
 
-    private Vector2f getAnchorOffset(Anchor anchor, float w, float h) {
-        return switch (anchor) {
-            case TOP_LEFT       -> new Vector2f(0, 0);
-            case TOP_CENTER     -> new Vector2f(-w / 2f, 0);
-            case TOP_RIGHT      -> new Vector2f(-w, 0);
-            case CENTER_LEFT    -> new Vector2f(0, -h / 2f);
-            case CENTER         -> new Vector2f(-w / 2f, -h / 2f);
-            case CENTER_RIGHT   -> new Vector2f(-w, -h / 2f);
-            case BOTTOM_LEFT    -> new Vector2f(0, -h);
-            case BOTTOM_CENTER  -> new Vector2f(-w / 2f, -h);
-            case BOTTOM_RIGHT   -> new Vector2f(-w, -h);
-        };
-    }
 
     private float parseRelative(String val, float total) {
         val = val.trim();
