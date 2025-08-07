@@ -55,7 +55,7 @@ public class PanelXml extends ComponentXml {
             @XmlElement(name = "panel", type = PanelXml.class),
             @XmlElement(name = "slider", type = SliderXml.class),
             @XmlElement(name = "checkbox", type = CheckboxXml.class),
-            @XmlElement(name = "title", type = TitleXml.class),
+            @XmlElement(name = "text", type = TextXml.class),
             @XmlElement(name = "tabs", type = TabsXml.class)
     })
     private List<ComponentXml> components;

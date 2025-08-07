@@ -3,7 +3,7 @@ package org.foxesworld.cge.tmp.menu.xml;
 import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement(name = "title")
-public class TitleXml extends ComponentXml {
+@XmlRootElement(name = "text")
+public class TextXml extends ComponentXml {
     @XmlAttribute public String fontSize = "20%";
 }

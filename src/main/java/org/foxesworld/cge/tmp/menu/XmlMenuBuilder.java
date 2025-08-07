@@ -13,7 +13,6 @@ import jakarta.xml.bind.Unmarshaller;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.utils.ColorUtils;
 import org.foxesworld.cge.tmp.menu.components.utils.MenuComponent;
-import org.foxesworld.cge.tmp.menu.components.ViceButton;
 import org.foxesworld.cge.tmp.menu.xml.*;
 import org.foxesworld.cge.tmp.menu.xml.ComponentBuilder;
 import org.slf4j.Logger;
@@ -45,7 +44,7 @@ public final class XmlMenuBuilder {
         try {
             return JAXBContext.newInstance(
                     MenuXml.class, ScreenXml.class, SceneXml.class, ButtonXml.class,
-                    TitleXml.class, TabsXml.class, TabXml.class, SliderXml.class, CheckboxXml.class, PanelXml.class
+                    TextXml.class, TabsXml.class, TabXml.class, SliderXml.class, CheckboxXml.class, PanelXml.class
             );
         } catch (JAXBException e) {
             throw new RuntimeException("Failed to initialize JAXBContext for menu building.", e);

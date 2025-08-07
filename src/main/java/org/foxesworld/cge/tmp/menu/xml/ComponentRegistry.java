@@ -21,7 +21,7 @@ public class ComponentRegistry {
     }
 
     private void registerDefaultBuilders(XmlMenuBuilder mainBuilder) {
-        register(TitleXml.class, new TitleBuilder());
+        register(TextXml.class, new TextBuilder());
         register(ButtonXml.class, new ButtonBuilder());
         register(SliderXml.class, new SliderBuilder());
         register(CheckboxXml.class, new CheckboxBuilder());
