@@ -29,9 +29,13 @@ public class ComponentRegistry {
         register(PanelXml.class, new PanelBuilder(mainBuilder));
     }
 
-    public <T extends ComponentXml> void register(Class<T> modelClass, org.foxesworld.cge.tmp.menu.xml.ComponentBuilder<T> builder) {
-        builders.put(modelClass, builder);
-        LOGGER.debug("Registered component builder for {}", modelClass.getSimpleName());
+    private <T extends ComponentXml> void register(Class<T> modelClass, org.foxesworld.cge.tmp.menu.xml.ComponentBuilder<T> builder) {
+        if (!builders.containsKey(modelClass)) {
+            builders.put(modelClass, builder);
+            LOGGER.debug("Registered component builder for {}", modelClass.getSimpleName());
+        } else {
+            LOGGER.warn("Component {} is already registered!", modelClass.getSimpleName());
+        }
     }
 
     public ComponentBuilder<? extends ComponentXml> getBuilderFor(ComponentXml model) {

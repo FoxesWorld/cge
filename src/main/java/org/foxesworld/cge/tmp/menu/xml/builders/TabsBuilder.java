@@ -35,7 +35,7 @@ public class TabsBuilder implements ComponentBuilder<TabsXml> {
                 ? Orientation.VERTICAL
                 : Orientation.HORIZONTAL;
 
-        ViceTabs tabComponent = new ViceTabs(context.app().getAssetManager(), context.buttonStyle(), orientation);
+        ViceTabs tabComponent = new ViceTabs(model.id, context.app().getAssetManager(), context.buttonStyle(), orientation);
 
         for (TabXml tabModel : model.tabs) {
             Node contentNode = new Node("TabContent: " + tabModel.title);

@@ -16,6 +16,7 @@ public class CheckboxBuilder implements ComponentBuilder<CheckboxXml> {
     @Override
     public ViceCheckbox build(CheckboxXml model, Node parent, BuildContext context) {
         ViceCheckbox checkbox = new ViceCheckbox(
+                model.id,
                 context.app().getAssetManager(),
                 model.text,
                 context.buttonStyle().fontPath(),

@@ -14,7 +14,7 @@
     <screen>
         <panel id="titlePanel" anchor="TOP_LEFT" dpiScale="1.0" height="35%" bgColor="#1d84de" cornerRadius="0" bgAlpha="0.5">
             <components>
-                <title text="Calista Game Engine" color="#1baade" fontSize="4vh" />
+                <title id="title" text="Calista Game Engine" color="#1baade" fontSize="4vh" />
                 <title text="ALPHA PreBuild 0.0.3-r" fontSize="3vw" />
                 <title text="EXPERIMENTAL" color="#c027a9" fontSize="2vw" />
             </components>

@@ -13,7 +13,7 @@ import org.foxesworld.cge.tmp.menu.xml.TabXml;
 import java.util.ArrayList;
 import java.util.List;
 
-public final class ViceTabs implements InteractiveComponent, MenuComponent {
+public final class ViceTabs extends UIComponent implements InteractiveComponent, MenuComponent {
 
     private record Tab(ViceButton button, Node contentNode, List<Object> content) {}
 
@@ -28,25 +28,32 @@ public final class ViceTabs implements InteractiveComponent, MenuComponent {
 
     private int activeTabIndex = -1;
     private ViceSlider activeSlider = null;
-    private Vector2f buttonBarSize;
-    private float contentWidth, contentHeight;
+    private float contentWidth = 0f;
+    private float contentHeight = 0f;
+    private Vector2f buttonBarSize = new Vector2f();
 
     private final Vector2f tabsWorldPos = new Vector2f();
     private final Vector2f contentLocalCursor = new Vector2f();
 
-    public ViceTabs(AssetManager assetManager, ViceButton.Style buttonStyle, Orientation orientation) {
+    private static final float BUTTON_WIDTH = 180f;
+    private static final float BUTTON_HEIGHT = 45f;
+    private static final float SPACING = 10f;
+    private static final float PADDING = 10f;
+
+    public ViceTabs(String id, AssetManager assetManager, ViceButton.Style buttonStyle, Orientation orientation) {
+        super(id);
         this.assetManager = assetManager;
         this.buttonStyle = buttonStyle;
         this.orientation = orientation;
 
-        this.tabBarBackground = createTabBackground(new ColorRGBA(0.05f, 0.05f, 0.05f, 0.75f), "TabsBarBackground");
-        this.contentBackground = createTabBackground(new ColorRGBA(0.1f, 0.1f, 0.1f, 0.65f), "TabsContentBackground");
+        this.tabBarBackground = createBackground(new ColorRGBA(0.05f, 0.05f, 0.05f, 0.75f), "TabBarBG");
+        this.contentBackground = createBackground(new ColorRGBA(0.1f, 0.1f, 0.1f, 0.65f), "ContentBG");
 
         tabsNode.attachChild(tabBarBackground);
         tabsNode.attachChild(contentBackground);
     }
 
-    private Geometry createTabBackground(ColorRGBA color, String name) {
+    private Geometry createBackground(ColorRGBA color, String name) {
         Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
         mat.setColor("Color", color);
         mat.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
@@ -57,10 +64,9 @@ public final class ViceTabs implements InteractiveComponent, MenuComponent {
 
     public void addTab(TabXml tabXml, Node content, List<Object> createdObjects) {
         int index = tabs.size();
-        ViceButton tabButton = new ViceButton(assetManager, tabXml.title, buttonStyle, () -> selectTab(index), tabXml.iconPath, tabXml.iconSize);
-        tabs.add(new Tab(tabButton, content, createdObjects));
-        tabsNode.attachChild(tabButton.getNode());
-        tabsNode.attachChild(content);
+        ViceButton button = new ViceButton("tab-" + index, assetManager, tabXml.title, buttonStyle, () -> selectTab(index), tabXml.iconPath, tabXml.iconSize);
+        tabs.add(new Tab(button, content, createdObjects));
+        tabsNode.attachChild(button.getNode());
     }
 
     public void finalizeLayout(float contentWidth, float contentHeight) {
@@ -68,7 +74,7 @@ public final class ViceTabs implements InteractiveComponent, MenuComponent {
         this.contentHeight = contentHeight;
 
         this.buttonBarSize = layoutTabButtons();
-        layoutContentArea(contentWidth, contentHeight, buttonBarSize);
+        layoutContentArea();
 
         if (!tabs.isEmpty()) {
             selectTab(0);
@@ -77,28 +83,23 @@ public final class ViceTabs implements InteractiveComponent, MenuComponent {
 
     private Vector2f layoutTabButtons() {
         float offset = 0f;
-        float maxDim = 0f;
-        float spacing = 10f;
-        float btnWidth = 180f, btnHeight = 45f;
-        float padding = 10f;
+        float maxButtonSize = 0f;
 
         for (Tab tab : tabs) {
-            tab.button().setSize(btnWidth, btnHeight);
-            //tab.button().setLabelSize(28f);
-
+            tab.button().setSize(BUTTON_WIDTH, BUTTON_HEIGHT);
             if (orientation == Orientation.HORIZONTAL) {
-                tab.button().setPosition(padding + offset, padding);
-                offset += btnWidth + spacing;
-                maxDim = Math.max(maxDim, btnHeight);
+                tab.button().setPosition(PADDING + offset, PADDING);
+                offset += BUTTON_WIDTH + SPACING;
+                maxButtonSize = BUTTON_HEIGHT;
             } else {
-                tab.button().setPosition(padding, padding + offset);
-                offset += btnHeight + spacing;
-                maxDim = Math.max(maxDim, btnWidth);
+                tab.button().setPosition(PADDING, PADDING + offset);
+                offset += BUTTON_HEIGHT + SPACING;
+                maxButtonSize = BUTTON_WIDTH;
             }
         }
 
-        float barWidth = (orientation == Orientation.HORIZONTAL) ? this.contentWidth : (maxDim + 2 * padding);
-        float barHeight = (orientation == Orientation.HORIZONTAL) ? (maxDim + 2 * padding) : (offset - spacing + 2 * padding);
+        float barWidth = (orientation == Orientation.HORIZONTAL) ? contentWidth : (maxButtonSize + 2 * PADDING);
+        float barHeight = (orientation == Orientation.HORIZONTAL) ? (maxButtonSize + 2 * PADDING) : (offset - SPACING + 2 * PADDING);
 
         ((Quad) tabBarBackground.getMesh()).updateGeometry(barWidth, barHeight);
         tabBarBackground.setLocalTranslation(0, 0, 0);
@@ -106,66 +107,41 @@ public final class ViceTabs implements InteractiveComponent, MenuComponent {
         return new Vector2f(barWidth, barHeight);
     }
 
-    private void layoutContentArea(float width, float height, Vector2f buttonBarSize) {
-        float xOffset = orientation == Orientation.HORIZONTAL ? 0 : buttonBarSize.x;
-        float yOffset = orientation == Orientation.HORIZONTAL ? -height : 0;
+    private void layoutContentArea() {
+        float xOffset = (orientation == Orientation.HORIZONTAL) ? 0 : buttonBarSize.x;
+        float yOffset = (orientation == Orientation.HORIZONTAL) ? -contentHeight : 0;
 
-        ((Quad) contentBackground.getMesh()).updateGeometry(width, height);
+        ((Quad) contentBackground.getMesh()).updateGeometry(contentWidth, contentHeight);
         contentBackground.setLocalTranslation(xOffset, yOffset, -1);
 
         for (Tab tab : tabs) {
             tab.contentNode().setLocalTranslation(xOffset, yOffset, 0);
+            tabsNode.attachChild(tab.contentNode());
         }
     }
 
     private void selectTab(int index) {
         if (index < 0 || index >= tabs.size() || index == activeTabIndex) return;
+        activeTabIndex = index;
 
         for (int i = 0; i < tabs.size(); i++) {
             Tab tab = tabs.get(i);
             boolean isActive = (i == index);
 
             tab.button().setSelected(isActive);
-            //tab.button().setUnderlineVisible(!isActive);
-
             tab.contentNode().setCullHint(isActive ? Node.CullHint.Inherit : Node.CullHint.Always);
-            if (isActive) {
-                for (Object item : tab.content()) {
-                    ((InteractiveComponent) item).setActive(true);
-                }
-                if (tab.contentNode().getParent() == null) {
-                    tabsNode.attachChild(tab.contentNode());
-                }
-            } else {
-                for (Object item : tab.content()) {
-                    ((InteractiveComponent) item).setActive(false);
-                }
-                // optionally detach node (depends on scene graph policy)
-                tabsNode.detachChild(tab.contentNode());
+
+            for (Object item : tab.content()) {
+                ((InteractiveComponent) item).setActive(isActive);
             }
         }
     }
-
 
     @Override
     public void update(float tpf) {
         for (Tab tab : tabs) {
             tab.button().update(tpf);
-
-            //if (isTabActive(tab)) {
-                //for (Object item : tab.content()) {
-                    //tab.contentNode.attachChild(((MenuComponent) item).getNode());
-                //}
-            //}
         }
-    }
-
-    private boolean isTabActive(Tab tab) {
-        return tab.contentNode().getCullHint() == Node.CullHint.Inherit;
-    }
-
-    private Tab getActiveTab() {
-        return (activeTabIndex >= 0 && activeTabIndex < tabs.size()) ? tabs.get(activeTabIndex) : null;
     }
 
     @Override
@@ -218,19 +194,13 @@ public final class ViceTabs implements InteractiveComponent, MenuComponent {
     }
 
     @Override
-    public void setSize(float width, float height) {
-
-    }
-
-    @Override
     public float getWidth() {
         return contentWidth;
     }
 
-    private void transformToContentSpace(Vector2f cursor, Tab activeTab) {
-        contentLocalCursor.set(cursor)
-                .subtractLocal(tabsWorldPos)
-                .subtractLocal(activeTab.contentNode().getLocalTranslation().x, activeTab.contentNode().getLocalTranslation().y);
+    @Override
+    public void setSize(float width, float height) {
+        finalizeLayout(width, height);
     }
 
     @Override
@@ -252,5 +222,15 @@ public final class ViceTabs implements InteractiveComponent, MenuComponent {
     @Override
     public Node getNode() {
         return tabsNode;
+    }
+
+    private Tab getActiveTab() {
+        return (activeTabIndex >= 0 && activeTabIndex < tabs.size()) ? tabs.get(activeTabIndex) : null;
+    }
+
+    private void transformToContentSpace(Vector2f cursor, Tab activeTab) {
+        contentLocalCursor.set(cursor)
+                .subtractLocal(tabsWorldPos)
+                .subtractLocal(activeTab.contentNode().getLocalTranslation().x, activeTab.contentNode().getLocalTranslation().y);
     }
 }

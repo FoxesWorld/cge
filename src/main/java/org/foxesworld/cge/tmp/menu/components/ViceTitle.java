@@ -8,12 +8,13 @@ import com.jme3.scene.Node;
 import org.foxesworld.cge.core.io.TTFrenderer;
 import org.foxesworld.cge.core.utils.ColorUtils;
 
-public class ViceTitle implements InteractiveComponent, MenuComponent {
+public class ViceTitle extends UIComponent implements InteractiveComponent, MenuComponent {
     private final Node titleNode;
     private final TrueTypeContainer ttc;
     private final TTFrenderer ttfRenderer;
 
-    public ViceTitle(AssetManager assetManager, String text, int fontSize, String color, String fontPath) {
+    public ViceTitle(String id, AssetManager assetManager, String text, int fontSize, String color, String fontPath) {
+        super(id);
         this.titleNode = new Node("ViceTitle: " + text);
         ttfRenderer = new TTFrenderer(assetManager);
         ttfRenderer.generateFont("assets/Interface/fonts/Docker One.ttf", Style.Plain, fontSize);

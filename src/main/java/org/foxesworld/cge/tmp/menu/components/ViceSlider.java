@@ -1,10 +1,8 @@
 package org.foxesworld.cge.tmp.menu.components;
 
 import com.jme3.asset.AssetManager;
-import com.jme3.audio.AudioNode;
 import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
-import com.jme3.font.Rectangle;
 import com.jme3.material.Material;
 import com.jme3.material.RenderState.BlendMode;
 import com.jme3.math.ColorRGBA;
@@ -14,14 +12,10 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.shape.Quad;
+import com.jme3.scene.shape.Sphere;
 import org.foxesworld.cge.core.utils.ColorUtils;
 
-/**
- * Стильный слайдер UI-компонент с поддержкой кастомизации и плавной анимацией.
- * Значение меняется по клику/перетаскиванию по полосе слайдера.
- * При нажатии воспроизводится звук, как в GTA V.
- */
-public final class ViceSlider implements InteractiveComponent, MenuComponent, SoundComponent {
+public final class ViceSlider extends UIComponent implements InteractiveComponent, MenuComponent, SoundComponent {
 
     private static final float DEFAULT_HEIGHT = 12f;
     private static final float DEFAULT_FONT_SIZE = 24f;
@@ -31,6 +25,7 @@ public final class ViceSlider implements InteractiveComponent, MenuComponent, So
     private static final float VALUE_LABEL_HEIGHT = 24f;
     private static final ColorRGBA DEFAULT_FILL_COLOR = new ColorRGBA(0f, 1f, 0.3f, 1f);
     private static final ColorRGBA DEFAULT_BORDER_COLOR = new ColorRGBA(1f, 1f, 1f, 0.5f);
+    private static final float THUMB_RADIUS = 10f;
 
     private final Node sliderNode;
     private final Geometry barFill;
@@ -50,14 +45,18 @@ public final class ViceSlider implements InteractiveComponent, MenuComponent, So
     private final ColorRGBA fillColor;
     private final ColorRGBA borderColor;
 
+    // Новый ползунок — круглый thumb
+    private final Geometry thumb;
+    private final Material thumbMaterial;
+
     private ValueChangeListener valueChangeListener;
 
     public interface ValueChangeListener {
         void onValueChanged(float newValue);
     }
 
-    public ViceSlider(AssetManager assetManager, String text, String hexColor, ViceButton.Style buttonStyle,
-                      float initialValue, String bind) {
+    public ViceSlider(String id, AssetManager assetManager, String text, String hexColor, ViceButton.Style buttonStyle, float initialValue, String bind) {
+        super(id);
         this.assetManager = assetManager;
         this.bind = bind;
         this.value = FastMath.clamp(initialValue, 0f, 1f);
@@ -65,21 +64,17 @@ public final class ViceSlider implements InteractiveComponent, MenuComponent, So
         this.fillColor = hexColor.isEmpty() ? DEFAULT_FILL_COLOR.clone() : ColorUtils.fromHexString(hexColor);
         this.borderColor = DEFAULT_BORDER_COLOR.clone();
 
-        // Инициализация узла
         this.sliderNode = new Node("ViceSlider: " + text);
 
-        // Текстовая метка
         BitmapFont font = assetManager.loadFont(buttonStyle.fontPath());
         this.label = new BitmapText(font);
         label.setText(text.toUpperCase());
         label.setColor(ColorRGBA.White);
         label.setSize(DEFAULT_FONT_SIZE);
 
-        // Бордер
         this.borderNode = new Node("SliderBorder");
         createBorder();
 
-        // Заливка
         Material fillMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
         fillMat.setColor("Color", fillColor);
         fillMat.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
@@ -87,17 +82,26 @@ public final class ViceSlider implements InteractiveComponent, MenuComponent, So
         this.barFill = new Geometry("SliderFill", new Quad(1, height - BORDER_THICKNESS * 2));
         barFill.setMaterial(fillMat);
 
-        // Значение
         this.valueLabel = label.clone();
-        valueLabel.setBox(new Rectangle(0, 0, VALUE_LABEL_WIDTH, VALUE_LABEL_HEIGHT));
+        valueLabel.setBox(new com.jme3.font.Rectangle(0, 0, VALUE_LABEL_WIDTH, VALUE_LABEL_HEIGHT));
         valueLabel.setAlignment(BitmapFont.Align.Center);
         valueLabel.setVerticalAlignment(BitmapFont.VAlign.Center);
 
-        // Сборка
+        // Создаем thumb — сферу радиусом THUMB_RADIUS
+        Sphere sphere = new Sphere(16, 16, THUMB_RADIUS);
+        thumb = new Geometry("SliderThumb", sphere);
+        thumbMaterial = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        thumbMaterial.setColor("Color", fillColor);
+        thumbMaterial.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
+        thumb.setMaterial(thumbMaterial);
+        // По умолчанию положим thumb в начальную позицию — при value=initialValue
+        updateThumbPosition();
+
         sliderNode.attachChild(label);
         sliderNode.attachChild(borderNode);
         sliderNode.attachChild(barFill);
         sliderNode.attachChild(valueLabel);
+        sliderNode.attachChild(thumb);
 
         updateLayout();
         updateVisuals();
@@ -141,6 +145,7 @@ public final class ViceSlider implements InteractiveComponent, MenuComponent, So
         label.setLocalTranslation(0, height + DEFAULT_FONT_SIZE + 4, 0);
         updateBorder();
         valueLabel.setLocalTranslation(width + 10f, height, 0);
+        updateThumbPosition();
     }
 
     public void setPosition(float x, float y) {
@@ -151,6 +156,7 @@ public final class ViceSlider implements InteractiveComponent, MenuComponent, So
         barFill.setLocalScale(width * displayedValue, 1, 1);
         barFill.setLocalTranslation(BORDER_THICKNESS, BORDER_THICKNESS, 0.1f);
         updateValueLabel();
+        updateThumbPosition();
     }
 
     private void updateValueLabel() {
@@ -171,20 +177,12 @@ public final class ViceSlider implements InteractiveComponent, MenuComponent, So
         }
     }
 
-    public float getValue() {
-        return value;
-    }
-
-    public void setFillColor(ColorRGBA color) {
-        fillColor.set(color);
-        barFill.getMaterial().setColor("Color", fillColor);
-    }
-
-    public void setBorderColor(ColorRGBA color) {
-        borderColor.set(color);
-        for (int i = 0; i < borderNode.getQuantity(); i++) {
-            ((Geometry) borderNode.getChild(i)).getMaterial().setColor("Color", borderColor);
-        }
+    private void updateThumbPosition() {
+        // thumb по горизонтали в позиции по текущему значению value
+        float posX = BORDER_THICKNESS + displayedValue * width;
+        // По вертикали — центрируем по высоте слайдера (примерно половина высоты)
+        float posY = height / 2f;
+        thumb.setLocalTranslation(posX, posY, 0.2f);
     }
 
     @Override
@@ -208,9 +206,7 @@ public final class ViceSlider implements InteractiveComponent, MenuComponent, So
         Vector2f worldPos = new Vector2f(worldPos3.x, worldPos3.y);
         float relativeX = cursor.x - worldPos.x;
         if (relativeX >= 0 && relativeX <= width) {
-            //clickSound.playInstance();
             setValue(relativeX / width);
-            System.out.println("Pressed: " + this + " | Value: " + value + " | RelX: " + relativeX + " | Width: " + width);
         }
     }
 
@@ -231,7 +227,8 @@ public final class ViceSlider implements InteractiveComponent, MenuComponent, So
 
     @Override
     public void setSize(float width, float height) {
-
+        // Игнорируем высоту - она фиксирована
+        setSize(width);
     }
 
     @Override

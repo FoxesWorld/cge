@@ -5,44 +5,51 @@ import jakarta.xml.bind.annotation.*;
 import java.util.List;
 
 /**
- * XML model for a Panel component. A panel acts as a container for other components
- * and can have its own background color.
+ * XML model for a Panel component.
+ * A panel is a container that can hold other components, define layout,
+ * spacing, background styles, and more.
  */
 @XmlRootElement(name = "panel")
-public class PanelXml extends ComponentXml {// Важно: наследуемся от ComponentXml
+@XmlAccessorType(XmlAccessType.FIELD)
+public class PanelXml extends ComponentXml {
 
-    @XmlAttribute
-    private float dpiScale;
+    // === Identification & Meta ===
 
     @XmlAttribute
     private String anchor;
-    @XmlAttribute
-    private String id;
 
-    @XmlAttribute
-    public String bgColor;
+    @XmlAttribute(name = "dpiScale")
+    private float dpiScale = 1.0f;
 
-    @XmlAttribute
-    public Float bgAlpha;
+    // === Styling ===
 
-    @XmlAttribute
-    public Float padding;
+    /** Background color (hex or rgba string) */
+    @XmlAttribute(name = "bgColor")
+    private String bgColor;
 
-    @XmlAttribute
-    public Float spacing;
+    /** Background transparency (0.0 - 1.0) */
+    @XmlAttribute(name = "bgAlpha")
+    private Float bgAlpha;
 
-    @XmlAttribute
-    public Float cornerRadius;
+    /** Space between edge of panel and inner content */
+    @XmlAttribute(name = "padding")
+    private Float padding;
+
+    /** Space between components inside the panel */
+    @XmlAttribute(name = "spacing")
+    private Float spacing;
+
+    /** Radius for rounded corners (in px or units) */
+    @XmlAttribute(name = "cornerRadius")
+    private Float cornerRadius;
+
+    // === Children Components ===
 
     /**
-     * This annotation specifies that the list of components is wrapped
-     * within a single <components> XML element.
+     * Contains child components nested in this panel.
+     * Each component is polymorphically mapped by its XML tag.
      */
     @XmlElementWrapper(name = "components")
-    /**
-     * This annotation tells JAXB how to map the inner XML tags (like <button>, <panel>)
-     * to concrete Java classes. This is crucial for handling polymorphism.
-     */
     @XmlElements({
             @XmlElement(name = "button", type = ButtonXml.class),
             @XmlElement(name = "panel", type = PanelXml.class),
@@ -51,7 +58,9 @@ public class PanelXml extends ComponentXml {// Важно: наследуемс�
             @XmlElement(name = "title", type = TitleXml.class),
             @XmlElement(name = "tabs", type = TabsXml.class)
     })
-    public List<ComponentXml> components;
+    private List<ComponentXml> components;
+
+    // === Getters ===
 
     public String getId() {
         return id;
@@ -63,5 +72,67 @@ public class PanelXml extends ComponentXml {// Важно: наследуемс�
 
     public float getDpiScale() {
         return dpiScale;
+    }
+
+    public String getBgColor() {
+        return bgColor;
+    }
+
+    public Float getBgAlpha() {
+        return bgAlpha;
+    }
+
+    public Float getPadding() {
+        return padding;
+    }
+
+    public Float getSpacing() {
+        return spacing;
+    }
+
+    public Float getCornerRadius() {
+        return cornerRadius;
+    }
+
+    public List<ComponentXml> getComponents() {
+        return components;
+    }
+
+    // === Setters (optional for future runtime UI editing support) ===
+
+    public void setId(String id) {
+        this.id = id;
+    }
+
+    public void setAnchor(String anchor) {
+        this.anchor = anchor;
+    }
+
+    public void setDpiScale(float dpiScale) {
+        this.dpiScale = dpiScale;
+    }
+
+    public void setBgColor(String bgColor) {
+        this.bgColor = bgColor;
+    }
+
+    public void setBgAlpha(Float bgAlpha) {
+        this.bgAlpha = bgAlpha;
+    }
+
+    public void setPadding(Float padding) {
+        this.padding = padding;
+    }
+
+    public void setSpacing(Float spacing) {
+        this.spacing = spacing;
+    }
+
+    public void setCornerRadius(Float cornerRadius) {
+        this.cornerRadius = cornerRadius;
+    }
+
+    public void setComponents(List<ComponentXml> components) {
+        this.components = components;
     }
 }

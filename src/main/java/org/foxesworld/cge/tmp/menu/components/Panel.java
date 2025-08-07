@@ -7,7 +7,6 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.renderer.Camera;
 import com.jme3.scene.Geometry;
-import com.jme3.scene.Node;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,31 +14,12 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * UI Panel with relative sizing, anchor positioning, dpi scaling, and vertical layout.
+ * Adaptive UI Panel with relative sizing, DPI scaling, anchor positioning and layout control.
+ * Наследуется от UIComponent, расширяет базовые возможности.
  */
-public class Panel implements MenuComponent, InteractiveComponent {
+public class Panel extends UIComponent implements MenuComponent, InteractiveComponent {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Panel.class);
-
-    private final String id;
-    private final Node panelNode = new Node();
-    private final Geometry background;
-    private final Style style;
-    private final List<MenuComponent> children = new ArrayList<>();
-    private final SimpleApplication app;
-
-    // Layout
-    private float width, height;
-    private float padding, spacing;
-    private float dpiScale = 1f;
-    private float nextY = 0;
-
-    // Relative bounds
-    private String relX = null, relY = null, relW = null, relH = null;
-    private Anchor anchor = Anchor.TOP_LEFT;
-
-    private int lastScreenW = -1, lastScreenH = -1;
-    private boolean dirtyLayout = true;
 
     public enum Anchor {
         TOP_LEFT,
@@ -53,9 +33,38 @@ public class Panel implements MenuComponent, InteractiveComponent {
         BOTTOM_RIGHT
     }
 
+    public enum LayoutDirection {
+        VERTICAL, HORIZONTAL
+    }
+
+    public enum Alignment {
+        START, CENTER, END
+    }
+
+    // ==== FIELDS ====
+
+    private final SimpleApplication app;
+    private final Geometry background;
+    private final Style style;
+    private final List<MenuComponent> children = new ArrayList<>();
+
+    private float width, height;
+    private float padding, spacing;
+    private LayoutDirection layout = LayoutDirection.VERTICAL;
+    private Alignment alignment = Alignment.START;
+    private boolean autoSize = false;
+
+    // Relative positioning strings (e.g. "50%", "200")
+    private String relX, relY, relW, relH;
+    private Anchor anchor = Anchor.TOP_LEFT;
+
+    private int lastScreenW = -1, lastScreenH = -1;
+    private boolean dirtyLayout = true;
+
+    // ==== CONSTRUCTOR ====
 
     public Panel(String id, SimpleApplication app, Style style, float padding, float spacing) {
-        this.id = id;
+        super(id);
         this.app = app;
         this.style = style;
         this.padding = padding;
@@ -67,11 +76,28 @@ public class Panel implements MenuComponent, InteractiveComponent {
 
         this.background = new Geometry("PanelBackground");
         this.background.setMaterial(bgMat);
-        panelNode.attachChild(background);
+        this.node.attachChild(background);
 
-        app.getGuiNode().attachChild(panelNode);
+        app.getGuiNode().attachChild(node);
 
         LOGGER.debug("Panel '{}' created", id);
+    }
+
+    // ==== CONFIGURATION SETTERS ====
+
+    public void setLayoutDirection(LayoutDirection layout) {
+        this.layout = layout;
+        dirtyLayout = true;
+    }
+
+    public void setAlignment(Alignment alignment) {
+        this.alignment = alignment;
+        dirtyLayout = true;
+    }
+
+    public void setAutoSize(boolean autoSize) {
+        this.autoSize = autoSize;
+        dirtyLayout = true;
     }
 
     public void setRelativeBounds(String x, String y, String w, String h) {
@@ -87,17 +113,20 @@ public class Panel implements MenuComponent, InteractiveComponent {
         dirtyLayout = true;
     }
 
+    @Override
     public void setDpiScale(float scale) {
-        this.dpiScale = scale;
+        super.setDpiScale(scale);
         dirtyLayout = true;
     }
 
     public void addComponent(MenuComponent component) {
         if (component == null) return;
         children.add(component);
-        panelNode.attachChild(component.getNode());
+        node.attachChild(component.getNode());
         dirtyLayout = true;
     }
+
+    // ==== UPDATE ====
 
     @Override
     public void update(float tpf) {
@@ -116,8 +145,12 @@ public class Panel implements MenuComponent, InteractiveComponent {
             dirtyLayout = false;
         }
 
-        for (MenuComponent c : children) c.update(tpf);
+        for (MenuComponent c : children) {
+            c.update(tpf);
+        }
     }
+
+    // ==== LAYOUT & POSITIONING ====
 
     private void applyBounds(int sw, int sh) {
         float x = relX != null ? parseRelative(relX, sw) : 0;
@@ -128,39 +161,28 @@ public class Panel implements MenuComponent, InteractiveComponent {
         w *= dpiScale;
         h *= dpiScale;
 
-        setSize(w, h);
+        if (!autoSize) setSize(w, h);
         applyAnchorPosition(x, y);
     }
 
     private void applyAnchorPosition(float x, float y) {
         Vector2f anchorOffset = getAnchorOffset(anchor, width, height);
-        float posX = x + anchorOffset.x;
-        float posY = y + anchorOffset.y;
-        panelNode.setLocalTranslation(posX, posY, 0);
+        node.setLocalTranslation(x + anchorOffset.x, y + anchorOffset.y, 0);
     }
 
     private Vector2f getAnchorOffset(Anchor anchor, float w, float h) {
-        float xMul = 0f;
-        float yMul = 0f;
-
-        switch (anchor) {
-            case TOP_LEFT       -> { xMul = 0f;   yMul = 0f; }
-            case TOP_CENTER     -> { xMul = -0.5f; yMul = 0f; }
-            case TOP_RIGHT      -> { xMul = -1f;  yMul = 0f; }
-
-            case CENTER_LEFT    -> { xMul = 0f;   yMul = -0.5f; }
-            case CENTER         -> { xMul = -0.5f; yMul = -0.5f; }
-            case CENTER_RIGHT   -> { xMul = -1f;  yMul = -0.5f; }
-
-            case BOTTOM_LEFT    -> { xMul = 0f;   yMul = -1f; }
-            case BOTTOM_CENTER  -> { xMul = -0.5f; yMul = -1f; }
-            case BOTTOM_RIGHT   -> { xMul = -1f;  yMul = -1f; }
-        }
-
-        return new Vector2f(w * xMul, h * yMul);
+        return switch (anchor) {
+            case TOP_LEFT       -> new Vector2f(0, 0);
+            case TOP_CENTER     -> new Vector2f(-w / 2f, 0);
+            case TOP_RIGHT      -> new Vector2f(-w, 0);
+            case CENTER_LEFT    -> new Vector2f(0, -h / 2f);
+            case CENTER         -> new Vector2f(-w / 2f, -h / 2f);
+            case CENTER_RIGHT   -> new Vector2f(-w, -h / 2f);
+            case BOTTOM_LEFT    -> new Vector2f(0, -h);
+            case BOTTOM_CENTER  -> new Vector2f(-w / 2f, -h);
+            case BOTTOM_RIGHT   -> new Vector2f(-w, -h);
+        };
     }
-
-
 
     private float parseRelative(String val, float total) {
         val = val.trim();
@@ -184,34 +206,61 @@ public class Panel implements MenuComponent, InteractiveComponent {
     public void setSize(float width, float height) {
         this.width = width;
         this.height = height;
-        this.nextY = height - padding;
-
         background.setMesh(new RoundedQuad(width, height, style.cornerRadius, 64));
         background.setLocalTranslation(width / 2f, height / 2f, -1f);
     }
 
     private void relayout() {
-        nextY = height - padding;
+        float contentWidth = width - padding * 2;
+        float contentHeight = height - padding * 2;
+
+        float posX = padding;
+        float posY = height - padding;
+
+        float maxX = padding;
+        float maxY = padding;
+
         for (MenuComponent child : children) {
-            float cw = width - padding * 2;
-            float ch = child.getHeight(); // предполагается, что уже масштабировано один раз
-            child.setSize(cw, ch); // НЕ умножаем повторно!
-            child.getNode().setLocalTranslation(padding, nextY - ch, 0);
-            nextY -= (ch + spacing);
+            float cw = layout == LayoutDirection.VERTICAL ? contentWidth : child.getWidth();
+            float ch = child.getHeight();
+
+            child.setSize(cw, ch);
+
+            if (layout == LayoutDirection.VERTICAL) {
+                posY -= ch;
+                child.getNode().setLocalTranslation(posX, posY, 0);
+                posY -= spacing;
+            } else {
+                child.getNode().setLocalTranslation(posX, posY - ch, 0);
+                posX += cw + spacing;
+            }
+
+            maxX = Math.max(maxX, posX);
+            maxY = Math.max(maxY, height - posY + padding);
+        }
+
+        if (autoSize) {
+            float newWidth = layout == LayoutDirection.VERTICAL ? width : maxX + padding;
+            float newHeight = layout == LayoutDirection.VERTICAL ? height - posY + padding : height;
+            setSize(newWidth, newHeight);
         }
     }
 
+    // ==== INTERACTIVE METHODS ====
 
-
-    @Override public Node getNode() { return panelNode; }
-    @Override public float getWidth() { return width; }
-    @Override public float getHeight() { return height; }
     @Override public boolean intersects(Vector2f pos) { return false; }
     @Override public void setHovered(boolean hovered) {}
     @Override public void handleMousePress(Vector2f cursor) {}
     @Override public void handleMouseDrag(Vector2f cursor) {}
     @Override public void handleMouseRelease() {}
     @Override public void setActive(boolean active) {}
+
+    // ==== GETTERS ====
+
+    @Override public float getWidth() { return width; }
+    @Override public float getHeight() { return height; }
+
+    // ==== STYLE RECORD ====
 
     public record Style(ColorRGBA backgroundColor, float cornerRadius) {
         public static Style getDefaultStyle() {

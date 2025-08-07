@@ -12,6 +12,8 @@ public interface MenuComponent {
      */
     Node getNode();
 
+    String getId();
+
     /**
      * Updates the component's state and animations.
      */

@@ -17,6 +17,7 @@ public class SliderBuilder implements ComponentBuilder<SliderXml> {
     @Override
     public ViceSlider build(SliderXml model, Node parent, BuildContext context) {
         ViceSlider slider = new ViceSlider(
+                model.id,
                 context.app().getAssetManager(),
                 model.text,
                 model.fillColor,

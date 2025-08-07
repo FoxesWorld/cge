@@ -15,6 +15,9 @@ public abstract class ComponentXml {
     @XmlAttribute
     public String text;
 
+    @XmlAttribute
+    public String id;
+
     /**
      * Horizontal position or offset.
      * Can be an absolute value (e.g., "100") or percentage (e.g., "50%").

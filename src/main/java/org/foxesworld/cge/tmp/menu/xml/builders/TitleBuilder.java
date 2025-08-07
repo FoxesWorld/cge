@@ -25,6 +25,7 @@ public class TitleBuilder implements ComponentBuilder<TitleXml> {
         float fontSizePx = parseFontSize(model, context);
         // Instantiate title
         ViceTitle title = new ViceTitle(
+                model.id,
                 context.app().getAssetManager(),
                 model.text,
                 Math.round(fontSizePx),

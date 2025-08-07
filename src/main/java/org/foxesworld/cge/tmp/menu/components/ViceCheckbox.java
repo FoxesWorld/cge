@@ -11,47 +11,34 @@ import com.jme3.math.Quaternion;
 import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
-import com.jme3.scene.Spatial;
 import com.jme3.ui.Picture;
 
-/**
- * A modern, animated checkbox component for a jMonkeyEngine UI.
- * Features a smooth "bounce" animation for the checkmark, which is rendered
- * from a texture and correctly scales and rotates from the center of its frame.
- */
-public final class ViceCheckbox implements InteractiveComponent, MenuComponent, SoundComponent {
+public final class ViceCheckbox extends UIComponent implements InteractiveComponent, MenuComponent, SoundComponent {
 
-    // --- Константы для настройки ---
     private static final float ANIM_SPEED = 20f;
     private static final float LABEL_GAP_MULTIPLIER = 0.4f;
-    private static final float CHECK_BOUNCE_MULTIPLIER = 1.15f; // "Отскок" до 115% от размера рамки
+    private static final float CHECK_BOUNCE_MULTIPLIER = 1.15f;
     private static final float CHECK_ROTATION_DEGREES = -20f;
 
-    // --- Цвета ---
     private static final ColorRGBA COLOR_FRAME = new ColorRGBA(0.8f, 0.8f, 0.8f, 0.9f);
     private static final ColorRGBA COLOR_HOVER = ColorRGBA.White.clone();
     private static final ColorRGBA COLOR_CHECK = new ColorRGBA(0.3f, 1f, 0.3f, 1f);
     private static final ColorRGBA COLOR_DISABLED_FRAME = new ColorRGBA(0.5f, 0.5f, 0.5f, 0.5f);
     private static final ColorRGBA COLOR_DISABLED_LABEL = new ColorRGBA(0.6f, 0.6f, 0.6f, 0.7f);
 
-    // --- Ресурсы ---
     private static final String ICON_FRAME_PATH = "assets/Interface/Icons/checkbox-frame.png";
     private static final String ICON_CHECK_PATH = "assets/Interface/Icons/check-mark.png";
 
-    // --- JME объекты ---
-    private final Node rootNode = new Node("ViceCheckbox");
     private final Picture framePicture;
     private final Picture checkPicture;
     private final BitmapText labelText;
     private final Material checkMaterial;
 
-    // --- Состояние ---
     private final String bind;
     private boolean isChecked;
     private boolean isActive = true;
     private boolean isHovered;
 
-    // --- Анимация ---
     private final ColorRGBA currentFrameColor = COLOR_FRAME.clone();
     private float currentCheckSize;
     private float currentCheckRotation;
@@ -60,9 +47,12 @@ public final class ViceCheckbox implements InteractiveComponent, MenuComponent, 
     private float size;
     private float baseLabelSize;
 
-    public ViceCheckbox(AssetManager assets, String text, String fontPath, boolean initialChecked, String bind) {
+    public ViceCheckbox(String id, AssetManager assets, String text, String fontPath, boolean initialChecked, String bind) {
+        super(id);
         this.bind = bind;
         this.isChecked = initialChecked;
+
+        node.setName("ViceCheckbox:" + id);
 
         framePicture = new Picture("frame");
         framePicture.setImage(assets, ICON_FRAME_PATH, true);
@@ -79,9 +69,9 @@ public final class ViceCheckbox implements InteractiveComponent, MenuComponent, 
         labelText.setText(text);
         labelText.setColor(ColorRGBA.White);
 
-        rootNode.attachChild(framePicture);
-        rootNode.attachChild(checkPicture);
-        rootNode.attachChild(labelText);
+        node.attachChild(framePicture);
+        node.attachChild(checkPicture);
+        node.attachChild(labelText);
     }
 
     @Override
@@ -125,7 +115,7 @@ public final class ViceCheckbox implements InteractiveComponent, MenuComponent, 
         float offset = (size - currentCheckSize) / 2f;
         checkPicture.setLocalTranslation(offset, offset, 1f);
 
-        checkPicture.setLocalRotation(new Quaternion().fromAngleAxis(currentCheckRotation * FastMath.DEG_TO_RAD, Vector3f.UNIT_Z));
+        checkPicture.setLocalRotation(new Quaternion().fromAngleAxis(currentCheckRotation * FastMath.DEG_TO_RAD, new Vector3f(0, 0, 1)));
 
         float alpha = FastMath.clamp(currentCheckSize / size, 0f, 1f);
         checkMaterial.setColor("Color", new ColorRGBA(COLOR_CHECK.r, COLOR_CHECK.g, COLOR_CHECK.b, alpha));
@@ -164,30 +154,51 @@ public final class ViceCheckbox implements InteractiveComponent, MenuComponent, 
         if (isActive) isChecked = !isChecked;
     }
 
-    // --- Getters и методы интерфейсов ---
-
-    /**
-     * Returns the root node of this component, which can be attached to a scene graph.
-     * This method fulfills the contract of the MenuComponent interface.
-     * @return The root Node containing all visual elements of this checkbox.
-     */
     @Override
     public Node getNode() {
-        return rootNode;
+        return node;
     }
 
-    @Override public float getWidth() { return size + (size * LABEL_GAP_MULTIPLIER) + labelText.getLineWidth(); }
-    @Override public float getHeight() { return size; }
-    @Override public void setActive(boolean active) { this.isActive = active; if (!active) isHovered = false; }
-    @Override public void setHovered(boolean hovered) { if (isActive) this.isHovered = hovered; }
-    @Override public boolean intersects(Vector2f cursor) {
-        Vector3f worldPos = rootNode.getWorldTranslation();
+    @Override
+    public float getWidth() {
+        return size + (size * LABEL_GAP_MULTIPLIER) + labelText.getLineWidth();
+    }
+
+    @Override
+    public float getHeight() {
+        return size;
+    }
+
+    @Override
+    public void setActive(boolean active) {
+        this.isActive = active;
+        if (!active) isHovered = false;
+    }
+
+    @Override
+    public void setHovered(boolean hovered) {
+        if (isActive) this.isHovered = hovered;
+    }
+
+    @Override
+    public boolean intersects(Vector2f cursor) {
+        Vector3f worldPos = node.getWorldTranslation();
         return cursor.x >= worldPos.x && cursor.x <= worldPos.x + getWidth() &&
                 cursor.y >= worldPos.y && cursor.y <= worldPos.y + getHeight();
     }
-    public void setPosition(float x, float y) { rootNode.setLocalTranslation(x, y, 0); }
-    public boolean isChecked() { return isChecked; }
-    public String getBind() { return bind; }
+
+    public void setPosition(float x, float y) {
+        node.setLocalTranslation(x, y, 0);
+    }
+
+    public boolean isChecked() {
+        return isChecked;
+    }
+
+    public String getBind() {
+        return bind;
+    }
+
     @Override public void handleMousePress(Vector2f cursor) {}
     @Override public void handleMouseDrag(Vector2f cursor) {}
     @Override public void handleMouseRelease() {}

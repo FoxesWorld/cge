@@ -22,48 +22,65 @@ public class PanelBuilder implements ComponentBuilder<PanelXml> {
 
     @Override
     public Panel build(PanelXml model, Node parent, BuildContext context) {
-        LOGGER.debug("Building Panel id='{}'.", model.getId());
+        String panelId = model.getId();
+        LOGGER.debug("--- Building Panel id='{}'.", panelId + " ---");
 
-        Panel.Style baseStyle = Panel.Style.getDefaultStyle();
-        ColorRGBA bgColor = baseStyle.backgroundColor();
+        // === Style Initialization ===
+        Panel.Style defaultStyle = Panel.Style.getDefaultStyle();
+        ColorRGBA bgColor = defaultStyle.backgroundColor();
 
-        if (model.bgColor != null) {
+        if (model.getBgColor() != null) {
             try {
-                bgColor = ColorUtils.fromHexString(model.bgColor);
+                bgColor = ColorUtils.fromHexString(model.getBgColor());
             } catch (IllegalArgumentException ex) {
-                LOGGER.error("Invalid color '{}' for Panel '{}'; using default.", model.bgColor, model.getId());
+                LOGGER.error("Invalid bgColor '{}' for Panel '{}'; using default.", model.getBgColor(), panelId);
             }
         }
 
-        if (model.bgAlpha != null) {
-            bgColor.a = model.bgAlpha;
+        if (model.getBgAlpha() != null) {
+            bgColor.a = model.getBgAlpha();
         }
 
-        float radius = model.cornerRadius != null ? model.cornerRadius : baseStyle.cornerRadius();
-        float padding = model.padding != null ? model.padding : 10f;
-        float spacing = model.spacing != null ? model.spacing : 8f;
+        float cornerRadius = model.getCornerRadius() != null ? model.getCornerRadius() : defaultStyle.cornerRadius();
+        float padding = model.getPadding() != null ? model.getPadding() : 10f;
+        float spacing = model.getSpacing() != null ? model.getSpacing() : 8f;
 
-        Panel.Style style = new Panel.Style(bgColor, radius);
-        Panel panel = new Panel(model.getId(), context.app(), style, padding, spacing);
+        Panel.Style style = new Panel.Style(bgColor, cornerRadius);
 
+        // === Create Panel ===
+        Panel panel = new Panel(panelId, context.app(), style, padding, spacing);
         panel.setDpiScale(model.getDpiScale());
-        panel.setAnchor(Panel.Anchor.valueOf(model.getAnchor().toUpperCase()));
+
+        // === Set Anchor ===
+        try {
+            Panel.Anchor anchor = Panel.Anchor.valueOf(model.getAnchor().toUpperCase());
+            panel.setAnchor(anchor);
+        } catch (IllegalArgumentException | NullPointerException e) {
+            LOGGER.warn("Invalid or missing anchor '{}' for Panel '{}'; defaulting to TOP_LEFT.",
+                    model.getAnchor(), panelId);
+            panel.setAnchor(Panel.Anchor.TOP_LEFT);
+        }
+
+        // === Set Bounds ===
         panel.setRelativeBounds(model.x, model.y, model.width, model.height);
 
-        if (model.components != null) {
-            LOGGER.debug("Panel '{}' has {} children.", model.getId(), model.components.size());
-            for (var compXml : model.components) {
+        // === Children ===
+        if (model.getComponents() != null && !model.getComponents().isEmpty()) {
+            LOGGER.debug("Panel '{}' has {} children.", panelId, model.getComponents().size());
+            for (var compXml : model.getComponents()) {
                 MenuComponent child = mainBuilder.buildComponent(compXml, panel.getNode());
+                LOGGER.info("Child {}", child.getId());
                 if (child != null) {
                     panel.addComponent(child);
                 } else {
-                    LOGGER.warn("Failed to build child '{}' in Panel '{}'.", compXml.text, model.getId());
+                    LOGGER.warn("Failed to build child '{}' in Panel '{}'.", compXml.getClass().getSimpleName(), panelId);
                 }
             }
         }
 
+        // === Attach ===
         parent.attachChild(panel.getNode());
-        LOGGER.debug("Panel '{}' attached to parent '{}'.", model.getId(), parent.getName());
+        LOGGER.debug("Panel '{}' attached to parent '{}'.", panelId, parent.getName());
 
         return panel;
     }

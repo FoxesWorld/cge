@@ -37,11 +37,11 @@ public final class MenuScreenHandler {
     /**
      * Создаёт обработчик экранов.
      */
-    public MenuScreenHandler(CalistaGameEngine app) {
-        this.engine = app;
-        this.guiNode = app.getGuiNode();
-        this.builder = new XmlMenuBuilder(app, ViceButton.Style.getViceStyle());
-        this.inputHandler = new InputHandler(app.getInputManager());
+    public MenuScreenHandler(MainMenuAppState app) {
+        this.engine = app.getCalistaGameEngine();
+        this.guiNode = engine.getGuiNode();
+        this.builder = app.getBuilder();
+        this.inputHandler = new InputHandler(engine.getInputManager());
     }
 
     /**
