@@ -4,6 +4,7 @@ import com.jme3.math.Vector2f;
 import com.jme3.scene.Node;
 import org.foxesworld.cge.tmp.menu.BuildContext;
 import org.foxesworld.cge.tmp.menu.MenuUtils;
+import org.foxesworld.cge.tmp.menu.components.ViceButton;
 import org.foxesworld.cge.tmp.menu.components.ViceCheckbox;
 import org.foxesworld.cge.tmp.menu.xml.CheckboxXml;
 import org.foxesworld.cge.tmp.menu.xml.ComponentBuilder;
@@ -16,12 +17,9 @@ public class CheckboxBuilder implements ComponentBuilder<CheckboxXml> {
     @Override
     public ViceCheckbox build(CheckboxXml model, Node parent, BuildContext context) {
         ViceCheckbox checkbox = new ViceCheckbox(
-                model.id,
                 context.app().getAssetManager(),
-                model.text,
-                context.buttonStyle().fontPath(),
-                model.checked,
-                model.bind
+                ViceButton.Style.getViceStyle().fontPath(),
+                model
         );
 
         float size = MenuUtils.parseSize(model.size, context.app().getCamera().getHeight());

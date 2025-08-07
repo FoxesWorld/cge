@@ -4,6 +4,7 @@ import com.jme3.math.Vector2f;
 import com.jme3.scene.Node;
 import org.foxesworld.cge.tmp.menu.BuildContext;
 import org.foxesworld.cge.tmp.menu.MenuUtils;
+import org.foxesworld.cge.tmp.menu.components.ViceButton;
 import org.foxesworld.cge.tmp.menu.components.ViceSlider;
 import org.foxesworld.cge.tmp.menu.xml.ComponentBuilder;
 import org.foxesworld.cge.tmp.menu.xml.SliderXml;
@@ -17,13 +18,8 @@ public class SliderBuilder implements ComponentBuilder<SliderXml> {
     @Override
     public ViceSlider build(SliderXml model, Node parent, BuildContext context) {
         ViceSlider slider = new ViceSlider(
-                model.id,
                 context.app().getAssetManager(),
-                model.text,
-                model.fillColor,
-                context.buttonStyle(),
-                model.value,
-                model.bind
+                model
         );
 
         float width = MenuUtils.parseSize(String.valueOf(model.width), context.app().getCamera().getWidth());

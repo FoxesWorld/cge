@@ -7,7 +7,6 @@ import com.jme3.math.Vector3f;
 import com.jme3.post.FilterPostProcessor;
 import com.jme3.post.filters.DepthOfFieldFilter;
 import org.foxesworld.cge.CalistaGameEngine;
-import org.foxesworld.cge.tmp.menu.components.ViceButton;
 import org.foxesworld.cge.tmp.menu.components.ViceMenuBackground;
 import org.foxesworld.cge.tmp.menu.xml.SceneXml;
 
@@ -28,7 +27,7 @@ public final class MainMenuAppState extends BaseAppState {
     @Override
     protected void initialize(Application app) {
         this.calistaGameEngine = (CalistaGameEngine) app;
-        builder = new XmlMenuBuilder((CalistaGameEngine) getApplication(), ViceButton.Style.getViceStyle());
+        builder = new XmlMenuBuilder((CalistaGameEngine) getApplication());
         screenHandler = new MenuScreenHandler(this);
 
         fpp = new FilterPostProcessor(app.getAssetManager());

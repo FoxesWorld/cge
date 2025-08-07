@@ -1,10 +1,5 @@
 package org.foxesworld.cge.tmp.menu.components;
 
-import com.atr.jme.font.TrueTypeFont;
-import com.atr.jme.font.asset.TrueTypeKeyMesh;
-import com.atr.jme.font.shape.TrueTypeContainer;
-import com.atr.jme.font.util.StringContainer;
-import com.atr.jme.font.util.Style;
 import com.jme3.asset.AssetManager;
 import com.jme3.material.Material;
 import com.jme3.material.RenderState.BlendMode;
@@ -16,6 +11,10 @@ import com.jme3.scene.Node;
 import com.jme3.ui.Picture;
 import org.foxesworld.cge.core.io.TTFrenderer;
 import org.foxesworld.cge.core.utils.ColorUtils;
+import org.foxesworld.cge.tmp.menu.components.utils.InteractiveComponent;
+import org.foxesworld.cge.tmp.menu.components.utils.MenuComponent;
+import org.foxesworld.cge.tmp.menu.components.utils.RoundedQuad;
+import org.foxesworld.cge.tmp.menu.components.utils.SoundComponent;
 
 public final class ViceButton extends UIComponent implements InteractiveComponent, MenuComponent, SoundComponent {
 

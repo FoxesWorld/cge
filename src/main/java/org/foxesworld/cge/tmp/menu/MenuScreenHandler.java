@@ -1,7 +1,5 @@
 package org.foxesworld.cge.tmp.menu;
 
-import com.jme3.app.Application;
-import com.jme3.app.SimpleApplication;
 import com.jme3.audio.AudioNode;
 import com.jme3.input.InputManager;
 import com.jme3.input.MouseInput;
@@ -13,8 +11,8 @@ import com.jme3.math.Vector2f;
 import com.jme3.scene.Node;
 import com.jme3.scene.shape.Quad;
 import org.foxesworld.cge.CalistaGameEngine;
-import org.foxesworld.cge.tmp.menu.components.InteractiveComponent;
-import org.foxesworld.cge.tmp.menu.components.SoundComponent;
+import org.foxesworld.cge.tmp.menu.components.utils.InteractiveComponent;
+import org.foxesworld.cge.tmp.menu.components.utils.SoundComponent;
 import org.foxesworld.cge.tmp.menu.components.ViceButton;
 import org.foxesworld.cge.tmp.menu.components.ViceCheckbox;
 
@@ -107,11 +105,12 @@ public final class MenuScreenHandler {
         }
 
         void register() {
-            if (!im.hasMapping(CLICK)) im.addMapping(CLICK, new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
-            if (!im.hasMapping(MOVE)) im.addMapping(MOVE,
-                    new MouseAxisTrigger(MouseInput.AXIS_X, true),
-                    new MouseAxisTrigger(MouseInput.AXIS_Y, true)
-            );
+            if (!im.hasMapping(CLICK)) {
+                im.addMapping(CLICK, new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
+            }
+            if (!im.hasMapping(MOVE)) {
+                im.addMapping(MOVE, new MouseAxisTrigger(MouseInput.AXIS_X, true), new MouseAxisTrigger(MouseInput.AXIS_Y, true));
+            }
             im.addListener(this, CLICK, MOVE);
         }
 
@@ -147,15 +146,23 @@ public final class MenuScreenHandler {
             } else {
                 dragging = false;
                 InteractiveComponent release = findComponent(c);
+
+                // Звук по нажатию
                 if (focused != null && focused == release && release instanceof SoundComponent) {
                     clickSound.playInstance();
                 }
+
+                // Выполнение действия компонента по типу
                 if (focused instanceof ViceButton vb) vb.executeAction();
                 else if (focused instanceof ViceCheckbox cb) cb.toggle();
+
+
+                // Освобождение фокуса
                 if (focused != null) focused.handleMouseRelease();
                 focused = null;
             }
         }
+
 
         @Override
         public void onAnalog(String name, float value, float tpf) {

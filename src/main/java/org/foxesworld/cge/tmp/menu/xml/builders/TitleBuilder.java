@@ -4,11 +4,14 @@ import com.jme3.math.Vector2f;
 import com.jme3.scene.Node;
 import org.foxesworld.cge.tmp.menu.BuildContext;
 import org.foxesworld.cge.tmp.menu.MenuUtils;
+import org.foxesworld.cge.tmp.menu.components.ViceButton;
 import org.foxesworld.cge.tmp.menu.components.ViceTitle;
 import org.foxesworld.cge.tmp.menu.xml.ComponentBuilder;
 import org.foxesworld.cge.tmp.menu.xml.TitleXml;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Optional;
 
 /**
  * Builds a {@link ViceTitle} component from a {@link TitleXml} model,
@@ -25,12 +28,9 @@ public class TitleBuilder implements ComponentBuilder<TitleXml> {
         float fontSizePx = parseFontSize(model, context);
         // Instantiate title
         ViceTitle title = new ViceTitle(
-                model.id,
                 context.app().getAssetManager(),
-                model.text,
-                Math.round(fontSizePx),
-                model.color,
-                context.buttonStyle().fontPath()
+                model,
+                fontSizePx
         );
 
         // Calculate position
@@ -51,32 +51,41 @@ public class TitleBuilder implements ComponentBuilder<TitleXml> {
      * or a percentage string (e.g. "5%" representing percent of screen height).
      */
     private float parseFontSize(TitleXml titleXml, BuildContext context) {
-        if (titleXml.fontSize == null || titleXml.fontSize.isEmpty()) {
+        String value = Optional.ofNullable(titleXml.fontSize)
+                .map(String::trim)
+                .map(String::toLowerCase)
+                .orElse("");
+
+        if (value.isEmpty()) {
             LOGGER.warn("fontSize not specified, defaulting to 32px");
             return 32f;
         }
 
-        String fontSizeStr = titleXml.fontSize.trim().toLowerCase();
         try {
-            int windowWidth = context.app().getContext().getSettings().getWidth();
-            int windowHeight = context.app().getContext().getSettings().getHeight();
+            float percent;
+            int width = context.app().getContext().getSettings().getWidth();
+            int height = context.app().getContext().getSettings().getHeight();
 
-            if (fontSizeStr.endsWith("vh")) {
-                float pct = Float.parseFloat(fontSizeStr.substring(0, fontSizeStr.length() - 2));
-                return windowHeight * pct / 100f;
-            } else if (fontSizeStr.endsWith("vw")) {
-                float pct = Float.parseFloat(fontSizeStr.substring(0, fontSizeStr.length() - 2));
-                return windowWidth * pct / 100f;
-            } else if (fontSizeStr.endsWith("%")) {
-                // Процент по умолчанию = vh
-                float pct = Float.parseFloat(fontSizeStr.substring(0, fontSizeStr.length() - 1));
-                return windowHeight * pct / 100f;
-            } else {
-                // Абсолютное значение в пикселях
-                return Float.parseFloat(fontSizeStr);
+            if (value.endsWith("vh")) {
+                percent = Float.parseFloat(value.substring(0, value.length() - 2));
+                return height * percent / 100f;
             }
+
+            if (value.endsWith("vw")) {
+                percent = Float.parseFloat(value.substring(0, value.length() - 2));
+                return width * percent / 100f;
+            }
+
+            if (value.endsWith("%")) {
+                percent = Float.parseFloat(value.substring(0, value.length() - 1));
+                return height * percent / 100f;
+            }
+
+            return Float.parseFloat(value);
+
         } catch (NumberFormatException e) {
-            LOGGER.error("Invalid fontSize '{}' for Title '{}', defaulting to 32px", titleXml.fontSize, titleXml.text, e);
+            LOGGER.error("Invalid fontSize '{}' for Title '{}', defaulting to 32px",
+                    titleXml.fontSize, titleXml.text, e);
             return 32f;
         }
     }

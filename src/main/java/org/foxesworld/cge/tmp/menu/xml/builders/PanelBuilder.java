@@ -5,7 +5,7 @@ import com.jme3.scene.Node;
 import org.foxesworld.cge.core.utils.ColorUtils;
 import org.foxesworld.cge.tmp.menu.BuildContext;
 import org.foxesworld.cge.tmp.menu.XmlMenuBuilder;
-import org.foxesworld.cge.tmp.menu.components.MenuComponent;
+import org.foxesworld.cge.tmp.menu.components.utils.MenuComponent;
 import org.foxesworld.cge.tmp.menu.components.Panel;
 import org.foxesworld.cge.tmp.menu.xml.ComponentBuilder;
 import org.foxesworld.cge.tmp.menu.xml.PanelXml;

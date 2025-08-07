@@ -7,6 +7,9 @@ import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.renderer.Camera;
 import com.jme3.scene.Geometry;
+import org.foxesworld.cge.tmp.menu.components.utils.InteractiveComponent;
+import org.foxesworld.cge.tmp.menu.components.utils.MenuComponent;
+import org.foxesworld.cge.tmp.menu.components.utils.RoundedQuad;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

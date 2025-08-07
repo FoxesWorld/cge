@@ -7,18 +7,21 @@ import com.jme3.math.Vector2f;
 import com.jme3.scene.Node;
 import org.foxesworld.cge.core.io.TTFrenderer;
 import org.foxesworld.cge.core.utils.ColorUtils;
+import org.foxesworld.cge.tmp.menu.components.utils.InteractiveComponent;
+import org.foxesworld.cge.tmp.menu.components.utils.MenuComponent;
+import org.foxesworld.cge.tmp.menu.xml.TitleXml;
 
 public class ViceTitle extends UIComponent implements InteractiveComponent, MenuComponent {
     private final Node titleNode;
     private final TrueTypeContainer ttc;
     private final TTFrenderer ttfRenderer;
 
-    public ViceTitle(String id, AssetManager assetManager, String text, int fontSize, String color, String fontPath) {
-        super(id);
-        this.titleNode = new Node("ViceTitle: " + text);
+    public ViceTitle(AssetManager assetManager, TitleXml titleXml, float fontSize) {
+        super(titleXml.id);
+        this.titleNode = new Node("ViceTitle: " + titleXml.text);
         ttfRenderer = new TTFrenderer(assetManager);
-        ttfRenderer.generateFont("assets/Interface/fonts/Docker One.ttf", Style.Plain, fontSize);
-        ttfRenderer.generateText(ColorUtils.fromHexString(color), text);
+        ttfRenderer.generateFont("assets/Interface/fonts/Docker One.ttf", Style.Plain, Math.round(fontSize));
+        ttfRenderer.generateText(ColorUtils.fromHexString(titleXml.color), titleXml.text);
         ttc = ttfRenderer.getTextGeometry();
         titleNode.attachChild(ttc);
     }

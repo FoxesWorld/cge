@@ -12,6 +12,10 @@ import com.jme3.math.Vector2f;
 import com.jme3.math.Vector3f;
 import com.jme3.scene.Node;
 import com.jme3.ui.Picture;
+import org.foxesworld.cge.tmp.menu.components.utils.InteractiveComponent;
+import org.foxesworld.cge.tmp.menu.components.utils.MenuComponent;
+import org.foxesworld.cge.tmp.menu.components.utils.SoundComponent;
+import org.foxesworld.cge.tmp.menu.xml.CheckboxXml;
 
 public final class ViceCheckbox extends UIComponent implements InteractiveComponent, MenuComponent, SoundComponent {
 
@@ -47,10 +51,10 @@ public final class ViceCheckbox extends UIComponent implements InteractiveCompon
     private float size;
     private float baseLabelSize;
 
-    public ViceCheckbox(String id, AssetManager assets, String text, String fontPath, boolean initialChecked, String bind) {
-        super(id);
-        this.bind = bind;
-        this.isChecked = initialChecked;
+    public ViceCheckbox(AssetManager assets, String fontPath, CheckboxXml checkboxXml) {
+        super(checkboxXml.id);
+        this.bind = checkboxXml.bind;
+        this.isChecked = checkboxXml.checked;
 
         node.setName("ViceCheckbox:" + id);
 
@@ -66,7 +70,7 @@ public final class ViceCheckbox extends UIComponent implements InteractiveCompon
 
         BitmapFont font = assets.loadFont(fontPath);
         labelText = new BitmapText(font);
-        labelText.setText(text);
+        labelText.setText(checkboxXml.text);
         labelText.setColor(ColorRGBA.White);
 
         node.attachChild(framePicture);

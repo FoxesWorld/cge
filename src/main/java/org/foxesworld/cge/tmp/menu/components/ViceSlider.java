@@ -14,6 +14,10 @@ import com.jme3.scene.Node;
 import com.jme3.scene.shape.Quad;
 import com.jme3.scene.shape.Sphere;
 import org.foxesworld.cge.core.utils.ColorUtils;
+import org.foxesworld.cge.tmp.menu.components.utils.InteractiveComponent;
+import org.foxesworld.cge.tmp.menu.components.utils.MenuComponent;
+import org.foxesworld.cge.tmp.menu.components.utils.SoundComponent;
+import org.foxesworld.cge.tmp.menu.xml.SliderXml;
 
 public final class ViceSlider extends UIComponent implements InteractiveComponent, MenuComponent, SoundComponent {
 
@@ -55,20 +59,20 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
         void onValueChanged(float newValue);
     }
 
-    public ViceSlider(String id, AssetManager assetManager, String text, String hexColor, ViceButton.Style buttonStyle, float initialValue, String bind) {
-        super(id);
+    public ViceSlider(AssetManager assetManager, SliderXml sliderXml) {
+        super(sliderXml.id);
         this.assetManager = assetManager;
-        this.bind = bind;
-        this.value = FastMath.clamp(initialValue, 0f, 1f);
+        this.bind = sliderXml.bind;
+        this.value = FastMath.clamp(sliderXml.value, 0f, 1f);
         this.displayedValue = this.value;
-        this.fillColor = hexColor.isEmpty() ? DEFAULT_FILL_COLOR.clone() : ColorUtils.fromHexString(hexColor);
+        this.fillColor = sliderXml.fillColor.isEmpty() ? DEFAULT_FILL_COLOR.clone() : ColorUtils.fromHexString(sliderXml.fillColor);
         this.borderColor = DEFAULT_BORDER_COLOR.clone();
 
-        this.sliderNode = new Node("ViceSlider: " + text);
+        this.sliderNode = new Node("ViceSlider: " + sliderXml.text);
 
-        BitmapFont font = assetManager.loadFont(buttonStyle.fontPath());
+        BitmapFont font = assetManager.loadFont(ViceButton.Style.getViceStyle().fontPath());
         this.label = new BitmapText(font);
-        label.setText(text.toUpperCase());
+        label.setText(sliderXml.text.toUpperCase());
         label.setColor(ColorRGBA.White);
         label.setSize(DEFAULT_FONT_SIZE);
 

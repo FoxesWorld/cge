@@ -2,7 +2,7 @@ package org.foxesworld.cge.tmp.menu.xml;
 
 import com.jme3.scene.Node;
 import org.foxesworld.cge.tmp.menu.BuildContext;
-import org.foxesworld.cge.tmp.menu.components.MenuComponent;
+import org.foxesworld.cge.tmp.menu.components.utils.MenuComponent;
 
 /**
  * A functional interface for a factory that builds a specific UI component

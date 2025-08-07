@@ -6,6 +6,8 @@ import org.foxesworld.cge.tmp.menu.BuildContext;
 import org.foxesworld.cge.tmp.menu.MenuUtils;
 import org.foxesworld.cge.tmp.menu.XmlMenuBuilder;
 import org.foxesworld.cge.tmp.menu.components.*;
+import org.foxesworld.cge.tmp.menu.components.utils.MenuComponent;
+import org.foxesworld.cge.tmp.menu.components.utils.Orientation;
 import org.foxesworld.cge.tmp.menu.xml.*;
 import org.foxesworld.cge.tmp.menu.xml.ComponentBuilder;
 
@@ -35,7 +37,7 @@ public class TabsBuilder implements ComponentBuilder<TabsXml> {
                 ? Orientation.VERTICAL
                 : Orientation.HORIZONTAL;
 
-        ViceTabs tabComponent = new ViceTabs(model.id, context.app().getAssetManager(), context.buttonStyle(), orientation);
+        ViceTabs tabComponent = new ViceTabs(model.id, context.app().getAssetManager(), ViceButton.Style.getViceStyle(), orientation);
 
         for (TabXml tabModel : model.tabs) {
             Node contentNode = new Node("TabContent: " + tabModel.title);

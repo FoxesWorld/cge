@@ -1,4 +1,4 @@
-package org.foxesworld.cge.tmp.menu.components;
+package org.foxesworld.cge.tmp.menu.components.utils;
 
 import com.jme3.math.Vector2f;
 
