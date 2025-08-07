@@ -2,6 +2,7 @@
 // Лучше использовать свой, например: org.foxesworld.cge.ui
 package com.jme3.awt;
 
+
 import com.formdev.flatlaf.FlatDarkLaf;
 import org.foxesworld.cge.ICOParser;
 
@@ -16,10 +17,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.PrintWriter;
 import java.io.StringWriter;
-import java.net.URI;
-import java.net.URISyntaxException;
 import java.util.List;
-import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Продвинутое диалоговое окно для отображения ошибок, оптимизированное
@@ -31,9 +29,8 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class AWTErrorDialog extends JDialog {
 
-    // --- Константы для легкой настройки и поддержки ---
     private static final String DEFAULT_TITLE = "Calista Game Engine: Fatal Error";
-    private static final String REPORT_ISSUE_URI = "https://github.com/your/repo/issues"; // ЗАМЕНИТЕ НА ВАШ РЕПОЗИТОРИЙ
+    private static final String REPORT_ISSUE_URI = "https://github.com/your/repo/issues";
     private static final String ICON_PATH = "/assets/theme/icon/engineLogo.ico";
     private static final int ICON_SIZE = 24;
 
@@ -43,7 +40,6 @@ public class AWTErrorDialog extends JDialog {
 
     private final ModernDialogPanel mainPanel;
     private JTextArea stackTraceArea;
-    private final AtomicReference<ModernButton> copyButtonRef = new AtomicReference<>();
 
     /**
      * Приватный конструктор. Используйте статические методы showDialog() для создания.
@@ -54,14 +50,13 @@ public class AWTErrorDialog extends JDialog {
 
         setUndecorated(true);
         setBackground(new Color(0, 0, 0, 0));
-        setSize(850, 600); // Немного увеличим размер для полных логов
+        setSize(850, 600);
         setLocationRelativeTo(owner);
 
         mainPanel = new ModernDialogPanel();
         mainPanel.setLayout(new BorderLayout());
         setContentPane(mainPanel);
 
-        // --- Сборка UI из логических блоков ---
         ImageIcon icon = loadDialogIcon();
         ModernTitleBar titleBar = new ModernTitleBar(title, icon, e -> mainPanel.fadeOut());
         JPanel contentPanel = createContentPanel(message, stackTrace);
@@ -123,7 +118,6 @@ public class AWTErrorDialog extends JDialog {
 
         ModernButton copyButton = new ModernButton(COPY_BTN_TEXT, ModernButton.ButtonStyle.SECONDARY);
         copyButton.addActionListener(e -> copyStackTraceToClipboard());
-        copyButtonRef.set(copyButton);
 
         ModernButton closeButton = new ModernButton(CLOSE_BTN_TEXT, ModernButton.ButtonStyle.PRIMARY);
         closeButton.addActionListener(e -> mainPanel.fadeOut());
@@ -156,16 +150,8 @@ public class AWTErrorDialog extends JDialog {
     }
 
     private void copyStackTraceToClipboard() {
-        final ModernButton copyButton = copyButtonRef.get();
-        if (copyButton == null || !copyButton.getText().equals(COPY_BTN_TEXT)) {
-            return;
-        }
         Toolkit.getDefaultToolkit().getSystemClipboard()
                 .setContents(new StringSelection(stackTraceArea.getText()), null);
-        copyButton.setText(COPIED_BTN_TEXT);
-        Timer timer = new Timer(2000, e -> copyButton.setText(COPY_BTN_TEXT));
-        timer.setRepeats(false);
-        timer.start();
     }
 
     private void setupShortcuts() {
@@ -184,26 +170,10 @@ public class AWTErrorDialog extends JDialog {
         });
     }
 
-    // --- НОВЫЙ, УЛУЧШЕННЫЙ ПУБЛИЧНЫЙ API ---
-
-    /**
-     * Показывает диалог ошибки, анализируя предоставленное исключение.
-     * Этот метод потокобезопасен.
-     *
-     * @param throwable Исключение, которое нужно отобразить.
-     */
     public static void showDialog(Throwable throwable) {
         showDialog(null, DEFAULT_TITLE, throwable);
     }
 
-    /**
-     * Показывает диалог ошибки с кастомным заголовком и родительским компонентом.
-     * Этот метод потокобезопасен.
-     *
-     * @param parent    Родительский компонент для центрирования диалога.
-     * @param title     Заголовок окна.
-     * @param throwable Исключение, которое нужно отобразить.
-     */
     public static void showDialog(Component parent, String title, Throwable throwable) {
         final Frame owner = (parent instanceof Frame) ? (Frame) parent : null;
         final String message = formatErrorMessage(throwable);
@@ -215,60 +185,30 @@ public class AWTErrorDialog extends JDialog {
         });
     }
 
-    /**
-     * Форматирует сообщение об ошибке, уделяя особое внимание основной причине (root cause).
-     */
     private static String formatErrorMessage(Throwable throwable) {
         Throwable rootCause = findRootCause(throwable);
         String mainMessage = throwable.getClass().getSimpleName() + ": " + throwable.getLocalizedMessage();
 
         if (rootCause != throwable) {
             String causeMessage = rootCause.getClass().getSimpleName() + ": " + rootCause.getLocalizedMessage();
-            return "An error occurred, see details below.\n" +
-                    "Message: " + mainMessage + "\n\n" +
-                    "Root Cause: " + causeMessage;
-        } else {
-            return "An unexpected error occurred:\n" + mainMessage;
+            return "An error occurred. Root cause: " + causeMessage + "\n" + mainMessage;
         }
+        return mainMessage;
     }
 
-    /**
-     * Рекурсивно находит самую глубокую причину исключения.
-     */
     private static Throwable findRootCause(Throwable throwable) {
         Throwable cause = throwable.getCause();
-        if (cause == null) {
-            return throwable;
+        while (cause != null) {
+            throwable = cause;
+            cause = throwable.getCause();
         }
-        return findRootCause(cause);
+        return throwable;
     }
 
-    /**
-     * Преобразует ПОЛНЫЙ стектрейс, включая все 'Caused by', в одну строку.
-     */
     private static String getFullStackTrace(Throwable throwable) {
         StringWriter sw = new StringWriter();
         PrintWriter pw = new PrintWriter(sw);
         throwable.printStackTrace(pw);
         return sw.toString();
-    }
-
-    /**
-     * Пример использования для тестирования.
-     */
-    public static void main(String[] args) {
-        // Имитируем типичную ошибку JME: одна оборачивает другую
-        try {
-            try {
-                // Внутренняя, реальная причина
-                throw new NullPointerException("Cannot find material parameter 'ColorMap'");
-            } catch (Exception e) {
-                // Обертка от AssetManager
-                throw new RuntimeException("AssetLoadException: An exception has occurred while loading asset: Materials/Player.j3m", e);
-            }
-        } catch (Exception e) {
-            // Используем наш новый умный диалог
-            AWTErrorDialog.showDialog(e);
-        }
     }
 }
