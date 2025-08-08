@@ -19,6 +19,7 @@ import org.foxesworld.cge.core.module.ModuleManager;
 import org.foxesworld.cge.core.io.streaming.ByteBoxingUtils;
 import org.foxesworld.cge.core.io.streaming.StreamingManager;
 import org.foxesworld.cge.core.io.streaming.StreamingParserLoader;
+import org.foxesworld.cge.core.sound.SoundManager;
 import org.foxesworld.cge.modules.ModuleConfig;
 import org.foxesworld.cge.modules.ecs.ECSModule;
 import org.foxesworld.cge.modules.ecs.systems.PhysicsSystem;
@@ -56,6 +57,7 @@ public class CalistaGameEngine extends SimpleApplication {
 
     private AssetLoader assetLoader;
     private MaterialManager materialManager;
+    private SoundManager soundManager;
     private ECSModule ecsModule;
     private SceneModule scene;
     private SoundModule soundModule;
@@ -103,6 +105,9 @@ public class CalistaGameEngine extends SimpleApplication {
         this.moduleManager = new ModuleManager(this);
         this.assetLoader = new AssetLoader(this);
         this.materialManager = new MaterialManager(this);
+        this.soundManager = new SoundManager(assetManager);
+        this.soundManager.loadFromJsonResource("sounds.json");
+        this.soundManager.preloadAll(true);
         filterPostProcessor = new FilterPostProcessor(getAssetManager());
         stateManager.attach(buildLogoChainFromJson(getAssetManager(), "ui/logos.json"));
         this.TTFrenderer = new TTFrenderer(assetManager);
@@ -194,6 +199,10 @@ public class CalistaGameEngine extends SimpleApplication {
 
     public TTFrenderer getFontFactory() {
         return TTFrenderer;
+    }
+
+    public SoundManager getSoundManager() {
+        return soundManager;
     }
 
     public void startGameFromMenu() {

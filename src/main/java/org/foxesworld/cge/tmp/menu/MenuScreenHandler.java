@@ -30,7 +30,10 @@ public final class MenuScreenHandler {
     private final XmlMenuBuilder builder;
     private final InputHandler inputHandler;
     private MenuData currentMenu;
-    private AudioNode clickSound;
+
+    // Hover sound
+    private AudioNode hoverSound;
+    private InteractiveComponent lastHoveredForSound = null;
 
     /**
      * Создаёт обработчик экранов.
@@ -46,10 +49,10 @@ public final class MenuScreenHandler {
      * Инициализирует звук и слушатели.
      */
     public void initialize() {
-        clickSound = new AudioNode(engine.getAssetManager(), "assets/Sounds/ui/pop.ogg", false);
-        clickSound.setPositional(false);
-        clickSound.setLooping(false);
-        clickSound.setVolume(1f);
+
+        // hover sound (громкость ниже, чтобы не утомлять)
+        hoverSound = safeCreateAudioNode("assets/Sounds/ui/hover.ogg", 0.6f);
+
         inputHandler.register();
         showMainMenu();
     }
@@ -75,7 +78,6 @@ public final class MenuScreenHandler {
         currentMenu.allComponents().forEach(c -> c.update(tpf));
         inputHandler.updateHover();
         screenSize = new Quad(engine.getContext().getSettings().getWindowWidth(), engine.getContext().getSettings().getWindowHeight());
-
     }
 
     /** Освобождает ресурсы и слушатели. */
@@ -84,6 +86,23 @@ public final class MenuScreenHandler {
             currentMenu.uiNode().removeFromParent();
         }
         inputHandler.unregister();
+    }
+
+    /**
+     * Безопасно создает AudioNode: если файл не найден — возвращаем null и логируем.
+     */
+    private AudioNode safeCreateAudioNode(String path, float volume) {
+        try {
+            AudioNode an = new AudioNode(engine.getAssetManager(), path, false);
+            an.setPositional(false);
+            an.setLooping(false);
+            an.setVolume(volume);
+            return an;
+        } catch (Exception ex) {
+            // не ломаем всё если файла нет
+            System.err.println("MenuScreenHandler: failed to load sound '" + path + "' -> " + ex.getMessage());
+            return null;
+        }
     }
 
     private class InputHandler implements ActionListener, AnalogListener {
@@ -120,12 +139,18 @@ public final class MenuScreenHandler {
             if (menu == null) return;
             Vector2f c = im.getCursorPosition();
             InteractiveComponent now = findComponent(c);
+
             if (now != hovered) {
+                // смена hover'а
                 if (hovered != null) hovered.setHovered(false);
                 if (now != null) now.setHovered(true);
                 hovered = now;
+                if(now instanceof SoundComponent) {
+                    engine.getSoundManager().play("ui.hover");
+                }
             }
         }
+
 
         private InteractiveComponent findComponent(Vector2f c) {
             return menu.allComponents().stream()
@@ -147,22 +172,20 @@ public final class MenuScreenHandler {
                 dragging = false;
                 InteractiveComponent release = findComponent(c);
 
-                // Звук по нажатию
+                // Звук по нажатию (если компонент поддерживает звук)
                 if (focused != null && focused == release && release instanceof SoundComponent) {
-                    clickSound.playInstance();
+                    engine.getSoundManager().play("ui.press");
                 }
 
                 // Выполнение действия компонента по типу
                 if (focused instanceof ViceButton vb) vb.executeAction();
                 else if (focused instanceof ViceCheckbox cb) cb.toggle();
 
-
                 // Освобождение фокуса
                 if (focused != null) focused.handleMouseRelease();
                 focused = null;
             }
         }
-
 
         @Override
         public void onAnalog(String name, float value, float tpf) {

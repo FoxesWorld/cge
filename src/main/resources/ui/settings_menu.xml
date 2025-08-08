@@ -5,15 +5,15 @@
 
 
         <!-- КОНТЕЙНЕР ДЛЯ ВКЛАДОК -->
-        <panel id="settings" anchor="CENTER_LEFT" dpiScale="1.0" height="65%" bgColor="#000000" cornerRadius="20" bgAlpha="0.5">
+        <panel  id="settings" anchor="CENTER" dpiScale="1.0" height="65%" width="90%" bgColor="#000000" cornerRadius="20" bgAlpha="0.5">
             <components>
-                <button action="org.foxesworld.cge.tmp.menu.actions.GoBackToMainMenuAction" text="BACK" y="15%"/>
+                <button iconPath="assets/Interface/ui/icons/back.png" iconSize="40" action="org.foxesworld.cge.tmp.menu.actions.GoBackToMainMenuAction" text="BACK" />
                 <tabs orientation="VERTICAL">
 
                     <!-- ТРЕТЬЯ ВКЛАДКА: УПРАВЛЕНИЕ -->
                     <tab iconPath="assets/Interface/ui/icons/process.png" title="CONTROLS">
                         <slider text="MOUSE SENSITIVITY" y="200" x="50" width="400" value="0.8" bind="audio.master"/>
-                        <title text="KEY BINDINGS..." fontSize="28" y="200" x="50"/>
+                        <text text="KEY BINDINGS..." fontSize="28" y="200" x="50"/>
                     </tab>
 
                     <!-- ВТОРАЯ ВКЛАДКА: АУДИО -->
@@ -27,7 +27,6 @@
                         <checkbox text="V-Sync" checked="true" bind="graphics.vsync"/>
                         <checkbox text="Shadows" checked="true" bind="graphics.shadows"/>
                         <checkbox text="Bloom Effect" checked="true" bind="graphics.bloom"/>
-                        <checkbox text="Shader Effect" checked="true" bind="graphics.bloom"/>
                     </tab>
                 </tabs>
             </components>
