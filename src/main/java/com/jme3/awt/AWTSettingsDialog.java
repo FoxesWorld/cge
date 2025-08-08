@@ -14,8 +14,8 @@ import java.awt.image.BufferedImage;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.util.List;
 import java.util.*;
+import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
@@ -24,10 +24,12 @@ import java.util.prefs.BackingStoreException;
 import java.util.stream.Collectors;
 
 /**
- * Modernized and optimized settings dialog with AAA-style polish.
- * - Clean layout (two-column rows)
- * - Frameless window with custom title bar and drag-to-move
- * - Improved controls styling and consistent palette
+ * Modernized and optimized settings dialog with improved titlebar and lightweight optimizations.
+ * - Titlebar now includes minimize / maximize / close with tooltips and keyboard mnemonics
+ * - Double-click title to toggle maximize/restore
+ * - Drag-to-move supports restoring from maximized state (Windows-like behaviour)
+ * - Global keybindings use RootPane InputMap/ActionMap instead of recursive KeyListeners
+ * - Cached OK/Cancel buttons so default-button lookup is O(1)
  */
 public final class AWTSettingsDialog extends JFrame {
 
@@ -49,7 +51,7 @@ public final class AWTSettingsDialog extends JFrame {
     private static final Color RAGE_SEPARATOR_COLOR = new Color(0x343436);
     private static final Font FONT_REGULAR = new Font("Segoe UI", Font.PLAIN, 14);
     private static final Font FONT_BOLD = new Font("Segoe UI", Font.BOLD, 14);
-    private static final Font FONT_TITLE = new Font("Segoe UI", Font.BOLD, 22);
+    private static final Font FONT_TITLE = new Font("Segoe UI", Font.BOLD, 20);
 
     // ---------- State ----------
     private ResourceBundle resourceBundle;
@@ -71,12 +73,23 @@ public final class AWTSettingsDialog extends JFrame {
     private JCheckBox audioModuleBox, physicsModuleBox, aiModuleBox;
     private JLabel iconLabel;
 
+    // Buttons cached for O(1) access
+    private JButton okButton;
+    private JButton cancelButton;
+    private JButton minimizeBtn;
+    private JButton maximizeBtn;
+    private JButton closeBtn;
+
     // Selection tracking
     private int selection = NO_SELECTION;
     private SelectionListener selectionListener;
 
     // Dragging
     private Point dragOffset;
+
+    // Maximize/restore
+    private boolean maximized = false;
+    private Rectangle restoredBounds = null;
 
     // Minimum supported sizes from AppSettings
     private final int minWidth;
@@ -190,7 +203,7 @@ public final class AWTSettingsDialog extends JFrame {
         root.setBackground(RAGE_BACKGROUND);
         root.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createLineBorder(RAGE_BORDER_COLOR, 1),
-                new EmptyBorder(16, 18, 16, 18)
+                new EmptyBorder(12, 14, 12, 14)
         ));
         setContentPane(root);
 
@@ -213,50 +226,159 @@ public final class AWTSettingsDialog extends JFrame {
             pack(); // recalc after populating combos
         });
 
-        // Esc/Enter handling
-        setupGlobalKeyBindings(root);
+        // Esc/Enter handling using root pane input map
+        setupGlobalKeyBindings();
     }
 
     private JPanel createTitleBar() {
         JPanel titleBar = new JPanel(new BorderLayout(8, 0));
         titleBar.setOpaque(false);
-        titleBar.setBorder(new EmptyBorder(6, 6, 10, 6));
+        titleBar.setBorder(new EmptyBorder(6, 6, 8, 6));
 
         // Icon + title
         JPanel left = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
         left.setOpaque(false);
         if (imageFile != null) {
-            iconLabel = new JLabel(new ImageIcon(imageFile));
+            ImageIcon ic = loadScaledIcon(imageFile, 36, 36);
+            iconLabel = new JLabel(ic);
+            iconLabel.setBorder(new EmptyBorder(2, 0, 0, 0));
             left.add(iconLabel);
         } else {
             iconLabel = new JLabel();
         }
-        JLabel title = new JLabel(Optional.ofNullable(source.getTitle()).orElse("Settings").toUpperCase());
+        JLabel title = new JLabel(Optional.ofNullable(source.getTitle()).orElse("Settings"));
         title.setFont(FONT_TITLE);
         title.setForeground(RAGE_FOREGROUND);
         left.add(title);
 
-        // Close button on right
-        JButton closeBtn = new JButton("\u2716"); // cross symbol
-        closeBtn.setFocusable(false);
-        closeBtn.setBorder(BorderFactory.createEmptyBorder(6, 8, 6, 8));
-        closeBtn.setBackground(RAGE_COMPONENT_BG);
-        closeBtn.setForeground(RAGE_FOREGROUND);
-        closeBtn.setFont(FONT_BOLD);
-        closeBtn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        // Center filler (allows title to be centered visually while controls float right)
+        JPanel center = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        center.setOpaque(false);
+
+        // Close/minimize/maximize on right
+        JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
+        right.setOpaque(false);
+
+        minimizeBtn = createWindowControlButton("–", "Minimize (Alt+M)");
+        maximizeBtn = createWindowControlButton("□", "Maximize (Alt+X)");
+        closeBtn = createWindowControlButton("✖", "Close (Alt+C)");
+
+        // tooltips and mnemonics (Alt+...)
+        minimizeBtn.setMnemonic(KeyEvent.VK_M);
+        maximizeBtn.setMnemonic(KeyEvent.VK_X);
+        closeBtn.setMnemonic(KeyEvent.VK_C);
+
+        minimizeBtn.addActionListener(e -> setState(Frame.ICONIFIED));
+        maximizeBtn.addActionListener(e -> toggleMaximizeRestore());
         closeBtn.addActionListener(e -> {
             setUserSelection(CANCEL_SELECTION);
             dispose();
         });
-        closeBtn.addMouseListener(hoverBrightener(closeBtn, RAGE_COMPONENT_BG, RAGE_ACCENT_HOVER));
+
+        right.add(minimizeBtn);
+        right.add(maximizeBtn);
+        right.add(closeBtn);
 
         titleBar.add(left, BorderLayout.WEST);
-        titleBar.add(closeBtn, BorderLayout.EAST);
+        titleBar.add(center, BorderLayout.CENTER);
+        titleBar.add(right, BorderLayout.EAST);
 
-        // Drag-to-move support
-        addDraggableListener(titleBar);
+        // Drag-to-move + double-click to maximize/restore
+        MouseAdapter dragAdapter = new MouseAdapter() {
+            private long lastClick = 0L;
+
+            @Override
+            public void mousePressed(MouseEvent e) {
+                dragOffset = e.getPoint();
+                if (maximized) {
+                    // convert to window relative point when maximized (simulate Windows behaviour)
+                    dragOffset = new Point(getWidth() / 2, 10);
+                }
+
+                long now = System.currentTimeMillis();
+                if (now - lastClick < 400) {
+                    // double click -> toggle
+                    toggleMaximizeRestore();
+                }
+                lastClick = now;
+            }
+
+            @Override
+            public void mouseDragged(MouseEvent e) {
+                if (maximized) {
+                    // restore to previous size and reposition so mouse stays over title
+                    restoreFromMaximizedAt(e.getLocationOnScreen());
+                    return;
+                }
+                Point loc = getLocation();
+                int x = loc.x + e.getX() - dragOffset.x;
+                int y = loc.y + e.getY() - dragOffset.y;
+                setLocation(x, y);
+            }
+        };
+
+        titleBar.addMouseListener(dragAdapter);
+        titleBar.addMouseMotionListener(dragAdapter);
 
         return titleBar;
+    }
+
+    private JButton createWindowControlButton(String text, String tooltip) {
+        JButton b = new JButton(text);
+        b.setFocusable(false);
+        b.setToolTipText(tooltip);
+        b.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        b.setForeground(RAGE_FOREGROUND);
+        b.setBackground(RAGE_COMPONENT_BG);
+        b.setBorder(BorderFactory.createEmptyBorder(6, 8, 6, 8));
+        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        b.setFocusPainted(false);
+        b.addMouseListener(hoverBrightener(b, RAGE_COMPONENT_BG, RAGE_COMPONENT_BG.brighter()));
+        return b;
+    }
+
+    private ImageIcon loadScaledIcon(URL url, int w, int h) {
+        try {
+            Image img = Toolkit.getDefaultToolkit().createImage(url);
+            MediaTracker mt = new MediaTracker(new Container());
+            mt.addImage(img, 0);
+            mt.waitForAll();
+            Image scaled = img.getScaledInstance(w, h, Image.SCALE_SMOOTH);
+            return new ImageIcon(scaled);
+        } catch (Exception ex) {
+            logger.log(Level.FINE, "Failed to load icon: " + url, ex);
+            return new ImageIcon();
+        }
+    }
+
+    private void toggleMaximizeRestore() {
+        GraphicsConfiguration gc = getGraphicsConfiguration();
+        Rectangle screen = gc.getBounds();
+        Insets insets = Toolkit.getDefaultToolkit().getScreenInsets(gc);
+        Rectangle usable = new Rectangle(screen.x + insets.left, screen.y + insets.top,
+                screen.width - insets.left - insets.right, screen.height - insets.top - insets.bottom);
+
+        if (!maximized) {
+            restoredBounds = getBounds();
+            setBounds(usable);
+            maximized = true;
+            maximizeBtn.setText("❒"); // change to restore-looking icon
+        } else {
+            if (restoredBounds != null) setBounds(restoredBounds);
+            maximized = false;
+            maximizeBtn.setText("□");
+        }
+    }
+
+    private void restoreFromMaximizedAt(Point screenPoint) {
+        // calculate new width same as restoredBounds or half-screen if null
+        Rectangle target = restoredBounds != null ? new Rectangle(restoredBounds) : new Rectangle(800, 600);
+        // attempt to center under cursor
+        int x = screenPoint.x - target.width / 2;
+        int y = screenPoint.y - 10;
+        setBounds(x, y, target.width, target.height);
+        maximized = false;
+        maximizeBtn.setText("\u25A1");
     }
 
     private JPanel createGraphicsPanel() {
@@ -321,20 +443,20 @@ public final class AWTSettingsDialog extends JFrame {
     private JPanel createButtonBar() {
         JPanel footer = new JPanel(new FlowLayout(FlowLayout.CENTER, 18, 12));
         footer.setOpaque(false);
-        JButton ok = createPrimaryButton(resource("button.ok", "OK").toUpperCase());
-        JButton cancel = createSecondaryButton(resource("button.cancel", "Cancel").toUpperCase());
-        ok.addActionListener(e -> {
+        okButton = createPrimaryButton(resource("button.ok", "OK").toUpperCase());
+        cancelButton = createSecondaryButton(resource("button.cancel", "Cancel").toUpperCase());
+        okButton.addActionListener(e -> {
             if (verifyAndSaveCurrentSelection()) {
                 setUserSelection(APPROVE_SELECTION);
                 dispose();
             }
         });
-        cancel.addActionListener(e -> {
+        cancelButton.addActionListener(e -> {
             setUserSelection(CANCEL_SELECTION);
             dispose();
         });
-        footer.add(ok);
-        footer.add(cancel);
+        footer.add(okButton);
+        footer.add(cancelButton);
         return footer;
     }
 
@@ -480,28 +602,55 @@ public final class AWTSettingsDialog extends JFrame {
         fullscreenBox.addActionListener(e -> updateResolutionChoices());
     }
 
-    private void setupGlobalKeyBindings(JComponent root) {
-        KeyAdapter key = new KeyAdapter() {
+    private void setupGlobalKeyBindings() {
+        JRootPane rp = getRootPane();
+        InputMap im = rp.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW);
+        ActionMap am = rp.getActionMap();
+
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "cancel");
+        am.put("cancel", new AbstractAction() {
             @Override
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                    // click OK if present
-                    for (Component c : ((Container) getContentPane()).getComponents()) {
-                        // footer is last component, find buttons
-                    }
-                    // fallback to default button
-                    JButton defaultBtn = getRootPane().getDefaultButton();
-                    if (defaultBtn != null) defaultBtn.doClick();
-                } else if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
-                    setUserSelection(CANCEL_SELECTION);
-                    dispose();
-                }
+            public void actionPerformed(ActionEvent e) {
+                setUserSelection(CANCEL_SELECTION);
+                dispose();
             }
-        };
-        addKeyListenerToAll(root, key);
+        });
+
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), "confirm");
+        am.put("confirm", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                if (okButton != null) okButton.doClick();
+            }
+        });
+
+        // Alt+M/X/C for window controls
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_M, InputEvent.ALT_DOWN_MASK), "minimize");
+        am.put("minimize", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setState(Frame.ICONIFIED);
+            }
+        });
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_X, InputEvent.ALT_DOWN_MASK), "maximize");
+        am.put("maximize", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                toggleMaximizeRestore();
+            }
+        });
+        im.put(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.ALT_DOWN_MASK), "close");
+        am.put("close", new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                setUserSelection(CANCEL_SELECTION);
+                dispose();
+            }
+        });
     }
 
     private void addDraggableListener(JComponent comp) {
+        // kept for backward compatibility; new titlebar handles dragging
         comp.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -517,15 +666,6 @@ public final class AWTSettingsDialog extends JFrame {
                 setLocation(x, y);
             }
         });
-    }
-
-    private void addKeyListenerToAll(Component comp, KeyListener listener) {
-        comp.addKeyListener(listener);
-        if (comp instanceof Container) {
-            for (Component c : ((Container) comp).getComponents()) {
-                addKeyListenerToAll(c, listener);
-            }
-        }
     }
 
     // ---------- Resolution / Antialias / Helpers ----------
@@ -559,16 +699,13 @@ public final class AWTSettingsDialog extends JFrame {
         String[] choices = {resource("antialias.disabled", "Disabled"), "2x", "4x", "6x", "8x", "16x"};
         antialiasCombo.setModel(new DefaultComboBoxModel<>(choices));
         int samples = source.getSamples();
-        String selection = switch (samples) {
-            case 0 -> choices[0];
-            default -> {
-                if (samples >= 16) yield "16x";
-                else if (samples >= 8) yield "8x";
-                else if (samples >= 6) yield "6x";
-                else if (samples >= 4) yield "4x";
-                else yield "2x";
-            }
-        };
+        String selection = "Disabled";
+        if (samples == 0) selection = choices[0];
+        else if (samples >= 16) selection = "16x";
+        else if (samples >= 8) selection = "8x";
+        else if (samples >= 6) selection = "6x";
+        else if (samples >= 4) selection = "4x";
+        else selection = "2x";
         antialiasCombo.setSelectedItem(selection);
     }
 
@@ -723,22 +860,8 @@ public final class AWTSettingsDialog extends JFrame {
             this.setVisible(true);
             this.toFront();
             // choose default button
-            getRootPane().setDefaultButton(findDefaultOKButton());
+            getRootPane().setDefaultButton(okButton);
         });
-    }
-
-    private JButton findDefaultOKButton() {
-        Container c = (Container) getContentPane();
-        for (Component comp : c.getComponents()) {
-            if (comp instanceof JPanel) {
-                for (Component inner : ((JPanel) comp).getComponents()) {
-                    if (inner instanceof JButton && ((JButton) inner).getText() != null && ((JButton) inner).getText().equalsIgnoreCase(resource("button.ok", "OK"))) {
-                        return (JButton) inner;
-                    }
-                }
-            }
-        }
-        return null;
     }
 
     // ---------- Misc helpers (kept for parity) ----------
