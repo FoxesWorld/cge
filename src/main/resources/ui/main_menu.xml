@@ -20,7 +20,7 @@
             </components>
         </panel>
 
-        <panel id="main_panel" anchor="BOTTOM_LEFT" dpiScale="1.4" x="5%" y="40%" width="25%" height="35%" bgColor="#000000" bgAlpha="0.5">
+        <panel id="main_panel" anchor="CENTER_LEFT" dpiScale="1.3" spacing="5" width="25%" height="35%" bgColor="#000000" bgAlpha="0.5">
             <components>
                 <button id="play" action="org.foxesworld.cge.tmp.menu.actions.StartGameAction" iconPath="assets/Interface/Icons/bug.png"  iconSize="40" height="125" text="START GAME" />
                 <button id="settings" action="org.foxesworld.cge.tmp.menu.actions.OpenSettingsAction" iconPath="assets/Interface/ui/icons/settings.png" iconSize="40" height="95" text="SETTINGS" />

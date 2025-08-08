@@ -178,33 +178,41 @@ public final class ViceTabs extends UIComponent implements InteractiveComponent,
     @Override
     public void handleMouseDrag(Vector2f cursor) {
         if (activeSlider == null) return;
-
         Tab activeTab = getActiveTab();
         if (activeTab == null) return;
-
         transformToContentSpace(cursor, activeTab);
         activeSlider.handleDrag(contentLocalCursor);
     }
-
     @Override
     public void handleMouseRelease() {
         activeSlider = null;
     }
 
     @Override
-    public float getHeight() {
-        return contentHeight;
+    public float getWidth() {
+        if (orientation == Orientation.HORIZONTAL) {
+            return Math.max(contentWidth, buttonBarSize.x);
+        } else {
+            return buttonBarSize.x + contentWidth;
+        }
     }
 
     @Override
-    public float getWidth() {
-        return contentWidth;
+    public float getHeight() {
+        if (orientation == Orientation.HORIZONTAL) {
+            return buttonBarSize.y + contentHeight;
+        } else {
+            return Math.max(contentHeight, buttonBarSize.y);
+        }
     }
 
     @Override
     public void setSize(float width, float height) {
-        finalizeLayout(width, height);
+        this.contentWidth = Math.max(0, width - (orientation == Orientation.VERTICAL ? buttonBarSize.x : 0));
+        this.contentHeight = Math.max(0, height - (orientation == Orientation.HORIZONTAL ? buttonBarSize.y : 0));
+        finalizeLayout(this.contentWidth, this.contentHeight);
     }
+
 
     @Override
     public boolean intersects(Vector2f cursor) {
@@ -232,8 +240,11 @@ public final class ViceTabs extends UIComponent implements InteractiveComponent,
     }
 
     private void transformToContentSpace(Vector2f cursor, Tab activeTab) {
-        contentLocalCursor.set(cursor)
-                .subtractLocal(tabsWorldPos)
-                .subtractLocal(activeTab.contentNode().getLocalTranslation().x, activeTab.contentNode().getLocalTranslation().y);
+        tabsWorldPos.set(tabsNode.getWorldTranslation().x, tabsNode.getWorldTranslation().y);
+        float xOffset = (orientation == Orientation.HORIZONTAL) ? 0f : buttonBarSize.x;
+        float yOffset = (orientation == Orientation.HORIZONTAL) ? -buttonBarSize.y : 0f;
+        float contentWorldX = tabsWorldPos.x + xOffset + PADDING;
+        float contentWorldY = tabsWorldPos.y + yOffset + PADDING;
+        contentLocalCursor.set(cursor.x - contentWorldX, contentWorldY - cursor.y);
     }
 }

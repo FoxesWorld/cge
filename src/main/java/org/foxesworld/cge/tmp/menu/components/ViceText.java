@@ -36,7 +36,7 @@ public class ViceText extends UIComponent implements InteractiveComponent, MenuC
         this.assetManager = assetManager;
         this.textXml = textXml;
         this.fontSizeRaw = textXml.fontSize;
-
+        ttfRenderer = new TTFrenderer(assetManager);
         this.textNode = new Node("ViceText: " + textXml.text);
         recreateFont(); // инициализация шрифта и текста
     }
@@ -46,7 +46,7 @@ public class ViceText extends UIComponent implements InteractiveComponent, MenuC
         if (ttfRenderer != null && ttc != null) {
             textNode.detachChild(ttc);
         }
-        ttfRenderer = new TTFrenderer(assetManager);
+
         ttfRenderer.generateFont("assets/Interface/fonts/Docker One.ttf", Style.Plain, Math.round(fontSize));
         ttfRenderer.generateText(ColorUtils.fromHexString(textXml.color), textXml.text);
         ttc = ttfRenderer.getTextGeometry();

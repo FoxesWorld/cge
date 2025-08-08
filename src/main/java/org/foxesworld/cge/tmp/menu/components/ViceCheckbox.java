@@ -5,11 +5,7 @@ import com.jme3.font.BitmapFont;
 import com.jme3.font.BitmapText;
 import com.jme3.material.Material;
 import com.jme3.material.RenderState.BlendMode;
-import com.jme3.math.ColorRGBA;
-import com.jme3.math.FastMath;
-import com.jme3.math.Quaternion;
-import com.jme3.math.Vector2f;
-import com.jme3.math.Vector3f;
+import com.jme3.math.*;
 import com.jme3.scene.Node;
 import com.jme3.ui.Picture;
 import org.foxesworld.cge.tmp.menu.components.utils.InteractiveComponent;
@@ -20,7 +16,7 @@ import org.foxesworld.cge.tmp.menu.xml.CheckboxXml;
 public final class ViceCheckbox extends UIComponent implements InteractiveComponent, MenuComponent, SoundComponent {
 
     private static final float ANIM_SPEED = 20f;
-    private static final float LABEL_GAP_MULTIPLIER = 0.4f;
+    private static final float LABEL_GAP_MULTIPLIER = 0.45f;
     private static final float CHECK_BOUNCE_MULTIPLIER = 1.15f;
     private static final float CHECK_ROTATION_DEGREES = -20f;
 
@@ -68,14 +64,18 @@ public final class ViceCheckbox extends UIComponent implements InteractiveCompon
         checkMaterial.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
         checkMaterial.setColor("Color", COLOR_CHECK);
 
-        BitmapFont font = assets.loadFont(fontPath);
+        BitmapFont font = assets.loadFont("Interface/Fonts/Default.fnt");
         labelText = new BitmapText(font);
         labelText.setText(checkboxXml.text);
         labelText.setColor(ColorRGBA.White);
+        labelText.setBox(null); // not forcing a box
 
         node.attachChild(framePicture);
         node.attachChild(checkPicture);
         node.attachChild(labelText);
+
+        // sensible default size
+        setSize(24f);
     }
 
     @Override
@@ -121,7 +121,7 @@ public final class ViceCheckbox extends UIComponent implements InteractiveCompon
 
         checkPicture.setLocalRotation(new Quaternion().fromAngleAxis(currentCheckRotation * FastMath.DEG_TO_RAD, new Vector3f(0, 0, 1)));
 
-        float alpha = FastMath.clamp(currentCheckSize / size, 0f, 1f);
+        float alpha = FastMath.clamp(size > 0f ? currentCheckSize / size : 0f, 0f, 1f);
         checkMaterial.setColor("Color", new ColorRGBA(COLOR_CHECK.r, COLOR_CHECK.g, COLOR_CHECK.b, alpha));
     }
 
@@ -130,28 +130,49 @@ public final class ViceCheckbox extends UIComponent implements InteractiveCompon
         currentLabelScale = FastMath.interpolateLinear(lerp, currentLabelScale, targetScale);
         labelText.setSize(baseLabelSize * currentLabelScale);
         labelText.setColor(isActive ? ColorRGBA.White : COLOR_DISABLED_LABEL);
+        // reposition after size change
+        repositionLabel();
     }
 
     @Override
     public void setSize(float width, float height) {
+        // keep API compatible: set by height primarily
         setSize(height);
     }
 
     public void setSize(float newSize) {
+        if (newSize <= 0f) newSize = 1f;
         this.size = newSize;
-        this.baseLabelSize = newSize * 0.75f;
+
+        // label size chosen relative to checkbox size; slightly smaller than box
+        this.baseLabelSize = newSize * 0.72f;
 
         framePicture.setWidth(size);
         framePicture.setHeight(size);
 
         this.currentCheckSize = isChecked ? size : 0f;
-        this.currentCheckRotation = 0f;
+        this.currentCheckRotation = isChecked ? 0f : CHECK_ROTATION_DEGREES;
         applyCheckTransform();
 
-        labelText.setSize(baseLabelSize);
-        float labelX = size + (size * LABEL_GAP_MULTIPLIER);
-        float labelY = (size - labelText.getLineHeight()) / 2f + 25f;
-        labelText.setLocalTranslation(labelX, labelY, 1f);
+        labelText.setSize(baseLabelSize * currentLabelScale);
+
+        repositionLabel();
+    }
+
+    private void repositionLabel() {
+        float gap = size * LABEL_GAP_MULTIPLIER;
+        float labelX = size + gap;
+
+        // ensure BitmapText metrics are up-to-date by using its current size
+        float textWidth = labelText.getLineWidth();
+        float textHeight = labelText.getLineHeight();
+
+        // BitmapText baseline coordinate: setLocalTranslation(x, y), y is the baseline position.
+        // To vertically center text inside box of height 'size', set baseline at (boxTop + textHeight/2 + (size - textHeight)/2)
+        // Simpler and reliable: baseline = size - (size - textHeight)/2
+        float baselineY = size - (size - textHeight) / 2f;
+
+        labelText.setLocalTranslation(labelX, baselineY, 1f);
     }
 
     public void toggle() {
@@ -165,12 +186,15 @@ public final class ViceCheckbox extends UIComponent implements InteractiveCompon
 
     @Override
     public float getWidth() {
-        return size + (size * LABEL_GAP_MULTIPLIER) + labelText.getLineWidth();
+        float gap = size * LABEL_GAP_MULTIPLIER;
+        float textWidth = labelText.getLineWidth();
+        return size + gap + textWidth;
     }
 
     @Override
     public float getHeight() {
-        return size;
+        float textH = labelText.getLineHeight();
+        return Math.max(size, textH);
     }
 
     @Override

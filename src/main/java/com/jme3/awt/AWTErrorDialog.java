@@ -58,14 +58,14 @@ public class AWTErrorDialog extends JDialog {
         setContentPane(mainPanel);
 
         ImageIcon icon = loadDialogIcon();
-        ModernTitleBar titleBar = new ModernTitleBar(title, icon, e -> mainPanel.fadeOut());
+        ModernTitleBar titleBar = new ModernTitleBar(title, icon, e -> mainPanel.hideAnimated());
         JPanel contentPanel = createContentPanel(message, stackTrace);
 
         mainPanel.add(titleBar, BorderLayout.NORTH);
         mainPanel.add(contentPanel, BorderLayout.CENTER);
 
         setupShortcuts();
-        mainPanel.fadeIn();
+        mainPanel.showAnimated();
     }
 
     private JPanel createContentPanel(String message, String stackTrace) {
@@ -120,7 +120,7 @@ public class AWTErrorDialog extends JDialog {
         copyButton.addActionListener(e -> copyStackTraceToClipboard());
 
         ModernButton closeButton = new ModernButton(CLOSE_BTN_TEXT, ModernButton.ButtonStyle.PRIMARY);
-        closeButton.addActionListener(e -> mainPanel.fadeOut());
+        closeButton.addActionListener(e -> mainPanel.hideAnimated());
 
         actionsPanel.add(copyButton);
         actionsPanel.add(closeButton);
@@ -161,7 +161,7 @@ public class AWTErrorDialog extends JDialog {
 
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_ESCAPE, 0), "closeAction");
         actionMap.put("closeAction", new AbstractAction() {
-            @Override public void actionPerformed(ActionEvent e) { mainPanel.fadeOut(); }
+            @Override public void actionPerformed(ActionEvent e) { mainPanel.hideAnimated(); }
         });
 
         inputMap.put(KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK), "copyAction");

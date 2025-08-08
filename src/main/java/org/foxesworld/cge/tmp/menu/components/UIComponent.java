@@ -8,7 +8,7 @@ import com.jme3.scene.Node;
  */
 public abstract class UIComponent {
 
-    protected final String id;
+    protected String id;
     protected final Node node;
     protected float dpiScale = 1.0f;
 
@@ -19,6 +19,10 @@ public abstract class UIComponent {
 
     public String getId() {
         return id;
+    }
+
+    public void setId(String id) {
+        this.id = id;
     }
 
     public Node getNode() {

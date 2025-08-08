@@ -47,11 +47,14 @@ public class TabsBuilder implements ComponentBuilder<TabsXml> {
                 for (ComponentXml componentModel : tabModel.components) {
                     MenuComponent createdComponent = mainBuilder.buildComponent(componentModel, contentNode);
                     createdObjects.add(createdComponent);
-                    innerHeight+= (float) (createdComponent.getHeight() * 2.4);
+                    innerHeight+= createdComponent.getHeight();
+                    System.out.println(createdComponent.getId() + " height - " + createdComponent.getHeight());
+                    createdComponent.getNode().setLocalTranslation(25, innerHeight + createdComponent.getHeight(), 0);
                 }
             }
             tabComponent.addTab(tabModel, contentNode, createdObjects);
         }
+        System.out.println(model.contentHeight);
         tabComponent.finalizeLayout(model.contentWidth, model.contentHeight - innerHeight);
         Vector2f pos = MenuUtils.calculatePosition(model.x, model.y, model.alignX, context.app().getCamera());
         float width = MenuUtils.parseSize(model.width, context.app().getCamera().getWidth());

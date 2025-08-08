@@ -5,9 +5,10 @@
 
 
         <!-- КОНТЕЙНЕР ДЛЯ ВКЛАДОК -->
-        <panel id="settings" anchor="TOP_LEFT" x="5%" y="0%" dpiScale="1.0" height="65%" bgColor="#000000" cornerRadius="20" bgAlpha="0.5">
+        <panel id="settings" anchor="CENTER_LEFT" dpiScale="1.0" height="65%" bgColor="#000000" cornerRadius="20" bgAlpha="0.5">
             <components>
-                <tabs contentWidth="600" contentHeight="300" orientation="VERTICAL">
+                <button action="org.foxesworld.cge.tmp.menu.actions.GoBackToMainMenuAction" text="BACK" y="15%"/>
+                <tabs orientation="VERTICAL">
 
                     <!-- ТРЕТЬЯ ВКЛАДКА: УПРАВЛЕНИЕ -->
                     <tab iconPath="assets/Interface/ui/icons/process.png" title="CONTROLS">
@@ -17,22 +18,19 @@
 
                     <!-- ВТОРАЯ ВКЛАДКА: АУДИО -->
                     <tab iconPath="assets/Interface/ui/icons/sound.png" title="AUDIO">
-                        <slider text="MASTER VOLUME" y="200" x="50" width="400" value="0.8" bind="audio.master"/>
-                        <slider text="MUSIC" y="100" x="50" width="400" value="0.6" bind="audio.music"
-                                fillColor="#cb2020"/>
+                        <slider text="MASTER VOLUME" width="400" value="0.8" bind="audio.master"/>
+                        <slider text="MUSIC" width="400" value="0.6" bind="audio.music" fillColor="#cb2020"/>
                     </tab>
 
                     <!-- ПЕРВАЯ ВКЛАДКА: ГРАФИКА -->
                     <tab iconPath="assets/Interface/ui/icons/graphic-card.png" title="GRAPHICS">
-                        <checkbox text="V-Sync" y="200" x="50" checked="true" bind="graphics.vsync"/>
-                        <checkbox text="Shadows" y="150" x="50" checked="true" bind="graphics.shadows"/>
-                        <checkbox text="Bloom Effect" y="100" x="50" checked="true" bind="graphics.bloom"/>
+                        <checkbox text="V-Sync" checked="true" bind="graphics.vsync"/>
+                        <checkbox text="Shadows" checked="true" bind="graphics.shadows"/>
+                        <checkbox text="Bloom Effect" checked="true" bind="graphics.bloom"/>
+                        <checkbox text="Shader Effect" checked="true" bind="graphics.bloom"/>
                     </tab>
                 </tabs>
             </components>
         </panel>
-
-        <!-- Кнопка "Назад" теперь ниже -->
-        <button action="org.foxesworld.cge.tmp.menu.actions.GoBackToMainMenuAction" text="BACK" y="15%"/>
     </screen>
 </menu>
