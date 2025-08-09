@@ -14,7 +14,7 @@ import java.util.Map;
  */
 public class ComponentRegistry {
     private static final Logger LOGGER = LoggerFactory.getLogger(ComponentRegistry.class);
-    private final Map<Class<? extends ComponentXml>, org.foxesworld.cge.tmp.menu.xml.ComponentBuilder<?>> builders = new HashMap<>();
+    private final Map<Class<? extends ComponentXml>, ComponentBuilder<?>> builders = new HashMap<>();
 
     public ComponentRegistry(XmlMenuBuilder mainBuilder) {
         registerDefaultBuilders(mainBuilder);
@@ -29,7 +29,7 @@ public class ComponentRegistry {
         register(PanelXml.class, new PanelBuilder(mainBuilder));
     }
 
-    private <T extends ComponentXml> void register(Class<T> modelClass, org.foxesworld.cge.tmp.menu.xml.ComponentBuilder<T> builder) {
+    private <T extends ComponentXml> void register(Class<T> modelClass, ComponentBuilder<T> builder) {
         if (!builders.containsKey(modelClass)) {
             builders.put(modelClass, builder);
             LOGGER.debug("Registered component builder for {}", modelClass.getSimpleName());

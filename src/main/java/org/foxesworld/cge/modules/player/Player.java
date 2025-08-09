@@ -146,7 +146,6 @@ public class Player extends Node {
 
             @Override
             public void onStep() {
-                getEngine().getSoundManager().play("player.step");
                 //getEngine().getModuleManager().getModule(SoundModule.class).playSound("assets/Sounds/FST_Conc_JumpDown_Player_1st_01.ogg", playerModel.getLocalTranslation(), true, 1.0f);
             }
         });

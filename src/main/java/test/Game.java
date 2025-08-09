@@ -1,5 +1,8 @@
 package test;
 
+import com.formdev.flatlaf.FlatDarkLaf;
+import com.formdev.flatlaf.FlatLaf;
+import com.formdev.flatlaf.FlatPropertiesLaf;
 import com.jme3.system.AppSettings;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.ICOParser;
@@ -9,7 +12,6 @@ import org.foxesworld.cge.modules.inputManager.InputManagerModule;
 import org.foxesworld.cge.modules.physics.PhysicsModule;
 import org.foxesworld.cge.modules.player.PlayerModule;
 import org.foxesworld.cge.modules.renderer.RendererModule;
-import org.foxesworld.cge.modules.scene.SceneModule;
 import org.foxesworld.cge.modules.terrain.Terrain;
 import org.foxesworld.cge.modules.ui.UIModule;
 
@@ -18,15 +20,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 
-import static org.foxesworld.cge.tools.SceneCGSCreator.SceneCgsCreatorFrame.setupTheme;
-
 public class Game {
     public static void main(String[] args){
         List<ModuleConfig> cfg = List.of(
              new ModuleConfig(InputManagerModule::new, 100),
              new ModuleConfig(RendererModule::new, 20),
              new ModuleConfig(PhysicsModule::new, 35),
-             new ModuleConfig(SceneModule::new,   10),
+                //new ModuleConfig(SceneModule::new,   10),
              new ModuleConfig(UIModule::new,        5),
              new ModuleConfig(PlayerModule::new, 40),
              new ModuleConfig(Terrain::new, 25),
@@ -60,5 +60,24 @@ public class Game {
 
         app.setSettings(settings);
         app.start();
+    }
+
+    public static void setupTheme(String theme) {
+        try {
+            InputStream themeStream = Game.class.getClassLoader().getResourceAsStream(theme);
+
+            if(themeStream == null) {
+                throw new RuntimeException("Theme file not found in resources");
+            }
+
+            FlatPropertiesLaf laf = new FlatPropertiesLaf("Dark Theme", themeStream);
+            FlatLaf.setup(laf);
+
+        } catch(Exception ex) {
+            // Fallback на стандартную темную тему
+            FlatLaf.setup(new FlatDarkLaf());
+            ex.printStackTrace();
+        }
+
     }
 }

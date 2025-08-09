@@ -27,9 +27,7 @@ import org.foxesworld.cge.modules.ecs.systems.SceneGraphSystem;
 import org.foxesworld.cge.modules.physics.PhysicsModule;
 import org.foxesworld.cge.modules.popcycle.PopCycle;
 import org.foxesworld.cge.modules.renderer.GpuInfo;
-import org.foxesworld.cge.modules.scene.SceneModule;
 import org.foxesworld.cge.modules.ui.novaUi.NovaUI;
-import org.foxesworld.cge.tmp.ShapeParty;
 import org.foxesworld.cge.tmp.menu.MainMenuAppState;
 import org.slf4j.bridge.SLF4JBridgeHandler;
 
@@ -37,6 +35,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import static org.foxesworld.cge.core.loadingLogos.LoadingAppState.buildLogoChainFromJson;
+import static test.Game.setupTheme;
 
 
 /**
@@ -57,7 +56,6 @@ public class CalistaGameEngine extends SimpleApplication {
     private MaterialManager materialManager;
     private SoundManager soundManager;
     private ECSModule ecsModule;
-    private SceneModule scene;
     private ModuleManager moduleManager;
     private NovaUI novaUI;
 
@@ -69,7 +67,7 @@ public class CalistaGameEngine extends SimpleApplication {
     public CalistaGameEngine(List<ModuleConfig> modulesToLoad) throws Exception {
         this.modulesToLoad = modulesToLoad;
         INSTANCE = this;
-
+        setupTheme("assets/theme/calista.properties");
         // Configure logging
         System.setProperty("log.dir", System.getProperty("user.dir"));
         System.setProperty("log.level", "DEBUG");
@@ -166,10 +164,6 @@ public class CalistaGameEngine extends SimpleApplication {
         return popCycle;
     }
 
-    public SceneModule getScene() {
-        return scene;
-    }
-
     public AssetRepo getAssetRepo() {
         return assetRepo;
     }
@@ -207,7 +201,7 @@ public class CalistaGameEngine extends SimpleApplication {
             //this.assetManager.registerLoader(OBJImporter.class, "obj");
             //this.assetManager.registerLoader(FBXImporter.class, "fbx");
 
-            this.scene = moduleManager.getModule(SceneModule.class);
+            //this.scene = moduleManager.getModule(SceneModule.class);
 
             //ECS System
             this.ecsModule = moduleManager.getModule(ECSModule.class);
@@ -217,10 +211,10 @@ public class CalistaGameEngine extends SimpleApplication {
             // Load assets
             assetLoader.loadAllAssets(new StatusProgressBar());
             stateManager.attach(new ConfigEditorState(configService));
-            assetLoader.onAssetsLoaded(() -> {
-                ShapeParty spawner = new ShapeParty(this);
-                spawner.startParty();
-            });
+            //assetLoader.onAssetsLoaded(() -> {
+             //   ShapeParty spawner = new ShapeParty(this);
+             //   spawner.startParty();
+            //});
         });
     }
 }

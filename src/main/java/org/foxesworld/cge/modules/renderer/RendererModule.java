@@ -1,9 +1,6 @@
 package org.foxesworld.cge.modules.renderer;
 
 import com.jme3.app.Application;
-import com.jme3.renderer.Caps;
-import com.jme3.renderer.Limits;
-import com.jme3.renderer.Renderer;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.CalistaGameEngine;
@@ -11,13 +8,6 @@ import org.foxesworld.cge.core.module.EngineModule;
 import org.foxesworld.cge.core.module.ModuleManager;
 import org.foxesworld.cge.modules.renderer.postProcessing.PostProcessingModule;
 import org.foxesworld.cge.modules.renderer.skyBox.SkyBox;
-import org.foxesworld.cge.modules.scene.SceneModule;
-import org.lwjgl.opengl.GL11;
-
-import java.util.Comparator;
-import java.util.EnumMap;
-import java.util.EnumSet;
-import java.util.StringJoiner;
 
 /**
  * Manages rendering-related sub-modules and settings.
@@ -66,8 +56,6 @@ public class RendererModule extends EngineModule<RendererConfig> {
         this.postProcessingModule = new PostProcessingModule(this);
         subManager.register(skyBox, 20);
         subManager.register(postProcessingModule, 30);
-
-        initializeSceneIntegration(app);
     }
 
     /**
@@ -91,25 +79,6 @@ public class RendererModule extends EngineModule<RendererConfig> {
             ppModule.onConfigReloaded();
         }
     }
-
-    /**
-     * Sets up a callback to adjust renderer settings when the scene becomes ready.
-     * This establishes the integration point between rendering and scene content.
-     *
-     * @param app The CalistaGameEngine instance.
-     */
-    private void initializeSceneIntegration(CalistaGameEngine app) {
-        SceneModule sceneModule = app.getModuleManager().getModule(SceneModule.class);
-        if (sceneModule != null) {
-            sceneModule.onSceneReady(ctx -> {
-                LOGGER.info("Scene is ready, performing final renderer updates (e.g., environment setup)...");
-                // TODO: Implement scene-specific rendering updates, like updating environment maps or lighting probes.
-            });
-        } else {
-            LOGGER.warn("SceneModule not found. Scene-specific renderer integration will be skipped.");
-        }
-    }
-
 
     // --- Accessors for dependent modules ---
 

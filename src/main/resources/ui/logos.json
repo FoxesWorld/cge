@@ -4,8 +4,8 @@
     "width": 685,
     "height": 226,
     "duration": 3.5,
-    "startScale": 0.8,
-    "endScale": 1.0,
+    "startScale": 0.4,
+    "endScale": 0.8,
     "skippable": true
   },
   {
@@ -13,7 +13,7 @@
     "width": 815,
     "height": 1196,
     "duration": 3.5,
-    "startScale": 0.4,
+    "startScale": 0.1,
     "endScale": 1.0,
     "skippable": true
   }

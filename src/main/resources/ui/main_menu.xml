@@ -22,12 +22,10 @@
 
         <panel id="main_panel" anchor="CENTER" dpiScale="1.0" spacing="5" bgColor="#000000" bgAlpha="0.5">
             <components>
-                <button id="play" action="org.foxesworld.cge.tmp.menu.actions.StartGameAction" iconPath="assets/Interface/Icons/bug.png"  iconSize="40" height="125" text="START GAME" />
-                <button id="settings" action="org.foxesworld.cge.tmp.menu.actions.OpenSettingsAction" iconPath="assets/Interface/ui/icons/settings.png" iconSize="40" height="95" text="SETTINGS" />
-                <button id="quit" action="org.foxesworld.cge.tmp.menu.actions.QuitGameAction" iconPath="assets/Interface/ui/icons/quit.png" iconSize="40" height="95" text="QUIT" />
+                <button id="play" action="org.foxesworld.cge.tmp.menu.actions.StartGameAction" iconPath="assets/Interface/Icons/bug.png"  iconSize="40" height="125" text="Играть" />
+                <button id="settings" action="org.foxesworld.cge.tmp.menu.actions.OpenSettingsAction" iconPath="assets/Interface/ui/icons/settings.png" iconSize="40" height="95" text="Настройки" />
+                <button id="quit" action="org.foxesworld.cge.tmp.menu.actions.QuitGameAction" iconPath="assets/Interface/ui/icons/quit.png" iconSize="40" height="95" text="Выход" />
             </components>
         </panel>
-
-
     </screen>
 </menu>
