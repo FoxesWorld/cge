@@ -5,6 +5,7 @@ import com.jme3.material.Material;
 import com.jme3.material.RenderState.BlendMode;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
+import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.shape.Quad;
@@ -16,6 +17,12 @@ import org.foxesworld.cge.tmp.menu.xml.TabXml;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * ViceTabs — вкладки с улучшенной адаптивностью вычисления зоны контента.
+ * Добавлена поддержка hover-эффекта для кнопок.
+ *
+ * CHANGED: Компоненты внутри контента теперь получают координаты курсора в своей локальной системе координат.
+ */
 public final class ViceTabs extends UIComponent implements InteractiveComponent, MenuComponent {
 
     private record Tab(ViceButton button, Node contentNode, List<Object> content) {}
@@ -31,22 +38,40 @@ public final class ViceTabs extends UIComponent implements InteractiveComponent,
 
     private int activeTabIndex = -1;
     private ViceSlider activeSlider = null;
+
+    // размеры контента (в локальных пикселях GUI, уже с учётом dpiScale где применяется)
     private float contentWidth = 0f;
     private float contentHeight = 0f;
-    private Vector2f buttonBarSize = new Vector2f();
 
-    private final Vector2f tabsWorldPos = new Vector2f();
+    // размер панели кнопок (ширина, высота)
+    private final Vector2f buttonBarSize = new Vector2f();
+
+    // рабочие параметры (не менять жестко — лучше через сеттеры)
+    private float preferredButtonWidth = 180f;
+    private float preferredButtonHeight = 45f;
+    private float minButtonWidth = 48f;
+    private float minButtonHeight = 20f;
+    private float spacing = 10f;
+    private float padding = 10f;
+
+    // локальная координата курсора внутри области контента (x: вправо от левого края, y: вверх от нижнего края)
+    // (оставляем как вспомогательный, но основные проверки теперь происходят в локале каждого компонента)
     private final Vector2f contentLocalCursor = new Vector2f();
 
-    private static final float BUTTON_WIDTH = 180f;
-    private static final float BUTTON_HEIGHT = 45f;
-    private static final float SPACING = 10f;
-    private static final float PADDING = 10f;
+    // индекс кнопки, над которой сейчас hover (-1 если никакой)
+    private int hoveredButtonIndex = -1;
+
+    private static final float QUAD_TEX_BUFFER = 1f; // небольшой буфер, если нужен
+
+    // CHANGED: временные буферы для преобразований мировых -> локальных (чтобы не аллоцировать каждый кадр)
+    private final Vector3f tmpWorld = new Vector3f();
+    private final Vector3f tmpLocal = new Vector3f();
+    private final Vector2f tmp2 = new Vector2f();
 
     public ViceTabs(String id, AssetManager assetManager, ViceButton.Style buttonStyle, Orientation orientation) {
         super(id);
         this.assetManager = assetManager;
-        this.buttonStyle = buttonStyle;
+        this.buttonStyle = buttonStyle != null ? buttonStyle : ViceButton.Style.getViceStyle();
         this.orientation = orientation;
 
         this.tabBarBackground = createBackground(new ColorRGBA(0.05f, 0.05f, 0.05f, 0.75f), "TabBarBG");
@@ -72,54 +97,100 @@ public final class ViceTabs extends UIComponent implements InteractiveComponent,
         tabsNode.attachChild(button.getNode());
     }
 
-    public void finalizeLayout(float contentWidth, float contentHeight) {
-        this.contentWidth = contentWidth;
-        this.contentHeight = contentHeight;
+    /**
+     * Подготовить финальную раскладку. Принимает доступную ширину и высоту для всей компоненты Tabs.
+     * Эти значения — в локальных GUI-пикселях (обычно передаются уже с учётом dpiScale внешнего контейнера).
+     */
+    public void finalizeLayout(float totalWidth, float totalHeight) {
+        // масштабируем внутренние константы с учётом dpiScale (UIComponent содержит поле dpiScale)
+        float dpi = Math.max(1f, dpiScale);
 
-        this.buttonBarSize = layoutTabButtons();
-        layoutContentArea();
+        float pad = padding * dpi;
+        float sp = spacing * dpi;
+        float prefBW = preferredButtonWidth * dpi;
+        float prefBH = preferredButtonHeight * dpi;
+        float minBW = minButtonWidth * dpi;
+        float minBH = minButtonHeight * dpi;
 
-        if (!tabs.isEmpty()) {
-            selectTab(0);
-        }
-    }
+        if (orientation == Orientation.HORIZONTAL) {
+            int n = Math.max(1, tabs.size());
+            float availableForButtons = Math.max(0f, totalWidth - pad * 2);
+            float buttonW = prefBW;
+            float totalNeeded = n * prefBW + (n - 1) * sp;
+            if (totalNeeded > availableForButtons) {
+                float candidate = (availableForButtons - (n - 1) * sp) / (float) n;
+                buttonW = Math.max(minBW, candidate);
+            }
+            float buttonH = prefBH;
+            float barH = buttonH + pad * 2;
+            float contentH = Math.max(0f, totalHeight - barH);
+            float contentW = totalWidth;
 
-    private Vector2f layoutTabButtons() {
-        float offset = 0f;
-        float maxButtonSize = 0f;
+            this.contentWidth = contentW;
+            this.contentHeight = contentH;
+            this.buttonBarSize.set(totalWidth, barH);
 
-        for (Tab tab : tabs) {
-            tab.button().setSize(BUTTON_WIDTH, BUTTON_HEIGHT);
-            if (orientation == Orientation.HORIZONTAL) {
-                tab.button().setPosition(PADDING + offset, PADDING);
-                offset += BUTTON_WIDTH + SPACING;
-                maxButtonSize = BUTTON_HEIGHT;
-            } else {
-                tab.button().setPosition(PADDING, PADDING + offset);
-                offset += BUTTON_HEIGHT + SPACING;
-                maxButtonSize = BUTTON_WIDTH;
+            float offsetX = pad + Math.max(0f, (availableForButtons - (n * buttonW + (n - 1) * sp)) / 2f);
+            float x = offsetX;
+            float y = pad;
+
+            for (Tab t : tabs) {
+                t.button().setSize(buttonW, buttonH);
+                t.button().setPosition(x, totalHeight - barH + y);
+                x += buttonW + sp;
+            }
+
+            ((Quad) tabBarBackground.getMesh()).updateGeometry(totalWidth, barH);
+            tabBarBackground.setLocalTranslation(0, totalHeight - barH, 0);
+
+            ((Quad) contentBackground.getMesh()).updateGeometry(contentW, contentH);
+            contentBackground.setLocalTranslation(0, 0, -1);
+
+            for (Tab t : tabs) {
+                //t.contentNode().setLocalTranslation(0, 0, 0);
+                if (t.contentNode().getParent() == null) tabsNode.attachChild(t.contentNode());
+            }
+        } else {
+            int n = Math.max(1, tabs.size());
+            float availableForButtons = Math.max(0f, totalHeight - pad * 2);
+            float buttonH = preferredButtonHeight * dpi;
+            float totalNeeded = n * buttonH + (n - 1) * sp;
+            if (totalNeeded > availableForButtons) {
+                float candidate = (availableForButtons - (n - 1) * sp) / (float) n;
+                buttonH = Math.max(minBH, candidate);
+            }
+            float buttonW = preferredButtonWidth * dpi;
+            float barW = buttonW + pad * 2;
+            float contentW = Math.max(0f, totalWidth - barW);
+            float contentH = totalHeight;
+
+            this.contentWidth = contentW;
+            this.contentHeight = contentH;
+            this.buttonBarSize.set(barW, totalHeight);
+
+            float offsetY = totalHeight - pad - buttonH;
+            for (Tab t : tabs) {
+                t.button().setSize(buttonW, buttonH);
+                t.button().setPosition(pad, offsetY);
+                offsetY -= (buttonH + sp);
+            }
+
+            ((Quad) tabBarBackground.getMesh()).updateGeometry(barW, totalHeight);
+            tabBarBackground.setLocalTranslation(0, 0, 0);
+
+            ((Quad) contentBackground.getMesh()).updateGeometry(contentW, contentH);
+            contentBackground.setLocalTranslation(barW, 0, -1);
+
+            for (Tab t : tabs) {
+                t.contentNode().setLocalTranslation(barW, 0, 0);
+                if (t.contentNode().getParent() == null) {
+                    tabsNode.attachChild(t.contentNode());
+                }
             }
         }
 
-        float barWidth = (orientation == Orientation.HORIZONTAL) ? contentWidth : (maxButtonSize + 2 * PADDING);
-        float barHeight = (orientation == Orientation.HORIZONTAL) ? (maxButtonSize + 2 * PADDING) : (offset - SPACING + 2 * PADDING);
-
-        ((Quad) tabBarBackground.getMesh()).updateGeometry(barWidth, barHeight);
-        tabBarBackground.setLocalTranslation(0, 0, 0);
-
-        return new Vector2f(barWidth, barHeight);
-    }
-
-    private void layoutContentArea() {
-        float xOffset = (orientation == Orientation.HORIZONTAL) ? 0 : buttonBarSize.x;
-        float yOffset = (orientation == Orientation.HORIZONTAL) ? -contentHeight : 0;
-
-        ((Quad) contentBackground.getMesh()).updateGeometry(contentWidth, contentHeight);
-        contentBackground.setLocalTranslation(xOffset, yOffset, -1);
-
-        for (Tab tab : tabs) {
-            tab.contentNode().setLocalTranslation(xOffset, yOffset, 0);
-            tabsNode.attachChild(tab.contentNode());
+        if (!tabs.isEmpty() && (activeTabIndex < 0 || activeTabIndex >= tabs.size())) {
+            selectTab(0);
         }
     }
 
@@ -128,107 +199,171 @@ public final class ViceTabs extends UIComponent implements InteractiveComponent,
         activeTabIndex = index;
 
         for (int i = 0; i < tabs.size(); i++) {
-            Tab tab = tabs.get(i);
-            boolean isActive = (i == index);
+            Tab t = tabs.get(i);
+            boolean active = (i == index);
+            t.button().setSelected(active);
+            t.contentNode().setCullHint(active ? Node.CullHint.Inherit : Node.CullHint.Always);
 
-            tab.button().setSelected(isActive);
-            tab.contentNode().setCullHint(isActive ? Node.CullHint.Inherit : Node.CullHint.Always);
-
-            for (Object item : tab.content()) {
-                ((InteractiveComponent) item).setActive(isActive);
+            for (Object o : t.content()) {
+                if (o instanceof InteractiveComponent ic) {
+                    ic.setActive(active);
+                }
             }
         }
     }
 
     @Override
     public void update(float tpf) {
-        for (Tab tab : tabs) {
-            tab.button().update(tpf);
+        for (Tab t : tabs) t.button().update(tpf);
+    }
+
+    /**
+     * Обрабатывает передвижение курсора — обновляет hover-состояние кнопок.
+     * Вызывать из внешней системы при движении мыши или, при отсутствии такой системы,
+     * из места, где у тебя доступен текущий курсор.
+     */
+    public void handleMouseMove(Vector2f cursor) {
+        int foundIndex = -1;
+        for (int i = 0; i < tabs.size(); i++) {
+            Tab t = tabs.get(i);
+            if (t.button().intersects(cursor)) {
+                foundIndex = i;
+                break;
+            }
         }
+
+        if (foundIndex == hoveredButtonIndex) return;
+
+        if (hoveredButtonIndex >= 0 && hoveredButtonIndex < tabs.size()) {
+            tabs.get(hoveredButtonIndex).button().setHovered(false);
+        }
+
+        if (foundIndex >= 0) {
+            tabs.get(foundIndex).button().setHovered(true);
+        }
+
+        hoveredButtonIndex = foundIndex;
     }
 
     @Override
     public void handleMousePress(Vector2f cursor) {
-        tabsWorldPos.set(tabsNode.getWorldTranslation().x, tabsNode.getWorldTranslation().y);
+        // обновляем hover чтобы избежать рассинхрона при нажатии
+        handleMouseMove(cursor);
 
-        for (Tab tab : tabs) {
-            if (tab.button().intersects(cursor)) {
-                tab.button().executeAction();
+        // button clicks: test each button directly (buttons know their node/world pos)
+        for (Tab t : tabs) {
+            if (t.button().intersects(cursor)) {
+                t.button().executeAction();
                 return;
             }
         }
 
-        Tab activeTab = getActiveTab();
-        if (activeTab == null) return;
+        // otherwise forward to active content
+        Tab active = getActiveTab();
+        if (active == null) return;
 
-        transformToContentSpace(cursor, activeTab);
+        // CHANGED: Для каждого элемента контента преобразуем курсор в локальные координаты этого элемента (если возможно)
+        for (Object item : active.content()) {
+            // case: item is both a MenuComponent (has node) and InteractiveComponent
+            if (item instanceof MenuComponent mc && item instanceof InteractiveComponent ic) {
+                Node itemNode = mc.getNode();
+                // world -> local in item's node
+                tmpWorld.set(cursor.x, cursor.y, 0f);
+                itemNode.worldToLocal(tmpWorld, tmpLocal);
+                tmp2.set(tmpLocal.x, tmpLocal.y);
 
-        for (Object item : activeTab.content()) {
-            if (item instanceof ViceSlider slider && slider.intersects(contentLocalCursor)) {
-                activeSlider = slider;
-                slider.handleDrag(contentLocalCursor);
-                return;
-            } else if (item instanceof ViceCheckbox checkbox && checkbox.intersects(contentLocalCursor)) {
-                checkbox.toggle();
-                return;
+                if (ic instanceof ViceSlider slider && slider.intersects(tmp2)) {
+                    activeSlider = slider;
+                    slider.handleDrag(tmp2);
+                    return;
+                } else if (ic instanceof ViceCheckbox checkbox && checkbox.intersects(tmp2)) {
+                    checkbox.toggle();
+                    return;
+                } else if (ic.intersects(tmp2)) {
+                    ic.handleMousePress(tmp2);
+                    return;
+                }
+            } else if (item instanceof InteractiveComponent ic) {
+                // fallback: use contentNode local coordinates
+                Node contentNode = active.contentNode();
+                tmpWorld.set(cursor.x, cursor.y, 0f);
+                contentNode.worldToLocal(tmpWorld, tmpLocal);
+                tmp2.set(tmpLocal.x, tmpLocal.y);
+
+                if (ic instanceof ViceSlider slider && slider.intersects(tmp2)) {
+                    activeSlider = slider;
+                    slider.handleDrag(tmp2);
+                    return;
+                } else if (ic instanceof ViceCheckbox checkbox && checkbox.intersects(tmp2)) {
+                    checkbox.toggle();
+                    return;
+                } else if (ic.intersects(tmp2)) {
+                    ic.handleMousePress(tmp2);
+                    return;
+                }
             }
         }
     }
 
     @Override
     public void handleMouseDrag(Vector2f cursor) {
+        // support hover update during drag as well
+        handleMouseMove(cursor);
+
         if (activeSlider == null) return;
-        Tab activeTab = getActiveTab();
-        if (activeTab == null) return;
-        transformToContentSpace(cursor, activeTab);
-        activeSlider.handleDrag(contentLocalCursor);
+        Tab active = getActiveTab();
+        if (active == null) return;
+
+        // CHANGED: convert to slider's local coords before dragging
+        Node sliderNode = activeSlider.getNode();
+        tmpWorld.set(cursor.x, cursor.y, 0f);
+        sliderNode.worldToLocal(tmpWorld, tmpLocal);
+        tmp2.set(tmpLocal.x, tmpLocal.y);
+        activeSlider.handleDrag(tmp2);
     }
+
     @Override
     public void handleMouseRelease() {
-        activeSlider = null;
+        if (activeSlider != null) {
+            activeSlider = null;
+        }
+
+        Tab active = getActiveTab();
+        if (active == null) return;
+        for (Object item : active.content()) {
+            if (item instanceof InteractiveComponent ic) ic.handleMouseRelease();
+        }
     }
 
     @Override
     public float getWidth() {
-        if (orientation == Orientation.HORIZONTAL) {
-            return Math.max(contentWidth, buttonBarSize.x);
-        } else {
-            return buttonBarSize.x + contentWidth;
-        }
+        return buttonBarSize.x + contentWidth;
     }
 
     @Override
     public float getHeight() {
-        if (orientation == Orientation.HORIZONTAL) {
-            return buttonBarSize.y + contentHeight;
-        } else {
-            return Math.max(contentHeight, buttonBarSize.y);
-        }
+        return Math.max(buttonBarSize.y, contentHeight);
     }
 
     @Override
     public void setSize(float width, float height) {
-        this.contentWidth = Math.max(0, width - (orientation == Orientation.VERTICAL ? buttonBarSize.x : 0));
-        this.contentHeight = Math.max(0, height - (orientation == Orientation.HORIZONTAL ? buttonBarSize.y : 0));
-        finalizeLayout(this.contentWidth, this.contentHeight);
+        finalizeLayout(width, height);
     }
-
 
     @Override
     public boolean intersects(Vector2f cursor) {
-        Vector2f worldPos = new Vector2f(tabsNode.getWorldTranslation().x, tabsNode.getWorldTranslation().y);
-        float totalWidth = Math.max(buttonBarSize.x, contentBackground.getLocalTranslation().x + contentWidth);
-        float totalHeight = buttonBarSize.y + contentHeight;
-
-        return cursor.x >= worldPos.x && cursor.x <= worldPos.x + totalWidth &&
-                cursor.y >= worldPos.y - totalHeight && cursor.y <= worldPos.y + buttonBarSize.y;
+        Vector2f world = new Vector2f(tabsNode.getWorldTranslation().x, tabsNode.getWorldTranslation().y);
+        float w = getWidth();
+        float h = getHeight();
+        return cursor.x >= world.x && cursor.x <= world.x + w &&
+                cursor.y >= world.y && cursor.y <= world.y + h;
     }
 
     @Override
-    public void setActive(boolean active) {}
+    public void setActive(boolean active) { /* nop */ }
 
     @Override
-    public void setHovered(boolean hovered) {}
+    public void setHovered(boolean hovered) { /* nop */ }
 
     @Override
     public Node getNode() {
@@ -239,12 +374,20 @@ public final class ViceTabs extends UIComponent implements InteractiveComponent,
         return (activeTabIndex >= 0 && activeTabIndex < tabs.size()) ? tabs.get(activeTabIndex) : null;
     }
 
+    /**
+     * Преобразовать курсор из мировых координат в локальные координаты области контента.
+     * (Остался для совместимости / внешних вызовов — но внутренняя логика теперь предпочитает
+     * преобразовывать в локал каждого конкретного компонента)
+     */
     private void transformToContentSpace(Vector2f cursor, Tab activeTab) {
-        tabsWorldPos.set(tabsNode.getWorldTranslation().x, tabsNode.getWorldTranslation().y);
-        float xOffset = (orientation == Orientation.HORIZONTAL) ? 0f : buttonBarSize.x;
-        float yOffset = (orientation == Orientation.HORIZONTAL) ? -buttonBarSize.y : 0f;
-        float contentWorldX = tabsWorldPos.x + xOffset + PADDING;
-        float contentWorldY = tabsWorldPos.y + yOffset + PADDING;
-        contentLocalCursor.set(cursor.x - contentWorldX, contentWorldY - cursor.y);
+        Vector3f worldPos = new Vector3f(cursor.x, cursor.y, 0f);
+        Vector3f local = contentBackground.worldToLocal(worldPos, null);
+        contentLocalCursor.set(local.x, local.y);
     }
+
+    // сеттеры для гибкой настройки
+    public void setPreferredButtonSize(float w, float h) { this.preferredButtonWidth = w; this.preferredButtonHeight = h; }
+    public void setMinButtonSize(float w, float h) { this.minButtonWidth = w; this.minButtonHeight = h; }
+    public void setSpacing(float spacing) { this.spacing = spacing; }
+    public void setPadding(float padding) { this.padding = padding; }
 }

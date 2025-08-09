@@ -5,15 +5,16 @@
 
 
         <!-- КОНТЕЙНЕР ДЛЯ ВКЛАДОК -->
-        <panel  id="settings" anchor="CENTER" dpiScale="1.0" height="65%" width="90%" bgColor="#000000" cornerRadius="20" bgAlpha="0.5">
+        <panel id="settings" anchor="CENTER" dpiScale="1.0" height="65%" width="90%" bgColor="#000000" cornerRadius="20" bgAlpha="0.5">
             <components>
                 <button iconPath="assets/Interface/ui/icons/back.png" iconSize="40" action="org.foxesworld.cge.tmp.menu.actions.GoBackToMainMenuAction" text="BACK" />
-                <tabs orientation="VERTICAL">
+                <tabs spacing="0" orientation="VERTICAL">
 
-                    <!-- ТРЕТЬЯ ВКЛАДКА: УПРАВЛЕНИЕ -->
-                    <tab iconPath="assets/Interface/ui/icons/process.png" title="CONTROLS">
-                        <slider text="MOUSE SENSITIVITY" y="200" x="50" width="400" value="0.8" bind="audio.master"/>
-                        <text text="KEY BINDINGS..." fontSize="28" y="200" x="50"/>
+                    <!-- ПЕРВАЯ ВКЛАДКА: ГРАФИКА -->
+                    <tab iconPath="assets/Interface/ui/icons/graphic-card.png" title="GRAPHICS">
+                        <checkbox text="V-Sync" checked="true" bind="graphics.vsync"/>
+                        <checkbox text="Shadows" checked="true" bind="graphics.shadows"/>
+                        <checkbox text="Bloom Effect" checked="true" bind="graphics.bloom"/>
                     </tab>
 
                     <!-- ВТОРАЯ ВКЛАДКА: АУДИО -->
@@ -22,11 +23,10 @@
                         <slider text="MUSIC" width="400" value="0.6" bind="audio.music" fillColor="#cb2020"/>
                     </tab>
 
-                    <!-- ПЕРВАЯ ВКЛАДКА: ГРАФИКА -->
-                    <tab iconPath="assets/Interface/ui/icons/graphic-card.png" title="GRAPHICS">
-                        <checkbox text="V-Sync" checked="true" bind="graphics.vsync"/>
-                        <checkbox text="Shadows" checked="true" bind="graphics.shadows"/>
-                        <checkbox text="Bloom Effect" checked="true" bind="graphics.bloom"/>
+                    <!-- ТРЕТЬЯ ВКЛАДКА: УПРАВЛЕНИЕ -->
+                    <tab iconPath="assets/Interface/ui/icons/process.png" title="CONTROLS">
+                        <slider text="MOUSE SENSITIVITY" y="200" x="50" width="400" value="0.8" bind="audio.master"/>
+                        <text text="KEY BINDINGS..." fontSize="28" y="200" x="50"/>
                     </tab>
                 </tabs>
             </components>

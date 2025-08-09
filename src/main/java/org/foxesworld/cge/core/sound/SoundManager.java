@@ -1,9 +1,14 @@
 package org.foxesworld.cge.core.sound;
 
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.google.gson.reflect.TypeToken;
 import com.jme3.asset.AssetManager;
 import com.jme3.audio.AudioNode;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,20 +21,14 @@ import java.util.concurrent.atomic.AtomicLong;
 /**
  * SoundManager (Gson edition)
  *
- * JSON формат: { "event.name": [ { SoundDescriptor }, { SoundDescriptor } ], ... }
+ * JSON формат: либо плоский { "event.name": [ { SoundDescriptor }, ... ], ... }
+ * либо группированный { "group": { "event": [ ... ], "event2": [...] }, "other": { ... } }
  *
- * Пример: ресурc "soundmap.json" в classpath
- * {
- *   "ui.hover": [
- *     { "path":"Sounds/ui/hover1.ogg", "volume":0.6, "pitch":1.0, "pitchVariance":0.05, "cooldownMs":80 },
- *     { "path":"Sounds/ui/hover2.ogg", "volume":0.5 }
- *   ],
- *   "ui.click": [
- *     { "path":"Sounds/ui/pop.ogg", "volume":1.0 }
- *   ]
- * }
+ * При загрузке вложенные ключи будут преобразованы в 'group.event' и зарегистрированы.
  */
 public class SoundManager {
+
+    private static final Logger LOGGER = LogManager.getLogger(SoundManager.class);
 
     private final AssetManager assetManager;
     private final Random rnd = new Random();
@@ -56,19 +55,59 @@ public class SoundManager {
 
     /**
      * Загружает маппинг из InputStream (Gson).
+     * Поддерживает как плоский формат "event.name": [ ... ], так и вложенный:
+     * { "ui": { "press": [...], "hover": [...] }, "player": { "step": [...] } }
+     * Вложенные ключи будут склеены через точку: "ui.press", "player.step".
      */
     public void loadFromJson(InputStream jsonStream)  {
         if (jsonStream == null) throw new IllegalArgumentException("jsonStream == null");
         try (InputStreamReader reader = new InputStreamReader(jsonStream)) {
-            Type type = new TypeToken<Map<String, List<SoundDescriptor>>>() {}.getType();
-            Map<String, List<SoundDescriptor>> map = gson.fromJson(reader, type);
-            if (map == null) return;
-            map.forEach((k, v) -> {
-                List<SoundDescriptor> list = v != null ? v : Collections.emptyList();
-                registry.put(k, new CopyOnWriteArrayList<>(list));
-            });
+            JsonElement root = JsonParser.parseReader(reader);
+            if (root == null || root.isJsonNull()) return;
+            if (root.isJsonObject()) {
+                processJsonObject("", root.getAsJsonObject());
+            } else {
+                // unexpected top-level type, try to treat as map anyway (fallback)
+                Type type = new TypeToken<Map<String, List<SoundDescriptor>>>() {}.getType();
+                Map<String, List<SoundDescriptor>> map = gson.fromJson(root, type);
+                if (map == null) return;
+                map.forEach((k, v) -> {
+                    List<SoundDescriptor> list = v != null ? v : Collections.emptyList();
+                    registry.put(k, new CopyOnWriteArrayList<>(list));
+                    LOGGER.info("Loaded sound event: {} ({} descriptors)", k, list.size());
+                });
+            }
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    /**
+     * Рекурсивно обходит объект и регистрирует списки дескрипторов.
+     * prefix пустой для корня; при заходе внутрь объект ключ становится prefix.key.
+     */
+    private void processJsonObject(String prefix, JsonObject obj) {
+        for (Map.Entry<String, JsonElement> entry : obj.entrySet()) {
+            String key = entry.getKey();
+            JsonElement value = entry.getValue();
+            String composed = (prefix == null || prefix.isEmpty()) ? key : (prefix + "." + key);
+
+            if (value == null || value.isJsonNull()) {
+                continue;
+            }
+
+            if (value.isJsonArray()) {
+                Type listType = new TypeToken<List<SoundDescriptor>>() {}.getType();
+                List<SoundDescriptor> list = gson.fromJson(value, listType);
+                if (list == null) list = Collections.emptyList();
+                registry.put(composed, new CopyOnWriteArrayList<>(list));
+                LOGGER.info("Loaded sound event: {} ({} descriptors)", composed, list.size());
+            } else if (value.isJsonObject()) {
+                // nested group, recurse with new prefix
+                processJsonObject(composed, value.getAsJsonObject());
+            } else {
+                // unsupported value type (primitive/string) - ignore
+            }
         }
     }
 
@@ -87,12 +126,17 @@ public class SoundManager {
     // ---------------- Registration API ----------------
 
     public void register(String eventName, SoundDescriptor descriptor) {
-        registry.computeIfAbsent(eventName, k -> new CopyOnWriteArrayList<>()).add(Objects.requireNonNull(descriptor));
+        Objects.requireNonNull(descriptor, "descriptor");
+        registry.computeIfAbsent(eventName, k -> new CopyOnWriteArrayList<>()).add(descriptor);
+        // log registration
+        String path = descriptor.path == null ? "<null>" : descriptor.path;
+        LOGGER.info("Registered sound for event: {} -> {}", eventName, path);
     }
 
     public void clearEvent(String eventName) {
         registry.remove(eventName);
         lastPlayedMillis.remove(eventName);
+        LOGGER.debug("Cleared event: {}", eventName);
     }
 
     // ---------------- Preload ----------------
@@ -123,8 +167,9 @@ public class SoundManager {
                 node.setLooping(sd.loop);
                 node.setVolume(sd.volume);
                 sd.audioNode = node;
+                //LOGGER.debug("Preloaded sound: {}", sd.path);
             } catch (Exception ex) {
-                System.err.println("SoundManager: failed to preload '" + sd.path + "' -> " + ex.getMessage());
+                LOGGER.warn("SoundManager: failed to preload '{}' -> {}", sd.path, ex.getMessage(), ex);
             }
         }
     }
@@ -153,6 +198,7 @@ public class SoundManager {
         long cooldown = Math.max(selected.cooldownMs, 0L);
 
         if (now - lastMillis < cooldown) {
+            LOGGER.trace("Cooldown active for event {} (now {} last {} cooldown {})", eventName, now, lastMillis, cooldown);
             return false; // cooldown active
         }
         last.set(now);
@@ -172,9 +218,10 @@ public class SoundManager {
             selected.audioNode.setVolume(volume);
             try { selected.audioNode.setPitch(pitch); } catch (Throwable ignored) {}
             selected.audioNode.playInstance();
+            //LOGGER.debug("Played sound: {} (event: {}, vol: {}, pitch: {})", selected.path, eventName, volume, pitch);
             return true;
         } catch (Exception ex) {
-            System.err.println("SoundManager: failed to play " + selected.path + " -> " + ex.getMessage());
+            LOGGER.warn("SoundManager: failed to play {} -> {}", selected.path, ex.getMessage(), ex);
             return false;
         }
     }
@@ -190,6 +237,7 @@ public class SoundManager {
                 try { sd.audioNode.stop(); } catch (Exception ignored) {}
             }
         }
+        LOGGER.debug("Stopped sounds for event: {}", eventName);
     }
 
     /**
@@ -205,11 +253,13 @@ public class SoundManager {
             }
         });
         lastPlayedMillis.clear();
+        LOGGER.debug("Unloaded all sounds and cleared cooldowns");
     }
 
     public void shutdown() {
         preloadExecutor.shutdownNow();
         unloadAll();
+        LOGGER.debug("SoundManager shutdown");
     }
 
     // ---------------- Utilities ----------------

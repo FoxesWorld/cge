@@ -31,8 +31,6 @@ public final class MenuScreenHandler {
     private final InputHandler inputHandler;
     private MenuData currentMenu;
 
-    // Hover sound
-    private AudioNode hoverSound;
     private InteractiveComponent lastHoveredForSound = null;
 
     /**
@@ -49,10 +47,7 @@ public final class MenuScreenHandler {
      * Инициализирует звук и слушатели.
      */
     public void initialize() {
-
-        // hover sound (громкость ниже, чтобы не утомлять)
-        hoverSound = safeCreateAudioNode("assets/Sounds/ui/hover.ogg", 0.6f);
-
+        engine.getSoundManager().play("ui.boot");
         inputHandler.register();
         showMainMenu();
     }

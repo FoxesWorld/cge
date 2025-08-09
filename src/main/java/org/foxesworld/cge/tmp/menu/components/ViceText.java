@@ -15,54 +15,77 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
+/**
+ * UI текстовый элемент с адаптивным масштабированием и выравниванием
+ * Оптимизирован: шрифт создаётся один раз, при ресайзе масштабируется геометрия
+ */
 public class ViceText extends UIComponent implements InteractiveComponent, MenuComponent {
 
-    private final Node textNode;
-    private final AssetManager assetManager;
-    private final TextXml textXml;
+    public enum Anchor {
+        TOP_LEFT, TOP_CENTER, TOP_RIGHT,
+        CENTER_LEFT, CENTER, CENTER_RIGHT,
+        BOTTOM_LEFT, BOTTOM_CENTER, BOTTOM_RIGHT
+    }
 
-    private final String fontSizeRaw;
+    private final Node textNode;
     private final Application app;
+    private final TextXml textXml;
+    private final String fontSizeRaw;
 
     private TTFrenderer ttfRenderer;
     private TrueTypeContainer ttc;
 
+    private int baseWidth;
+    private int baseHeight;
+    private float baseFontSize;
+
     private int lastWindowWidth = -1;
     private int lastWindowHeight = -1;
+
+    private Anchor anchor = Anchor.CENTER;
+    private Vector2f position = new Vector2f();
 
     public ViceText(Application app, AssetManager assetManager, TextXml textXml) {
         super(textXml.id);
         this.app = app;
-        this.assetManager = assetManager;
         this.textXml = textXml;
         this.fontSizeRaw = textXml.fontSize;
-        ttfRenderer = new TTFrenderer(assetManager);
+        this.ttfRenderer = new TTFrenderer(assetManager);
         this.textNode = new Node("ViceText: " + textXml.text);
-        recreateFont(); // инициализация шрифта и текста
+
+        this.baseWidth = app.getContext().getSettings().getWidth();
+        this.baseHeight = app.getContext().getSettings().getHeight();
+        this.baseFontSize = parseFontSize(fontSizeRaw, baseWidth, baseHeight) * getDPIScale();
+
+        createFontOnce();
+        updateScale();
     }
 
-    private void recreateFont() {
-        float fontSize = parseFontSize(fontSizeRaw);
-        if (ttfRenderer != null && ttc != null) {
-            textNode.detachChild(ttc);
-        }
-
-        ttfRenderer.generateFont("assets/Interface/fonts/Docker One.ttf", Style.Plain, Math.round(fontSize));
+    private void createFontOnce() {
+        ttfRenderer.generateFont("assets/Interface/fonts/Docker One.ttf", Style.Plain, Math.round(baseFontSize));
         ttfRenderer.generateText(ColorUtils.fromHexString(textXml.color), textXml.text);
         ttc = ttfRenderer.getTextGeometry();
         textNode.attachChild(ttc);
     }
 
-    private float parseFontSize(String raw) {
+    private float getDPIScale() {
+        int baseDpi = 96;
+        int dpi = app.getContext().getSettings().getSamples(); // Если хранится в Settings
+        if (dpi <= 0) dpi = baseDpi;
+        return dpi / (float) baseDpi;
+    }
+
+    private float parseFontSize(String raw, int width, int height) {
         String value = Optional.ofNullable(raw)
                 .map(String::trim)
                 .map(String::toLowerCase)
                 .orElse("");
 
-        int width = app.getContext().getSettings().getWidth();
-        int height = app.getContext().getSettings().getHeight();
-
         try {
+            if (value.endsWith("vmin")) {
+                int minSide = Math.min(width, height);
+                return minSide * Float.parseFloat(value.substring(0, value.length() - 4)) / 100f;
+            }
             if (value.endsWith("vh")) {
                 return height * Float.parseFloat(value.substring(0, value.length() - 2)) / 100f;
             }
@@ -79,6 +102,56 @@ public class ViceText extends UIComponent implements InteractiveComponent, MenuC
         }
     }
 
+    private void updateScale() {
+        int currentWidth = app.getContext().getSettings().getWidth();
+        int currentHeight = app.getContext().getSettings().getHeight();
+
+        float currentSize = parseFontSize(fontSizeRaw, currentWidth, currentHeight) * getDPIScale();
+        float scaleFactor = currentSize / baseFontSize;
+
+        if (ttc != null) {
+            ttc.setLocalScale(scaleFactor);
+            updatePosition();
+        }
+    }
+
+    private void updatePosition() {
+        float textWidth = getWidth();
+        float textHeight = getHeight();
+        float x = position.x;
+        float y = position.y;
+
+        switch (anchor) {
+            case TOP_LEFT:
+                textNode.setLocalTranslation(x, y, 0);
+                break;
+            case TOP_CENTER:
+                textNode.setLocalTranslation(x - textWidth / 2f, y, 0);
+                break;
+            case TOP_RIGHT:
+                textNode.setLocalTranslation(x - textWidth, y, 0);
+                break;
+            case CENTER_LEFT:
+                textNode.setLocalTranslation(x, y - textHeight / 2f, 0);
+                break;
+            case CENTER:
+                textNode.setLocalTranslation(x - textWidth / 2f, y - textHeight / 2f, 0);
+                break;
+            case CENTER_RIGHT:
+                textNode.setLocalTranslation(x - textWidth, y - textHeight / 2f, 0);
+                break;
+            case BOTTOM_LEFT:
+                textNode.setLocalTranslation(x, y - textHeight, 0);
+                break;
+            case BOTTOM_CENTER:
+                textNode.setLocalTranslation(x - textWidth / 2f, y - textHeight, 0);
+                break;
+            case BOTTOM_RIGHT:
+                textNode.setLocalTranslation(x - textWidth, y - textHeight, 0);
+                break;
+        }
+    }
+
     @Override
     public void update(float tpf) {
         int currentWidth = app.getContext().getSettings().getWidth();
@@ -87,13 +160,18 @@ public class ViceText extends UIComponent implements InteractiveComponent, MenuC
         if (currentWidth != lastWindowWidth || currentHeight != lastWindowHeight) {
             lastWindowWidth = currentWidth;
             lastWindowHeight = currentHeight;
-            recreateFont();
+            updateScale();
         }
     }
 
     public void setPosition(float x, float y) {
-        float textWidth = ttc.getWidth();
-        textNode.setLocalTranslation(x - textWidth / 2f, y, 0);
+        this.position.set(x, y);
+        updatePosition();
+    }
+
+    public void setAnchor(Anchor anchor) {
+        this.anchor = anchor;
+        updatePosition();
     }
 
     public Node getNode() {
@@ -104,6 +182,7 @@ public class ViceText extends UIComponent implements InteractiveComponent, MenuC
     public boolean intersects(Vector2f cursor) {
         return false;
     }
+
     @Override
     public void setActive(boolean active) {}
 
@@ -121,7 +200,7 @@ public class ViceText extends UIComponent implements InteractiveComponent, MenuC
 
     @Override
     public float getHeight() {
-        return ttc.getTextHeight();
+        return ttc.getTextHeight() * ttc.getLocalScale().y;
     }
 
     @Override
@@ -129,6 +208,6 @@ public class ViceText extends UIComponent implements InteractiveComponent, MenuC
 
     @Override
     public float getWidth() {
-        return ttc.getTextWidth();
+        return ttc.getTextWidth() * ttc.getLocalScale().x;
     }
 }

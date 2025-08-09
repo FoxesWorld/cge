@@ -24,7 +24,7 @@
     "shadowCompareMode": "Hardware"
   },
   "dof": {
-    "enable": true,
+    "enable": false,
     "focus": 15.0,
     "range": 45.0,
     "aperture": 1.4,

@@ -258,13 +258,13 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
                     base,
                     base.mult(2.5f),
                     "#232425",
-                    "#f2f5f7a8",
+                    "#2f3240cc",
                     font,
                     15f,
-                    new Vector2f(8f, 0f),
+                    new Vector2f(20f, 0f),
                     15f,
                     8f,
-                    1.35f,   // hover font scale
+                    1.2f,   // hover font scale
                     8f       // font animation speed
             );
         }

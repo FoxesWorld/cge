@@ -7,9 +7,11 @@ import java.util.List;
 
 @XmlRootElement(name = "tabs")
 public class TabsXml extends ComponentXml {
-    @XmlAttribute public String orientation = "HORIZONTAL"; // По умолчанию
+    @XmlAttribute public String orientation = "HORIZONTAL";
     @XmlAttribute public float contentWidth = 600;
     @XmlAttribute public float contentHeight = 400;
+
+    @XmlAttribute public float spacing = 5;
 
     @XmlElement(name = "tab")
     public List<TabXml> tabs;

@@ -16,8 +16,6 @@ import org.foxesworld.cge.modules.player.Player;
 import org.foxesworld.cge.modules.player.PlayerState;
 import org.foxesworld.cge.modules.player.config.PlayerConfig;
 
-import static java.lang.Math.max;
-
 /**
  * Manages first-person character movement, focusing purely on physics and input.
  * <p>
@@ -39,11 +37,23 @@ public final class MovementControl extends AbstractControl {
         void onJumpStart();
         void onLanding(float fallHeight);
         void onMove(float targetSpeed);
+        /**
+         * Basic legacy step notification.
+         */
         void onStep();
+
+        /**
+         * Optional richer step notification that indicates which foot "struck".
+         * Default implementation forwards to the legacy onStep() for backward compatibility.
+         */
+        default void onStep(boolean leftFoot) { onStep(); }
     }
 
-    private static final float WALK_STEP_INTERVAL_SECONDS = 0.5f;
+    private static final float WALK_STEP_INTERVAL_SECONDS = 0.50f;
     private static final float SPRINT_STEP_INTERVAL_SECONDS = 0.35f;
+    private static final float STEP_INTERVAL_MIN = 0.15f; // clamp for very high speeds
+    private static final float STEP_INTERVAL_MAX = 0.8f;  // clamp for very slow speeds
+    private static final float MIN_FALL_FOR_LAND_EVENT = 0.25f; // meters
 
     private final Player player;
     private final CharacterControl character;
@@ -61,8 +71,12 @@ public final class MovementControl extends AbstractControl {
 
     private boolean wasInAir = false;
     private float lastY = 0f;
-    private float peakY = 0f;
+    private float fallStartY = 0f; // Y when the body left the ground
+
     private float timeSinceLastStep = 0f;
+    private boolean stepLeft = true; // alternate left/right foot
+    private boolean wasMoving = false;
+
     private RawInputListener rawListener;
     private MovementListener movementListener;
 
@@ -93,6 +107,9 @@ public final class MovementControl extends AbstractControl {
     protected void controlUpdate(float tpf) {
         if (spatial == null) return;
 
+        // handle jump input separately for clarity and future extensions (double-jump, variable jump, etc.)
+        handleJump();
+
         updateMovement(tpf);
         updateViewDirection();
         handleLanding();
@@ -101,17 +118,26 @@ public final class MovementControl extends AbstractControl {
     }
 
     /**
-     * Calculates and applies the character's movement vector based on input and smoothing.
+     * Separated jump handling: triggers physics jump, records start height and notifies listener.
+     * This is extracted to make jump logic easier to extend (double-jump, charge jump, animation hooks).
      */
-    private void updateMovement(float tpf) {
+    private void handleJump() {
+        // Only act on the moment the jump action is active while grounded.
         if (inputModule.isActionActive("jump") && character.onGround()) {
+            player.getEngine().getSoundManager().play("player.takeoff");
             character.jump();
-            peakY = spatial.getWorldTranslation().y;
+            // record Y at jump start to be used later for landing/fall distance calculation
+            fallStartY = spatial.getWorldTranslation().y;
             if (movementListener != null) {
                 movementListener.onJumpStart();
             }
         }
+    }
 
+    /**
+     * Calculates and applies the character's movement vector based on input and smoothing.
+     */
+    private void updateMovement(float tpf) {
         tempDir.set(0, 0, 0);
         if (inputModule.isActionActive("move_forward")) tempDir.z += 1f;
         if (inputModule.isActionActive("move_backward")) tempDir.z -= 1f;
@@ -141,6 +167,21 @@ public final class MovementControl extends AbstractControl {
         float alpha = 1f - FastMath.pow(1f - smoothFactor, tpf * 60f);
         currentVel.interpolateLocal(desiredVel, alpha);
         character.setWalkDirection(currentVel);
+
+        // detect movement start to trigger an immediate footstep and keep step phase in sync
+        boolean movingNow = currentVel.lengthSquared() > 1e-4f;
+        if (!wasMoving && movingNow) {
+            // trigger a half-interval so the first step feels immediate
+            timeSinceLastStep = Math.max(0f, getStepInterval() * 0.5f);
+            // optionally fire an immediate short step
+            if (movementListener != null && character.onGround()) {
+                movementListener.onStep(stepLeft);
+                // keep legacy callback for backward compatibility
+                movementListener.onStep();
+                stepLeft = !stepLeft;
+            }
+        }
+        wasMoving = movingNow;
     }
 
     /**
@@ -154,21 +195,40 @@ public final class MovementControl extends AbstractControl {
     }
 
     /**
-     * Handles rhythmic footstep events based on a time interval.
+     * Returns the dynamic step interval based on current speed. Faster speed => shorter interval.
+     */
+    private float getStepInterval() {
+        float speed = getCurrentSpeed();
+        if (speed <= 1e-4f) return STEP_INTERVAL_MAX;
+        float base = isSprinting() ? SPRINT_STEP_INTERVAL_SECONDS : WALK_STEP_INTERVAL_SECONDS;
+        // scale base interval inversely with speed relative to walkSpeed
+        float interval = base * (walkSpeed / Math.max(speed, 1e-4f));
+        return FastMath.clamp(interval, STEP_INTERVAL_MIN, STEP_INTERVAL_MAX);
+    }
+
+    /**
+     * Handles rhythmic footstep events based on a variable interval derived from speed.
      */
     private void handleFootsteps(float tpf) {
         if (character.onGround() && isMoving()) {
             timeSinceLastStep += tpf;
-            float requiredInterval = isSprinting() ? SPRINT_STEP_INTERVAL_SECONDS : WALK_STEP_INTERVAL_SECONDS;
+            float requiredInterval = getStepInterval();
 
             if (timeSinceLastStep >= requiredInterval) {
                 if (movementListener != null) {
-                    movementListener.onStep();
+                    movementListener.onStep(stepLeft);
+                    movementListener.onStep(); // keep legacy behaviour
                 }
+                stepLeft = !stepLeft;
                 timeSinceLastStep -= requiredInterval;
+                // avoid large accumulation when frame spikes occur
+                timeSinceLastStep = Math.min(timeSinceLastStep, requiredInterval);
             }
         } else {
             timeSinceLastStep = 0f;
+            // reset step phase so starting to walk gives a predictable foot
+            // (optional - comment out if you want to preserve phase across small stops)
+            // stepLeft = true;
         }
     }
 
@@ -179,13 +239,19 @@ public final class MovementControl extends AbstractControl {
         boolean inAir = !character.onGround();
         float posY = spatial.getWorldTranslation().y;
 
-        if (inAir) {
-            if (posY > lastY) peakY = max(peakY, posY);
+        // just left the ground
+        if (inAir && !wasInAir) {
+            fallStartY = lastY; // where we were when leaving ground
         }
 
-        if (wasInAir && !inAir && movementListener != null) {
-            movementListener.onLanding(FastMath.abs(peakY - lastY));
-            peakY = 0f;
+        // just landed
+        if (wasInAir && !inAir) {
+            player.getEngine().getSoundManager().play("player.land");
+            float fallDistance = fallStartY - posY;
+            if (fallDistance > MIN_FALL_FOR_LAND_EVENT && movementListener != null) {
+                movementListener.onLanding(fallDistance);
+            }
+            fallStartY = posY;
         }
 
         wasInAir = inAir;

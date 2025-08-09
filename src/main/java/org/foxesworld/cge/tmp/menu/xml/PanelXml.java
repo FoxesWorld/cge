@@ -15,9 +15,6 @@ public class PanelXml extends ComponentXml {
 
     // === Identification & Meta ===
 
-    @XmlAttribute
-    private String anchor;
-
     @XmlAttribute(name = "dpiScale")
     private float dpiScale = 1.0f;
 
@@ -66,10 +63,6 @@ public class PanelXml extends ComponentXml {
         return id;
     }
 
-    public String getAnchor() {
-        return anchor;
-    }
-
     public float getDpiScale() {
         return dpiScale;
     }
@@ -102,10 +95,6 @@ public class PanelXml extends ComponentXml {
 
     public void setId(String id) {
         this.id = id;
-    }
-
-    public void setAnchor(String anchor) {
-        this.anchor = anchor;
     }
 
     public void setDpiScale(float dpiScale) {

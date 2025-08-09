@@ -36,6 +36,9 @@ public class TextBuilder implements ComponentBuilder<TextXml> {
                 context.app().getCamera()
         );
         title.setPosition(pos.x, pos.y);
+        if(model.getAnchor() != null) {
+            title.setAnchor(ViceText.Anchor.valueOf(model.getAnchor()));
+        }
 
         parent.attachChild(title.getNode());
         return title;

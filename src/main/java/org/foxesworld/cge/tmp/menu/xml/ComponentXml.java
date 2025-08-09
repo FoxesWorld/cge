@@ -1,5 +1,7 @@
 package org.foxesworld.cge.tmp.menu.xml;
 
+import jakarta.xml.bind.annotation.XmlAccessType;
+import jakarta.xml.bind.annotation.XmlAccessorType;
 import jakarta.xml.bind.annotation.XmlAttribute;
 
 /**
@@ -9,11 +11,15 @@ import jakarta.xml.bind.annotation.XmlAttribute;
  * Position and size can be specified in absolute pixels or percentages (e.g., "50%").
  * When width or height are omitted, components may auto-fit based on their content or container.
  */
+@XmlAccessorType(XmlAccessType.FIELD)
 public abstract class ComponentXml {
 
     /** Optional text content (e.g., button label, title). */
     @XmlAttribute
     public String text;
+
+    @XmlAttribute
+    private String anchor;
 
     @XmlAttribute
     public String id;
@@ -65,4 +71,12 @@ public abstract class ComponentXml {
     /** Optional foreground or main color in HEX format (e.g., "#FFFFFF"). */
     @XmlAttribute
     public String color;
+
+    public void setAnchor(String anchor) {
+        this.anchor = anchor;
+    }
+
+    public String getAnchor() {
+        return anchor;
+    }
 }
