@@ -25,7 +25,6 @@ import org.foxesworld.cge.modules.player.config.PlayerConfig;
 import org.foxesworld.cge.modules.player.control.MovementControl;
 import org.foxesworld.cge.modules.player.control.PlayerCameraControl;
 import org.foxesworld.cge.modules.player.hud.PlayerHud;
-import org.foxesworld.cge.modules.sound.SoundModule;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

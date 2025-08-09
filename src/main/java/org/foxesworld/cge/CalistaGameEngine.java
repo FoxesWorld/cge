@@ -24,12 +24,10 @@ import org.foxesworld.cge.modules.ModuleConfig;
 import org.foxesworld.cge.modules.ecs.ECSModule;
 import org.foxesworld.cge.modules.ecs.systems.PhysicsSystem;
 import org.foxesworld.cge.modules.ecs.systems.SceneGraphSystem;
-import org.foxesworld.cge.modules.ecs.systems.SoundSystem;
 import org.foxesworld.cge.modules.physics.PhysicsModule;
 import org.foxesworld.cge.modules.popcycle.PopCycle;
 import org.foxesworld.cge.modules.renderer.GpuInfo;
 import org.foxesworld.cge.modules.scene.SceneModule;
-import org.foxesworld.cge.modules.sound.SoundModule;
 import org.foxesworld.cge.modules.ui.novaUi.NovaUI;
 import org.foxesworld.cge.tmp.ShapeParty;
 import org.foxesworld.cge.tmp.menu.MainMenuAppState;
@@ -60,7 +58,6 @@ public class CalistaGameEngine extends SimpleApplication {
     private SoundManager soundManager;
     private ECSModule ecsModule;
     private SceneModule scene;
-    private SoundModule soundModule;
     private ModuleManager moduleManager;
     private NovaUI novaUI;
 
@@ -177,10 +174,6 @@ public class CalistaGameEngine extends SimpleApplication {
         return assetRepo;
     }
 
-    public SoundModule getSoundModule() {
-        return soundModule;
-    }
-
     public MaterialManager getMaterialManager() {
         return materialManager;
     }
@@ -215,12 +208,10 @@ public class CalistaGameEngine extends SimpleApplication {
             //this.assetManager.registerLoader(FBXImporter.class, "fbx");
 
             this.scene = moduleManager.getModule(SceneModule.class);
-            this.soundModule = moduleManager.getModule(SoundModule.class);
 
             //ECS System
             this.ecsModule = moduleManager.getModule(ECSModule.class);
             ecsModule.addSystem(new PhysicsSystem(moduleManager.getModule(PhysicsModule.class)));
-            ecsModule.addSystem(new SoundSystem(soundModule));
             ecsModule.addSystem(new SceneGraphSystem(this.getRootNode()));
 
             // Load assets

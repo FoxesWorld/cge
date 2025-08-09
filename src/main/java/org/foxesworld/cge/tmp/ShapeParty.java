@@ -77,7 +77,6 @@ public class ShapeParty {
                 if (physicsModule != null) {
                     processNodePhysics((Node) instance, physicsModule);
                 }
-                calistaGameEngine.getSoundModule().playSound("assets/Sounds/bang.ogg", model.getLocalTranslation(), true,1.0f);
             }
         });
 

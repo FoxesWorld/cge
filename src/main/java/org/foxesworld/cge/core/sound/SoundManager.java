@@ -14,6 +14,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicLong;
@@ -96,6 +97,32 @@ public class SoundManager {
                 continue;
             }
 
+            // --- новая логика для readFrom ---
+            if (value.isJsonObject() && value.getAsJsonObject().has("readFrom")) {
+                String includePath = value.getAsJsonObject().get("readFrom").getAsString();
+                LOGGER.info("Чтение внешнего файла для '{}': {}", composed, includePath);
+
+                try (InputStream includeStream = getClass().getClassLoader().getResourceAsStream(includePath)) {
+                    if (includeStream == null) {
+                        LOGGER.error("Не найден файл '{}'", includePath);
+                        continue;
+                    }
+                    JsonElement includedRoot = JsonParser.parseReader(new InputStreamReader(includeStream, StandardCharsets.UTF_8));
+                    if (includedRoot.isJsonObject()) {
+                        processJsonObject(composed, includedRoot.getAsJsonObject());
+                    } else {
+                        Type listType = new TypeToken<List<SoundDescriptor>>() {}.getType();
+                        List<SoundDescriptor> list = gson.fromJson(includedRoot, listType);
+                        if (list == null) list = Collections.emptyList();
+                        registry.put(composed, new CopyOnWriteArrayList<>(list));
+                        LOGGER.info("Loaded sound event (from include): {} ({} descriptors)", composed, list.size());
+                    }
+                } catch (IOException e) {
+                    LOGGER.error("Ошибка при чтении '{}': {}", includePath, e.getMessage(), e);
+                }
+                continue; // переходим к следующему ключу
+            }
+
             if (value.isJsonArray()) {
                 Type listType = new TypeToken<List<SoundDescriptor>>() {}.getType();
                 List<SoundDescriptor> list = gson.fromJson(value, listType);
@@ -103,13 +130,14 @@ public class SoundManager {
                 registry.put(composed, new CopyOnWriteArrayList<>(list));
                 LOGGER.info("Loaded sound event: {} ({} descriptors)", composed, list.size());
             } else if (value.isJsonObject()) {
-                // nested group, recurse with new prefix
                 processJsonObject(composed, value.getAsJsonObject());
             } else {
-                // unsupported value type (primitive/string) - ignore
+                // unsupported primitive type — можно логировать warning
+                LOGGER.warn("Пропущен ключ '{}': неподдерживаемый тип {}", composed, value.getClass().getSimpleName());
             }
         }
     }
+
 
     /**
      * Convenience: load from resource on classpath.

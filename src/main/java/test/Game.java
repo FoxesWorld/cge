@@ -10,7 +10,6 @@ import org.foxesworld.cge.modules.physics.PhysicsModule;
 import org.foxesworld.cge.modules.player.PlayerModule;
 import org.foxesworld.cge.modules.renderer.RendererModule;
 import org.foxesworld.cge.modules.scene.SceneModule;
-import org.foxesworld.cge.modules.sound.SoundModule;
 import org.foxesworld.cge.modules.terrain.Terrain;
 import org.foxesworld.cge.modules.ui.UIModule;
 
@@ -31,8 +30,7 @@ public class Game {
              new ModuleConfig(UIModule::new,        5),
              new ModuleConfig(PlayerModule::new, 40),
              new ModuleConfig(Terrain::new, 25),
-             new ModuleConfig(ECSModule::new, 60),
-             new ModuleConfig(SoundModule::new, 100)
+             new ModuleConfig(ECSModule::new, 60)
          );
 
         CalistaGameEngine app;
