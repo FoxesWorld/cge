@@ -21,15 +21,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.prefs.BackingStoreException;
-import java.util.stream.Collectors;
 
 /**
- * Modernized and optimized settings dialog with improved titlebar and lightweight optimizations.
- * - Titlebar now includes minimize / maximize / close with tooltips and keyboard mnemonics
- * - Double-click title to toggle maximize/restore
- * - Drag-to-move supports restoring from maximized state (Windows-like behaviour)
- * - Global keybindings use RootPane InputMap/ActionMap instead of recursive KeyListeners
- * - Cached OK/Cancel buttons so default-button lookup is O(1)
+ * Modernized settings dialog — removed manual styling so UI is driven by Look&Feel / UIManager.
+ * Keeps behavior: titlebar controls, dragging, maximize/restore, keyboard shortcuts, persisted settings.
  */
 public final class AWTSettingsDialog extends JFrame {
 
@@ -39,19 +34,6 @@ public final class AWTSettingsDialog extends JFrame {
     public static final int NO_SELECTION = 0;
     public static final int APPROVE_SELECTION = 1;
     public static final int CANCEL_SELECTION = 2;
-
-    // ---------- Design tokens / palette ----------
-    private static final Color RAGE_BACKGROUND = new Color(0x1A1A1A);
-    private static final Color RAGE_PANEL_BG = new Color(0x212125);
-    private static final Color RAGE_COMPONENT_BG = new Color(0x2D2F33);
-    private static final Color RAGE_FOREGROUND = new Color(0xE6E6E6);
-    private static final Color RAGE_ACCENT = new Color(0xD32F2F);
-    private static final Color RAGE_ACCENT_HOVER = new Color(0xF44336);
-    private static final Color RAGE_BORDER_COLOR = new Color(0x3A3B3F);
-    private static final Color RAGE_SEPARATOR_COLOR = new Color(0x343436);
-    private static final Font FONT_REGULAR = new Font("Segoe UI", Font.PLAIN, 14);
-    private static final Font FONT_BOLD = new Font("Segoe UI", Font.BOLD, 14);
-    private static final Font FONT_TITLE = new Font("Segoe UI", Font.BOLD, 20);
 
     // ---------- State ----------
     private ResourceBundle resourceBundle;
@@ -163,7 +145,7 @@ public final class AWTSettingsDialog extends JFrame {
         setUndecorated(true);
         setAlwaysOnTop(true);
         setResizable(false);
-        setBackground(new Color(0, 0, 0, 0)); // allow rounded corners if used
+        setBackground(new Color(0, 0, 0, 0)); // allow rounded corners if used by platform LAF
 
         // Load registry settings if requested
         AppSettings registrySettings = new AppSettings(true);
@@ -196,13 +178,13 @@ public final class AWTSettingsDialog extends JFrame {
         setLocationRelativeTo(null);
     }
 
-    // ---------- UI Construction (cleaned, modular) ----------
+    // ---------- UI Construction (LAF-driven, minimal manual styling) ----------
 
     private void createUI() {
         JPanel root = new JPanel(new BorderLayout());
-        root.setBackground(RAGE_BACKGROUND);
+        // do not force colors/fonts — allow Look&Feel to paint
         root.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(RAGE_BORDER_COLOR, 1),
+                BorderFactory.createLineBorder(UIManager.getColor("Panel.border") != null ? UIManager.getColor("Panel.border") : Color.GRAY, 1),
                 new EmptyBorder(12, 14, 12, 14)
         ));
         setContentPane(root);
@@ -212,9 +194,9 @@ public final class AWTSettingsDialog extends JFrame {
 
         // Tabs center
         JTabbedPane tabs = new JTabbedPane();
-        styleTabbedPane(tabs);
-        tabs.addTab("GRAPHICS", createGraphicsPanel());
-        tabs.addTab("MODULES", createModulesPanel());
+        // keep tabs default LAF behavior
+        tabs.addTab(resource("tab.graphics", "GRAPHICS"), createGraphicsPanel());
+        tabs.addTab(resource("tab.modules", "MODULES"), createModulesPanel());
         root.add(tabs, BorderLayout.CENTER);
 
         // Footer
@@ -247,11 +229,10 @@ public final class AWTSettingsDialog extends JFrame {
             iconLabel = new JLabel();
         }
         JLabel title = new JLabel(Optional.ofNullable(source.getTitle()).orElse("Settings"));
-        title.setFont(FONT_TITLE);
-        title.setForeground(RAGE_FOREGROUND);
+        // rely on LAF font and color
         left.add(title);
 
-        // Center filler (allows title to be centered visually while controls float right)
+        // Center filler
         JPanel center = new JPanel(new FlowLayout(FlowLayout.LEFT));
         center.setOpaque(false);
 
@@ -259,11 +240,11 @@ public final class AWTSettingsDialog extends JFrame {
         JPanel right = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
         right.setOpaque(false);
 
-        minimizeBtn = createWindowControlButton("–", "Minimize (Alt+M)");
-        maximizeBtn = createWindowControlButton("□", "Maximize (Alt+X)");
-        closeBtn = createWindowControlButton("✖", "Close (Alt+C)");
+        minimizeBtn = createWindowControlButton("–", resource("tt.minimize", "Minimize (Alt+M)"));
+        maximizeBtn = createWindowControlButton("□", resource("tt.maximize", "Maximize (Alt+X)"));
+        closeBtn = createWindowControlButton("✖", resource("tt.close", "Close (Alt+C)"));
 
-        // tooltips and mnemonics (Alt+...)
+        // mnemonics and behavior
         minimizeBtn.setMnemonic(KeyEvent.VK_M);
         maximizeBtn.setMnemonic(KeyEvent.VK_X);
         closeBtn.setMnemonic(KeyEvent.VK_C);
@@ -291,13 +272,12 @@ public final class AWTSettingsDialog extends JFrame {
             public void mousePressed(MouseEvent e) {
                 dragOffset = e.getPoint();
                 if (maximized) {
-                    // convert to window relative point when maximized (simulate Windows behaviour)
+                    // approximate restored drag offset
                     dragOffset = new Point(getWidth() / 2, 10);
                 }
 
                 long now = System.currentTimeMillis();
                 if (now - lastClick < 400) {
-                    // double click -> toggle
                     toggleMaximizeRestore();
                 }
                 lastClick = now;
@@ -306,7 +286,6 @@ public final class AWTSettingsDialog extends JFrame {
             @Override
             public void mouseDragged(MouseEvent e) {
                 if (maximized) {
-                    // restore to previous size and reposition so mouse stays over title
                     restoreFromMaximizedAt(e.getLocationOnScreen());
                     return;
                 }
@@ -327,13 +306,10 @@ public final class AWTSettingsDialog extends JFrame {
         JButton b = new JButton(text);
         b.setFocusable(false);
         b.setToolTipText(tooltip);
-        b.setFont(new Font("Segoe UI", Font.BOLD, 12));
-        b.setForeground(RAGE_FOREGROUND);
-        b.setBackground(RAGE_COMPONENT_BG);
+        // do not set fonts/colors/borders — let LAF handle visual style
         b.setBorder(BorderFactory.createEmptyBorder(6, 8, 6, 8));
         b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         b.setFocusPainted(false);
-        b.addMouseListener(hoverBrightener(b, RAGE_COMPONENT_BG, RAGE_COMPONENT_BG.brighter()));
         return b;
     }
 
@@ -362,7 +338,7 @@ public final class AWTSettingsDialog extends JFrame {
             restoredBounds = getBounds();
             setBounds(usable);
             maximized = true;
-            maximizeBtn.setText("❒"); // change to restore-looking icon
+            maximizeBtn.setText("❒");
         } else {
             if (restoredBounds != null) setBounds(restoredBounds);
             maximized = false;
@@ -371,9 +347,7 @@ public final class AWTSettingsDialog extends JFrame {
     }
 
     private void restoreFromMaximizedAt(Point screenPoint) {
-        // calculate new width same as restoredBounds or half-screen if null
         Rectangle target = restoredBounds != null ? new Rectangle(restoredBounds) : new Rectangle(800, 600);
-        // attempt to center under cursor
         int x = screenPoint.x - target.width / 2;
         int y = screenPoint.y - 10;
         setBounds(x, y, target.width, target.height);
@@ -390,14 +364,14 @@ public final class AWTSettingsDialog extends JFrame {
         gbc.weightx = 0.0;
 
         // Controls
-        displayResCombo = createStyledComboBox();
-        colorDepthCombo = createStyledComboBox();
-        displayFreqCombo = createStyledComboBox();
-        antialiasCombo = createStyledComboBox();
+        displayResCombo = createComboBox();
+        colorDepthCombo = createComboBox();
+        displayFreqCombo = createComboBox();
+        antialiasCombo = createComboBox();
 
-        vsyncBox = createStyledCheckBox(resource("checkbox.vsync", "VSync"));
-        gammaBox = createStyledCheckBox(resource("checkbox.gamma", "Gamma"));
-        fullscreenBox = createStyledCheckBox(resource("checkbox.fullscreen", "Fullscreen"));
+        vsyncBox = createCheckBox(resource("checkbox.vsync", "VSync"));
+        gammaBox = createCheckBox(resource("checkbox.gamma", "Gamma"));
+        fullscreenBox = createCheckBox(resource("checkbox.fullscreen", "Fullscreen"));
 
         int row = 0;
         addRow(panel, gbc, row++, resource("label.resolutions", "Resolution"), displayResCombo);
@@ -424,9 +398,9 @@ public final class AWTSettingsDialog extends JFrame {
     private JPanel createModulesPanel() {
         JPanel panel = createCardPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        audioModuleBox = createStyledCheckBox("Audio Module");
-        physicsModuleBox = createStyledCheckBox("Physics Module");
-        aiModuleBox = createStyledCheckBox("AI Module");
+        audioModuleBox = createCheckBox("Audio Module");
+        physicsModuleBox = createCheckBox("Physics Module");
+        aiModuleBox = createCheckBox("AI Module");
         audioModuleBox.setSelected(true);
         physicsModuleBox.setSelected(true);
         aiModuleBox.setSelected(true);
@@ -442,7 +416,6 @@ public final class AWTSettingsDialog extends JFrame {
 
     private JPanel createButtonBar() {
         JPanel footer = new JPanel(new FlowLayout(FlowLayout.CENTER, 18, 12));
-        footer.setOpaque(false);
         okButton = createPrimaryButton(resource("button.ok", "OK").toUpperCase());
         cancelButton = createSecondaryButton(resource("button.cancel", "Cancel").toUpperCase());
         okButton.addActionListener(e -> {
@@ -460,21 +433,17 @@ public final class AWTSettingsDialog extends JFrame {
         return footer;
     }
 
-    // ---------- Helpers (UI pieces) ----------
+    // ---------- Helpers (UI pieces) — minimal manual styling ----------
 
     private JPanel createCardPanel() {
         JPanel p = new JPanel();
         p.setOpaque(true);
-        p.setBackground(RAGE_PANEL_BG);
         p.setBorder(new EmptyBorder(12, 12, 12, 12));
         return p;
     }
 
     private JSeparator createSeparator() {
-        JSeparator s = new JSeparator();
-        s.setForeground(RAGE_SEPARATOR_COLOR);
-        s.setBackground(RAGE_SEPARATOR_COLOR);
-        return s;
+        return new JSeparator(); // rely on LAF
     }
 
     private void addRow(JPanel panel, GridBagConstraints gbc, int row, String label, JComponent comp) {
@@ -498,89 +467,43 @@ public final class AWTSettingsDialog extends JFrame {
 
     private JLabel createLabel(String text) {
         JLabel l = new JLabel(text + ":");
-        l.setForeground(RAGE_FOREGROUND);
-        l.setFont(FONT_BOLD);
+        // use LAF defaults (do not override font/color)
         return l;
     }
 
-    private JComboBox<String> createStyledComboBox() {
+    private JComboBox<String> createComboBox() {
         JComboBox<String> combo = new JComboBox<>();
-        combo.setFont(FONT_REGULAR);
-        combo.setBackground(RAGE_COMPONENT_BG);
-        combo.setForeground(RAGE_FOREGROUND);
-        combo.setBorder(BorderFactory.createLineBorder(RAGE_BORDER_COLOR));
-        combo.setFocusable(false);
-        // customize popup colors
-        combo.setUI(new javax.swing.plaf.basic.BasicComboBoxUI() {
-            @Override
-            protected ComboPopup createPopup() {
-                BasicComboPopup popup = (BasicComboPopup) super.createPopup();
-                popup.getList().setSelectionBackground(RAGE_ACCENT);
-                popup.getList().setSelectionForeground(Color.WHITE);
-                popup.getList().setBackground(RAGE_COMPONENT_BG);
-                popup.getList().setForeground(RAGE_FOREGROUND);
-                popup.setBorder(BorderFactory.createLineBorder(RAGE_BORDER_COLOR));
-                return popup;
-            }
-        });
+        // use LAF defaults; avoid custom popup styling
+        combo.setFocusable(true);
         return combo;
     }
 
-    private JCheckBox createStyledCheckBox(String text) {
+    private JCheckBox createCheckBox(String text) {
         JCheckBox cb = new JCheckBox(text);
-        cb.setFont(FONT_REGULAR);
-        cb.setForeground(RAGE_FOREGROUND);
         cb.setOpaque(false);
-        cb.setFocusable(false);
+        cb.setFocusable(true);
         return cb;
     }
 
     private JButton createPrimaryButton(String text) {
         JButton b = new JButton(text);
-        b.setFont(FONT_BOLD);
-        b.setForeground(Color.WHITE);
-        b.setBackground(RAGE_ACCENT);
+        // minimal behavior only; visual styling left to LAF
         b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        b.setFocusPainted(false);
+        b.setFocusPainted(true);
         b.setBorder(BorderFactory.createEmptyBorder(8, 18, 8, 18));
-        b.addMouseListener(hoverBrightener(b, RAGE_ACCENT, RAGE_ACCENT_HOVER));
         return b;
     }
 
     private JButton createSecondaryButton(String text) {
         JButton b = new JButton(text);
-        b.setFont(FONT_BOLD);
-        b.setForeground(RAGE_FOREGROUND);
-        b.setBackground(RAGE_COMPONENT_BG);
         b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        b.setFocusPainted(false);
+        b.setFocusPainted(true);
         b.setBorder(BorderFactory.createEmptyBorder(8, 18, 8, 18));
-        b.addMouseListener(hoverBrightener(b, RAGE_COMPONENT_BG, RAGE_COMPONENT_BG.brighter()));
         return b;
     }
 
-    private MouseAdapter hoverBrightener(AbstractButton btn, Color base, Color hover) {
-        return new MouseAdapter() {
-            @Override
-            public void mouseEntered(MouseEvent e) {
-                btn.setBackground(hover);
-            }
-
-            @Override
-            public void mouseExited(MouseEvent e) {
-                btn.setBackground(base);
-            }
-        };
-    }
-
     private void styleTabbedPane(JTabbedPane tabs) {
-        tabs.setFont(FONT_BOLD);
-        tabs.setForeground(RAGE_FOREGROUND);
-        tabs.setBackground(RAGE_BACKGROUND);
-        tabs.setOpaque(false);
-        tabs.setBorder(new EmptyBorder(6, 0, 12, 0));
-        UIManager.put("TabbedPane.contentAreaColor", RAGE_PANEL_BG);
-        UIManager.put("TabbedPane.selected", RAGE_ACCENT);
+        // intentionally empty — let Look&Feel render tabs
     }
 
     // ---------- Initialization & event wiring ----------
@@ -790,11 +713,7 @@ public final class AWTSettingsDialog extends JFrame {
     }
 
     private static void showError(Component parent, String message) {
-        UIManager.put("OptionPane.background", RAGE_BACKGROUND);
-        UIManager.put("Panel.background", RAGE_PANEL_BG);
-        UIManager.put("OptionPane.messageForeground", RAGE_FOREGROUND);
-        UIManager.put("Button.background", RAGE_COMPONENT_BG);
-        UIManager.put("Button.foreground", RAGE_FOREGROUND);
+        // Do not override LAF colors; use default JOptionPane
         JOptionPane.showMessageDialog(parent, message, "Error", JOptionPane.ERROR_MESSAGE);
     }
 
@@ -808,7 +727,6 @@ public final class AWTSettingsDialog extends JFrame {
     }
 
     private static DisplayMode[] mergeModes(DisplayMode[] deviceModes, DisplayMode[] defaults) {
-        // merge keeping unique width x height, ordered
         LinkedHashMap<String, DisplayMode> map = new LinkedHashMap<>();
         for (DisplayMode d : deviceModes) {
             String key = d.getWidth() + "x" + d.getHeight();
@@ -859,7 +777,6 @@ public final class AWTSettingsDialog extends JFrame {
             this.setLocationRelativeTo(null);
             this.setVisible(true);
             this.toFront();
-            // choose default button
             getRootPane().setDefaultButton(okButton);
         });
     }

@@ -59,7 +59,7 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
             initSkyControl();
             initLights();
             initShadows();
-            //initPostProcessing();
+            initPostProcessing();
         });
     }
 
@@ -79,7 +79,7 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
     }
 
     private void initLights() {
-        sunLight = new DirectionalLight();
+        //sunLight = new DirectionalLight();
         sunLight.setColor(SUN_COLOR_ZENITH.mult(getConfig().getSunLightIntensity()));
         engine.getRootNode().addLight(sunLight);
 
