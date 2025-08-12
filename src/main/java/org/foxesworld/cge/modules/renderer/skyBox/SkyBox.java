@@ -79,7 +79,7 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
     }
 
     private void initLights() {
-        //sunLight = new DirectionalLight();
+        sunLight = new DirectionalLight();
         sunLight.setColor(SUN_COLOR_ZENITH.mult(getConfig().getSunLightIntensity()));
         engine.getRootNode().addLight(sunLight);
 
@@ -128,7 +128,7 @@ public class SkyBox extends EngineModule<SkyBoxConfig> {
         if (hourDelta > 12f) hourDelta -= 24f;
         if (hourDelta < -12f) hourDelta += 24f;
         simulationHour += hourDelta * timeSmoothingFactor * tpf;
-        simulationHour = (simulationHour + 24f) % 24f;
+        simulationHour = 12;//(simulationHour + 24f) % 24f;
     }
 
     private AtmosphereState calculateAtmosphereState() {
