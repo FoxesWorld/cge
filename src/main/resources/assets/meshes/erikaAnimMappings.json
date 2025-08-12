@@ -4,6 +4,7 @@
     "walk": "Walk",
     "sprint": "Run Forward",
     "jump": "Jump",
+    "jumping": "Jumping",
     "fall": "Fall A Land To Standing Idle 02",
     "landing": "Landing",
     "crouch_idle": "Crouch_Idle",

@@ -8,12 +8,14 @@ import com.jme3.math.Vector3f;
 
 import java.util.List;
 
- class PhysicsHelper {
+ public class PhysicsHelper {
+     private final Player player;
     private final CharacterControl character;
     private final BulletAppState bullet;
     private final PlayerModule module;
 
     PhysicsHelper(Player player) {
+        this.player = player;
         this.character = player.getCharacter();
         this.bullet = player.getBullet();
         this.module = player.getPlayerModule();
@@ -51,4 +53,23 @@ import java.util.List;
         }
         return false;
     }
+
+     public void updateModelPosition() {
+         if (player.playerModel == null) return;
+         Vector3f modelPos = player.reuseVec1.set(character.getPhysicsLocation()).addLocal(0, -player.getPlayerModule().getConfig().getPhysics().getHeight() / 2f, 0);
+         player.playerModel.setLocalTranslation(modelPos);
+
+         Vector3f lookTarget = modelPos.add(player.getCam().getDirection(player.reuseVec2).normalizeLocal());
+         player.playerModel.lookAt(lookTarget, Vector3f.UNIT_Y);
+     }
+
+     public boolean isGrounded() {
+         return character.onGround() || checkGroundWithRaycast(player);
+     }
+
+     public void synchronize(boolean instant) {
+         player.setLocalTranslation(character.getPhysicsLocation());
+         if (instant) player.interpEyeHeight = player.targetEyeHeight;
+         else player.interpEyeHeight += (player.targetEyeHeight - player.interpEyeHeight) * 0.12f;
+     }
 }

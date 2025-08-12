@@ -36,17 +36,17 @@ public final class MovementControl extends AbstractControl {
     public interface MovementListener {
         void onJumpStart();
         void onLanding(float fallHeight);
-        void onMove(float targetSpeed);
+        void onStay();
         /**
          * Basic legacy step notification.
          */
-        void onStep();
+        void onStep(float targetSpeed);
 
         /**
          * Optional richer step notification that indicates which foot "struck".
          * Default implementation forwards to the legacy onStep() for backward compatibility.
          */
-        default void onStep(boolean leftFoot) { onStep(); }
+        //default void onStep(boolean leftFoot) { onStep(); }
     }
 
     private static final float WALK_STEP_INTERVAL_SECONDS = 0.50f;
@@ -158,11 +158,12 @@ public final class MovementControl extends AbstractControl {
         } else {
             desiredVel.set(0, 0, 0);
             targetSpeed = 0;
+            if(player.getPhysicsHelper().isGrounded()) {
+                movementListener.onStay();
+            }
         }
 
-        if (movementListener != null) {
-            movementListener.onMove(targetSpeed);
-        }
+
 
         float alpha = 1f - FastMath.pow(1f - smoothFactor, tpf * 60f);
         currentVel.interpolateLocal(desiredVel, alpha);
@@ -175,9 +176,9 @@ public final class MovementControl extends AbstractControl {
             timeSinceLastStep = Math.max(0f, getStepInterval() * 0.5f);
             // optionally fire an immediate short step
             if (movementListener != null && character.onGround()) {
-                movementListener.onStep(stepLeft);
+                //movementListener.onStep(stepLeft);
                 // keep legacy callback for backward compatibility
-                movementListener.onStep();
+                movementListener.onStep(currentVel.length());
                 stepLeft = !stepLeft;
             }
         }
@@ -216,8 +217,8 @@ public final class MovementControl extends AbstractControl {
 
             if (timeSinceLastStep >= requiredInterval) {
                 if (movementListener != null) {
-                    movementListener.onStep(stepLeft);
-                    movementListener.onStep(); // keep legacy behaviour
+                    //movementListener.onStep(stepLeft);
+                    movementListener.onStep(currentVel.length()); // keep legacy behaviour
                 }
                 stepLeft = !stepLeft;
                 timeSinceLastStep -= requiredInterval;

@@ -37,16 +37,16 @@ public class Player extends Node {
     private final PlayerHud playerHud;
 
     private PlayerCameraControl camControl;
-    private Spatial playerModel;
+    Spatial playerModel;
     private AnimComposer animComposer;
     private PlayerAnimationController animationController;
-    private final Vector3f reuseVec1 = new Vector3f();
-    private final Vector3f reuseVec2 = new Vector3f();
+    final Vector3f reuseVec1 = new Vector3f();
+    final Vector3f reuseVec2 = new Vector3f();
 
     private boolean isCrouching = false;
     private float crouchAmount = 0f;
-    private float targetEyeHeight;
-    private float interpEyeHeight;
+    float targetEyeHeight;
+    float interpEyeHeight;
 
     private boolean lastGrounded = true;
     private float airTime = 0f;
@@ -102,40 +102,39 @@ public class Player extends Node {
             @Override
             public void onJumpStart() {
                 camEffectsControl.notifyJumpStart();
-                if (animationController != null) animationController.play("jump", 0.18f, null, false);
+                if (animationController != null) animationController.forcePlay("jumping", 0.18f, null, false);
             }
 
             @Override
             public void onLanding(float peak) {
                 camEffectsControl.notifyLanding(peak);
-                if (animationController != null) animationController.play("landing", 0.18f, null, false);
+                if (animationController != null) animationController.forcePlay("landing", 0.18f, null, false);
             }
 
             @Override
-            public void onMove(float speed) {
+            public void onStay() {
+                animationController.play("idle", 0.18f, null, true);
+            }
+
+            @Override
+            public void onStep(float speed) {
                 String anim;
-                if (speed == 0f) {
-                    anim = "idle";
-                } else if (speed <= 0.03f) {
+                if (speed <= 0.035f) {
                     anim = "walk";
                 } else {
                     anim = "sprint";
                 }
+
                 if (animationController != null) {
                     animationController.play(anim, 0.18f, null, true);
                 }
-            }
-
-            @Override
-            public void onStep() {
-
             }
         });
         this.physicsHelper = new PhysicsHelper(this);
         this.modelHelper = new ModelHelper(this);
 
         loadPlayerModel(playerModule.getConfig().getModel().getModelPath());
-        synchronize(true);
+        physicsHelper.synchronize(true);
     }
 
 
@@ -151,33 +150,15 @@ public class Player extends Node {
         crouchAmount += ((isCrouching ? 0.7f : 1.0f) - crouchAmount) * 0.15f;
         targetEyeHeight = configEyeHeight * crouchAmount;
 
-        String animName = isGrounded() ? (movementControl.isSprinting() ? "sprint" : movementControl.isMoving() ? "move" : "idle") : "jump";
-        if (animationController != null) animationController.play(animName, 0.13f, "", true);
-
-        synchronize(true);
-        updateModelPosition();
+        physicsHelper.synchronize(true);
+        physicsHelper.updateModelPosition();
         updateGroundedState(tpf);
         playerHud.update(tpf);
         if (animationController != null) animationController.update(tpf);
     }
 
-    private void synchronize(boolean instant) {
-        setLocalTranslation(character.getPhysicsLocation());
-        if (instant) interpEyeHeight = targetEyeHeight;
-        else interpEyeHeight += (targetEyeHeight - interpEyeHeight) * 0.12f;
-    }
-
-    private void updateModelPosition() {
-        if (playerModel == null) return;
-        Vector3f modelPos = reuseVec1.set(character.getPhysicsLocation()).addLocal(0, -playerModule.getConfig().getPhysics().getHeight() / 2f, 0);
-        playerModel.setLocalTranslation(modelPos);
-
-        Vector3f lookTarget = modelPos.add(cam.getDirection(reuseVec2).normalizeLocal());
-        playerModel.lookAt(lookTarget, Vector3f.UNIT_Y);
-    }
-
     private void updateGroundedState(float tpf) {
-        boolean grounded = isGrounded();
+        boolean grounded = physicsHelper.isGrounded();
         if (!grounded) {
             airTime += tpf;
         } else {
@@ -187,10 +168,6 @@ public class Player extends Node {
             airTime = 0;
         }
         lastGrounded = grounded;
-    }
-
-    public boolean isGrounded() {
-        return character.onGround() || physicsHelper.checkGroundWithRaycast(this);
     }
 
     public void cleanup() {
@@ -243,5 +220,9 @@ public class Player extends Node {
 
     public PlayerModule getPlayerModule() {
         return playerModule;
+    }
+
+    public PhysicsHelper getPhysicsHelper() {
+        return physicsHelper;
     }
 }

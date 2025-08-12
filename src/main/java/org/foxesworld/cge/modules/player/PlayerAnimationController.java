@@ -102,10 +102,11 @@ public class PlayerAnimationController {
         String targetLayer = layer != null ? layer : DEFAULT_LAYER;
         //AnimClip clip = composer.getAnimClip(name);
         name = animationMapping.get(name);
+        float length = getClipLength(name);
 
         AnimationState prev = stateByLayer.get(targetLayer);
         if (prev != null && prev.name.equals(name) && blendTime > 0f) {
-            return; // already playing same
+            return;
         }
         ensureLayer(targetLayer);
         if (blendTime > 0f && blendedActionMethod != null) {
@@ -115,6 +116,17 @@ public class PlayerAnimationController {
         }
         stateByLayer.put(targetLayer, new AnimationState(name, blendTime, loop));
         logger.info("Play '{}' on [{}] (blend={}, loop={})", name, targetLayer, blendTime, loop);
+    }
+
+    // Утилита: получить длину клипа (в секундах)
+    private float getClipLength(String animName) {
+        if (composer == null) return 0f;
+        try {
+            // AnimComposer -> AnimClip (в JME API есть composer.getAnimClip(name))
+            com.jme3.anim.AnimClip clip = composer.getAnimClip(animName);
+            if (clip != null) return (float) clip.getLength();
+        } catch (RuntimeException ignored) { }
+        return 0f;
     }
 
     /**
@@ -129,7 +141,8 @@ public class PlayerAnimationController {
      * Immediately force play, ignoring last state.
      */
     public void forcePlay(String name, float blendTime, String layer, boolean loop) {
-        ensureLayer(layer);
+        layer = ensureLayer(layer);
+        name = animationMapping.get(name);
         if (blendTime > 0f && blendedActionMethod != null) {
             invokeBlended(name, layer, loop, blendTime);
         } else {
@@ -152,11 +165,12 @@ public class PlayerAnimationController {
         }
     }
 
-    private void ensureLayer(String layer) {
+    private String ensureLayer(String layer) {
         if (layer == null) layer = DEFAULT_LAYER;
         if (composer.getLayer(layer) == null) {
             composer.makeLayer(layer, null);
         }
+        return layer;
     }
 
     private static class AnimationState {
