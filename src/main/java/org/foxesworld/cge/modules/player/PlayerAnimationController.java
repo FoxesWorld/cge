@@ -9,6 +9,7 @@ import org.foxesworld.cge.modules.player.config.AnimationMapping;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.*;
 import java.util.concurrent.ConcurrentLinkedQueue;
@@ -41,6 +42,9 @@ public class PlayerAnimationController {
         this.composer = Objects.requireNonNull(composer, "AnimComposer cannot be null");
         initReflection();
         ensureLayer(DEFAULT_LAYER);
+        for(String anim: enumerateAnimations()){
+           logger.info("Existing animation " + anim);
+        }
     }
 
     private void initReflection() {
@@ -217,4 +221,85 @@ public class PlayerAnimationController {
             ctrl.logger.info("Event '{}' scheduled at {}s on [{}]", name, delay, layer);
         }
     }
+
+    /**
+     * Возвращает список имен анимаций, найденных в AnimComposer / загруженной модели.
+     * Порядок — предсказуемый (LinkedHashSet) и без дубликатов.
+     */
+    private List<String> enumerateAnimations() {
+        LinkedHashSet<String> found = new LinkedHashSet<>();
+
+        // try several reflection-based approaches to support different JME versions / implementations
+        // 1) composer.getAnimClips() -> Map<String, AnimClip> or Collection<AnimClip>
+        try {
+            Method m = composer.getClass().getMethod("getAnimClips");
+            Object res = m.invoke(composer);
+            if (res != null) {
+                if (res instanceof Map) {
+                    Map<?,?> map = (Map<?,?>) res;
+                    for (Object k : map.keySet()) {
+                        if (k != null) found.add(String.valueOf(k));
+                    }
+                } else if (res instanceof Collection) {
+                    for (Object o : (Collection<?>) res) {
+                        if (o instanceof String) {
+                            found.add((String) o);
+                        } else if (o != null) {
+                            // try getName() on AnimClip-like object
+                            try {
+                                Method getName = o.getClass().getMethod("getName");
+                                Object nm = getName.invoke(o);
+                                if (nm != null) found.add(String.valueOf(nm));
+                            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {}
+                        }
+                    }
+                } else if (res.getClass().isArray()) {
+                    Object[] arr = (Object[]) res;
+                    for (Object o : arr) {
+                        if (o instanceof String) found.add((String) o);
+                        else if (o != null) {
+                            try {
+                                Method getName = o.getClass().getMethod("getName");
+                                Object nm = getName.invoke(o);
+                                if (nm != null) found.add(String.valueOf(nm));
+                            } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {}
+                        }
+                    }
+                }
+            }
+        } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {
+            // try other strategies below
+        }
+
+        // 2) composer.getAnimClipNames() or composer.getAnimationNames()
+        if (found.isEmpty()) {
+            String[] tryNames = {"getAnimClipNames", "getAnimationNames", "getAnimations"};
+            for (String name : tryNames) {
+                try {
+                    Method m = composer.getClass().getMethod(name);
+                    Object res = m.invoke(composer);
+                    if (res instanceof String[]) {
+                        for (String s : (String[]) res) if (s != null) found.add(s);
+                    } else if (res instanceof Collection) {
+                        for (Object o : (Collection<?>) res) if (o != null) found.add(String.valueOf(o));
+                    }
+                } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException ignored) {
+                }
+                if (!found.isEmpty()) break;
+            }
+        }
+
+        // 4) Final fallback: try a small set of conventional animation names many rigs use
+        if (found.isEmpty()) {
+            String[] conventional = {"idle", "idle_01", "walk", "run", "run_fast", "jump", "landing", "fall"};
+            for (String c : conventional) {
+                try {
+                    if (composer.getAnimClip(c) != null) found.add(c);
+                } catch (RuntimeException ignored) {}
+            }
+        }
+
+        return new ArrayList<>(found);
+    }
+
 }

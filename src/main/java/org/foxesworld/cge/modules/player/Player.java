@@ -108,7 +108,13 @@ public class Player extends Node {
             @Override
             public void onLanding(float peak) {
                 camEffectsControl.notifyLanding(peak);
-                if (animationController != null) animationController.forcePlay("landing", 0.18f, null, false);
+                String anim;
+                if(peak <= 10) {
+                    anim = "landing";
+                } else {
+                    anim = "hardLanding";
+                }
+                if (animationController != null) animationController.play(anim, 0.18f, null, false);
             }
 
             @Override
@@ -117,7 +123,7 @@ public class Player extends Node {
             }
 
             @Override
-            public void onStep(float speed) {
+            public void onStep(boolean left, float speed) {
                 String anim;
                 if (speed <= 0.035f) {
                     anim = "walk";
@@ -128,6 +134,16 @@ public class Player extends Node {
                 if (animationController != null) {
                     animationController.play(anim, 0.18f, null, true);
                 }
+            }
+
+            @Override
+            public  void onAirborne(float airtime) {
+                animationController.play("falling", 0.18f, null, true);
+            }
+
+            @Override
+            public void onStopMoving() {
+                animationController.play("stopMoving", 0.18f, null, true);
             }
         });
         this.physicsHelper = new PhysicsHelper(this);

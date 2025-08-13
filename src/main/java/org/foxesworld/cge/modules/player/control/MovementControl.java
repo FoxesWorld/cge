@@ -16,38 +16,50 @@ import org.foxesworld.cge.modules.player.Player;
 import org.foxesworld.cge.modules.player.PlayerState;
 import org.foxesworld.cge.modules.player.config.PlayerConfig;
 
+import java.util.List;
+import java.util.concurrent.CopyOnWriteArrayList;
+
 /**
- * Manages first-person character movement, focusing purely on physics and input.
+ * Improved MovementControl with support for multiple listeners and richer movement events.
  * <p>
- * This control is "animation-agnostic". It translates user input into physical
- * motion using a {@link CharacterControl} and reports key events like jumping,
- * landing, and changes in speed via the {@link MovementListener} interface.
- * All animation-related decisions are left to external systems that implement this listener.
- * <p>
- * Input is handled by polling the state of actions from the central {@link InputManagerModule},
- * making controls fully configurable via external files.
+ * Backwards compatibility: the original {@code onStep(float)} / {@code onJumpStart()} / {@code onLanding(float)}
+ * methods are preserved as default methods on the listener interface so existing listeners continue to work.
  */
 public final class MovementControl extends AbstractControl {
 
     /**
-     * A listener interface for receiving key movement events from the {@link MovementControl}.
-     * This serves as the primary communication channel to other systems, such as an animation controller.
+     * A listener interface for receiving movement events. New methods are defaulted so
+     * existing implementors won't break.
      */
     public interface MovementListener {
-        void onJumpStart();
-        void onLanding(float fallHeight);
-        void onStay();
-        /**
-         * Basic legacy step notification.
-         */
-        void onStep(float targetSpeed);
+        default void onJumpStart() {}
+        default void onLanding(float fallHeight) {}
+        default void onStay() {}
+        /** legacy step callback kept for compatibility */
+        //default void onStep(float targetSpeed) {}
+        /** richer step event: which foot contacted and the speed */
+        void onStep(boolean leftFoot, float speed);
 
-        /**
-         * Optional richer step notification that indicates which foot "struck".
-         * Default implementation forwards to the legacy onStep() for backward compatibility.
-         */
-        //default void onStep(boolean leftFoot) { onStep(); }
+        /** movement lifecycle hooks */
+        default void onStartMoving() {}
+        default void onStopMoving() {}
+
+        /** sprint lifecycle */
+        default void onSprintStart() {}
+        default void onSprintStop() {}
+
+        /** crouch lifecycle */
+        default void onCrouchStart() {}
+        default void onCrouchStop() {}
+
+        /** Falling/air events */
+        default void onFallStart(float startY) {}
+        void onAirborne(float airtime);
     }
+
+    private float airTime = 0f;                     // аккумулируем время в воздухе
+    private float lastAirborneNotifyTime = 0f;      // время, когда в последний раз вызвали notifyAirborne
+    private static final float AIRBORNE_NOTIFY_INTERVAL = 0.25f; // интервал оповещений в секундах
 
     private static final float WALK_STEP_INTERVAL_SECONDS = 0.50f;
     private static final float SPRINT_STEP_INTERVAL_SECONDS = 0.35f;
@@ -77,15 +89,13 @@ public final class MovementControl extends AbstractControl {
     private boolean stepLeft = true; // alternate left/right foot
     private boolean wasMoving = false;
 
-    private RawInputListener rawListener;
-    private MovementListener movementListener;
+    private boolean wasSprinting = false;
+    private boolean wasCrouching = false;
 
-    /**
-     * Constructs a new MovementControl.
-     *
-     * @param player         The context providing access to core components like the camera and character.
-     * @param movementConfig The configuration object containing speed and smoothing values.
-     */
+    private RawInputListener rawListener;
+    // support multiple listeners safely across threads/iteration
+    private final CopyOnWriteArrayList<MovementListener> listeners = new CopyOnWriteArrayList<>();
+
     public MovementControl(Player player, PlayerConfig.MovementConfig movementConfig) {
         this.player = player;
         this.character = player.getCharacter();
@@ -112,31 +122,32 @@ public final class MovementControl extends AbstractControl {
 
         updateMovement(tpf);
         updateViewDirection();
-        handleLanding();
+        handleLanding(tpf);
         handleFootsteps(tpf);
         updateHud();
+
+        // sprint state transitions
+        boolean sprintNow = inputModule.isActionActive("sprint");
+        if (sprintNow && !wasSprinting) notifySprintStart();
+        if (!sprintNow && wasSprinting) notifySprintStop();
+        wasSprinting = sprintNow;
+
+        // crouch state transitions (optional action)
+        boolean crouchNow = inputModule.isActionActive("crouch");
+        if (crouchNow && !wasCrouching) notifyCrouchStart();
+        if (!crouchNow && wasCrouching) notifyCrouchStop();
+        wasCrouching = crouchNow;
     }
 
-    /**
-     * Separated jump handling: triggers physics jump, records start height and notifies listener.
-     * This is extracted to make jump logic easier to extend (double-jump, charge jump, animation hooks).
-     */
     private void handleJump() {
-        // Only act on the moment the jump action is active while grounded.
         if (inputModule.isActionActive("jump") && character.onGround()) {
             player.getEngine().getSoundManager().play("player.takeoff");
             character.jump();
-            // record Y at jump start to be used later for landing/fall distance calculation
             fallStartY = spatial.getWorldTranslation().y;
-            if (movementListener != null) {
-                movementListener.onJumpStart();
-            }
+            notifyJumpStart();
         }
     }
 
-    /**
-     * Calculates and applies the character's movement vector based on input and smoothing.
-     */
     private void updateMovement(float tpf) {
         tempDir.set(0, 0, 0);
         if (inputModule.isActionActive("move_forward")) tempDir.z += 1f;
@@ -146,6 +157,7 @@ public final class MovementControl extends AbstractControl {
 
         float targetSpeed = isSprinting() ? sprintSpeed : walkSpeed;
 
+        boolean movingNow;
         if (tempDir.lengthSquared() > 0) {
             tempDir.normalizeLocal();
             player.getCam().getDirection(camDir).setY(0).normalizeLocal();
@@ -155,39 +167,39 @@ public final class MovementControl extends AbstractControl {
             desiredVel.addLocal(camDir.mult(tempDir.z));
             desiredVel.addLocal(camLeft.mult(-tempDir.x));
             desiredVel.normalizeLocal().multLocal(targetSpeed);
+            movingNow = true;
         } else {
             desiredVel.set(0, 0, 0);
             targetSpeed = 0;
-            if(player.getPhysicsHelper().isGrounded()) {
-                movementListener.onStay();
+            movingNow = false;
+            if (player.getPhysicsHelper().isGrounded()) {
+                notifyOnStay();
             }
         }
-
-
 
         float alpha = 1f - FastMath.pow(1f - smoothFactor, tpf * 60f);
         currentVel.interpolateLocal(desiredVel, alpha);
         character.setWalkDirection(currentVel);
 
-        // detect movement start to trigger an immediate footstep and keep step phase in sync
-        boolean movingNow = currentVel.lengthSquared() > 1e-4f;
-        if (!wasMoving && movingNow) {
-            // trigger a half-interval so the first step feels immediate
+        // movement start/stop detection
+        boolean wasMovingBefore = wasMoving;
+        boolean movingNowBasedOnVelocity = currentVel.lengthSquared() > 1e-4f;
+        if (!wasMovingBefore && movingNowBasedOnVelocity) {
+            // start moving
             timeSinceLastStep = Math.max(0f, getStepInterval() * 0.5f);
-            // optionally fire an immediate short step
-            if (movementListener != null && character.onGround()) {
-                //movementListener.onStep(stepLeft);
-                // keep legacy callback for backward compatibility
-                movementListener.onStep(currentVel.length());
+            notifyStartMoving();
+            // immediately fire a step for feel
+            if (character.onGround()) {
+                notifyOnStep(stepLeft, currentVel.length());
                 stepLeft = !stepLeft;
             }
+        } else if (wasMovingBefore && !movingNowBasedOnVelocity) {
+            notifyStopMoving();
         }
-        wasMoving = movingNow;
+
+        wasMoving = movingNowBasedOnVelocity;
     }
 
-    /**
-     * Orients the character model to face the direction of movement.
-     */
     private void updateViewDirection() {
         if (currentVel.lengthSquared() > 1e-4f) {
             Vector3f viewDir = new Vector3f(currentVel.x, 0, currentVel.z).normalizeLocal();
@@ -195,82 +207,89 @@ public final class MovementControl extends AbstractControl {
         }
     }
 
-    /**
-     * Returns the dynamic step interval based on current speed. Faster speed => shorter interval.
-     */
     private float getStepInterval() {
         float speed = getCurrentSpeed();
         if (speed <= 1e-4f) return STEP_INTERVAL_MAX;
         float base = isSprinting() ? SPRINT_STEP_INTERVAL_SECONDS : WALK_STEP_INTERVAL_SECONDS;
-        // scale base interval inversely with speed relative to walkSpeed
         float interval = base * (walkSpeed / Math.max(speed, 1e-4f));
         return FastMath.clamp(interval, STEP_INTERVAL_MIN, STEP_INTERVAL_MAX);
     }
 
-    /**
-     * Handles rhythmic footstep events based on a variable interval derived from speed.
-     */
     private void handleFootsteps(float tpf) {
         if (character.onGround() && isMoving()) {
             timeSinceLastStep += tpf;
             float requiredInterval = getStepInterval();
 
             if (timeSinceLastStep >= requiredInterval) {
-                if (movementListener != null) {
-                    //movementListener.onStep(stepLeft);
-                    movementListener.onStep(currentVel.length()); // keep legacy behaviour
-                }
+                notifyOnStep(stepLeft, currentVel.length());
                 stepLeft = !stepLeft;
                 timeSinceLastStep -= requiredInterval;
-                // avoid large accumulation when frame spikes occur
                 timeSinceLastStep = Math.min(timeSinceLastStep, requiredInterval);
             }
         } else {
             timeSinceLastStep = 0f;
-            // reset step phase so starting to walk gives a predictable foot
-            // (optional - comment out if you want to preserve phase across small stops)
-            // stepLeft = true;
         }
     }
 
-    /**
-     * Detects when the character lands after a fall and notifies the listener.
-     */
-    private void handleLanding() {
+    // изменённый метод (замени старую реализацию)
+    private void handleLanding(float tpf) {
         boolean inAir = !character.onGround();
         float posY = spatial.getWorldTranslation().y;
 
-        // just left the ground
+        // --- just left the ground -----------------------
         if (inAir && !wasInAir) {
-            fallStartY = lastY; // where we were when leaving ground
+            // точка старта падения — запоминаем высоту, сбрасываем таймер
+            fallStartY = lastY;
+            airTime = 0f;
+            lastAirborneNotifyTime = 0f;
+            notifyFallStart(fallStartY);
         }
 
-        // just landed
+        // --- while airborne: accumulate airtime и уведомляем периодически -------
+        if (inAir) {
+            // аккумулируем airtime
+            airTime += tpf;
+
+            float fallDistance = fallStartY - posY;
+
+            // отправляем периодические уведомления, только если падение значимо
+            if (fallDistance > MIN_FALL_FOR_LAND_EVENT) {
+                if (airTime - lastAirborneNotifyTime >= AIRBORNE_NOTIFY_INTERVAL) {
+                    notifyAirborne(airTime);
+                    lastAirborneNotifyTime = airTime;
+                }
+            }
+
+        } else {
+            // not in air -> reset some counters (keeps state clean)
+            // но НЕ сбрасываем fallStartY здесь — он будет обновлён при следующем выходе в воздух
+        }
+
+        // --- just landed: вычисляем итоговую дистанцию и генерируем событие приземления -----------
         if (wasInAir && !inAir) {
+            // проигрываем звук приземления (всегда, как и раньше)
             player.getEngine().getSoundManager().play("player.land");
             float fallDistance = fallStartY - posY;
-            if (fallDistance > MIN_FALL_FOR_LAND_EVENT && movementListener != null) {
-                movementListener.onLanding(fallDistance);
+            // только если падение достаточно большое — уведомляем о приземлении
+            if (fallDistance > MIN_FALL_FOR_LAND_EVENT) {
+                // уведомляем слушателей о дистанции падения (можно расширить сигнатуру, чтобы передать и airTime)
+                notifyLanding(fallDistance);
             }
+
+            airTime = 0f;
+            lastAirborneNotifyTime = 0f;
             fallStartY = posY;
         }
-
         wasInAir = inAir;
         lastY = posY;
     }
 
-    /**
-     * Updates the player's HUD with the current speed.
-     */
     private void updateHud() {
         if (player.getPlayerHud() != null) {
             player.getPlayerHud().setPlayerSpeed(getCurrentSpeed());
         }
     }
 
-    /**
-     * Registers a raw input listener for handling debug keys.
-     */
     private void registerRawInput() {
         if (rawListener != null) return;
         rawListener = new RawInputListener() {
@@ -333,11 +352,90 @@ public final class MovementControl extends AbstractControl {
         return isMoving() && inputModule.isActionActive("sprint");
     }
 
+    // Listener management -------------------------------------------------
+
+    /**
+     * Add a listener to receive movement events.
+     */
+    public void addMovementListener(MovementListener l) {
+        if (l != null) listeners.addIfAbsent(l);
+    }
+
+    /**
+     * Remove a previously added listener.
+     */
+    public void removeMovementListener(MovementListener l) {
+        listeners.remove(l);
+    }
+
+    /**
+     * Clear all movement listeners.
+     */
+    public void clearMovementListeners() {
+        listeners.clear();
+    }
+
+    /**
+     * Backwards-compatible single-listener setter (keeps old code working).
+     */
+    @Deprecated
     public void setMovementListener(MovementListener movementListener) {
-        this.movementListener = movementListener;
+        listeners.clear();
+        if (movementListener != null) listeners.add(movementListener);
     }
 
     public PlayerState getPlayerState() {
         return new PlayerState(isMoving(), isSprinting(), !character.onGround(), getCurrentSpeed(), currentVel.clone(), spatial.getWorldTranslation().clone());
+    }
+
+    // Notification helpers -------------------------------------------------
+    private void notifyJumpStart() {
+        for (MovementListener l : listeners) l.onJumpStart();
+    }
+
+    private void notifyLanding(float fallHeight) {
+        for (MovementListener l : listeners) l.onLanding(fallHeight);
+    }
+
+    private void notifyOnStay() {
+        for (MovementListener l : listeners) l.onStay();
+    }
+
+    private void notifyOnStep(boolean left, float speed) {
+        for (MovementListener l : listeners) {
+            l.onStep(left, speed);
+        }
+    }
+
+    private void notifyStartMoving() {
+        for (MovementListener l : listeners) l.onStartMoving();
+    }
+
+    private void notifyStopMoving() {
+        for (MovementListener l : listeners) l.onStopMoving();
+    }
+
+    private void notifySprintStart() {
+        for (MovementListener l : listeners) l.onSprintStart();
+    }
+
+    private void notifySprintStop() {
+        for (MovementListener l : listeners) l.onSprintStop();
+    }
+
+    private void notifyCrouchStart() {
+        for (MovementListener l : listeners) l.onCrouchStart();
+    }
+
+    private void notifyCrouchStop() {
+        for (MovementListener l : listeners) l.onCrouchStop();
+    }
+
+    private void notifyFallStart(float startY) {
+        for (MovementListener l : listeners) l.onFallStart(startY);
+    }
+
+    private void notifyAirborne(float airtime) {
+        for (MovementListener l : listeners) l.onAirborne(airtime);
     }
 }
