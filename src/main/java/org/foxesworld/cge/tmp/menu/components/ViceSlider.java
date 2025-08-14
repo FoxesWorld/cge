@@ -54,9 +54,6 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
     private final AssetManager assetManager;
     private final String bind;
 
-    private float width;
-    private float height = DEFAULT_HEIGHT;
-
     private float value;
     private float displayedValue;
 
@@ -99,6 +96,7 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
         this.borderColor = DEFAULT_BORDER_COLOR.clone();
         this.currentFillColor = this.fillColor.clone();
         this.currentBorderColor = this.borderColor.clone();
+        height = DEFAULT_HEIGHT;
 
         ttFrenderer = new TTFrenderer(assetManager);
         this.borderNode = new Node("SliderBorder");
@@ -273,18 +271,8 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
     }
 
     @Override
-    public float getHeight() {
-        return height;
-    }
-
-    @Override
     public void setSize(float width, float height) {
         setSize(width);
-    }
-
-    @Override
-    public float getWidth() {
-        return width;
     }
 
     @Override

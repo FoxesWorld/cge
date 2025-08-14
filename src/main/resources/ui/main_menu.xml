@@ -8,24 +8,22 @@
             modelOffsetY="-1.0"
             cameraDistance="4.5"
             cameraHeight="1.5"
-            lookAtY="2.0"
-    />
+            lookAtY="2.0" />
 
     <screen>
+        <panel id="logoPanel" anchor="TOP_LEFT" y="-25%" x="4%" width="250"  dpiScale="1.0" spacing="5" bgColor="#000000" bgAlpha="0.3">
+            <components>
+                <image scaleMode="cover" path="assets/Interface/ui/engine.png" />
+            </components>
+        </panel>
 
-        <panel id="logoPanel" y="-25%" x="5%" width="250" anchor="TOP_LEFT" dpiScale="1.0" spacing="5" bgColor="#000000" bgAlpha="0.3">
-        <components>
-            <image scaleMode="cover" path="assets/Interface/ui/engine.png" />
-        </components>
-    </panel>
-
-        <panel id="main_panel" anchor="CENTER" dpiScale="1.0" spacing="5" bgColor="#000000" bgAlpha="0.95">
-        <components>
-            <button id="play" action="org.foxesworld.cge.tmp.menu.actions.StartGameAction" iconPath="assets/Interface/Icons/bug.png"  iconSize="40" height="125" text="Играть" />
-            <button id="settings" action="org.foxesworld.cge.tmp.menu.actions.OpenSettingsAction" iconPath="assets/Interface/ui/icons/settings.png" iconSize="40" height="95" text="Настройки" />
-            <button id="quit" action="org.foxesworld.cge.tmp.menu.actions.QuitGameAction" iconPath="assets/Interface/ui/icons/quit.png" iconSize="40" height="95" text="Выход" />
-        </components>
-    </panel>
+            <panel id="main_panel" anchor="CENTER" dpiScale="1.0" spacing="5" bgColor="#000000" bgAlpha="0.95">
+            <components>
+                <button id="play" action="org.foxesworld.cge.tmp.menu.actions.StartGameAction" iconPath="assets/Interface/ui/icons/bug.png"  iconSize="40" height="95" text="Играть" />
+                <button id="settings" action="org.foxesworld.cge.tmp.menu.actions.OpenSettingsAction" iconPath="assets/Interface/ui/icons/settings.png" iconSize="40" height="95" text="Настройки" />
+                <button id="quit" action="org.foxesworld.cge.tmp.menu.actions.QuitGameAction" iconPath="assets/Interface/ui/icons/quit.png" iconSize="40" height="95" text="Выход" />
+            </components>
+        </panel>
 
 
         <panel id="infoPanel" anchor="BOTTOM_CENTER" dpiScale="1.0" height="12%" width="100%" bgColor="#1d84de" cornerRadius="0" bgAlpha="0.5">
@@ -33,12 +31,6 @@
                 <text anchor="TOP_LEFT" id="title" text="Calista Game Engine" color="#1baade" fontSize="20vh" />
                 <text id="version" fontPath="assets/Interface/fonts/Intro-Black.ttf" text="ALPHA PreBuild 0.0.5-r" color="#00bbff" fontSize="15vw" />
                 <text id="type" fontPath="assets/Interface/fonts/FSElliotPro.ttf" text="EXPERIMENTAL" color="#ff00a9" fontSize="14vw" />
-            </components>
-        </panel>
-
-        <panel id="main_panel2" zindex="1" anchor="BOTTOM_RIGHT" dpiScale="1.0" spacing="0" bgColor="#000000" bgAlpha="0.5">
-            <components>
-                <button id="test" iconPath="assets/Interface/Icons/bug.png" action="org.foxesworld.cge.tmp.menu.actions.PlaySound" iconSize="40" height="95" text="TEST" />
             </components>
         </panel>
     </screen>

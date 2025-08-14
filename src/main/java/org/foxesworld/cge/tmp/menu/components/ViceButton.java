@@ -27,7 +27,6 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
     private final Picture icon;
 
     private final Vector2f position = new Vector2f();
-    private float width, height;
     private boolean isSelected = false, isHovered = false, isActive = true;
 
     // --- Анимационные состояния ---
@@ -200,7 +199,7 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
         private float cornerRadius;
         public final Vector2f hoverNudge;
         public final float animationSpeed;
-        public final float iconGap;
+        private float iconGap;
 
         // font scaling params
         public final float hoverFontScale;      // например 1.12f
@@ -275,19 +274,17 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
         public void setHoverBackgroundColor(String hoverBackgroundColor) {
             this.hoverBackgroundColor = hoverBackgroundColor;
         }
+
+        public void setIconGap(float iconGap) {
+            this.iconGap = iconGap;
+        }
     }
 
     public TTFrenderer getTtfRenderer() {
         return ttfRenderer;
     }
 
-    @Override
-    public float getWidth() {
-        return width;
-    }
-
-    @Override
-    public float getHeight() {
-        return height;
+    public boolean isActive() {
+        return isActive;
     }
 }

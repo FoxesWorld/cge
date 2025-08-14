@@ -120,5 +120,28 @@
       "pitchVariance": 0.06,
       "cooldownMs": 80
     }
+  ],
+  "toggle": [
+    {
+      "path": "assets/Sounds/ui/toggle/toggle0.ogg",
+      "volume": 1.0,
+      "pitch": 1.2,
+      "pitchVariance": 0.06,
+      "cooldownMs": 80
+    },
+    {
+      "path": "assets/Sounds/ui/toggle/toggle1.ogg",
+      "volume": 1.0,
+      "pitch": 1.2,
+      "pitchVariance": 0.06,
+      "cooldownMs": 80
+    },
+    {
+      "path": "assets/Sounds/ui/toggle/toggle2.ogg",
+      "volume": 1.0,
+      "pitch": 1.2,
+      "pitchVariance": 0.06,
+      "cooldownMs": 80
+    }
   ]
 }

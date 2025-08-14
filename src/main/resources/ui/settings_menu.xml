@@ -5,7 +5,7 @@
 
 
         <!-- КОНТЕЙНЕР ДЛЯ ВКЛАДОК -->
-        <panel id="settings" anchor="CENTER" dpiScale="1.0" height="65%" width="90%" bgColor="#000000" cornerRadius="20" bgAlpha="0.5">
+        <panel id="settings" anchor="CENTER" dpiScale="1.0" width="95%" bgColor="#000000" cornerRadius="20" bgAlpha="0.5">
             <components>
                 <button iconPath="assets/Interface/ui/icons/back.png" iconSize="40" action="org.foxesworld.cge.tmp.menu.actions.GoBackToMainMenuAction" text="BACK" />
                 <tabs spacing="0" orientation="VERTICAL">
@@ -29,6 +29,7 @@
                         <text text="KEY BINDINGS..." fontSize="28vw" x="50"/>
                     </tab>
                 </tabs>
+                <button id="quit" action="org.foxesworld.cge.tmp.menu.actions.PlaySound" iconPath="assets/Interface/ui/icons/apply.png" iconSize="40" height="95" text="Применить" />
             </components>
         </panel>
     </screen>

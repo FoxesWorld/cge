@@ -18,6 +18,9 @@ public class ButtonXml extends ComponentXml {
     @XmlAttribute
     public String iconPath;
 
+    @XmlAttribute
+    private float iconGap = 2;
+
     /**
      * Constructor to set default values for button dimensions.
      * These will be used if 'width' or 'height' are not specified in the XML tag.
@@ -26,5 +29,9 @@ public class ButtonXml extends ComponentXml {
         // Устанавливаем значения по умолчанию
         this.width = "400";
         this.height = "55";
+    }
+
+    public float getIconGap() {
+        return iconGap;
     }
 }

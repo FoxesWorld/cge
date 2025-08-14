@@ -11,6 +11,7 @@ public abstract class UIComponent extends Node {
 
     protected String id;
     protected float dpiScale = 1.0f;
+    protected float width, height;
 
     protected UIComponent(String id) {
         super(id);
@@ -38,8 +39,6 @@ public abstract class UIComponent extends Node {
     }
 
     public abstract void update(float tpf);
-    public abstract float getWidth();
-    public abstract float getHeight();
     public abstract boolean intersects(Vector2f cursor);
     public abstract void setSize(final float width, final float height);
 
@@ -47,4 +46,8 @@ public abstract class UIComponent extends Node {
         removeFromParent();
         detachAllChildren();
     }
+
+    public float getHeight() { return height; }
+
+    public float getWidth() { return width; }
 }

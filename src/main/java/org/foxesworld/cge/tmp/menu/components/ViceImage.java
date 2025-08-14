@@ -21,7 +21,6 @@ public final class ViceImage extends UIComponent implements InteractiveComponent
     private Geometry background;
     private String imagePath;
     private Texture2D texture;
-    private float width, height;
 
     private boolean isActive = true;
     private boolean isHovered = false;
@@ -220,12 +219,4 @@ public final class ViceImage extends UIComponent implements InteractiveComponent
         this.isActive = active;
         if (!active) isHovered = false;
     }
-
-    @Override
-    public float getHeight() { return height; }
-
-    @Override
-    public float getWidth() { return width; }
-
-    public String getImagePath() { return imagePath; }
 }

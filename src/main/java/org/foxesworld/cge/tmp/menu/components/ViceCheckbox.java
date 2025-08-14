@@ -6,7 +6,6 @@ import com.jme3.font.BitmapText;
 import com.jme3.material.Material;
 import com.jme3.material.RenderState.BlendMode;
 import com.jme3.math.*;
-import com.jme3.scene.Node;
 import com.jme3.ui.Picture;
 import org.foxesworld.cge.tmp.menu.components.utils.InteractiveComponent;
 import org.foxesworld.cge.tmp.menu.components.utils.SoundComponent;
@@ -33,8 +32,8 @@ public final class ViceCheckbox extends UIComponent implements InteractiveCompon
     private static final ColorRGBA COLOR_DISABLED_LABEL = new ColorRGBA(0.6f, 0.6f, 0.6f, 0.7f);
 
     // === Ресурсы ===
-    private static final String ICON_FRAME_PATH = "assets/Interface/Icons/checkbox-frame.png";
-    private static final String ICON_CHECK_PATH = "assets/Interface/Icons/check-mark.png";
+    private static final String ICON_FRAME_PATH = "assets/Interface/ui/icons/checkbox/checkbox-frame.png";
+    private static final String ICON_CHECK_PATH = "assets/Interface/ui/icons/checkbox/check-mark.png";
 
     // === Узлы ===
     private final Picture framePicture;

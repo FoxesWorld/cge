@@ -38,7 +38,7 @@ public class TabsBuilder implements ComponentBuilder<TabsXml> {
 
         ViceTabs tabComponent = new ViceTabs(
                 model.id,
-                context.app().getAssetManager(),
+                context,
                 ViceButton.Style.getViceStyle(),
                 orientation
         );

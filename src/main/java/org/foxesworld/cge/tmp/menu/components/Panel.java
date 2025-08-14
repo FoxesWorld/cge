@@ -58,7 +58,7 @@ public class Panel extends UIComponent implements InteractiveComponent {
     private final Style style;
     private final List<UIComponent> children = new ArrayList<>();
 
-    private float width = 128f, height = 64f;
+    //private float width = 128f, height = 64f;
     private float padding, spacing;
     private LayoutDirection layout = LayoutDirection.VERTICAL;
     private Alignment alignment = Alignment.START;
@@ -400,10 +400,6 @@ public class Panel extends UIComponent implements InteractiveComponent {
     @Override public void handleMouseRelease() {}
     @Override public void setActive(boolean active) {}
 
-    // ==== GETTERS ====
-    @Override public float getWidth() { return width; }
-    @Override public float getHeight() { return height; }
-
     // ==== STYLE RECORD ====
     public record Style(ColorRGBA backgroundColor, float cornerRadius) {
         public static Style getDefaultStyle() {
@@ -412,23 +408,8 @@ public class Panel extends UIComponent implements InteractiveComponent {
     }
 
     // ==== CLIPPING PROTOCOL ====
-    /**
-     * Интерфейс, который могут реализовать компоненты, умеющие самостоятельно обрезаться по прямоугольнику.
-     * Panel будет вызывать setClipRect(clipX, clipY, clipW, clipH) — координаты даны в локальных координатах компонента.
-     */
     public interface Clippable {
-        /**
-         * Установить область видимости (в локальных координатах компонента).
-         * @param x левый нижний угол в локальных координатах компонента
-         * @param y нижний угол в локальных координатах компонента
-         * @param w ширина области
-         * @param h высота области
-         */
         void setClipRect(float x, float y, float w, float h);
-
-        /**
-         * Очистить (убрать) область обрезки — вернуть поведение по умолчанию.
-         */
         void clearClip();
     }
 }

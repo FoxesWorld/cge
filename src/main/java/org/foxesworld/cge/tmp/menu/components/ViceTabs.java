@@ -9,6 +9,8 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.shape.Quad;
+import org.foxesworld.cge.CalistaGameEngine;
+import org.foxesworld.cge.tmp.menu.BuildContext;
 import org.foxesworld.cge.tmp.menu.components.utils.InteractiveComponent;
 import org.foxesworld.cge.tmp.menu.components.utils.Orientation;
 import org.foxesworld.cge.tmp.menu.xml.TabXml;
@@ -16,28 +18,14 @@ import org.foxesworld.cge.tmp.menu.xml.TabXml;
 import java.util.ArrayList;
 import java.util.List;
 
-/**
- * ViceTabs — вкладки с улучшенной адаптивностью вычисления зоны контента.
- *
- * CHANGES:
- *  - теперь contentNode каждой вкладки не прикрепляется автоматически к дереву сцены;
- *    прикрепление происходит только для активной вкладки (attach-on-select).
- *  - при переключении вкладок предыдущая вкладка полностью деактивируется:
- *      - contentNode детачится из tabsNode,
- *      - все InteractiveComponent в content() получают setActive(false),
- *      - optional: вызывается CullHint.Always для safety.
- *    Новая (активная) вкладка — наоборот — прикрепляется и активируется.
- *  - все обработчики ввода работают только с активной вкладкой (никакого обхода всех вкладок).
- *
- *  Это гарантирует, что компоненты других вкладок не видимы и не могут получать ввод/драг/клики.
- */
+
 public final class ViceTabs extends UIComponent implements InteractiveComponent {
 
     private record Tab(ViceButton button, Node contentNode, List<UIComponent> content) {}
 
     //private final Node tabsNode = new Node("ViceTabs");
     private final List<Tab> tabs = new ArrayList<>();
-    private final AssetManager assetManager;
+    private final BuildContext buildContext;
     private final ViceButton.Style buttonStyle;
     private final Orientation orientation;
 
@@ -69,9 +57,9 @@ public final class ViceTabs extends UIComponent implements InteractiveComponent 
 
     private int hoveredButtonIndex = -1;
 
-    public ViceTabs(String id, AssetManager assetManager, ViceButton.Style buttonStyle, Orientation orientation) {
+    public ViceTabs(String id, BuildContext buildContext, ViceButton.Style buttonStyle, Orientation orientation) {
         super(id);
-        this.assetManager = assetManager;
+        this.buildContext = buildContext;
         this.buttonStyle = buttonStyle != null ? buttonStyle : ViceButton.Style.getViceStyle();
         this.buttonStyle.setCornerRadius(0);
         this.buttonStyle.setBackgroundColor("#ffffff");
@@ -86,7 +74,7 @@ public final class ViceTabs extends UIComponent implements InteractiveComponent 
     }
 
     private Geometry createBackground(ColorRGBA color, String name) {
-        Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        Material mat = new Material(buildContext.app().getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
         mat.setColor("Color", color);
         mat.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
         Geometry bg = new Geometry(name, new Quad(1, 1));
@@ -100,7 +88,7 @@ public final class ViceTabs extends UIComponent implements InteractiveComponent 
      */
     public void addTab(TabXml tabXml, Node content, List<UIComponent> createdObjects) {
         int index = tabs.size();
-        ViceButton button = new ViceButton("tab-" + index, assetManager, tabXml.title, buttonStyle, () -> selectTab(index), tabXml.iconPath, tabXml.iconSize);
+        ViceButton button = new ViceButton("tab-" + index, buildContext.app().getAssetManager(), tabXml.title, buttonStyle, () -> selectTab(index), tabXml.iconPath, tabXml.iconSize);
         // store tab — but do NOT attach content to scene yet
         tabs.add(new Tab(button, content, new ArrayList<>(createdObjects)));
         this.attachChild(button.getNode());
@@ -297,6 +285,7 @@ public final class ViceTabs extends UIComponent implements InteractiveComponent 
 
         if (foundIndex >= 0) {
             tabs.get(foundIndex).button().setHovered(true);
+            buildContext.app().getSoundManager().play("ui.toggle");
         }
 
         hoveredButtonIndex = foundIndex;
@@ -333,7 +322,7 @@ public final class ViceTabs extends UIComponent implements InteractiveComponent 
                 } else if (ic instanceof ViceCheckbox checkbox && checkbox.intersects(tmp2)) {
                     checkbox.toggle();
                     return;
-                } else if (ic instanceof InteractiveComponent) {
+                } else {
                     if (((UIComponent) ic).intersects(tmp2)) {
                         ic.handleMousePress(tmp2);
                         return;

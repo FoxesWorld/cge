@@ -14,6 +14,8 @@ import jakarta.xml.bind.annotation.XmlAttribute;
 @XmlAccessorType(XmlAccessType.FIELD)
 public abstract class ComponentXml {
 
+
+
     /** Optional text content (e.g., button label, title). */
     @XmlAttribute
     public String text;
