@@ -9,7 +9,6 @@ import com.jme3.math.*;
 import com.jme3.scene.Node;
 import com.jme3.ui.Picture;
 import org.foxesworld.cge.tmp.menu.components.utils.InteractiveComponent;
-import org.foxesworld.cge.tmp.menu.components.utils.MenuComponent;
 import org.foxesworld.cge.tmp.menu.components.utils.SoundComponent;
 import org.foxesworld.cge.tmp.menu.xml.CheckboxXml;
 
@@ -17,7 +16,7 @@ import org.foxesworld.cge.tmp.menu.xml.CheckboxXml;
  * ViceCheckbox — атмосферный чекбокс в стиле игрового UI
  * С плавными анимациями, подсветкой при наведении и «сочным» откликом.
  */
-public final class ViceCheckbox extends UIComponent implements InteractiveComponent, MenuComponent, SoundComponent {
+public final class ViceCheckbox extends UIComponent implements InteractiveComponent, SoundComponent {
 
     // === Твики анимаций ===
     private static final float ANIM_SPEED = 28f;

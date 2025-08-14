@@ -12,7 +12,7 @@ import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.utils.ColorUtils;
-import org.foxesworld.cge.tmp.menu.components.utils.MenuComponent;
+import org.foxesworld.cge.tmp.menu.components.UIComponent;
 import org.foxesworld.cge.tmp.menu.xml.*;
 import org.foxesworld.cge.tmp.menu.xml.ComponentBuilder;
 import org.slf4j.Logger;
@@ -78,10 +78,10 @@ public final class XmlMenuBuilder {
      * The main factory method. It finds the appropriate builder for the given XML model
      * and delegates the build task to it.
      */
-    public MenuComponent buildComponent(ComponentXml model, Node parent) {
+    public UIComponent buildComponent(ComponentXml model, Node parent) {
         ComponentBuilder<ComponentXml> builder = (ComponentBuilder<ComponentXml>) registry.getBuilderFor(model);
         if (builder != null) {
-            MenuComponent component = builder.build(model, parent, context);
+            UIComponent component = builder.build(model, parent, context);
             context.addComponent(component);
             return component;
         } else {

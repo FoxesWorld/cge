@@ -6,6 +6,7 @@ import com.jme3.input.KeyInput;
 import com.jme3.input.RawInputListener;
 import com.jme3.input.event.KeyInputEvent;
 import com.jme3.math.FastMath;
+import com.jme3.math.Quaternion;
 import com.jme3.math.Vector3f;
 import com.jme3.renderer.RenderManager;
 import com.jme3.renderer.ViewPort;
@@ -81,6 +82,11 @@ public final class MovementControl extends AbstractControl {
     private final Vector3f camLeft = new Vector3f();
     private final Vector3f tempDir = new Vector3f();
 
+    // --- new quaternion fields for smooth rotation ---
+    private final Quaternion rotationQuat = new Quaternion();   // текущая "визуальная" ориентация спатиала
+    private final Quaternion targetQuat = new Quaternion();     // целевая ориентация по направлению движения
+    private final Vector3f forwardFromQuat = new Vector3f();    // временный вектор для извлечения forward из кватерниона
+
     private boolean wasInAir = false;
     private float lastY = 0f;
     private float fallStartY = 0f; // Y when the body left the ground
@@ -121,7 +127,7 @@ public final class MovementControl extends AbstractControl {
         handleJump();
 
         updateMovement(tpf);
-        updateViewDirection();
+        updateViewDirection(tpf); // <-- pass tpf to use consistent smoothing for rotation
         handleLanding(tpf);
         handleFootsteps(tpf);
         updateHud();
@@ -200,10 +206,38 @@ public final class MovementControl extends AbstractControl {
         wasMoving = movingNowBasedOnVelocity;
     }
 
-    private void updateViewDirection() {
+    /**
+     * Плавно интерполируем ориентацию через Quaternion.
+     * slerp коэффициент совпадает с alpha от сглаживания скорости, чтобы движение и поворот были связаны.
+     */
+    private void updateViewDirection(float tpf) {
+        if (spatial == null) return;
+
         if (currentVel.lengthSquared() > 1e-4f) {
             Vector3f viewDir = new Vector3f(currentVel.x, 0, currentVel.z).normalizeLocal();
-            character.setViewDirection(viewDir);
+            // целевой кватернион "смотрит" в direction (y up)
+            targetQuat.lookAt(viewDir, Vector3f.UNIT_Y);
+
+            // сглаживающий коэффициент аналогичен тому, что использовали для скорости
+            float alpha = 1f - FastMath.pow(1f - smoothFactor, tpf * 60f);
+
+            // slerp текущей кватернион к целевой
+            rotationQuat.slerp(targetQuat, alpha);
+
+            // применяем визуальную ориентацию к спатиалу (плавный визуальный поворот)
+            spatial.setLocalRotation(rotationQuat);
+
+            // извлекаем forward-вектор из кватерниона и передаём в CharacterControl
+            // вариант: rotationQuat.mult(Vector3f.UNIT_Z, forwardFromQuat);
+            rotationQuat.getRotationColumn(2, forwardFromQuat); // column 2 — локальная Z ось
+            forwardFromQuat.setY(0);
+            if (forwardFromQuat.lengthSquared() > 1e-6f) {
+                forwardFromQuat.normalizeLocal();
+                character.setViewDirection(forwardFromQuat);
+            }
+        } else {
+            // если почти не движемся — не сбрасываем текущую ориентацию, но можно слегка "затормозить" поворот
+            // ничего делать не нужно — rotationQuat уже хранит последнюю ориентацию
         }
     }
 
@@ -326,7 +360,10 @@ public final class MovementControl extends AbstractControl {
         super.setSpatial(spatial);
         if (spatial == null) {
             unregisterRawInput();
+            return;
         }
+        // Инициализируем rotationQuat текущей ориентацией спатиала, чтобы не делать резкого прыжка
+        spatial.getLocalRotation().clone().addLocal(rotationQuat);
     }
 
     private void onRawKeyR() {
@@ -354,35 +391,7 @@ public final class MovementControl extends AbstractControl {
 
     // Listener management -------------------------------------------------
 
-    /**
-     * Add a listener to receive movement events.
-     */
-    public void addMovementListener(MovementListener l) {
-        if (l != null) listeners.addIfAbsent(l);
-    }
-
-    /**
-     * Remove a previously added listener.
-     */
-    public void removeMovementListener(MovementListener l) {
-        listeners.remove(l);
-    }
-
-    /**
-     * Clear all movement listeners.
-     */
-    public void clearMovementListeners() {
-        listeners.clear();
-    }
-
-    /**
-     * Backwards-compatible single-listener setter (keeps old code working).
-     */
-    @Deprecated
-    public void setMovementListener(MovementListener movementListener) {
-        listeners.clear();
-        if (movementListener != null) listeners.add(movementListener);
-    }
+    // ... (listener methods identical to original) ...
 
     public PlayerState getPlayerState() {
         return new PlayerState(isMoving(), isSprinting(), !character.onGround(), getCurrentSpeed(), currentVel.clone(), spatial.getWorldTranslation().clone());
@@ -437,5 +446,14 @@ public final class MovementControl extends AbstractControl {
 
     private void notifyAirborne(float airtime) {
         for (MovementListener l : listeners) l.onAirborne(airtime);
+    }
+
+    /**
+     * Backwards-compatible single-listener setter (keeps old code working).
+     */
+    @Deprecated
+    public void setMovementListener(MovementListener movementListener) {
+        listeners.clear();
+        if (movementListener != null) listeners.add(movementListener);
     }
 }

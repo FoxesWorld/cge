@@ -1,7 +1,7 @@
 package org.foxesworld.cge.tmp.menu;
 
 import org.foxesworld.cge.CalistaGameEngine;
-import org.foxesworld.cge.tmp.menu.components.utils.MenuComponent;
+import org.foxesworld.cge.tmp.menu.components.UIComponent;
 import org.foxesworld.cge.tmp.menu.components.ViceButton;
 
 import java.util.ArrayList;
@@ -13,7 +13,7 @@ import java.util.List;
  */
 public record BuildContext(
         CalistaGameEngine app,
-        List<MenuComponent> allComponents
+        List<UIComponent> allComponents
 ) {
     public BuildContext(CalistaGameEngine app) {
         this(app, new ArrayList<>());
@@ -23,8 +23,8 @@ public record BuildContext(
      * Adds a newly created component to the context's collection.
      */
     public void addComponent(Object component) {
-        if (component instanceof MenuComponent menuComponent) {
-            allComponents.add(menuComponent);
+        if (component instanceof UIComponent uiComponent) {
+            allComponents.add(uiComponent);
         }
     }
 }

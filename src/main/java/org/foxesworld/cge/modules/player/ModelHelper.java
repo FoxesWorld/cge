@@ -76,7 +76,7 @@ class ModelHelper {
             this.animComposer = fetchControl(playerModel, AnimComposer.class);
             if (this.animComposer != null) {
                 AnimationMapping mapping = loadAnimationMapping(owner.getEngine().getAssetManager(), module.getConfig().getAnimMappingPath());
-                this.animationController = new PlayerAnimationController(this.animComposer, mapping);
+                this.animationController = new PlayerAnimationController(owner.getPlayerModule().getGameEngine(), this.animComposer, mapping);
                 this.animationController.play("idle", 0.15f, null, true);
             } else {
                 logger.warn("AnimComposer not found on player model!");

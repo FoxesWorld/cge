@@ -10,7 +10,6 @@ import com.jme3.scene.Geometry;
 import com.jme3.scene.Spatial;
 import com.jme3.scene.Spatial.CullHint;
 import org.foxesworld.cge.tmp.menu.components.utils.InteractiveComponent;
-import org.foxesworld.cge.tmp.menu.components.utils.MenuComponent;
 import org.foxesworld.cge.tmp.menu.components.utils.RoundedQuad;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,7 +21,7 @@ import java.util.List;
  * Adaptive UI Panel with relative sizing, DPI scaling, anchor positioning and layout control.
  * Теперь поддерживает clipping (обрезание) контента, выходящего за пределы области контента.
  */
-public class Panel extends UIComponent implements MenuComponent, InteractiveComponent {
+public class Panel extends UIComponent implements InteractiveComponent {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Panel.class);
 
@@ -56,7 +55,7 @@ public class Panel extends UIComponent implements MenuComponent, InteractiveComp
     private final SimpleApplication app;
     private final Geometry background;
     private final Style style;
-    private final List<MenuComponent> children = new ArrayList<>();
+    private final List<UIComponent> children = new ArrayList<>();
 
     private float width = 128f, height = 64f;
     private float padding, spacing;
@@ -133,7 +132,7 @@ public class Panel extends UIComponent implements MenuComponent, InteractiveComp
         dirtyLayout = true;
     }
 
-    public void addComponent(MenuComponent component) {
+    public void addComponent(UIComponent component) {
         if (component == null) return;
         children.add(component);
         node.attachChild(component.getNode());
@@ -159,7 +158,7 @@ public class Panel extends UIComponent implements MenuComponent, InteractiveComp
             dirtyLayout = false;
         }
 
-        for (MenuComponent c : children) {
+        for (UIComponent c : children) {
             c.update(tpf);
         }
     }
@@ -202,7 +201,7 @@ public class Panel extends UIComponent implements MenuComponent, InteractiveComp
             if (layout == LayoutDirection.VERTICAL) {
                 float maxChildW = 0f;
                 float sumChildH = 0f;
-                for (MenuComponent c : children) {
+                for (UIComponent c : children) {
                     float cw = c.getWidth();
                     float ch = c.getHeight();
                     maxChildW = Math.max(maxChildW, cw);
@@ -214,7 +213,7 @@ public class Panel extends UIComponent implements MenuComponent, InteractiveComp
             } else {
                 float sumChildW = 0f;
                 float maxChildH = 0f;
-                for (MenuComponent c : children) {
+                for (UIComponent c : children) {
                     float cw = c.getWidth();
                     float ch = c.getHeight();
                     sumChildW += cw;
@@ -301,7 +300,7 @@ public class Panel extends UIComponent implements MenuComponent, InteractiveComp
         float maxX = contentLeft;
         float maxY = contentBottom;
 
-        for (MenuComponent child : children) {
+        for (UIComponent child : children) {
             float cw = layout == LayoutDirection.VERTICAL ? contentW : child.getWidth();
             float ch = child.getHeight();
             child.setSize(cw, ch);
@@ -373,14 +372,14 @@ public class Panel extends UIComponent implements MenuComponent, InteractiveComp
             if (layout == LayoutDirection.VERTICAL) {
                 float usedHeight = (contentTop - posYTop) + padding;
                 float maxChildW = 0f;
-                for (MenuComponent c : children) maxChildW = Math.max(maxChildW, c.getWidth());
+                for (UIComponent c : children) maxChildW = Math.max(maxChildW, c.getWidth());
                 float newWidth = padding * 2f + maxChildW;
                 float newHeight = Math.max(usedHeight, MIN_PANEL_HEIGHT * dpiScale);
                 setSize(Math.max(newWidth, MIN_PANEL_WIDTH * dpiScale), newHeight);
             } else {
                 float newWidth = maxX + padding;
                 float maxChildH = 0f;
-                for (MenuComponent c : children) maxChildH = Math.max(maxChildH, c.getHeight());
+                for (UIComponent c : children) maxChildH = Math.max(maxChildH, c.getHeight());
                 float newHeight = padding * 2f + maxChildH;
                 setSize(Math.max(newWidth, MIN_PANEL_WIDTH * dpiScale), Math.max(newHeight, MIN_PANEL_HEIGHT * dpiScale));
             }

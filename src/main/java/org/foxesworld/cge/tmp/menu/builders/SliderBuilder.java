@@ -1,14 +1,12 @@
-package org.foxesworld.cge.tmp.menu.xml.builders;
+package org.foxesworld.cge.tmp.menu.builders;
 
 import com.jme3.math.Vector2f;
 import com.jme3.scene.Node;
 import org.foxesworld.cge.tmp.menu.BuildContext;
 import org.foxesworld.cge.tmp.menu.MenuUtils;
-import org.foxesworld.cge.tmp.menu.components.ViceButton;
 import org.foxesworld.cge.tmp.menu.components.ViceSlider;
 import org.foxesworld.cge.tmp.menu.xml.ComponentBuilder;
 import org.foxesworld.cge.tmp.menu.xml.SliderXml;
-import org.foxesworld.cge.tmp.menu.XmlMenuBuilder;
 
 /**
  * Builds a {@link ViceSlider} component from a {@link SliderXml} model.

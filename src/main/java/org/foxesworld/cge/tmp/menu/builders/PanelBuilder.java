@@ -1,11 +1,11 @@
-package org.foxesworld.cge.tmp.menu.xml.builders;
+package org.foxesworld.cge.tmp.menu.builders;
 
 import com.jme3.math.ColorRGBA;
 import com.jme3.scene.Node;
 import org.foxesworld.cge.core.utils.ColorUtils;
 import org.foxesworld.cge.tmp.menu.BuildContext;
 import org.foxesworld.cge.tmp.menu.XmlMenuBuilder;
-import org.foxesworld.cge.tmp.menu.components.utils.MenuComponent;
+import org.foxesworld.cge.tmp.menu.components.UIComponent;
 import org.foxesworld.cge.tmp.menu.components.Panel;
 import org.foxesworld.cge.tmp.menu.xml.ComponentBuilder;
 import org.foxesworld.cge.tmp.menu.xml.PanelXml;
@@ -68,7 +68,7 @@ public class PanelBuilder implements ComponentBuilder<PanelXml> {
         if (model.getComponents() != null && !model.getComponents().isEmpty()) {
             LOGGER.debug("Panel '{}' has {} children.", panelId, model.getComponents().size());
             for (var compXml : model.getComponents()) {
-                MenuComponent child = mainBuilder.buildComponent(compXml, panel.getNode());
+                UIComponent child = mainBuilder.buildComponent(compXml, panel.getNode());
                 LOGGER.info("Child {}", child.getId());
                 if (child != null) {
                     panel.addComponent(child);

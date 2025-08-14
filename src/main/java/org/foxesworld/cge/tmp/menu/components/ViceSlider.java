@@ -16,7 +16,6 @@ import com.jme3.scene.shape.Sphere;
 import org.foxesworld.cge.core.io.TTFrenderer;
 import org.foxesworld.cge.core.utils.ColorUtils;
 import org.foxesworld.cge.tmp.menu.components.utils.InteractiveComponent;
-import org.foxesworld.cge.tmp.menu.components.utils.MenuComponent;
 import org.foxesworld.cge.tmp.menu.components.utils.SoundComponent;
 import org.foxesworld.cge.tmp.menu.xml.SliderXml;
 
@@ -26,7 +25,7 @@ import org.foxesworld.cge.tmp.menu.xml.SliderXml;
  * - drag: дополнительное увеличение, подъём thumb, усиление подсветки
  * - плавные интерполяции
  */
-public final class ViceSlider extends UIComponent implements InteractiveComponent, MenuComponent, SoundComponent {
+public final class ViceSlider extends UIComponent implements InteractiveComponent, SoundComponent {
 
     private static final float DEFAULT_HEIGHT = 12f;
     private static final float DEFAULT_FONT_SIZE = 24f;

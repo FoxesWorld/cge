@@ -11,6 +11,7 @@ import com.jme3.math.Vector2f;
 import com.jme3.scene.Node;
 import com.jme3.scene.shape.Quad;
 import org.foxesworld.cge.CalistaGameEngine;
+import org.foxesworld.cge.tmp.menu.components.UIComponent;
 import org.foxesworld.cge.tmp.menu.components.utils.InteractiveComponent;
 import org.foxesworld.cge.tmp.menu.components.utils.SoundComponent;
 import org.foxesworld.cge.tmp.menu.components.ViceButton;
@@ -149,10 +150,10 @@ public final class MenuScreenHandler {
 
         private InteractiveComponent findComponent(Vector2f c) {
             return menu.allComponents().stream()
-                    .filter(InteractiveComponent.class::isInstance)
+                    .filter(UIComponent.class::isInstance)
                     .map(InteractiveComponent.class::cast)
-                    .filter(ic -> ic.intersects(c))
-                    .max(Comparator.comparing(ic -> ic.getNode().getWorldTranslation().z))
+                    .filter(ic -> ((UIComponent) ic).intersects(c))
+                    .max(Comparator.comparing(ic -> ((UIComponent) ic).getNode().getWorldTranslation().z))
                     .orElse(null);
         }
 

@@ -1,4 +1,4 @@
-package org.foxesworld.cge.tmp.menu.xml.builders;
+package org.foxesworld.cge.tmp.menu.builders;
 
 import com.jme3.math.Vector2f;
 import com.jme3.scene.Node;

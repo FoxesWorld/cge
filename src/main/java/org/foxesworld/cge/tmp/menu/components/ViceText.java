@@ -9,7 +9,6 @@ import com.jme3.scene.Node;
 import org.foxesworld.cge.core.io.TTFrenderer;
 import org.foxesworld.cge.core.utils.ColorUtils;
 import org.foxesworld.cge.tmp.menu.components.utils.InteractiveComponent;
-import org.foxesworld.cge.tmp.menu.components.utils.MenuComponent;
 import org.foxesworld.cge.tmp.menu.xml.TextXml;
 import org.slf4j.LoggerFactory;
 
@@ -19,7 +18,7 @@ import java.util.Optional;
  * UI текстовый элемент с адаптивным масштабированием и выравниванием
  * Оптимизирован: шрифт создаётся один раз, при ресайзе масштабируется геометрия
  */
-public class ViceText extends UIComponent implements InteractiveComponent, MenuComponent {
+public final class ViceText extends UIComponent implements InteractiveComponent {
 
     public enum Anchor {
         TOP_LEFT, TOP_CENTER, TOP_RIGHT,

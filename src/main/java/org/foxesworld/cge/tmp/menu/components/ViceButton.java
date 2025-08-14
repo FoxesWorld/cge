@@ -12,11 +12,10 @@ import com.jme3.ui.Picture;
 import org.foxesworld.cge.core.io.TTFrenderer;
 import org.foxesworld.cge.core.utils.ColorUtils;
 import org.foxesworld.cge.tmp.menu.components.utils.InteractiveComponent;
-import org.foxesworld.cge.tmp.menu.components.utils.MenuComponent;
 import org.foxesworld.cge.tmp.menu.components.utils.RoundedQuad;
 import org.foxesworld.cge.tmp.menu.components.utils.SoundComponent;
 
-public final class ViceButton extends UIComponent implements InteractiveComponent, MenuComponent, SoundComponent {
+public final class ViceButton extends UIComponent implements InteractiveComponent, SoundComponent {
 
     private final AssetManager assetManager;
     private final TTFrenderer ttfRenderer;
@@ -199,10 +198,10 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
         public final ColorRGBA defaultColor;
         public final ColorRGBA selectedColor;
         public final ColorRGBA glowColor;
-        public final String backgroundColor;
-        public final String hoverBackgroundColor;
+        private String backgroundColor;
+        private String hoverBackgroundColor;
         public final String fontPath;
-        public final float cornerRadius;
+        private float cornerRadius;
         public final Vector2f hoverNudge;
         public final float animationSpeed;
         public final float iconGap;
@@ -267,6 +266,18 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
                     1.2f,   // hover font scale
                     8f       // font animation speed
             );
+        }
+
+        public void setCornerRadius(float cornerRadius) {
+            this.cornerRadius = cornerRadius;
+        }
+
+        public void setBackgroundColor(String backgroundColor) {
+            this.backgroundColor = backgroundColor;
+        }
+
+        public void setHoverBackgroundColor(String hoverBackgroundColor) {
+            this.hoverBackgroundColor = hoverBackgroundColor;
         }
     }
 

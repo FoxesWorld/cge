@@ -6,7 +6,7 @@ import com.jme3.math.Vector2f;
  * An extension of MenuComponent for elements that can directly handle user input events like
  * hover states and mouse clicks.
  */
-public interface InteractiveComponent extends MenuComponent {
+public interface InteractiveComponent {
 
 
     /**
@@ -44,4 +44,5 @@ public interface InteractiveComponent extends MenuComponent {
      */
     void handleMouseRelease();
 
+    boolean intersects(Vector2f tmp2);
 }

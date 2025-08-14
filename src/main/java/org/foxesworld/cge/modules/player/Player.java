@@ -22,7 +22,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.Objects;
 
-public class Player extends Node {
+public class Player extends Node implements PlayerAnimationController.AnimationListener {
 
     private static final Logger logger = LoggerFactory.getLogger(Player.class);
 
@@ -106,15 +106,10 @@ public class Player extends Node {
             }
 
             @Override
-            public void onLanding(float peak) {
-                camEffectsControl.notifyLanding(peak);
-                String anim;
-                if(peak <= 10) {
-                    anim = "landing";
-                } else {
-                    anim = "hardLanding";
-                }
-                if (animationController != null) animationController.play(anim, 0.18f, null, false);
+            public void onLanding(float fallDistance) {
+                camEffectsControl.notifyLanding(fallDistance);
+                String anim = (fallDistance <= 1.0f) ? "landing" : "hardLanding";
+                animationController.forcePlay(anim, 0.18f, null, false);
             }
 
             @Override
@@ -143,7 +138,7 @@ public class Player extends Node {
 
             @Override
             public void onStopMoving() {
-                animationController.play("stopMoving", 0.18f, null, true);
+                animationController.forcePlay("stopMoving", 0.18f, null, false);
             }
         });
         this.physicsHelper = new PhysicsHelper(this);
@@ -159,6 +154,7 @@ public class Player extends Node {
         this.playerModel = modelHelper.getPlayerModel();
         this.animComposer = modelHelper.getAnimComposer();
         this.animationController = modelHelper.getAnimationController();
+        this.animationController.addListener(this);
     }
 
     public void update(float tpf) {
@@ -240,5 +236,15 @@ public class Player extends Node {
 
     public PhysicsHelper getPhysicsHelper() {
         return physicsHelper;
+    }
+
+    @Override
+    public void onAnimationStart(String layer, String animName) {
+        System.out.println("onAnimationStart "+ animName);
+    }
+
+    @Override
+    public void onAnimationEnd(String layer, String animName) {
+        System.out.println("onAnimationEnd "+ animName);
     }
 }

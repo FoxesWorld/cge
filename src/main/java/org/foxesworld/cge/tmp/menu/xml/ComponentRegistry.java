@@ -1,7 +1,7 @@
 package org.foxesworld.cge.tmp.menu.xml;
 
 import org.foxesworld.cge.tmp.menu.XmlMenuBuilder;
-import org.foxesworld.cge.tmp.menu.xml.builders.*;
+import org.foxesworld.cge.tmp.menu.builders.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

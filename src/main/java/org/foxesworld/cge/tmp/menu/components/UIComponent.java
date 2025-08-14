@@ -1,5 +1,6 @@
 package org.foxesworld.cge.tmp.menu.components;
 
+import com.jme3.math.Vector2f;
 import com.jme3.scene.Node;
 
 /**
@@ -41,10 +42,11 @@ public abstract class UIComponent {
      * Вызывается каждый кадр для обновления компонента.
      * Переопределяется в потомках при необходимости.
      */
-    public void update(float tpf) {
-        // Ничего по умолчанию
-    }
-
+    public abstract void update(float tpf);
+    public abstract float getWidth();
+    public abstract float getHeight();
+    public abstract boolean intersects(Vector2f cursor);
+    public abstract void setSize(final float width, final float height);
     /**
      * Удаляет компонент из родителя и освобождает ресурсы.
      */
@@ -52,4 +54,6 @@ public abstract class UIComponent {
         node.removeFromParent();
         node.detachAllChildren();
     }
+
+
 }

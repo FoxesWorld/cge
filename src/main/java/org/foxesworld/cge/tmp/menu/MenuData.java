@@ -3,7 +3,6 @@ package org.foxesworld.cge.tmp.menu;
 import com.jme3.scene.Node;
 import org.foxesworld.cge.tmp.menu.components.*;
 import org.foxesworld.cge.tmp.menu.components.ViceButton;
-import org.foxesworld.cge.tmp.menu.components.utils.MenuComponent;
 import org.foxesworld.cge.tmp.menu.xml.SceneXml;
 
 import java.util.List;
@@ -19,12 +18,12 @@ import java.util.stream.Collectors;
  *
  * @param sceneConfig   The configuration for the 3D background scene, parsed from the {@code <scene>} tag.
  * @param uiNode        The root {@link Node} of the generated 2D user interface.
- * @param allComponents A unified list of all {@link MenuComponent} instances created from the XML.
+ * @param allComponents A unified list of all {@link UIComponent} instances created from the XML.
  */
 public record MenuData(
         SceneXml sceneConfig,
         Node uiNode,
-        List<MenuComponent> allComponents
+        List<UIComponent> allComponents
 ) {
     /**
      * A factory method to create a safe, empty MenuData object.
