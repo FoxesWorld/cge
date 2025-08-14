@@ -28,7 +28,7 @@
             </components>
         </panel>
 
-        <panel id="main_panel2" anchor="BOTTOM_RIGHT" dpiScale="1.0" spacing="5" bgColor="#000000" bgAlpha="0.5">
+        <panel id="main_panel2" zindex="1" anchor="BOTTOM_RIGHT" dpiScale="1.0" spacing="0" bgColor="#000000" bgAlpha="0.5">
             <components>
                 <button id="test" iconPath="assets/Interface/Icons/bug.png"  iconSize="40" height="95" text="TEST" />
             </components>

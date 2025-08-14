@@ -24,6 +24,7 @@ import java.util.List;
 public class Panel extends UIComponent implements InteractiveComponent {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Panel.class);
+    private int zIndex;
 
     public enum Anchor {
         TOP_LEFT,
@@ -113,11 +114,12 @@ public class Panel extends UIComponent implements InteractiveComponent {
         dirtyLayout = true;
     }
 
-    public void setRelativeBounds(String x, String y, String w, String h) {
+    public void setRelativeBounds(String x, String y, String w, String h, int zIndex) {
         this.relX = x;
         this.relY = y;
         this.relW = w;
         this.relH = h;
+        this.zIndex = zIndex;
         dirtyLayout = true;
     }
 
@@ -250,7 +252,7 @@ public class Panel extends UIComponent implements InteractiveComponent {
             default -> 0;
         };
 
-        node.setLocalTranslation(finalX + x, finalY + y, 0);
+        node.setLocalTranslation(finalX + x, finalY + y, zIndex);
     }
 
     private float parseRelative(String val, float total) {

@@ -12,21 +12,21 @@
 
                     <!-- ПЕРВАЯ ВКЛАДКА: ГРАФИКА -->
                     <tab iconPath="assets/Interface/ui/icons/graphic-card.png" title="GRAPHICS">
-                        <checkbox text="V-Sync" checked="true" bind="graphics.vsync"/>
-                        <checkbox text="Shadows" checked="true" bind="graphics.shadows"/>
-                        <checkbox text="Bloom Effect" checked="true" bind="graphics.bloom"/>
+                        <checkbox text="V-Sync"       checked="true" bind="graphics.vsync"/>
+                        <checkbox text="Shadows"      checked="true" bind="graphics.shadows"/>
+                        <checkbox text="Bloom Effect" checked="false" bind="graphics.bloom"/>
                     </tab>
 
                     <!-- ВТОРАЯ ВКЛАДКА: АУДИО -->
                     <tab iconPath="assets/Interface/ui/icons/sound.png" title="AUDIO">
-                        <slider text="MASTER VOLUME" width="400" value="0.8" bind="audio.master"/>
-                        <slider text="MUSIC" width="400" value="0.6" bind="audio.music" fillColor="#cb2020"/>
+                        <slider text="MASTER VOLUME" value="0.8" bind="audio.master"/>
+                        <slider text="MUSIC"         value="0.6" bind="audio.music" fillColor="#cb2020"/>
                     </tab>
 
                     <!-- ТРЕТЬЯ ВКЛАДКА: УПРАВЛЕНИЕ -->
                     <tab iconPath="assets/Interface/ui/icons/process.png" title="CONTROLS">
-                        <slider text="MOUSE SENSITIVITY" y="200" x="50" width="400" value="0.8" bind="audio.master"/>
-                        <text text="KEY BINDINGS..." fontSize="28" y="200" x="50"/>
+                        <slider text="MOUSE SENSITIVITY" x="50" value="0.8" bind="audio.master"/>
+                        <text text="KEY BINDINGS..." fontSize="28vw" x="50"/>
                     </tab>
                 </tabs>
             </components>

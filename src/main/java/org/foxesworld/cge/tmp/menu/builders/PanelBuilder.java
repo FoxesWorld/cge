@@ -62,7 +62,7 @@ public class PanelBuilder implements ComponentBuilder<PanelXml> {
         }
 
         // === Set Bounds ===
-        panel.setRelativeBounds(model.x, model.y, model.width, model.height);
+        panel.setRelativeBounds(model.x, model.y, model.width, model.height, model.getZindex());
 
         // === Children ===
         if (model.getComponents() != null && !model.getComponents().isEmpty()) {

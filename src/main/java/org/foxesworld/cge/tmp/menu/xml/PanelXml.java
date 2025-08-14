@@ -40,6 +40,8 @@ public class PanelXml extends ComponentXml {
     @XmlAttribute(name = "cornerRadius")
     private Float cornerRadius;
 
+    @XmlAttribute private int zindex = 0;
+
     // === Children Components ===
 
     /**
@@ -85,6 +87,10 @@ public class PanelXml extends ComponentXml {
 
     public Float getCornerRadius() {
         return cornerRadius;
+    }
+
+    public int getZindex() {
+        return zindex;
     }
 
     public List<ComponentXml> getComponents() {
