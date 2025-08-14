@@ -27,6 +27,7 @@ public class ComponentRegistry {
         register(CheckboxXml.class, new CheckboxBuilder());
         register(TabsXml.class, new TabsBuilder(mainBuilder));
         register(PanelXml.class, new PanelBuilder(mainBuilder));
+        register(ImageXml.class, new ImageBuilder());
     }
 
     private <T extends ComponentXml> void register(Class<T> modelClass, ComponentBuilder<T> builder) {

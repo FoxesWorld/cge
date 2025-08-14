@@ -4,35 +4,35 @@
       "path": "assets/Sounds/ui/click/press0.ogg",
       "volume": 0.60,
       "pitch": 1.00,
-      "pitchVariance": 0.05,
+      "pitchVariance": 0.5,
       "cooldownMs": 80
     },
     {
       "path": "assets/Sounds/ui/click/press1.ogg",
       "volume": 0.55,
       "pitch": 1.03,
-      "pitchVariance": 0.06,
+      "pitchVariance": 0.6,
       "cooldownMs": 80
     },
     {
       "path": "assets/Sounds/ui/click/press2.ogg",
       "volume": 0.55,
       "pitch": 1.03,
-      "pitchVariance": 0.06,
+      "pitchVariance": 0.6,
       "cooldownMs": 80
     },
     {
       "path": "assets/Sounds/ui/click/press3.ogg",
       "volume": 0.55,
       "pitch": 1.03,
-      "pitchVariance": 0.06,
+      "pitchVariance": 0.6,
       "cooldownMs": 80
     },
     {
       "path": "assets/Sounds/ui/click/press4.ogg",
       "volume": 0.55,
       "pitch": 1.03,
-      "pitchVariance": 0.06,
+      "pitchVariance": 0.6,
       "cooldownMs": 80
     }
   ],
@@ -41,72 +41,42 @@
       "path": "assets/Sounds/ui/hover/hover0.ogg",
       "volume": 0.55,
       "pitch": 1.03,
-      "pitchVariance": 0.06,
+      "pitchVariance": 0.2,
       "cooldownMs": 80
     },
     {
       "path": "assets/Sounds/ui/hover/hover1.ogg",
       "volume": 0.55,
       "pitch": 1.03,
-      "pitchVariance": 0.06,
+      "pitchVariance": 0.2,
       "cooldownMs": 80
     },
     {
       "path": "assets/Sounds/ui/hover/hover2.ogg",
       "volume": 0.55,
       "pitch": 1.03,
-      "pitchVariance": 0.06,
+      "pitchVariance": 0.3,
       "cooldownMs": 80
     },
     {
       "path": "assets/Sounds/ui/hover/hover3.ogg",
       "volume": 0.55,
       "pitch": 1.03,
-      "pitchVariance": 0.06,
+      "pitchVariance": 0.6,
       "cooldownMs": 80
     },
     {
       "path": "assets/Sounds/ui/hover/hover4.ogg",
       "volume": 0.55,
       "pitch": 1.03,
-      "pitchVariance": 0.06,
+      "pitchVariance": 0.4,
       "cooldownMs": 80
     },
     {
       "path": "assets/Sounds/ui/hover/hover5.ogg",
       "volume": 0.55,
       "pitch": 1.03,
-      "pitchVariance": 0.06,
-      "cooldownMs": 80
-    }
-  ],
-  "boot": [
-    {
-      "path": "assets/Sounds/ui/boot/boot0.ogg",
-      "volume": 0.55,
-      "pitch": 1.03,
-      "pitchVariance": 0.06,
-      "cooldownMs": 80
-    },
-    {
-      "path": "assets/Sounds/ui/boot/boot1.ogg",
-      "volume": 0.55,
-      "pitch": 1.03,
-      "pitchVariance": 0.06,
-      "cooldownMs": 80
-    },
-    {
-      "path": "assets/Sounds/ui/boot/boot2.ogg",
-      "volume": 0.55,
-      "pitch": 1.03,
-      "pitchVariance": 0.06,
-      "cooldownMs": 80
-    },
-    {
-      "path": "assets/Sounds/ui/boot/boot3.ogg",
-      "volume": 0.55,
-      "pitch": 1.03,
-      "pitchVariance": 0.06,
+      "pitchVariance": 0.2,
       "cooldownMs": 80
     }
   ],
@@ -115,6 +85,38 @@
       "path": "assets/Sounds/ui/attention/attention0.ogg",
       "volume": 0.25,
       "pitch": 1.03,
+      "pitchVariance": 0.06,
+      "cooldownMs": 80
+    }
+  ],
+  "enter": [
+    {
+      "path": "assets/Sounds/ui/enter.ogg",
+      "volume": 1.0,
+      "pitch": 1.0,
+      "pitchVariance": 0.06,
+      "cooldownMs": 80
+    }
+  ],
+  "success": [
+    {
+      "path": "assets/Sounds/ui/success/success0.ogg",
+      "volume": 1.0,
+      "pitch": 1.2,
+      "pitchVariance": 0.06,
+      "cooldownMs": 80
+    },
+    {
+      "path": "assets/Sounds/ui/success/success1.ogg",
+      "volume": 1.0,
+      "pitch": 1.2,
+      "pitchVariance": 0.06,
+      "cooldownMs": 80
+    },
+    {
+      "path": "assets/Sounds/ui/success/success2.ogg",
+      "volume": 1.0,
+      "pitch": 1.2,
       "pitchVariance": 0.06,
       "cooldownMs": 80
     }

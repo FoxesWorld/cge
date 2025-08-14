@@ -35,7 +35,7 @@ public final class ViceTabs extends UIComponent implements InteractiveComponent 
 
     private record Tab(ViceButton button, Node contentNode, List<UIComponent> content) {}
 
-    private final Node tabsNode = new Node("ViceTabs");
+    //private final Node tabsNode = new Node("ViceTabs");
     private final List<Tab> tabs = new ArrayList<>();
     private final AssetManager assetManager;
     private final ViceButton.Style buttonStyle;
@@ -81,8 +81,8 @@ public final class ViceTabs extends UIComponent implements InteractiveComponent 
         this.tabBarBackground = createBackground(new ColorRGBA(0.05f, 0.05f, 0.05f, 0.75f), "TabBarBG");
         this.contentBackground = createBackground(new ColorRGBA(0.1f, 0.1f, 0.1f, 0.65f), "ContentBG");
 
-        tabsNode.attachChild(tabBarBackground);
-        tabsNode.attachChild(contentBackground);
+        this.attachChild(tabBarBackground);
+        this.attachChild(contentBackground);
     }
 
     private Geometry createBackground(ColorRGBA color, String name) {
@@ -103,7 +103,7 @@ public final class ViceTabs extends UIComponent implements InteractiveComponent 
         ViceButton button = new ViceButton("tab-" + index, assetManager, tabXml.title, buttonStyle, () -> selectTab(index), tabXml.iconPath, tabXml.iconSize);
         // store tab — but do NOT attach content to scene yet
         tabs.add(new Tab(button, content, new ArrayList<>(createdObjects)));
-        tabsNode.attachChild(button.getNode());
+        this.attachChild(button.getNode());
     }
 
     /**
@@ -217,8 +217,8 @@ public final class ViceTabs extends UIComponent implements InteractiveComponent 
             Tab prevTab = tabs.get(prev);
             try {
                 // detach content node from tabsNode if attached
-                if (prevTab.contentNode().getParent() == tabsNode) {
-                    tabsNode.detachChild(prevTab.contentNode());
+                if (prevTab.contentNode().getParent() == this) {
+                    this.detachChild(prevTab.contentNode());
                 }
             } catch (Exception ex) {
                 // ignore detach failures
@@ -236,8 +236,8 @@ public final class ViceTabs extends UIComponent implements InteractiveComponent 
         // Activate new tab: attach its content node and activate components
         Tab newTab = tabs.get(activeTabIndex);
         // Ensure the content node is attached exactly once
-        if (newTab.contentNode().getParent() != tabsNode) {
-            tabsNode.attachChild(newTab.contentNode());
+        if (newTab.contentNode().getParent() != this) {
+            this.attachChild(newTab.contentNode());
         }
 
         for (int i = 0; i < tabs.size(); i++) {
@@ -245,7 +245,7 @@ public final class ViceTabs extends UIComponent implements InteractiveComponent 
             boolean active = (i == activeTabIndex);
             t.button().setSelected(active);
             // button nodes remain attached; content nodes are managed above
-            if (t.contentNode().getParent() == tabsNode) {
+            if (t.contentNode().getParent() == this) {
                 t.contentNode().setCullHint(active ? Node.CullHint.Inherit : Node.CullHint.Always);
             } else {
                 t.contentNode().setCullHint(Node.CullHint.Always);
@@ -399,7 +399,7 @@ public final class ViceTabs extends UIComponent implements InteractiveComponent 
 
     @Override
     public boolean intersects(Vector2f cursor) {
-        Vector2f world = new Vector2f(tabsNode.getWorldTranslation().x, tabsNode.getWorldTranslation().y);
+        Vector2f world = new Vector2f(this.getWorldTranslation().x, this.getWorldTranslation().y);
         float w = getWidth();
         float h = getHeight();
         return cursor.x >= world.x && cursor.x <= world.x + w &&
@@ -412,10 +412,6 @@ public final class ViceTabs extends UIComponent implements InteractiveComponent 
     @Override
     public void setHovered(boolean hovered) { /* nop */ }
 
-    @Override
-    public Node getNode() {
-        return tabsNode;
-    }
 
     private Tab getActiveTab() {
         return (activeTabIndex >= 0 && activeTabIndex < tabs.size()) ? tabs.get(activeTabIndex) : null;

@@ -62,7 +62,7 @@ public final class ViceCheckbox extends UIComponent implements InteractiveCompon
         this.bind = checkboxXml.bind;
         this.isChecked = checkboxXml.checked;
 
-        node.setName("ViceCheckbox:" + id);
+        setName("ViceCheckbox:" + id);
 
         // Рамка
         framePicture = new Picture("frame");
@@ -83,9 +83,9 @@ public final class ViceCheckbox extends UIComponent implements InteractiveCompon
         labelText.setColor(ColorRGBA.White);
 
         // Добавляем в иерархию
-        node.attachChild(framePicture);
-        node.attachChild(checkPicture);
-        node.attachChild(labelText);
+        this.attachChild(framePicture);
+        this.attachChild(checkPicture);
+        this.attachChild(labelText);
 
         // Базовый размер
         setSize(24f);
@@ -187,20 +187,19 @@ public final class ViceCheckbox extends UIComponent implements InteractiveCompon
     }
 
     // === Interface impl ===
-    @Override public Node getNode() { return node; }
     @Override public float getWidth() { return size + size * LABEL_GAP_MULTIPLIER + labelText.getLineWidth(); }
     @Override public float getHeight() { return Math.max(size, labelText.getLineHeight()); }
     @Override public void setActive(boolean active) { this.isActive = active; if (!active) isHovered = false; }
     @Override public void setHovered(boolean hovered) { if (isActive) this.isHovered = hovered; }
     @Override public boolean intersects(Vector2f cursor) {
-        Vector3f pos = node.getWorldTranslation();
+        Vector3f pos = getWorldTranslation();
         return cursor.x >= pos.x && cursor.x <= pos.x + getWidth()
                 && cursor.y >= pos.y && cursor.y <= pos.y + getHeight();
     }
     @Override public void handleMousePress(Vector2f cursor) {}
     @Override public void handleMouseDrag(Vector2f cursor) {}
     @Override public void handleMouseRelease() {}
-    public void setPosition(float x, float y) { node.setLocalTranslation(x, y, 0); }
+    public void setPosition(float x, float y) { setLocalTranslation(x, y, 0); }
     public boolean isChecked() { return isChecked; }
     public String getBind() { return bind; }
 }

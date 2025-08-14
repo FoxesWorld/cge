@@ -48,7 +48,7 @@ public final class MenuScreenHandler {
      * Инициализирует звук и слушатели.
      */
     public void initialize() {
-        engine.getSoundManager().play("ui.boot");
+        engine.getSoundManager().play("ui.enter");
         inputHandler.register();
         showMainMenu();
     }

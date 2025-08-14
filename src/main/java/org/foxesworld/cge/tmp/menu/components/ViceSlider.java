@@ -46,7 +46,6 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
     private static final float DRAG_RAISE = 6f;
     private static final float DRAG_BRIGHTNESS = 0.45f;
 
-    private final Node sliderNode;
     private final Geometry barFill;
     private final Node borderNode;
     private final TTFrenderer ttFrenderer;
@@ -102,8 +101,6 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
         this.currentBorderColor = this.borderColor.clone();
 
         ttFrenderer = new TTFrenderer(assetManager);
-
-        this.sliderNode = new Node("ViceSlider: " + sliderXml.text);
         this.borderNode = new Node("SliderBorder");
         createBorder();
 
@@ -128,10 +125,10 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
         thumb.setMaterial(thumbMaterial);
         updateThumbPosition();
 
-        sliderNode.attachChild(ttc);
-        sliderNode.attachChild(borderNode);
-        sliderNode.attachChild(barFill);
-        sliderNode.attachChild(thumb);
+        this.attachChild(ttc);
+        this.attachChild(borderNode);
+        this.attachChild(barFill);
+        this.attachChild(thumb);
 
         updateAdaptiveSize();
         updateVisuals();
@@ -194,7 +191,7 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
     }
 
     public void setPosition(float x, float y) {
-        sliderNode.setLocalTranslation(x, y, 0);
+        this.setLocalTranslation(x, y, 0);
     }
 
     private void updateVisuals() {
@@ -235,14 +232,14 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
 
     @Override
     public boolean intersects(Vector2f cursorPos) {
-        Vector3f worldPos3 = sliderNode.localToWorld(Vector3f.ZERO, null);
+        Vector3f worldPos3 = this.localToWorld(Vector3f.ZERO, null);
         Vector2f worldPos = new Vector2f(worldPos3.x, worldPos3.y);
         return cursorPos.x >= worldPos.x && cursorPos.x <= worldPos.x + width
                 && cursorPos.y >= worldPos.y && cursorPos.y <= worldPos.y + height;
     }
 
     public void handleDrag(Vector2f cursorPos) {
-        Vector3f worldPos3 = sliderNode.localToWorld(Vector3f.ZERO, null);
+        Vector3f worldPos3 = this.localToWorld(Vector3f.ZERO, null);
         Vector2f worldPos = new Vector2f(worldPos3.x, worldPos3.y);
         float relativeX = cursorPos.x - worldPos.x;
         setValue(relativeX / width);
@@ -250,7 +247,7 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
 
     @Override
     public void handleMousePress(Vector2f cursor) {
-        Vector3f worldPos3 = sliderNode.localToWorld(Vector3f.ZERO, null);
+        Vector3f worldPos3 = this.localToWorld(Vector3f.ZERO, null);
         Vector2f worldPos = new Vector2f(worldPos3.x, worldPos3.y);
         float relativeX = cursor.x - worldPos.x;
         if (relativeX >= 0 && relativeX <= width) {
@@ -288,15 +285,6 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
     @Override
     public float getWidth() {
         return width;
-    }
-
-    public void updateInteraction(Vector2f localCursorPos) {
-        // handled externally via setHovered(...) and input events
-    }
-
-    @Override
-    public Node getNode() {
-        return sliderNode;
     }
 
     @Override

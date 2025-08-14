@@ -1,9 +1,9 @@
 package org.foxesworld.cge.tmp.menu.components;
 
 import com.atr.jme.font.shape.TrueTypeContainer;
-import com.atr.jme.font.util.Style;
 import com.jme3.app.Application;
 import com.jme3.asset.AssetManager;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
 import com.jme3.scene.Node;
 import org.foxesworld.cge.core.io.TTFrenderer;
@@ -17,6 +17,8 @@ import java.util.Optional;
 /**
  * UI текстовый элемент с адаптивным масштабированием и выравниванием
  * Оптимизирован: шрифт создаётся один раз, при ресайзе масштабируется геометрия
+ *
+ * Теперь поддерживает текстовый Style (вложенный класс Style).
  */
 public final class ViceText extends UIComponent implements InteractiveComponent {
 
@@ -26,7 +28,6 @@ public final class ViceText extends UIComponent implements InteractiveComponent 
         BOTTOM_LEFT, BOTTOM_CENTER, BOTTOM_RIGHT
     }
 
-    private final Node textNode;
     private final Application app;
     private final TextXml textXml;
     private final String fontSizeRaw;
@@ -44,13 +45,23 @@ public final class ViceText extends UIComponent implements InteractiveComponent 
     private Anchor anchor = Anchor.CENTER;
     private Vector2f position = new Vector2f();
 
+    // новый: стиль текста
+    private Style style;
+
+    // Конструктор: прежний сохраняется и использует стиль из xml или дефолтный
     public ViceText(Application app, AssetManager assetManager, TextXml textXml) {
+        this(app, assetManager, textXml, Style.fromTextXml(textXml));
+    }
+
+    // Новый: конструктор с явным стилем
+    public ViceText(Application app, AssetManager assetManager, TextXml textXml, Style style) {
         super(textXml.id);
         this.app = app;
         this.textXml = textXml;
         this.fontSizeRaw = textXml.fontSize;
+        this.style = style != null ? style : Style.defaultStyle();
         this.ttfRenderer = new TTFrenderer(assetManager);
-        this.textNode = new Node("ViceText: " + textXml.text);
+        //this.textNode = new Node("ViceText: " + textXml.text);
 
         this.baseWidth = app.getContext().getSettings().getWidth();
         this.baseHeight = app.getContext().getSettings().getHeight();
@@ -61,10 +72,12 @@ public final class ViceText extends UIComponent implements InteractiveComponent 
     }
 
     private void createFontOnce() {
-        ttfRenderer.generateFont("assets/Interface/fonts/Docker One.ttf", Style.Plain, Math.round(baseFontSize));
-        ttfRenderer.generateText(ColorUtils.fromHexString(textXml.color), textXml.text);
+        // Генерируем шрифт согласно style
+        int fontSizePx = Math.max(6, Math.round(baseFontSize)); // нижняя граница
+        ttfRenderer.generateFont(style.fontPath, style.fontWeight, fontSizePx);
+        ttfRenderer.generateText(style.color, textXml.text);
         ttc = ttfRenderer.getTextGeometry();
-        textNode.attachChild(ttc);
+        this.attachChild(ttc);
     }
 
     private float getDPIScale() {
@@ -122,31 +135,31 @@ public final class ViceText extends UIComponent implements InteractiveComponent 
 
         switch (anchor) {
             case TOP_LEFT:
-                textNode.setLocalTranslation(x, y, 0);
+                this.setLocalTranslation(x, y, 0);
                 break;
             case TOP_CENTER:
-                textNode.setLocalTranslation(x - textWidth / 2f, y, 0);
+                this.setLocalTranslation(x - textWidth / 2f, y, 0);
                 break;
             case TOP_RIGHT:
-                textNode.setLocalTranslation(x - textWidth, y, 0);
+                this.setLocalTranslation(x - textWidth, y, 0);
                 break;
             case CENTER_LEFT:
-                textNode.setLocalTranslation(x, y - textHeight / 2f, 0);
+                this.setLocalTranslation(x, y - textHeight / 2f, 0);
                 break;
             case CENTER:
-                textNode.setLocalTranslation(x - textWidth / 2f, y - textHeight / 2f, 0);
+                this.setLocalTranslation(x - textWidth / 2f, y - textHeight / 2f, 0);
                 break;
             case CENTER_RIGHT:
-                textNode.setLocalTranslation(x - textWidth, y - textHeight / 2f, 0);
+                this.setLocalTranslation(x - textWidth, y - textHeight / 2f, 0);
                 break;
             case BOTTOM_LEFT:
-                textNode.setLocalTranslation(x, y - textHeight, 0);
+                this.setLocalTranslation(x, y - textHeight, 0);
                 break;
             case BOTTOM_CENTER:
-                textNode.setLocalTranslation(x - textWidth / 2f, y - textHeight, 0);
+                this.setLocalTranslation(x - textWidth / 2f, y - textHeight, 0);
                 break;
             case BOTTOM_RIGHT:
-                textNode.setLocalTranslation(x - textWidth, y - textHeight, 0);
+                this.setLocalTranslation(x - textWidth, y - textHeight, 0);
                 break;
         }
     }
@@ -173,10 +186,6 @@ public final class ViceText extends UIComponent implements InteractiveComponent 
         updatePosition();
     }
 
-    public Node getNode() {
-        return textNode;
-    }
-
     @Override
     public boolean intersects(Vector2f cursor) {
         return false;
@@ -199,6 +208,7 @@ public final class ViceText extends UIComponent implements InteractiveComponent 
 
     @Override
     public float getHeight() {
+        if (ttc == null) return 0f;
         return ttc.getTextHeight() * ttc.getLocalScale().y;
     }
 
@@ -207,6 +217,79 @@ public final class ViceText extends UIComponent implements InteractiveComponent 
 
     @Override
     public float getWidth() {
+        if (ttc == null) return 0f;
         return ttc.getTextWidth() * ttc.getLocalScale().x;
+    }
+
+    /**
+     * Сеттер стиля: регенерирует шрифт/текст в соответствии с новым стилем.
+     */
+    public void setStyle(Style newStyle) {
+        if (newStyle == null) return;
+        this.style = newStyle;
+        // удаляем старую геометрию и создаём заново
+        if (ttc != null) {
+            this.detachChild(ttc);
+            ttc = null;
+        }
+        createFontOnce();
+        updateScale();
+    }
+
+    public static final class Style {
+        public final String fontPath;
+        public final com.atr.jme.font.util.Style fontWeight; // используй com.atr... полностью
+        public final ColorRGBA color;
+        public final float letterSpacing; // не используется сейчас, но доступно для будущей логики
+        public final float lineSpacing;
+        public final boolean useShadow;
+        public final ColorRGBA shadowColor;
+        public final Vector2f shadowOffset;
+
+        public Style(String fontPath,
+                     com.atr.jme.font.util.Style fontWeight,
+                     ColorRGBA color,
+                     float letterSpacing,
+                     float lineSpacing,
+                     boolean useShadow,
+                     ColorRGBA shadowColor,
+                     Vector2f shadowOffset) {
+            this.fontPath = fontPath;
+            this.fontWeight = fontWeight;
+            this.color = color;
+            this.letterSpacing = letterSpacing;
+            this.lineSpacing = lineSpacing;
+            this.useShadow = useShadow;
+            this.shadowColor = shadowColor;
+            this.shadowOffset = shadowOffset;
+        }
+
+        public static Style defaultStyle() {
+            return new Style(
+                    "assets/Interface/fonts/Docker One.ttf",
+                    com.atr.jme.font.util.Style.Plain,
+                    ColorRGBA.White.clone(),
+                    0f,
+                    0f,
+                    false,
+                    new ColorRGBA(0,0,0,0.5f),
+                    new Vector2f(1f, -1f)
+            );
+        }
+
+        public static Style fromTextXml(TextXml xml) {
+            String font = Optional.ofNullable(xml.fontPath).filter(s -> !s.isBlank()).orElse("assets/Interface/fonts/Docker One.ttf");
+            com.atr.jme.font.util.Style w = com.atr.jme.font.util.Style.Plain;
+            // Если в xml есть поле weight, можно распарсить (просто пример; TextXml может не иметь)
+            // try { w = com.atr.jme.font.util.Style.valueOf(xml.weight.toUpperCase()); } catch(...) {}
+
+            ColorRGBA col = ColorUtils.fromHexString(Optional.ofNullable(xml.color).orElse("#FFFFFF"));
+
+            return new Style(font, w, col, 0f, 0f, false, new ColorRGBA(0,0,0,0.5f), new Vector2f(1f, -1f));
+        }
+    }
+
+    public Style getStyle() {
+        return style;
     }
 }

@@ -194,6 +194,7 @@ public class SoundManager {
                 node.setPositional(false);
                 node.setLooping(sd.loop);
                 node.setVolume(sd.volume);
+                node.setPitch(sd.pitch);
                 sd.audioNode = node;
                 //LOGGER.debug("Preloaded sound: {}", sd.path);
             } catch (Exception ex) {

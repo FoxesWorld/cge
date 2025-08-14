@@ -46,9 +46,9 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
         this.action = action;
         this.style = style;
 
-        this.node.setName("ViceButton: " + text);
+        setName("ViceButton: " + text);
         this.contentNode = new Node("ButtonContent");
-        node.attachChild(contentNode);
+        attachChild(contentNode);
 
         // TTFrenderer: генерируем шрифт и текст
         ttfRenderer = new TTFrenderer(assetManager);
@@ -66,7 +66,7 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
         bgMat.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
         this.background = new Geometry("ButtonBackground");
         this.background.setMaterial(bgMat);
-        node.attachChild(background);
+        attachChild(background);
         currentBackgroundColor.set(bgColor);
 
         // --- Content (icon + text geometry) ---
@@ -134,7 +134,7 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
 
     public void setPosition(float x, float y) {
         position.set(x, y);
-        node.setLocalTranslation(x, y, 0);
+        setLocalTranslation(x, y, 0);
     }
 
     private void centerContent() {
@@ -161,15 +161,11 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
     @Override
     public boolean intersects(Vector2f pos) {
         if (!isActive) return false;
-        Vector2f wp = new Vector2f(node.getWorldTranslation().x, node.getWorldTranslation().y);
+        Vector2f wp = new Vector2f(getWorldTranslation().x, getWorldTranslation().y);
         return pos.x >= wp.x && pos.x <= wp.x + width
                 && pos.y >= wp.y && pos.y <= wp.y + height;
     }
 
-    @Override
-    public Node getNode() {
-        return node;
-    }
 
     @Override
     public void setHovered(boolean hovered) {

@@ -7,15 +7,14 @@ import com.jme3.scene.Node;
  * Абстрактный базовый класс для всех UI-компонентов.
  * Обеспечивает единый API и базовую реализацию.
  */
-public abstract class UIComponent {
+public abstract class UIComponent extends Node {
 
     protected String id;
-    protected final Node node;
     protected float dpiScale = 1.0f;
 
     protected UIComponent(String id) {
+        super(id);
         this.id = id;
-        this.node = new Node(id);
     }
 
     public String getId() {
@@ -27,7 +26,7 @@ public abstract class UIComponent {
     }
 
     public Node getNode() {
-        return node;
+        return this;
     }
 
     public float getDpiScale() {
@@ -38,22 +37,14 @@ public abstract class UIComponent {
         this.dpiScale = dpiScale;
     }
 
-    /**
-     * Вызывается каждый кадр для обновления компонента.
-     * Переопределяется в потомках при необходимости.
-     */
     public abstract void update(float tpf);
     public abstract float getWidth();
     public abstract float getHeight();
     public abstract boolean intersects(Vector2f cursor);
     public abstract void setSize(final float width, final float height);
-    /**
-     * Удаляет компонент из родителя и освобождает ресурсы.
-     */
+
     public void dispose() {
-        node.removeFromParent();
-        node.detachAllChildren();
+        removeFromParent();
+        detachAllChildren();
     }
-
-
 }

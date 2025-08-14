@@ -90,9 +90,8 @@ public class Panel extends UIComponent implements InteractiveComponent {
 
         this.background = new Geometry("PanelBackground");
         this.background.setMaterial(bgMat);
-        this.node.attachChild(background);
-
-        app.getGuiNode().attachChild(node);
+        attachChild(background);
+        app.getGuiNode().attachChild(this);
 
         LOGGER.debug("Panel '{}' created", id);
     }
@@ -137,7 +136,7 @@ public class Panel extends UIComponent implements InteractiveComponent {
     public void addComponent(UIComponent component) {
         if (component == null) return;
         children.add(component);
-        node.attachChild(component.getNode());
+        attachChild(component.getNode());
         dirtyLayout = true;
     }
 
@@ -252,7 +251,7 @@ public class Panel extends UIComponent implements InteractiveComponent {
             default -> 0;
         };
 
-        node.setLocalTranslation(finalX + x, finalY + y, zIndex);
+        this.setLocalTranslation(finalX + x, finalY + y, zIndex);
     }
 
     private float parseRelative(String val, float total) {
@@ -390,7 +389,7 @@ public class Panel extends UIComponent implements InteractiveComponent {
 
     // ==== INTERACTIVE METHODS ====
     @Override public boolean intersects(Vector2f pos) {
-        Vector2f world = new Vector2f(node.getWorldTranslation().x, node.getWorldTranslation().y);
+        Vector2f world = new Vector2f(this.getWorldTranslation().x, this.getWorldTranslation().y);
         float wx = world.x;
         float wy = world.y;
         return pos.x >= wx && pos.x <= wx + width && pos.y >= wy && pos.y <= wy + height;
