@@ -148,22 +148,22 @@
   "inventory.change": [
     {
       "path": "assets/Sounds/player/inventory/change/change0.ogg",
-      "volume": 0.55,
-      "pitch": 1.03,
+      "volume": 1.0,
+      "pitch": 1.0,
       "pitchVariance": 0.06,
       "cooldownMs": 80
     },
     {
       "path": "assets/Sounds/player/inventory/change/change1.ogg",
-      "volume": 0.55,
-      "pitch": 1.03,
+      "volume": 1.0,
+      "pitch": 1.0,
       "pitchVariance": 0.06,
       "cooldownMs": 80
     },
     {
       "path": "assets/Sounds/player/inventory/change/change2.ogg",
-      "volume": 0.55,
-      "pitch": 1.03,
+      "volume": 1.0,
+      "pitch": 1.0,
       "pitchVariance": 0.06,
       "cooldownMs": 80
     }

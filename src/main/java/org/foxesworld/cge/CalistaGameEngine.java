@@ -67,7 +67,7 @@ public class CalistaGameEngine extends SimpleApplication {
     public CalistaGameEngine(List<ModuleConfig> modulesToLoad) throws Exception {
         this.modulesToLoad = modulesToLoad;
         INSTANCE = this;
-        setupTheme("assets/theme/calista.properties");
+        setupTheme("assets/Theme/calista.properties");
         // Configure logging
         System.setProperty("log.dir", System.getProperty("user.dir"));
         System.setProperty("log.level", "DEBUG");
@@ -104,7 +104,7 @@ public class CalistaGameEngine extends SimpleApplication {
         this.soundManager.loadFromJsonResource("sounds.json");
         this.soundManager.preloadAll(true);
         filterPostProcessor = new FilterPostProcessor(getAssetManager());
-        stateManager.attach(buildLogoChainFromJson(getAssetManager(), "ui/logos.json"));
+        stateManager.attach(buildLogoChainFromJson(getAssetManager(), "assets/Interface/logos.json"));
         this.TTFrenderer = new TTFrenderer(assetManager);
         assetManager.registerLoader(com.atr.jme.font.asset.TrueTypeLoader.class, "ttf");
     }

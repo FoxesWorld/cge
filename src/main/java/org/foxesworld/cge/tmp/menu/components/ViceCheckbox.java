@@ -201,4 +201,9 @@ public final class ViceCheckbox extends UIComponent implements InteractiveCompon
     public void setPosition(float x, float y) { setLocalTranslation(x, y, 0); }
     public boolean isChecked() { return isChecked; }
     public String getBind() { return bind; }
+
+    @Override
+    public String getHoverSound(){
+        return "player.inventory.change";
+    }
 }

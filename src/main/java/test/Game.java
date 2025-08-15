@@ -40,17 +40,17 @@ public class Game {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
-        setupTheme("assets/theme/calista.properties");
+        setupTheme("assets/Theme/calista.properties");
 
         AppSettings settings = new AppSettings(false);
         settings.setTitle("Calista Game Engine");
         settings.setResizable(true);
-        settings.setSettingsDialogImage("assets/theme/logo3.png");
+        settings.setSettingsDialogImage("assets/Theme/logo3.png");
         settings.setRenderer(AppSettings.LWJGL_OPENGL45);
 
         settings.setTitle("Calista Experimental");
         settings.setFrameRate(-1);
-        try (InputStream icoStream = CalistaGameEngine.class.getClassLoader().getResourceAsStream("assets/theme/icon/engineLogo.ico")) {
+        try (InputStream icoStream = CalistaGameEngine.class.getClassLoader().getResourceAsStream("assets/Theme/icon/engineLogo.ico")) {
             ICOParser icoParser = new ICOParser();
             BufferedImage bestIcon = icoParser.getLargestIcon(icoParser.parse(icoStream));
             settings.setIcons(new BufferedImage[]{bestIcon});

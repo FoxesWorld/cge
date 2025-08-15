@@ -31,7 +31,7 @@ public final class MainMenuAppState extends BaseAppState {
 
     private static final Logger LOG = LoggerFactory.getLogger(MainMenuAppState.class);
 
-    private static final String MAIN_MENU_XML = "ui/main_menu.xml";
+    private static final String MAIN_MENU_XML = "assets/Interface/main_menu.xml";
 
     private XmlMenuBuilder builder;
     private ViceMenuBackground background;

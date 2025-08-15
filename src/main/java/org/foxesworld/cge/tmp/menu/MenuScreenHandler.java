@@ -23,16 +23,13 @@ import java.util.Comparator;
  * Управляет UI-меню: загрузка экранов, обновление, ввод.
  */
 public final class MenuScreenHandler {
-    private static final String MAIN_MENU_XML = "ui/main_menu.xml";
-    private static final String SETTINGS_MENU_XML = "ui/settings_menu.xml";
-    private Quad screenSize;
+    private static final String MAIN_MENU_XML = "assets/Interface/main_menu.xml";
+    private static final String SETTINGS_MENU_XML = "assets/Interface/settings_menu.xml";
     private final Node guiNode;
     private final CalistaGameEngine engine;
     private final XmlMenuBuilder builder;
     private final InputHandler inputHandler;
     private MenuData currentMenu;
-
-    private InteractiveComponent lastHoveredForSound = null;
 
     /**
      * Создаёт обработчик экранов.
@@ -73,7 +70,6 @@ public final class MenuScreenHandler {
         if (currentMenu == null) return;
         currentMenu.allComponents().forEach(c -> c.update(tpf));
         inputHandler.updateHover();
-        screenSize = new Quad(engine.getContext().getSettings().getWindowWidth(), engine.getContext().getSettings().getWindowHeight());
     }
 
     /** Освобождает ресурсы и слушатели. */
@@ -82,23 +78,6 @@ public final class MenuScreenHandler {
             currentMenu.uiNode().removeFromParent();
         }
         inputHandler.unregister();
-    }
-
-    /**
-     * Безопасно создает AudioNode: если файл не найден — возвращаем null и логируем.
-     */
-    private AudioNode safeCreateAudioNode(String path, float volume) {
-        try {
-            AudioNode an = new AudioNode(engine.getAssetManager(), path, false);
-            an.setPositional(false);
-            an.setLooping(false);
-            an.setVolume(volume);
-            return an;
-        } catch (Exception ex) {
-            // не ломаем всё если файла нет
-            System.err.println("MenuScreenHandler: failed to load sound '" + path + "' -> " + ex.getMessage());
-            return null;
-        }
     }
 
     private class InputHandler implements ActionListener, AnalogListener {
@@ -141,8 +120,8 @@ public final class MenuScreenHandler {
                 if (hovered != null) hovered.setHovered(false);
                 if (now != null) now.setHovered(true);
                 hovered = now;
-                if(now instanceof SoundComponent) {
-                    engine.getSoundManager().play("ui.hover");
+                if(now instanceof SoundComponent component) {
+                    engine.getSoundManager().play(component.getHoverSound());
                 }
             }
         }
@@ -177,7 +156,6 @@ public final class MenuScreenHandler {
                 if (focused instanceof ViceButton vb) vb.executeAction();
                 else if (focused instanceof ViceCheckbox cb) cb.toggle();
 
-                // Освобождение фокуса
                 if (focused != null) focused.handleMouseRelease();
                 focused = null;
             }
@@ -187,9 +165,5 @@ public final class MenuScreenHandler {
         public void onAnalog(String name, float value, float tpf) {
             if (dragging && focused != null) focused.handleMouseDrag(im.getCursorPosition());
         }
-    }
-
-    public Quad getScreenSize() {
-        return screenSize;
     }
 }

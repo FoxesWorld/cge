@@ -452,7 +452,7 @@ public class AppUI {
     public static void main(String[] args) {
         System.setProperty("log.dir", System.getProperty("user.dir"));
         System.setProperty("log.level", "DEBUG");
-        setupTheme("assets/theme/calista.properties");
+        setupTheme("assets/Theme/calista.properties");
         // If args provided, prefill fields — optional behavior similar to original App
         SwingUtilities.invokeLater(() -> {
             AppUI app = new AppUI();

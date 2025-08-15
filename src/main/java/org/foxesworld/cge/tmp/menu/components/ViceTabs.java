@@ -9,21 +9,52 @@ import com.jme3.math.Vector3f;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 import com.jme3.scene.shape.Quad;
-import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.tmp.menu.BuildContext;
 import org.foxesworld.cge.tmp.menu.components.utils.InteractiveComponent;
 import org.foxesworld.cge.tmp.menu.components.utils.Orientation;
 import org.foxesworld.cge.tmp.menu.xml.TabXml;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 
-
+/**
+ * Набор вкладок (Tab control) для кастомного GUI
+ * <p>
+ * Ключевые особенности и ожидания:
+ * <ul>
+ *     <li>Каждая вкладка содержит кнопку (ViceButton) и узел контента (Node) с дочерними UIComponent.</li>
+ *     <li>Контент активной вкладки прикреплён к сцене, остальной контент — отключён (detach / cullHint = Always).</li>
+ *     <li>Класс не предполагает параллельного доступа из нескольких потоков игрового движка — вызовы должны
+ *     происходить в основном потоке рендеринга/логики.</li>
+ * </ul>
+ *
+ * Улучшения по сравнению с оригиналом:
+ * <ul>
+ *     <li>Документация и Javadoc для публичных методов.</li>
+ *     <li>Разбиение логики раскладки на методы для горизонтальной и вертикальной ориентации.</li>
+ *     <li>Упрощённая и прозрачная работа с attach/detach узлов (safeAttach/safeDetach).</li>
+ *     <li>Дополнительные геттеры/манипуляторы (removeTab, getTabCount, getActiveIndex).</li>
+ *     <li>Минимальная оптимизация локальных временных векторов и предотвращение чрезмерных try/catch.
+ *     </li>
+ * </ul>
+ */
 public final class ViceTabs extends UIComponent implements InteractiveComponent {
 
-    private record Tab(ViceButton button, Node contentNode, List<UIComponent> content) {}
+    /** Внутренний контейнер вкладки. */
+    private static final class Tab {
+        final ViceButton button;
+        final Node contentNode;
+        final List<UIComponent> content;
 
-    //private final Node tabsNode = new Node("ViceTabs");
+        Tab(ViceButton button, Node contentNode, List<UIComponent> content) {
+            this.button = Objects.requireNonNull(button);
+            this.contentNode = Objects.requireNonNull(contentNode);
+            this.content = (content == null) ? new ArrayList<>() : new ArrayList<>(content);
+        }
+    }
+
     private final List<Tab> tabs = new ArrayList<>();
     private final BuildContext buildContext;
     private final ViceButton.Style buttonStyle;
@@ -35,14 +66,14 @@ public final class ViceTabs extends UIComponent implements InteractiveComponent 
     private int activeTabIndex = -1;
     private ViceSlider activeSlider = null;
 
-    // размеры контента (в локальных пикселях GUI, уже с учётом dpiScale где применяется)
+    // размеры контента в локальных GUI-пикселях (с учётом dpiScale)
     private float contentWidth = 0f;
     private float contentHeight = 0f;
 
-    // размер панели кнопок (ширина, высота)
+    // размер панели кнопок
     private final Vector2f buttonBarSize = new Vector2f();
 
-    // рабочие параметры (не менять жестко — лучше через сеттеры)
+    // рабочие параметры — можно менять через сеттеры
     private float preferredButtonWidth = 280f;
     private float preferredButtonHeight = 45f;
     private float minButtonWidth = 48f;
@@ -50,137 +81,118 @@ public final class ViceTabs extends UIComponent implements InteractiveComponent 
     private float spacing = 10f;
     private float padding = 10f;
 
-    // вспомогательные переменные преобразований
+    // временные переменные для преобразований (чтобы не аллоцировать каждый кадр)
     private final Vector3f tmpWorld = new Vector3f();
     private final Vector3f tmpLocal = new Vector3f();
     private final Vector2f tmp2 = new Vector2f();
 
     private int hoveredButtonIndex = -1;
 
+    // Z offsets for layering
+    private static final float TAB_BAR_Z = 0f;
+    private static final float CONTENT_BG_Z = -1f;
+
+    /**
+     * Конструктор.
+     *
+     * @param id          идентификатор компонента
+     * @param buildContext контекст сборки (доступ к приложению, звукам и т.п.)
+     * @param buttonStyle  стиль кнопки (если null — используется стиль по умолчанию)
+     * @param orientation  ориентация панели (HORIZONTAL или VERTICAL)
+     */
     public ViceTabs(String id, BuildContext buildContext, ViceButton.Style buttonStyle, Orientation orientation) {
         super(id);
-        this.buildContext = buildContext;
-        this.buttonStyle = buttonStyle != null ? buttonStyle : ViceButton.Style.getViceStyle();
+        this.buildContext = Objects.requireNonNull(buildContext, "buildContext");
+        // безопасно используем переданный стиль — если он null, берем дефолтный
+        this.buttonStyle = (buttonStyle != null) ? buttonStyle : ViceButton.Style.getViceStyle();
+        // фиксируем оформление кнопок для табов: углы и цвета — можно вынести в конфиг позже
         this.buttonStyle.setCornerRadius(0);
         this.buttonStyle.setBackgroundColor("#ffffff");
         this.buttonStyle.setHoverBackgroundColor("#000000");
-        this.orientation = orientation;
+
+        this.orientation = (orientation == null) ? Orientation.HORIZONTAL : orientation;
 
         this.tabBarBackground = createBackground(new ColorRGBA(0.05f, 0.05f, 0.05f, 0.75f), "TabBarBG");
         this.contentBackground = createBackground(new ColorRGBA(0.1f, 0.1f, 0.1f, 0.65f), "ContentBG");
 
+        // фоновая геометрия всегда прикреплёнa — это упрощает подсчёт размеров и отображение
         this.attachChild(tabBarBackground);
         this.attachChild(contentBackground);
     }
 
     private Geometry createBackground(ColorRGBA color, String name) {
-        Material mat = new Material(buildContext.app().getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
+        AssetManager am = buildContext.app().getAssetManager();
+        Material mat = new Material(am, "Common/MatDefs/Misc/Unshaded.j3md");
         mat.setColor("Color", color);
         mat.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
-        Geometry bg = new Geometry(name, new Quad(1, 1));
+        Geometry bg = new Geometry(name, new Quad(1f, 1f));
         bg.setMaterial(mat);
         return bg;
     }
 
     /**
-     * Добавляет вкладку. ВАЖНО: contentNode НЕ будет автоматически прикреплён к сцене —
-     * это делается только для активной вкладки в selectTab(...)
+     * Добавляет вкладку.
+     * <p>
+     * ВАЖНО: contentNode НЕ прикрепляется автоматически — это делается для активной вкладки в {@link #selectTab(int)}.
+     *
+     * @param tabXml        описание вкладки (заголовок, иконка и т.п.)
+     * @param content       узел с контентом (Node) — должен содержать локальную компоновку элементов
+     * @param createdObjects список UIComponent — элементы, которые нужно активировать/деактивировать с вкладкой
      */
     public void addTab(TabXml tabXml, Node content, List<UIComponent> createdObjects) {
         int index = tabs.size();
-        ViceButton button = new ViceButton("tab-" + index, buildContext.app().getAssetManager(), tabXml.title, buttonStyle, () -> selectTab(index), tabXml.iconPath, tabXml.iconSize);
-        // store tab — but do NOT attach content to scene yet
-        tabs.add(new Tab(button, content, new ArrayList<>(createdObjects)));
+        String name = "tab-" + index;
+        ViceButton button = new ViceButton(name, buildContext.app().getAssetManager(), tabXml.title, buttonStyle,
+                () -> selectTab(index), tabXml.iconPath, tabXml.iconSize);
+
+        // сохраняем таб, но не прикрепляем contentNode — это сделается в selectTab
+        tabs.add(new Tab(button, content, createdObjects));
+        // кнопки всегда должны быть в дереве (для отрисовки и hit-testing)
         this.attachChild(button.getNode());
     }
 
     /**
-     * Подготовить финальную раскладку. ВАЖНО: contentNodes не будут автоматически прикреплены здесь —
-     * прикрепление произойдёт в selectTab для активной вкладки.
+     * Удаляет вкладку по индексу. Если удаляемая вкладка активна — переключаемся на ближайшую.
+     *
+     * @param index индекс вкладки
+     * @return true если удалено, false если индекс некорректен
+     */
+    public boolean removeTab(int index) {
+        if (index < 0 || index >= tabs.size()) return false;
+        Tab t = tabs.remove(index);
+        safeDetachChild(t.contentNode);
+        safeDetachChild(t.button.getNode());
+
+        // поправляем activeTabIndex
+        if (tabs.isEmpty()) {
+            activeTabIndex = -1;
+        } else {
+            if (activeTabIndex == index) {
+                // выберем ближайший
+                selectTab(Math.max(0, index - 1));
+            } else if (activeTabIndex > index) {
+                activeTabIndex--;
+            }
+        }
+        // перенумерация имён кнопок не производится — не нужно полагаться на нейминг как на идентификатор
+        return true;
+    }
+
+    /**
+     * Подготовить финальную раскладку. Контент активной вкладки будет прикреплён (если ещё не прикреплён).
+     *
+     * @param totalWidth  общая ширина доступного места (локальные GUI-пиксели)
+     * @param totalHeight общая высота
      */
     public void finalizeLayout(float totalWidth, float totalHeight) {
-        float dpi = Math.max(1f, dpiScale);
-
-        float pad = padding * dpi;
-        float sp = spacing * dpi;
-        float prefBW = preferredButtonWidth * dpi;
-        float prefBH = preferredButtonHeight * dpi;
-        float minBW = minButtonWidth * dpi;
-        float minBH = minButtonHeight * dpi;
+        final float dpi = Math.max(1f, dpiScale);
+        final float pad = padding * dpi;
+        final float sp = spacing * dpi;
 
         if (orientation == Orientation.HORIZONTAL) {
-            int n = Math.max(1, tabs.size());
-            float availableForButtons = Math.max(0f, totalWidth - pad * 2);
-            float buttonW = prefBW;
-            float totalNeeded = n * prefBW + (n - 1) * sp;
-            if (totalNeeded > availableForButtons) {
-                float candidate = (availableForButtons - (n - 1) * sp) / (float) n;
-                buttonW = Math.max(minBW, candidate);
-            }
-            float buttonH = prefBH;
-            float barH = buttonH + pad * 2;
-            float contentH = Math.max(0f, totalHeight - barH);
-            float contentW = totalWidth;
-
-            this.contentWidth = contentW;
-            this.contentHeight = contentH;
-            this.buttonBarSize.set(totalWidth, barH);
-
-            float offsetX = pad + Math.max(0f, (availableForButtons - (n * buttonW + (n - 1) * sp)) / 2f);
-            float x = offsetX;
-            float y = pad;
-
-            for (Tab t : tabs) {
-                t.button().setSize(buttonW, buttonH);
-                t.button().setPosition(x, totalHeight - barH + y);
-                x += buttonW + sp;
-            }
-
-            ((Quad) tabBarBackground.getMesh()).updateGeometry(totalWidth, barH);
-            tabBarBackground.setLocalTranslation(0, totalHeight - barH, 0);
-
-            ((Quad) contentBackground.getMesh()).updateGeometry(contentW, contentH);
-            contentBackground.setLocalTranslation(0, 0, -1);
-
-            // set content nodes' local translation but DO NOT attach here — attach only active one in selectTab
-            for (Tab t : tabs) {
-                t.contentNode().setLocalTranslation(0, 0, 0); // content will appear at origin of content area
-            }
-
+            layoutHorizontal(totalWidth, totalHeight, dpi, pad, sp);
         } else {
-            int n = Math.max(1, tabs.size());
-            float availableForButtons = Math.max(0f, totalHeight - pad * 2);
-            float buttonH = preferredButtonHeight * dpi;
-            float totalNeeded = n * buttonH + (n - 1) * sp;
-            if (totalNeeded > availableForButtons) {
-                float candidate = (availableForButtons - (n - 1) * sp) / (float) n;
-                buttonH = Math.max(minBH, candidate);
-            }
-            float buttonW = preferredButtonWidth * dpi;
-            float barW = buttonW + pad * 2;
-            float contentW = Math.max(0f, totalWidth - barW);
-            float contentH = totalHeight;
-
-            this.contentWidth = contentW;
-            this.contentHeight = contentH;
-            this.buttonBarSize.set(barW, totalHeight);
-
-            float offsetY = totalHeight - pad - buttonH;
-            for (Tab t : tabs) {
-                t.button().setSize(buttonW, buttonH);
-                t.button().setPosition(pad, offsetY);
-                offsetY -= (buttonH + sp);
-            }
-
-            ((Quad) tabBarBackground.getMesh()).updateGeometry(barW, totalHeight);
-            tabBarBackground.setLocalTranslation(0, 0, 0);
-
-            ((Quad) contentBackground.getMesh()).updateGeometry(contentW, contentH);
-            contentBackground.setLocalTranslation(barW, 0, -1);
-
-            for (Tab t : tabs) {
-                t.contentNode().setLocalTranslation(barW, -15, 0);
-            }
+            layoutVertical(totalWidth, totalHeight, dpi, pad, sp);
         }
 
         // ensure we have a valid active tab
@@ -189,89 +201,169 @@ public final class ViceTabs extends UIComponent implements InteractiveComponent 
         }
     }
 
+    private void layoutHorizontal(float totalWidth, float totalHeight, float dpi, float pad, float sp) {
+        int n = Math.max(1, tabs.size());
+        float prefBW = preferredButtonWidth * dpi;
+        float prefBH = preferredButtonHeight * dpi;
+        float minBW = minButtonWidth * dpi;
+
+        float availableForButtons = Math.max(0f, totalWidth - pad * 2f);
+        float buttonW = prefBW;
+        float totalNeeded = n * prefBW + (n - 1) * sp;
+        if (totalNeeded > availableForButtons) {
+            float candidate = (availableForButtons - (n - 1) * sp) / (float) n;
+            buttonW = Math.max(minBW, candidate);
+        }
+
+        float buttonH = prefBH;
+        float barH = buttonH + pad * 2f;
+        float contentH = Math.max(0f, totalHeight - barH);
+        float contentW = totalWidth;
+
+        this.contentWidth = contentW;
+        this.contentHeight = contentH;
+        this.buttonBarSize.set(totalWidth, barH);
+
+        float offsetX = pad + Math.max(0f, (availableForButtons - (n * buttonW + (n - 1) * sp)) / 2f);
+        float x = offsetX;
+        float y = pad;
+
+        for (Tab t : tabs) {
+            t.button.setSize(buttonW, buttonH);
+            t.button.setPosition(x, totalHeight - barH + y);
+            x += buttonW + sp;
+        }
+
+        updateBackgroundGeometry(tabBarBackground, totalWidth, barH, 0f, totalHeight - barH, TAB_BAR_Z);
+        updateBackgroundGeometry(contentBackground, contentW, contentH, 0f, 0f, CONTENT_BG_Z);
+
+        // ensure content nodes are placed at content origin (attach/detach handled in selectTab)
+        for (Tab t : tabs) {
+            t.contentNode.setLocalTranslation(0f, 0f, 0f);
+        }
+    }
+
+    private void layoutVertical(float totalWidth, float totalHeight, float dpi, float pad, float sp) {
+        int n = Math.max(1, tabs.size());
+        float prefBW = preferredButtonWidth * dpi;
+        float prefBH = preferredButtonHeight * dpi;
+        float minBH = minButtonHeight * dpi;
+
+        float availableForButtons = Math.max(0f, totalHeight - pad * 2f);
+        float buttonH = prefBH;
+        float totalNeeded = n * prefBH + (n - 1) * sp;
+        if (totalNeeded > availableForButtons) {
+            float candidate = (availableForButtons - (n - 1) * sp) / (float) n;
+            buttonH = Math.max(minBH, candidate);
+        }
+
+        float buttonW = prefBW;
+        float barW = buttonW + pad * 2f;
+        float contentW = Math.max(0f, totalWidth - barW);
+        float contentH = totalHeight;
+
+        this.contentWidth = contentW;
+        this.contentHeight = contentH;
+        this.buttonBarSize.set(barW, totalHeight);
+
+        float offsetY = totalHeight - pad - buttonH;
+        for (Tab t : tabs) {
+            t.button.setSize(buttonW, buttonH);
+            t.button.setPosition(pad, offsetY);
+            offsetY -= (buttonH + sp);
+        }
+
+        updateBackgroundGeometry(tabBarBackground, barW, totalHeight, 0f, 0f, TAB_BAR_Z);
+        updateBackgroundGeometry(contentBackground, contentW, contentH, barW, 0f, CONTENT_BG_Z);
+
+        for (Tab t : tabs) {
+            // small vertical offset to avoid overlapping tab bar visually
+            t.contentNode.setLocalTranslation(barW, -15f, 0f);
+        }
+    }
+
+    private void updateBackgroundGeometry(Geometry geom, float w, float h, float tx, float ty, float tz) {
+        Quad q = (Quad) geom.getMesh();
+        q.updateGeometry(Math.max(0f, w), Math.max(0f, h));
+        geom.setLocalTranslation(tx, ty, tz);
+    }
+
     /**
-     * Выбирать вкладку. Предыдущая вкладка полностью отключается (детачится и деактивирует интерактивные элементы).
-     * Новая вкладка прикрепляется и активируется.
+     * Выбрать вкладку. Деактивирует интерактивные компоненты предыдущей вкладки и активирует новые.
+     *
+     * @param index индекс вкладки
      */
-    private void selectTab(int index) {
+    public void selectTab(int index) {
         if (index < 0 || index >= tabs.size()) return;
         if (index == activeTabIndex) return;
 
         int prev = activeTabIndex;
         activeTabIndex = index;
 
-        // Deactivate previous tab: detach its contentNode and deactivate components
+        // deactivate previous tab
         if (prev >= 0 && prev < tabs.size()) {
             Tab prevTab = tabs.get(prev);
-            try {
-                // detach content node from tabsNode if attached
-                if (prevTab.contentNode().getParent() == this) {
-                    this.detachChild(prevTab.contentNode());
-                }
-            } catch (Exception ex) {
-                // ignore detach failures
-            }
-            // deactivate interactive children
-            for (UIComponent comp : prevTab.content()) {
+            safeDetachChild(prevTab.contentNode);
+            for (UIComponent comp : prevTab.content) {
                 if (comp instanceof InteractiveComponent ic) {
-                    try { ic.setActive(false); } catch (Exception ignored) {}
+                    ic.setActive(false);
                 }
-                // defensively set cull hint to Always to be sure it's fully invisible (optional)
-                try { comp.getNode().setCullHint(Node.CullHint.Always); } catch (Exception ignored) {}
+                try {
+                    comp.getNode().setCullHint(Node.CullHint.Always);
+                } catch (Exception ignored) {
+                    // компоненты могут быть частично инициализированы — не фатально
+                }
             }
         }
 
-        // Activate new tab: attach its content node and activate components
+        // activate new tab
         Tab newTab = tabs.get(activeTabIndex);
-        // Ensure the content node is attached exactly once
-        if (newTab.contentNode().getParent() != this) {
-            this.attachChild(newTab.contentNode());
-        }
+        safeAttachChild(newTab.contentNode);
 
         for (int i = 0; i < tabs.size(); i++) {
             Tab t = tabs.get(i);
             boolean active = (i == activeTabIndex);
-            t.button().setSelected(active);
-            // button nodes remain attached; content nodes are managed above
-            if (t.contentNode().getParent() == this) {
-                t.contentNode().setCullHint(active ? Node.CullHint.Inherit : Node.CullHint.Always);
+            t.button.setSelected(active);
+
+            if (t.contentNode.getParent() == this) {
+                t.contentNode.setCullHint(active ? Node.CullHint.Inherit : Node.CullHint.Always);
             } else {
-                t.contentNode().setCullHint(Node.CullHint.Always);
+                t.contentNode.setCullHint(Node.CullHint.Always);
             }
 
-            for (UIComponent comp : t.content()) {
+            for (UIComponent comp : t.content) {
                 if (comp instanceof InteractiveComponent ic) {
-                    try { ic.setActive(active); } catch (Exception ignored) {}
+                    ic.setActive(active);
                 }
-                // For additional safety, set cull hints for each component node when not active
                 try {
                     comp.getNode().setCullHint(active ? Node.CullHint.Inherit : Node.CullHint.Always);
-                } catch (Exception ignored) {}
+                } catch (Exception ignored) {
+                }
             }
         }
     }
 
     @Override
     public void update(float tpf) {
-        // update only buttons + active tab content components (if needed)
-        for (Tab t : tabs) t.button().update(tpf);
+        // обновляем кнопки
+        for (Tab t : tabs) t.button.update(tpf);
 
         Tab active = getActiveTab();
         if (active != null) {
-            for (UIComponent c : active.content()) {
-                try { c.update(tpf); } catch (Exception ignored) {}
+            for (UIComponent c : active.content) {
+                c.update(tpf);
             }
         }
     }
 
     /**
-     * Обновление hover-состояния кнопок (как раньше).
+     * Обновление hover-состояния кнопок. Вызывает звук переключения при входе на кнопку.
      */
     public void handleMouseMove(Vector2f cursor) {
         int foundIndex = -1;
         for (int i = 0; i < tabs.size(); i++) {
             Tab t = tabs.get(i);
-            if (t.button().intersects(cursor)) {
+            if (t.button.intersects(cursor)) {
                 foundIndex = i;
                 break;
             }
@@ -280,12 +372,16 @@ public final class ViceTabs extends UIComponent implements InteractiveComponent 
         if (foundIndex == hoveredButtonIndex) return;
 
         if (hoveredButtonIndex >= 0 && hoveredButtonIndex < tabs.size()) {
-            tabs.get(hoveredButtonIndex).button().setHovered(false);
+            tabs.get(hoveredButtonIndex).button.setHovered(false);
         }
 
         if (foundIndex >= 0) {
-            tabs.get(foundIndex).button().setHovered(true);
-            buildContext.app().getSoundManager().play("ui.toggle");
+            tabs.get(foundIndex).button.setHovered(true);
+            // play sound — buildContext может вернуть null-менеджер, но по контракту он должен существовать
+            try {
+                buildContext.app().getSoundManager().play("ui.toggle");
+            } catch (Exception ignored) {
+            }
         }
 
         hoveredButtonIndex = foundIndex;
@@ -293,52 +389,58 @@ public final class ViceTabs extends UIComponent implements InteractiveComponent 
 
     @Override
     public void handleMousePress(Vector2f cursor) {
-        // update hover
+        // сначала обновим hover
         handleMouseMove(cursor);
 
-        // check buttons first
+        // обработка нажатий по кнопкам
         for (Tab t : tabs) {
-            if (t.button().intersects(cursor)) {
-                t.button().executeAction();
+            if (t.button.intersects(cursor)) {
+                t.button.executeAction();
                 return;
             }
         }
 
-        // forward only to active content (components in other tabs are detached/deactivated)
+        // дальше — проброс события в активный контент
         Tab active = getActiveTab();
         if (active == null) return;
 
-        for (Object item : active.content()) {
-            if (item instanceof UIComponent mc && item instanceof InteractiveComponent ic) {
-                Node itemNode = mc.getNode();
-                tmpWorld.set(cursor.x, cursor.y, 0f);
-                itemNode.worldToLocal(tmpWorld, tmpLocal);
-                tmp2.set(tmpLocal.x, tmpLocal.y);
+        // пробуем специализированные контролы (слайдеры, чекбоксы), затем обычное интерактивное поведение
+        for (UIComponent item : active.content) {
+            if (!(item instanceof InteractiveComponent)) continue;
+            InteractiveComponent ic = (InteractiveComponent) item;
 
-                if (ic instanceof ViceSlider slider && slider.intersects(tmp2)) {
-                    activeSlider = slider;
-                    slider.handleDrag(tmp2);
-                    return;
-                } else if (ic instanceof ViceCheckbox checkbox && checkbox.intersects(tmp2)) {
-                    checkbox.toggle();
-                    return;
-                } else {
-                    if (((UIComponent) ic).intersects(tmp2)) {
-                        ic.handleMousePress(tmp2);
-                        return;
-                    }
-                }
-            } else if (item instanceof InteractiveComponent ic) {
-                // fallback: test against contentNode-local coords
-                Node contentNode = active.contentNode();
-                tmpWorld.set(cursor.x, cursor.y, 0f);
-                contentNode.worldToLocal(tmpWorld, tmpLocal);
-                tmp2.set(tmpLocal.x, tmpLocal.y);
+            Node itemNode = item.getNode();
+            tmpWorld.set(cursor.x, cursor.y, 0f);
+            itemNode.worldToLocal(tmpWorld, tmpLocal);
+            tmp2.set(tmpLocal.x, tmpLocal.y);
 
-                if (ic.intersects(tmp2)) {
-                    ic.handleMousePress(tmp2);
-                    return;
-                }
+            if (ic instanceof ViceSlider slider && slider.intersects(tmp2)) {
+                activeSlider = slider;
+                slider.handleDrag(tmp2);
+                return;
+            }
+
+            if (ic instanceof ViceCheckbox checkbox && checkbox.intersects(tmp2)) {
+                checkbox.toggle();
+                return;
+            }
+
+            if (ic.intersects(tmp2)) {
+                ic.handleMousePress(tmp2);
+                return;
+            }
+        }
+
+        // последний шанс — попробовать общий contentNode
+        Node contentNode = active.contentNode;
+        tmpWorld.set(cursor.x, cursor.y, 0f);
+        contentNode.worldToLocal(tmpWorld, tmpLocal);
+        tmp2.set(tmpLocal.x, tmpLocal.y);
+
+        for (UIComponent item : active.content) {
+            if (item instanceof InteractiveComponent ic && ic.intersects(tmp2)) {
+                ic.handleMousePress(tmp2);
+                return;
             }
         }
     }
@@ -360,13 +462,11 @@ public final class ViceTabs extends UIComponent implements InteractiveComponent 
 
     @Override
     public void handleMouseRelease() {
-        if (activeSlider != null) {
-            activeSlider = null;
-        }
+        activeSlider = null;
 
         Tab active = getActiveTab();
         if (active == null) return;
-        for (Object item : active.content()) {
+        for (UIComponent item : active.content) {
             if (item instanceof InteractiveComponent ic) ic.handleMouseRelease();
         }
     }
@@ -391,24 +491,46 @@ public final class ViceTabs extends UIComponent implements InteractiveComponent 
         Vector2f world = new Vector2f(this.getWorldTranslation().x, this.getWorldTranslation().y);
         float w = getWidth();
         float h = getHeight();
-        return cursor.x >= world.x && cursor.x <= world.x + w &&
-                cursor.y >= world.y && cursor.y <= world.y + h;
+        return cursor.x >= world.x && cursor.x <= world.x + w && cursor.y >= world.y && cursor.y <= world.y + h;
     }
 
     @Override
-    public void setActive(boolean active) { /* nop */ }
+    public void setActive(boolean active) {
+        // nop — вкладки сами управляют жизненным циклом дочерних интерактивных компонентов
+    }
 
     @Override
-    public void setHovered(boolean hovered) { /* nop */ }
-
+    public void setHovered(boolean hovered) {
+        // nop — hover отслеживается на уровне кнопок
+    }
 
     private Tab getActiveTab() {
         return (activeTabIndex >= 0 && activeTabIndex < tabs.size()) ? tabs.get(activeTabIndex) : null;
     }
 
-    // setters
+    // публичные доступы и набор сеттеров
+    public int getTabCount() { return tabs.size(); }
+    public int getActiveIndex() { return activeTabIndex; }
+
     public void setPreferredButtonSize(float w, float h) { this.preferredButtonWidth = w; this.preferredButtonHeight = h; }
     public void setMinButtonSize(float w, float h) { this.minButtonWidth = w; this.minButtonHeight = h; }
     public void setSpacing(float spacing) { this.spacing = spacing; }
     public void setPadding(float padding) { this.padding = padding; }
+
+    // безопасные attach/detach (чтобы не пытаться дважды прикреплять или отсоединять)
+    private void safeAttachChild(Node node) {
+        if (node == null) return;
+        try {
+            if (node.getParent() != this) this.attachChild(node);
+        } catch (Exception ignored) {
+        }
+    }
+
+    private void safeDetachChild(Node node) {
+        if (node == null) return;
+        try {
+            if (node.getParent() == this) this.detachChild(node);
+        } catch (Exception ignored) {
+        }
+    }
 }

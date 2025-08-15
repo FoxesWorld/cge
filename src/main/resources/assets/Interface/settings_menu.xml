@@ -1,10 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <menu>
-    <!-- 3D-сцена остается та же, поэтому тег <scene> здесь не нужен -->
     <screen>
 
 
-        <!-- КОНТЕЙНЕР ДЛЯ ВКЛАДОК -->
         <panel id="settings" anchor="CENTER" dpiScale="1.0" width="95%" bgColor="#000000" cornerRadius="20" bgAlpha="0.5">
             <components>
                 <button iconPath="assets/Interface/ui/icons/back.png" iconSize="40" action="org.foxesworld.cge.tmp.menu.actions.GoBackToMainMenuAction" text="BACK" />

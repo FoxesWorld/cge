@@ -287,4 +287,9 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
     public boolean isActive() {
         return isActive;
     }
+
+    @Override
+    public String getHoverSound(){
+        return "ui.hover";
+    }
 }

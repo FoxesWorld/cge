@@ -22,11 +22,7 @@ public class TextBuilder implements ComponentBuilder<TextXml> {
     public ViceText build(TextXml model, Node parent, BuildContext context) {
 
         // Instantiate title
-        ViceText title = new ViceText(
-                context.app(),
-                context.app().getAssetManager(),
-                model
-        );
+        ViceText title = new ViceText(context, model);
 
         // Calculate position
         Vector2f pos = MenuUtils.calculatePosition(

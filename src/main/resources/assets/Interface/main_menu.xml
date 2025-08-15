@@ -2,7 +2,7 @@
 
 <menu>
     <scene
-            modelPath=""
+            modelPath="assets/meshes/plm.obj"
             skyboxPath="assets/Textures/sky.dds"
             modelScale="0.5"
             modelOffsetY="-1.0"

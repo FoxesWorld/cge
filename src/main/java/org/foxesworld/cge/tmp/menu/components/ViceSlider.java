@@ -360,4 +360,9 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
                 src.a
         );
     }
+
+    @Override
+    public String getHoverSound(){
+        return "ui.hover";
+    }
 }

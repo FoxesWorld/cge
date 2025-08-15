@@ -44,7 +44,7 @@ public final class XmlMenuBuilder {
         try {
             return JAXBContext.newInstance(
                     MenuXml.class, ScreenXml.class, SceneXml.class, ButtonXml.class,
-                    TextXml.class, TabsXml.class, TabXml.class, SliderXml.class, CheckboxXml.class, PanelXml.class
+                    TextXml.class, TabsXml.class, TabXml.class, SliderXml.class, CheckboxXml.class, PanelXml.class, ImageXml.class
             );
         } catch (JAXBException e) {
             throw new RuntimeException("Failed to initialize JAXBContext for menu building.", e);

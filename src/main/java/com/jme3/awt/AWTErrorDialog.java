@@ -1,11 +1,9 @@
 package com.jme3.awt;
 
-import com.formdev.flatlaf.FlatDarkLaf;
 import org.foxesworld.cge.ICOParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.imageio.ImageIO;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.datatransfer.StringSelection;
@@ -40,7 +38,7 @@ public class AWTErrorDialog extends JDialog {
     private static final String ENGINE_NAME = "Calista Game Engine";
     private static final String ENGINE_VERSION = "1.5.0";
     private static final String REPORT_ISSUE_URI = "https://github.com/FoxesWorld/CGE/issues";
-    private static final String ICON_PATH = "/assets/theme/icon/engineLogo.ico";
+    private static final String ICON_PATH = "/assets/Theme/icon/engineLogo.ico";
     private static final int ICON_SIZE = 64;
 
 
@@ -80,7 +78,7 @@ public class AWTErrorDialog extends JDialog {
 
         // Настройка тёмной темы и UIManager overrides
         //FlatDarkLaf.setup();
-        setupTheme("assets/theme/calista.properties");
+        setupTheme("assets/Theme/calista.properties");
         UIManager.put("Button.arc", 10);
         UIManager.put("TextComponent.arc", 6);
         UIManager.put("Component.error.borderColor", COLOR_ACCENT_YELLOW);

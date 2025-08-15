@@ -8,6 +8,7 @@ import com.jme3.math.Vector2f;
 import com.jme3.scene.Node;
 import org.foxesworld.cge.core.io.TTFrenderer;
 import org.foxesworld.cge.core.utils.ColorUtils;
+import org.foxesworld.cge.tmp.menu.BuildContext;
 import org.foxesworld.cge.tmp.menu.components.utils.InteractiveComponent;
 import org.foxesworld.cge.tmp.menu.xml.TextXml;
 import org.slf4j.LoggerFactory;
@@ -49,18 +50,18 @@ public final class ViceText extends UIComponent implements InteractiveComponent 
     private Style style;
 
     // Конструктор: прежний сохраняется и использует стиль из xml или дефолтный
-    public ViceText(Application app, AssetManager assetManager, TextXml textXml) {
-        this(app, assetManager, textXml, Style.fromTextXml(textXml));
+    public ViceText(BuildContext context, TextXml textXml) {
+        this(context, textXml, Style.fromTextXml(textXml));
     }
 
     // Новый: конструктор с явным стилем
-    public ViceText(Application app, AssetManager assetManager, TextXml textXml, Style style) {
+    public ViceText(BuildContext context, TextXml textXml, Style style) {
         super(textXml.id);
-        this.app = app;
+        this.app = context.app();
         this.textXml = textXml;
         this.fontSizeRaw = textXml.fontSize;
         this.style = style != null ? style : Style.defaultStyle();
-        this.ttfRenderer = new TTFrenderer(assetManager);
+        this.ttfRenderer = new TTFrenderer(context.app().getAssetManager());
         //this.textNode = new Node("ViceText: " + textXml.text);
 
         this.baseWidth = app.getContext().getSettings().getWidth();
