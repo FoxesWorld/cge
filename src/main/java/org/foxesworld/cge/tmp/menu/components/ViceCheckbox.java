@@ -204,6 +204,11 @@ public final class ViceCheckbox extends UIComponent implements InteractiveCompon
 
     @Override
     public String getHoverSound(){
-        return "player.inventory.change";
+        return "ui.hover";
+    }
+
+    @Override
+    public String getClickSound() {
+        return "ui.checkbox.toggle";
     }
 }

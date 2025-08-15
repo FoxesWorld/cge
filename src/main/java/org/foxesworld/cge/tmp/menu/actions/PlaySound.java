@@ -13,6 +13,6 @@ public class PlaySound implements MenuAction {
     public void execute(Application app) {
         AppStateManager stateManager = app.getStateManager();
         MainMenuAppState menuState = stateManager.getState(MainMenuAppState.class);
-        menuState.getCalistaGameEngine().getSoundManager().play("ui.success");
+        menuState.getCalistaGameEngine().getSoundManager().play("ui.submit");
     }
 }

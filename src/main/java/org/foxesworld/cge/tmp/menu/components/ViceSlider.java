@@ -96,7 +96,7 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
         this.borderColor = DEFAULT_BORDER_COLOR.clone();
         this.currentFillColor = this.fillColor.clone();
         this.currentBorderColor = this.borderColor.clone();
-        height = DEFAULT_HEIGHT;
+        setHeight(DEFAULT_HEIGHT);
 
         ttFrenderer = new TTFrenderer(assetManager);
         this.borderNode = new Node("SliderBorder");
@@ -107,7 +107,7 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
         fillMat.setColor("Color", currentFillColor);
         fillMat.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
 
-        this.barFill = new Geometry("SliderFill", new Quad(1, height - BORDER_THICKNESS * 2));
+        this.barFill = new Geometry("SliderFill", new Quad(1, getHeight() - BORDER_THICKNESS * 2));
         barFill.setMaterial(fillMat);
 
         ttFrenderer.generateFont("assets/Interface/fonts/FSElliotPro.ttf", Style.Plain, (int) DEFAULT_FONT_SIZE);
@@ -149,15 +149,15 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
     }
 
     private void updateBorder() {
-        ((Quad) ((Geometry) borderNode.getChild("BorderTop")).getMesh()).updateGeometry(width, BORDER_THICKNESS);
-        ((Quad) ((Geometry) borderNode.getChild("BorderBottom")).getMesh()).updateGeometry(width, BORDER_THICKNESS);
-        ((Quad) ((Geometry) borderNode.getChild("BorderLeft")).getMesh()).updateGeometry(BORDER_THICKNESS, height);
-        ((Quad) ((Geometry) borderNode.getChild("BorderRight")).getMesh()).updateGeometry(BORDER_THICKNESS, height);
+        ((Quad) ((Geometry) borderNode.getChild("BorderTop")).getMesh()).updateGeometry(getWidth(), BORDER_THICKNESS);
+        ((Quad) ((Geometry) borderNode.getChild("BorderBottom")).getMesh()).updateGeometry(getWidth(), BORDER_THICKNESS);
+        ((Quad) ((Geometry) borderNode.getChild("BorderLeft")).getMesh()).updateGeometry(BORDER_THICKNESS, getHeight());
+        ((Quad) ((Geometry) borderNode.getChild("BorderRight")).getMesh()).updateGeometry(BORDER_THICKNESS, getHeight());
 
-        borderNode.getChild("BorderTop").setLocalTranslation(0, height - BORDER_THICKNESS, 0.05f);
+        borderNode.getChild("BorderTop").setLocalTranslation(0, getHeight() - BORDER_THICKNESS, 0.05f);
         borderNode.getChild("BorderBottom").setLocalTranslation(0, 0, 0.05f);
         borderNode.getChild("BorderLeft").setLocalTranslation(0, 0, 0.05f);
-        borderNode.getChild("BorderRight").setLocalTranslation(width - BORDER_THICKNESS, 0, 0.05f);
+        borderNode.getChild("BorderRight").setLocalTranslation(getWidth() - BORDER_THICKNESS, 0, 0.05f);
 
         // apply interpolated border color to all border parts
         for (int i = 0; i < borderNode.getQuantity(); i++) {
@@ -170,12 +170,12 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
     private void updateAdaptiveSize() {
         float textWidth = ttc.getWidth();
         float minBarWidth = 100f;
-        this.width = Math.max(minBarWidth, textWidth + THUMB_RADIUS * 2 + 20f);
+        setWidth(Math.max(minBarWidth, textWidth + THUMB_RADIUS * 2 + 20f));
         updateLayout();
     }
 
     public void setSize(float width) {
-        this.width = width;
+        setWidth(width);
         autoSize = false;
         updateLayout();
         updateVisuals();
@@ -183,7 +183,7 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
 
     private void updateLayout() {
         // text position: placed to the right of the bar
-        ttc.setLocalTranslation(width + 10f, height, 0);
+        ttc.setLocalTranslation(getWidth() + 10f, getHeight(), 0);
         updateBorder();
         updateThumbPosition();
     }
@@ -194,7 +194,7 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
 
     private void updateVisuals() {
         // interpolate fill width by displayedValue
-        barFill.setLocalScale(width * displayedValue, 1, 1);
+        barFill.setLocalScale(getWidth() * displayedValue, 1, 1);
         barFill.setLocalTranslation(BORDER_THICKNESS, BORDER_THICKNESS, 0.1f);
         // color & thumb scale handled in update()
         updateValueLabel();
@@ -222,8 +222,8 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
     }
 
     private void updateThumbPosition() {
-        float posX = BORDER_THICKNESS + displayedValue * width;
-        float posY = height / 2f;
+        float posX = BORDER_THICKNESS + displayedValue * getWidth();
+        float posY = getHeight() / 2f;
         // if dragging, raise by dragAnim (applied in update())
         thumb.setLocalTranslation(posX, posY, 0.2f);
     }
@@ -232,15 +232,15 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
     public boolean intersects(Vector2f cursorPos) {
         Vector3f worldPos3 = this.localToWorld(Vector3f.ZERO, null);
         Vector2f worldPos = new Vector2f(worldPos3.x, worldPos3.y);
-        return cursorPos.x >= worldPos.x && cursorPos.x <= worldPos.x + width
-                && cursorPos.y >= worldPos.y && cursorPos.y <= worldPos.y + height;
+        return cursorPos.x >= worldPos.x && cursorPos.x <= worldPos.x + getWidth()
+                && cursorPos.y >= worldPos.y && cursorPos.y <= worldPos.y + getHeight();
     }
 
     public void handleDrag(Vector2f cursorPos) {
         Vector3f worldPos3 = this.localToWorld(Vector3f.ZERO, null);
         Vector2f worldPos = new Vector2f(worldPos3.x, worldPos3.y);
         float relativeX = cursorPos.x - worldPos.x;
-        setValue(relativeX / width);
+        setValue(relativeX / getWidth());
     }
 
     @Override
@@ -248,8 +248,8 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
         Vector3f worldPos3 = this.localToWorld(Vector3f.ZERO, null);
         Vector2f worldPos = new Vector2f(worldPos3.x, worldPos3.y);
         float relativeX = cursor.x - worldPos.x;
-        if (relativeX >= 0 && relativeX <= width) {
-            setValue(relativeX / width);
+        if (relativeX >= 0 && relativeX <= getWidth()) {
+            setValue(relativeX / getWidth());
             // start dragging immediately
             dragging = true;
         }
@@ -313,8 +313,8 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
 
         // vertical raise while dragging (smooth)
         float raise = DRAG_RAISE * dragAnim;
-        float posX = BORDER_THICKNESS + displayedValue * width;
-        float posY = height / 2f + raise;
+        float posX = BORDER_THICKNESS + displayedValue * getWidth();
+        float posY = getHeight() / 2f + raise;
         thumb.setLocalTranslation(posX, posY, 0.25f + 0.01f * dragAnim);
 
         // update colors: fill and border get brighter on hover/drag
@@ -364,5 +364,10 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
     @Override
     public String getHoverSound(){
         return "ui.hover";
+    }
+
+    @Override
+    public String getClickSound() {
+        return "ui.press";
     }
 }

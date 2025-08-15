@@ -55,8 +55,8 @@ public final class ViceImage extends UIComponent implements InteractiveComponent
         this.assetManager = assetManager;
         this.style = style != null ? style : new Style();
         this.sizeExplicit = (width > 0f && height > 0f);
-        this.width = Math.max(1f, width);
-        this.height = Math.max(1f, height);
+        setWidth(Math.max(1f, width));
+        setHeight(Math.max(1f, height));
 
         background = new Geometry("ViceImageBackground");
         Material bgMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
@@ -93,8 +93,8 @@ public final class ViceImage extends UIComponent implements InteractiveComponent
             picture.setMaterial(mat);
 
             if (!sizeExplicit) {
-                this.width = imageIntrinsicW;
-                this.height = imageIntrinsicH;
+                setWidth(imageIntrinsicW);
+                setHeight(imageIntrinsicH);
                 picture.setWidth(imageIntrinsicW);
                 picture.setHeight(imageIntrinsicH);
             }
@@ -110,8 +110,8 @@ public final class ViceImage extends UIComponent implements InteractiveComponent
 
     public void setSize(float width, float height) {
         this.sizeExplicit = true;
-        this.width = Math.max(1f, width);
-        this.height = Math.max(1f, height);
+        setWidth(Math.max(1f, width));
+        setHeight(Math.max(1f, height));
         updateGeometry();
     }
 
@@ -146,7 +146,7 @@ public final class ViceImage extends UIComponent implements InteractiveComponent
 
     private void updateGeometry() {
         if (style.showBackground) {
-            background.setMesh(new RoundedQuad(width, height, style.cornerRadius, 16));
+            background.setMesh(new RoundedQuad(getWidth(), getHeight(), style.cornerRadius, 16));
             background.setLocalTranslation(0, 0, style.backgroundZ);
             try {
                 background.getMaterial().setColor("Color", ColorUtils.fromHexString(style.backgroundColor));
@@ -157,28 +157,28 @@ public final class ViceImage extends UIComponent implements InteractiveComponent
         }
 
         float imgAspect = imageIntrinsicW / imageIntrinsicH;
-        float areaAspect = width / Math.max(1f, height);
-        float dispW = width, dispH = height;
+        float areaAspect = getWidth() / Math.max(1f, getHeight());
+        float dispW = getWidth(), dispH = getHeight();
 
         switch (scaleMode) {
             case STRETCH:
                 break;
             case FIT:
                 if (imgAspect >= areaAspect) {
-                    dispW = width;
-                    dispH = width / imgAspect;
+                    dispW = getWidth();
+                    dispH = getWidth() / imgAspect;
                 } else {
-                    dispH = height;
-                    dispW = height * imgAspect;
+                    dispH = getHeight();
+                    dispW = getHeight() * imgAspect;
                 }
                 break;
             case COVER:
                 if (imgAspect >= areaAspect) {
-                    dispH = height;
-                    dispW = height * imgAspect;
+                    dispH = getHeight();
+                    dispW = getHeight() * imgAspect;
                 } else {
-                    dispW = width;
-                    dispH = width / imgAspect;
+                    dispW = getWidth();
+                    dispH = getWidth() / imgAspect;
                 }
                 break;
         }
@@ -197,9 +197,9 @@ public final class ViceImage extends UIComponent implements InteractiveComponent
     public boolean intersects(Vector2f pos) {
         return isActive &&
                 pos.x >= getWorldTranslation().x &&
-                pos.x <= getWorldTranslation().x + width &&
+                pos.x <= getWorldTranslation().x + getWidth() &&
                 pos.y >= getWorldTranslation().y &&
-                pos.y <= getWorldTranslation().y + height;
+                pos.y <= getWorldTranslation().y + getHeight();
     }
 
     @Override

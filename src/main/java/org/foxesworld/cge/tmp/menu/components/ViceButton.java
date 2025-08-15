@@ -123,8 +123,8 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
     }
 
     public void setSize(float width, float height) {
-        this.width = width;
-        this.height = height;
+        setWidth(width);
+        setHeight(height);
 
         background.setMesh(new RoundedQuad(width, height, style.cornerRadius(), 16));
         background.setLocalTranslation(width / 2f, height / 2f, -1f);
@@ -142,10 +142,10 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
         float textW = ttfRenderer.getTextGeometry().getWidth();
         float totalW = iconW + gap + textW;
 
-        float startX = (width - totalW) / 10f; // можно подправить, если хочется точнее центрировать
+        float startX = (getWidth() - totalW) / 10f; // можно подправить, если хочется точнее центрировать
 
-        float iconY = (height - icon.getHeight()) / 2f;
-        float textY = (height - ttfRenderer.getTextGeometry().getHeight()) / 2f;
+        float iconY = (getHeight() - icon.getHeight()) / 2f;
+        float textY = (getHeight() - ttfRenderer.getTextGeometry().getHeight()) / 2f;
 
         if (iconW > 0) {
             icon.setLocalTranslation(startX, iconY, 0);
@@ -161,8 +161,8 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
     public boolean intersects(Vector2f pos) {
         if (!isActive) return false;
         Vector2f wp = new Vector2f(getWorldTranslation().x, getWorldTranslation().y);
-        return pos.x >= wp.x && pos.x <= wp.x + width
-                && pos.y >= wp.y && pos.y <= wp.y + height;
+        return pos.x >= wp.x && pos.x <= wp.x + getWidth()
+                && pos.y >= wp.y && pos.y <= wp.y + getHeight();
     }
 
 
@@ -291,5 +291,10 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
     @Override
     public String getHoverSound(){
         return "ui.hover";
+    }
+
+    @Override
+    public String getClickSound() {
+        return "ui.press";
     }
 }

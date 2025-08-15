@@ -1,35 +1,35 @@
 {
   "press": [
     {
-      "path": "assets/Sounds/ui/click/press0.ogg",
+      "path": "assets/Sounds/ui/button/click/press0.ogg",
       "volume": 0.60,
       "pitch": 1.00,
       "pitchVariance": 0.5,
       "cooldownMs": 80
     },
     {
-      "path": "assets/Sounds/ui/click/press1.ogg",
+      "path": "assets/Sounds/ui/button/click/press1.ogg",
       "volume": 0.55,
       "pitch": 1.03,
       "pitchVariance": 0.6,
       "cooldownMs": 80
     },
     {
-      "path": "assets/Sounds/ui/click/press2.ogg",
+      "path": "assets/Sounds/ui/button/click/press2.ogg",
       "volume": 0.55,
       "pitch": 1.03,
       "pitchVariance": 0.6,
       "cooldownMs": 80
     },
     {
-      "path": "assets/Sounds/ui/click/press3.ogg",
+      "path": "assets/Sounds/ui/button/click/press3.ogg",
       "volume": 0.55,
       "pitch": 1.03,
       "pitchVariance": 0.6,
       "cooldownMs": 80
     },
     {
-      "path": "assets/Sounds/ui/click/press4.ogg",
+      "path": "assets/Sounds/ui/button/click/press4.ogg",
       "volume": 0.55,
       "pitch": 1.03,
       "pitchVariance": 0.6,
@@ -38,42 +38,42 @@
   ],
   "hover": [
     {
-      "path": "assets/Sounds/ui/hover/hover0.ogg",
+      "path": "assets/Sounds/ui/button/hover/hover0.ogg",
       "volume": 0.55,
       "pitch": 1.03,
       "pitchVariance": 0.2,
       "cooldownMs": 80
     },
     {
-      "path": "assets/Sounds/ui/hover/hover1.ogg",
+      "path": "assets/Sounds/ui/button/hover/hover1.ogg",
       "volume": 0.55,
       "pitch": 1.03,
       "pitchVariance": 0.2,
       "cooldownMs": 80
     },
     {
-      "path": "assets/Sounds/ui/hover/hover2.ogg",
+      "path": "assets/Sounds/ui/button/hover/hover2.ogg",
       "volume": 0.55,
       "pitch": 1.03,
       "pitchVariance": 0.3,
       "cooldownMs": 80
     },
     {
-      "path": "assets/Sounds/ui/hover/hover3.ogg",
+      "path": "assets/Sounds/ui/button/hover/hover3.ogg",
       "volume": 0.55,
       "pitch": 1.03,
       "pitchVariance": 0.6,
       "cooldownMs": 80
     },
     {
-      "path": "assets/Sounds/ui/hover/hover4.ogg",
+      "path": "assets/Sounds/ui/button/hover/hover4.ogg",
       "volume": 0.55,
       "pitch": 1.03,
       "pitchVariance": 0.4,
       "cooldownMs": 80
     },
     {
-      "path": "assets/Sounds/ui/hover/hover5.ogg",
+      "path": "assets/Sounds/ui/button/hover/hover5.ogg",
       "volume": 0.55,
       "pitch": 1.03,
       "pitchVariance": 0.2,
@@ -123,21 +123,46 @@
   ],
   "toggle": [
     {
-      "path": "assets/Sounds/ui/toggle/toggle0.ogg",
+      "path": "assets/Sounds/ui/tab/toggle/toggle0.ogg",
       "volume": 1.0,
       "pitch": 1.2,
       "pitchVariance": 0.06,
       "cooldownMs": 80
     },
     {
-      "path": "assets/Sounds/ui/toggle/toggle1.ogg",
+      "path": "assets/Sounds/ui/tab/toggle/toggle1.ogg",
       "volume": 1.0,
       "pitch": 1.2,
       "pitchVariance": 0.06,
       "cooldownMs": 80
     },
     {
-      "path": "assets/Sounds/ui/toggle/toggle2.ogg",
+      "path": "assets/Sounds/ui/tab/toggle/toggle2.ogg",
+      "volume": 1.0,
+      "pitch": 1.2,
+      "pitchVariance": 0.06,
+      "cooldownMs": 80
+    }
+  ],
+  "submit": [
+    {
+      "path": "assets/Sounds/ui/submit.ogg",
+      "volume": 1.0,
+      "pitch": 1.2,
+      "pitchVariance": 0.06,
+      "cooldownMs": 80
+    }
+  ],
+  "checkbox.toggle": [
+    {
+      "path": "assets/Sounds/ui/checkbox/toggle/checkboxOff.ogg",
+      "volume": 1.0,
+      "pitch": 1.2,
+      "pitchVariance": 0.06,
+      "cooldownMs": 80
+    },
+    {
+      "path": "assets/Sounds/ui/checkbox/toggle/checkboxOn.ogg",
       "volume": 1.0,
       "pitch": 1.2,
       "pitchVariance": 0.06,

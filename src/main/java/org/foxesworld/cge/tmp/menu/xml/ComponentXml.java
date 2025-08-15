@@ -61,18 +61,18 @@ public abstract class ComponentXml {
      * Can be an absolute value, percentage (e.g., "100%"), or omitted for auto-fit.
      */
     @XmlAttribute
-    public String width;
+    public String width = "0%";
 
     /**
      * Height of the component.
      * Can be an absolute value, percentage, or omitted for auto-fit.
      */
     @XmlAttribute
-    public String height;
+    public String height = "0%";
 
     /** Optional foreground or main color in HEX format (e.g., "#FFFFFF"). */
     @XmlAttribute
-    public String color;
+    public String color = "#FFFFFF";
 
     public void setAnchor(String anchor) {
         this.anchor = anchor;

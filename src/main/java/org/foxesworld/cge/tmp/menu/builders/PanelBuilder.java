@@ -70,11 +70,9 @@ public class PanelBuilder implements ComponentBuilder<PanelXml> {
             for (var compXml : model.getComponents()) {
                 UIComponent child = mainBuilder.buildComponent(compXml, panel.getNode());
                 LOGGER.info("Child {}", child.getId());
-                if (child != null) {
-                    panel.addComponent(child);
-                } else {
-                    LOGGER.warn("Failed to build child '{}' in Panel '{}'.", compXml.getClass().getSimpleName(), panelId);
-                }
+                //LOGGER.debug("  - Child's parent is {} ", child.getParentComponent().getId());
+                //LOGGER.debug("  - Child's parent size is {}x{}", child.getParentComponent().getWidth(), child.getParentComponent().getHeight());
+                panel.addComponent(child);
             }
         }
 

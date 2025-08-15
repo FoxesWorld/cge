@@ -8,7 +8,6 @@ import com.jme3.math.Vector2f;
 import com.jme3.renderer.Camera;
 import com.jme3.scene.Geometry;
 import com.jme3.scene.Spatial;
-import com.jme3.scene.Spatial.CullHint;
 import org.foxesworld.cge.tmp.menu.components.utils.InteractiveComponent;
 import org.foxesworld.cge.tmp.menu.components.utils.RoundedQuad;
 import org.slf4j.Logger;
@@ -19,63 +18,41 @@ import java.util.List;
 
 /**
  * Adaptive UI Panel with relative sizing, DPI scaling, anchor positioning and layout control.
- * Теперь поддерживает clipping (обрезание) контента, выходящего за пределы области контента.
+ * Supports clipping for content outside bounds.
  */
 public class Panel extends UIComponent implements InteractiveComponent {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(Panel.class);
-    private int zIndex;
 
     public enum Anchor {
-        TOP_LEFT,
-        TOP_CENTER,
-        TOP_RIGHT,
-        CENTER_LEFT,
-        CENTER,
-        CENTER_RIGHT,
-        BOTTOM_LEFT,
-        BOTTOM_CENTER,
-        BOTTOM_RIGHT,
-        // New anchors
-        LEFT_CENTER,
-        RIGHT_CENTER,
-        CENTER_TOP,
-        CENTER_BOTTOM
+        TOP_LEFT, TOP_CENTER, TOP_RIGHT,
+        CENTER_LEFT, CENTER, CENTER_RIGHT,
+        BOTTOM_LEFT, BOTTOM_CENTER, BOTTOM_RIGHT
     }
 
-    public enum LayoutDirection {
-        VERTICAL, HORIZONTAL
-    }
-
-    public enum Alignment {
-        START, CENTER, END
-    }
-
-    // ==== FIELDS ====
+    public enum LayoutDirection { VERTICAL, HORIZONTAL }
+    public enum Alignment { START, CENTER, END }
 
     private final SimpleApplication app;
     private final Geometry background;
     private final Style style;
     private final List<UIComponent> children = new ArrayList<>();
 
-    //private float width = 128f, height = 64f;
     private float padding, spacing;
     private LayoutDirection layout = LayoutDirection.VERTICAL;
     private Alignment alignment = Alignment.START;
     private boolean autoSize = false;
 
-    // Relative positioning strings (e.g. "50%", "200")
+    // Relative positioning
     private String relX, relY, relW, relH;
     private Anchor anchor = Anchor.TOP_LEFT;
+    private int zIndex = 0;
 
     private int lastScreenW = -1, lastScreenH = -1;
     private boolean dirtyLayout = true;
 
-    // Minimum hard limits (px)
-    private static final float MIN_PANEL_WIDTH = 32f;
-    private static final float MIN_PANEL_HEIGHT = 32f;
-
-    // ==== CONSTRUCTOR ====
+    private static final float MIN_W = 32f;
+    private static final float MIN_H = 32f;
 
     public Panel(String id, SimpleApplication app, Style style, float padding, float spacing) {
         super(id);
@@ -91,308 +68,165 @@ public class Panel extends UIComponent implements InteractiveComponent {
         this.background = new Geometry("PanelBackground");
         this.background.setMaterial(bgMat);
         attachChild(background);
+
         app.getGuiNode().attachChild(this);
-
-        LOGGER.debug("Panel '{}' created", id);
     }
 
-    // ==== CONFIGURATION SETTERS ====
-
-    public void setLayoutDirection(LayoutDirection layout) {
-        this.layout = layout;
-        dirtyLayout = true;
-    }
-
-    public void setAlignment(Alignment alignment) {
-        this.alignment = alignment;
-        dirtyLayout = true;
-    }
-
-    public void setAutoSize(boolean autoSize) {
-        this.autoSize = autoSize;
-        dirtyLayout = true;
-    }
+    // === Config ===
+    public void setLayoutDirection(LayoutDirection layout) { this.layout = layout; markDirty(); }
+    public void setAlignment(Alignment alignment) { this.alignment = alignment; markDirty(); }
+    public void setAutoSize(boolean autoSize) { this.autoSize = autoSize; markDirty(); }
+    public void setAnchor(Anchor anchor) { this.anchor = anchor; markDirty(); }
 
     public void setRelativeBounds(String x, String y, String w, String h, int zIndex) {
-        this.relX = x;
-        this.relY = y;
-        this.relW = w;
-        this.relH = h;
+        this.relX = x; this.relY = y;
+        this.relW = w; this.relH = h;
         this.zIndex = zIndex;
-        dirtyLayout = true;
-    }
-
-    public void setAnchor(Anchor anchor) {
-        this.anchor = anchor;
-        dirtyLayout = true;
-    }
-
-    @Override
-    public void setDpiScale(float scale) {
-        super.setDpiScale(scale);
-        dirtyLayout = true;
+        markDirty();
     }
 
     public void addComponent(UIComponent component) {
-        if (component == null) return;
-        children.add(component);
-        attachChild(component.getNode());
-        dirtyLayout = true;
+        if (component != null) {
+            children.add(component);
+            attachChild(component.getNode());
+            markDirty();
+        }
     }
 
-    // ==== UPDATE ====
+    private void markDirty() { dirtyLayout = true; }
 
     @Override
     public void update(float tpf) {
         Camera cam = app.getGuiViewPort().getCamera();
-        int sw = cam.getWidth(), sh = cam.getHeight();
-
-        if (sw != lastScreenW || sh != lastScreenH) {
-            lastScreenW = sw;
-            lastScreenH = sh;
-            dirtyLayout = true;
+        if (cam.getWidth() != lastScreenW || cam.getHeight() != lastScreenH) {
+            lastScreenW = cam.getWidth();
+            lastScreenH = cam.getHeight();
+            markDirty();
         }
-
         if (dirtyLayout) {
-            applyBounds(sw, sh);
+            applyBounds(lastScreenW, lastScreenH);
             relayoutAndClip();
             dirtyLayout = false;
         }
-
-        for (UIComponent c : children) {
-            c.update(tpf);
-        }
+        children.forEach(c -> c.update(tpf));
     }
 
-    // ==== LAYOUT & POSITIONING ====
-
+    // === Layout ===
     private void applyBounds(int sw, int sh) {
-        float x = relX != null ? parseRelative(relX, sw) : 0;
-        float y = relY != null ? parseRelative(relY, sh) : 0;
+        float x = parseRelative(relX, sw);
+        float y = parseRelative(relY, sh);
 
-        // If relW / relH not provided, use computed minimal size (based on children, padding, spacing).
-        // Otherwise parse relative and scale by dpi.
-        float computedW = relW != null ? parseRelative(relW, sw) * dpiScale : -1f;
-        float computedH = relH != null ? parseRelative(relH, sh) * dpiScale : -1f;
+        float w = (relW != null ? parseRelative(relW, sw) * dpiScale : -1f);
+        float h = (relH != null ? parseRelative(relH, sh) * dpiScale : -1f);
 
-        if (computedW <= 0f || computedH <= 0f) {
-            Vector2f minimal = computeMinimalSize();
-            if (computedW <= 0f) computedW = minimal.x;
-            if (computedH <= 0f) computedH = minimal.y;
+        if (w <= 0 || h <= 0) {
+            Vector2f minSize = computeMinimalSize();
+            if (w <= 0) w = minSize.x;
+            if (h <= 0) h = minSize.y;
         }
 
-        // Ensure hard minimums
-        computedW = Math.max(computedW, MIN_PANEL_WIDTH * dpiScale);
-        computedH = Math.max(computedH, MIN_PANEL_HEIGHT * dpiScale);
+        w = Math.max(w, MIN_W * dpiScale);
+        h = Math.max(h, MIN_H * dpiScale);
 
-        if (!autoSize) setSize(computedW, computedH);
-
+        if (!autoSize) setSize(w, h);
         applyAnchorPosition(x, y);
     }
 
     private Vector2f computeMinimalSize() {
-        float contentMinW = 0f;
-        float contentMinH = 0f;
-
-        int n = children.size();
-        if (n == 0) {
-            contentMinW = 0f;
-            contentMinH = 0f;
-        } else {
-            if (layout == LayoutDirection.VERTICAL) {
-                float maxChildW = 0f;
-                float sumChildH = 0f;
-                for (UIComponent c : children) {
-                    float cw = c.getWidth();
-                    float ch = c.getHeight();
-                    maxChildW = Math.max(maxChildW, cw);
-                    sumChildH += ch;
-                }
-                float totalSpacing = Math.max(0, n - 1) * spacing;
-                contentMinW = maxChildW;
-                contentMinH = sumChildH + totalSpacing;
-            } else {
-                float sumChildW = 0f;
-                float maxChildH = 0f;
-                for (UIComponent c : children) {
-                    float cw = c.getWidth();
-                    float ch = c.getHeight();
-                    sumChildW += cw;
-                    maxChildH = Math.max(maxChildH, ch);
-                }
-                float totalSpacing = Math.max(0, n - 1) * spacing;
-                contentMinW = sumChildW + totalSpacing;
-                contentMinH = maxChildH;
+        float contentW = 0, contentH = 0;
+        if (layout == LayoutDirection.VERTICAL) {
+            float maxW = 0, sumH = 0;
+            for (UIComponent c : children) {
+                maxW = Math.max(maxW, c.getWidth());
+                sumH += c.getHeight();
             }
+            contentW = maxW;
+            contentH = sumH + spacing * (Math.max(0, children.size() - 1));
+        } else {
+            float sumW = 0, maxH = 0;
+            for (UIComponent c : children) {
+                sumW += c.getWidth();
+                maxH = Math.max(maxH, c.getHeight());
+            }
+            contentW = sumW + spacing * (Math.max(0, children.size() - 1));
+            contentH = maxH;
         }
-
-        float minW = padding * 2f + contentMinW;
-        float minH = padding * 2f + contentMinH;
-
-        return new Vector2f(minW * dpiScale, minH * dpiScale);
+        return new Vector2f((contentW + padding * 2) * dpiScale, (contentH + padding * 2) * dpiScale);
     }
 
-    private void applyAnchorPosition(float x, float y) {
+    private void applyAnchorPosition(float offsetX, float offsetY) {
         Camera cam = app.getGuiViewPort().getCamera();
-        float sw = cam.getWidth();
-        float sh = cam.getHeight();
+        float sw = cam.getWidth(), sh = cam.getHeight();
 
-        float finalX = switch (anchor) {
-            case TOP_LEFT, CENTER_LEFT, BOTTOM_LEFT, LEFT_CENTER -> 0;
-            case TOP_CENTER, CENTER, BOTTOM_CENTER, CENTER_TOP, CENTER_BOTTOM -> (sw - width) / 2f;
-            case TOP_RIGHT, CENTER_RIGHT, BOTTOM_RIGHT, RIGHT_CENTER -> sw - width;
+        float baseX = switch (anchor) {
+            case TOP_CENTER, CENTER, BOTTOM_CENTER -> (sw - getWidth()) / 2f;
+            case TOP_RIGHT, CENTER_RIGHT, BOTTOM_RIGHT -> sw - getWidth();
+            default -> 0;
+        };
+        float baseY = switch (anchor) {
+            case TOP_LEFT, TOP_CENTER, TOP_RIGHT -> sh - getHeight();
+            case CENTER_LEFT, CENTER, CENTER_RIGHT -> (sh - getHeight()) / 2f;
             default -> 0;
         };
 
-        float finalY = switch (anchor) {
-            case TOP_LEFT, TOP_CENTER, TOP_RIGHT, CENTER_TOP -> sh - height;
-            case CENTER_LEFT, CENTER, CENTER_RIGHT, LEFT_CENTER, RIGHT_CENTER -> (sh - height) / 2f;
-            case BOTTOM_LEFT, BOTTOM_CENTER, BOTTOM_RIGHT, CENTER_BOTTOM -> 0;
-            default -> 0;
-        };
-
-        this.setLocalTranslation(finalX + x, finalY + y, zIndex);
+        setLocalTranslation(baseX + offsetX, baseY + offsetY, zIndex);
     }
 
     private float parseRelative(String val, float total) {
+        if (val == null) return 0;
         val = val.trim();
-        if (val.endsWith("%")) {
-            try {
-                float pct = Float.parseFloat(val.substring(0, val.length() - 1));
-                return total * pct / 100f;
-            } catch (NumberFormatException e) {
-                LOGGER.error("Invalid percentage '{}'", val);
-                return 0;
-            }
-        }
         try {
+            if (val.endsWith("%")) return total * Float.parseFloat(val.replace("%", "")) / 100f;
             return Float.parseFloat(val);
         } catch (NumberFormatException e) {
-            LOGGER.error("Invalid number '{}'", val);
+            LOGGER.error("Invalid value '{}'", val);
             return 0;
         }
     }
 
-    public void setSize(float width, float height) {
-        this.width = width;
-        this.height = height;
-        background.setMesh(new RoundedQuad(width, height, style.cornerRadius, 64));
-        background.setLocalTranslation(width / 2f, height / 2f, -1f);
+    public void setSize(float w, float h) {
+        setWidth(w);
+        setHeight(h);
+        background.setMesh(new RoundedQuad(w, h, style.cornerRadius, 64));
+        background.setLocalTranslation(w / 2f, h / 2f, -1f);
     }
 
-    /**
-     * Основной метод релэйаута и применения clipping.
-     * Для компонентов, реализующих Panel.Clippable, мы передаём прямоугольник отсечения
-     * в локальных координатах компонента.
-     */
     private void relayoutAndClip() {
-        float contentW = Math.max(0f, width - padding * 2f);
-        float contentH = Math.max(0f, height - padding * 2f);
+        float contentW = getWidth() - padding * 2;
+        float contentH = getHeight() - padding * 2;
 
-        // content origin in panel-local coords: bottom-left corner of content area
-        float contentLeft = padding;
-        float contentBottom = padding;
-        float contentRight = contentLeft + contentW;
-        float contentTop = contentBottom + contentH;
-
-        float posX = contentLeft;
-        float posYTop = contentTop; // Y coordinate from top for stacking
-
-        float maxX = contentLeft;
-        float maxY = contentBottom;
+        float posX = padding;
+        float posY = getHeight() - padding;
 
         for (UIComponent child : children) {
-            float cw = layout == LayoutDirection.VERTICAL ? contentW : child.getWidth();
+            float cw = (layout == LayoutDirection.VERTICAL) ? contentW : child.getWidth();
             float ch = child.getHeight();
             child.setSize(cw, ch);
 
-            // For consistency: we'll place child's local translation as bottom-left coordinates.
-            float childLocalX = posX;
-            float childLocalBottomY;
-
             if (layout == LayoutDirection.VERTICAL) {
-                // stack top -> bottom
-                childLocalBottomY = posYTop - ch;
-                child.getNode().setLocalTranslation(childLocalX, childLocalBottomY, 0);
-                posYTop = childLocalBottomY - spacing;
-            } else { // HORIZONTAL layout: left -> right
-                float childY;
-                switch (alignment) {
-                    case START -> childY = contentTop - ch; // top inside content
-                    case CENTER -> childY = contentBottom + (contentH - ch) / 2f; // center vertically
-                    case END -> childY = contentBottom; // bottom inside content
-                    default -> childY = contentBottom;
-                }
-                childLocalBottomY = childY;
-                child.getNode().setLocalTranslation(childLocalX, childLocalBottomY, 0);
+                posY -= ch;
+                child.getNode().setLocalTranslation(posX, posY, 0);
+                posY -= spacing;
+            } else {
+                float childY = switch (alignment) {
+                    case CENTER -> padding + (contentH - ch) / 2f;
+                    case END -> padding;
+                    default -> getHeight() - padding - ch;
+                };
+                child.getNode().setLocalTranslation(posX, childY, 0);
                 posX += cw + spacing;
             }
 
-            // Now compute child's rect in panel-local coords (bottom-left based)
-            float childRectLeft = childLocalX;
-            float childRectRight = childLocalX + cw;
-            float childRectBottom = childLocalBottomY;
-            float childRectTop = childLocalBottomY + ch;
-
-            // Compute overlap
-            float overlapLeft = Math.max(contentLeft, childRectLeft);
-            float overlapRight = Math.min(contentRight, childRectRight);
-            float overlapBottom = Math.max(contentBottom, childRectBottom);
-            float overlapTop = Math.min(contentTop, childRectTop);
-
-            float overlapW = overlapRight - overlapLeft;
-            float overlapH = overlapTop - overlapBottom;
-
-            Spatial childSpatial = child.getNode();
-
-            if (overlapW <= 0f || overlapH <= 0f) {
-                // полностью вне области контента — скрываем (для производительности)
-                childSpatial.setCullHint(CullHint.Always);
-
-                if (child instanceof Clippable) {
-                    ((Clippable) child).clearClip();
-                }
-            } else {
-                // частично или полностью внутри — показываем
-                childSpatial.setCullHint(CullHint.Inherit);
-
-                if (child instanceof Clippable) {
-                    // overlap coordinates are in panel-local; convert to child's local coords:
-                    float clipXInChild = overlapLeft - childRectLeft;   // >= 0
-                    float clipYInChild = overlapBottom - childRectBottom; // >= 0
-                    ((Clippable) child).setClipRect(clipXInChild, clipYInChild, overlapW, overlapH);
-                }
-            }
-
-            maxX = Math.max(maxX, childRectRight + spacing);
-            maxY = Math.max(maxY, childRectTop + spacing);
-        }
-
-        // авторазмер (если включён)
-        if (autoSize) {
-            if (layout == LayoutDirection.VERTICAL) {
-                float usedHeight = (contentTop - posYTop) + padding;
-                float maxChildW = 0f;
-                for (UIComponent c : children) maxChildW = Math.max(maxChildW, c.getWidth());
-                float newWidth = padding * 2f + maxChildW;
-                float newHeight = Math.max(usedHeight, MIN_PANEL_HEIGHT * dpiScale);
-                setSize(Math.max(newWidth, MIN_PANEL_WIDTH * dpiScale), newHeight);
-            } else {
-                float newWidth = maxX + padding;
-                float maxChildH = 0f;
-                for (UIComponent c : children) maxChildH = Math.max(maxChildH, c.getHeight());
-                float newHeight = padding * 2f + maxChildH;
-                setSize(Math.max(newWidth, MIN_PANEL_WIDTH * dpiScale), Math.max(newHeight, MIN_PANEL_HEIGHT * dpiScale));
+            if (child instanceof Clippable clip) {
+                clip.setClipRect(0, 0, Math.max(0, cw), Math.max(0, ch));
             }
         }
     }
 
-    // ==== INTERACTIVE METHODS ====
     @Override public boolean intersects(Vector2f pos) {
-        Vector2f world = new Vector2f(this.getWorldTranslation().x, this.getWorldTranslation().y);
-        float wx = world.x;
-        float wy = world.y;
-        return pos.x >= wx && pos.x <= wx + width && pos.y >= wy && pos.y <= wy + height;
+        Vector2f wp = new Vector2f(getWorldTranslation().x, getWorldTranslation().y);
+        return pos.x >= wp.x && pos.x <= wp.x + getWidth() &&
+                pos.y >= wp.y && pos.y <= wp.y + getHeight();
     }
     @Override public void setHovered(boolean hovered) {}
     @Override public void handleMousePress(Vector2f cursor) {}
@@ -400,14 +234,12 @@ public class Panel extends UIComponent implements InteractiveComponent {
     @Override public void handleMouseRelease() {}
     @Override public void setActive(boolean active) {}
 
-    // ==== STYLE RECORD ====
     public record Style(ColorRGBA backgroundColor, float cornerRadius) {
         public static Style getDefaultStyle() {
             return new Style(new ColorRGBA(0.05f, 0.05f, 0.15f, 0.7f), 20f);
         }
     }
 
-    // ==== CLIPPING PROTOCOL ====
     public interface Clippable {
         void setClipRect(float x, float y, float w, float h);
         void clearClip();

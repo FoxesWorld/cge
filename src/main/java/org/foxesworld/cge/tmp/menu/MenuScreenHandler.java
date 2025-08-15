@@ -148,12 +148,14 @@ public final class MenuScreenHandler {
                 InteractiveComponent release = findComponent(c);
 
                 // Звук по нажатию (если компонент поддерживает звук)
-                if (focused != null && focused == release && release instanceof SoundComponent) {
-                    engine.getSoundManager().play("ui.press");
+                if (focused != null && focused == release && release instanceof SoundComponent component) {
+                    engine.getSoundManager().play(component.getClickSound());
                 }
 
                 // Выполнение действия компонента по типу
-                if (focused instanceof ViceButton vb) vb.executeAction();
+                if (focused instanceof ViceButton vb) {
+                    vb.executeAction();
+                }
                 else if (focused instanceof ViceCheckbox cb) cb.toggle();
 
                 if (focused != null) focused.handleMouseRelease();

@@ -11,36 +11,26 @@ public abstract class UIComponent extends Node {
 
     protected String id;
     protected float dpiScale = 1.0f;
-    protected float width, height;
+    private float width, height;
 
     protected UIComponent(String id) {
         super(id);
         this.id = id;
     }
 
-    public String getId() {
-        return id;
-    }
-
-    public void setId(String id) {
-        this.id = id;
-    }
-
-    public Node getNode() {
-        return this;
-    }
-
-    public float getDpiScale() {
-        return dpiScale;
-    }
-
-    public void setDpiScale(float dpiScale) {
-        this.dpiScale = dpiScale;
-    }
-
     public abstract void update(float tpf);
     public abstract boolean intersects(Vector2f cursor);
     public abstract void setSize(final float width, final float height);
+
+    public String getId() {
+        return id;
+    }
+    public void setId(String id) {
+        this.id = id;
+    }
+    public Node getNode() {return this;}
+    public float getDpiScale() {return dpiScale;}
+    public void setDpiScale(float dpiScale) {this.dpiScale = dpiScale;}
 
     public void dispose() {
         removeFromParent();
@@ -48,6 +38,14 @@ public abstract class UIComponent extends Node {
     }
 
     public float getHeight() { return height; }
-
     public float getWidth() { return width; }
+    public void setWidth(float width) {this.width = width;}
+    public void setHeight(float height) {this.height = height;}
+
+    public UIComponent getParentComponent() {
+        if (getParent() instanceof UIComponent) {
+            return (UIComponent) getParent();
+        }
+        return null;
+    }
 }
