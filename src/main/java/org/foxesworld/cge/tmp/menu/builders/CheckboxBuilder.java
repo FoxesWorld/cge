@@ -17,21 +17,23 @@ public class CheckboxBuilder implements ComponentBuilder<CheckboxXml> {
     @Override
     public ViceCheckbox build(CheckboxXml model, Node parent, BuildContext context) {
         ViceCheckbox checkbox = new ViceCheckbox(
-                context.app().getAssetManager(),
+                context.mainMenuAppState().getGameEngine().getAssetManager(),
                 ViceButton.Style.getViceStyle().fontPath(),
                 model
         );
 
-        float size = MenuUtils.parseSize(model.size, context.app().getCamera().getHeight());
+        float size = MenuUtils.parseSize(model.size, context.mainMenuAppState().getGameEngine().getCamera().getHeight());
         checkbox.setSize(size);
-
+        String[] binds = model.bind.split("\\.");
+        checkbox.setChecked((Boolean) context.mainMenuAppState().getNestedFieldValue(context.mainMenuAppState().getSettingsInstance(), binds[0], binds[1]));
         Vector2f pos = MenuUtils.calculatePosition(
                 model.x,
                 model.y,
                 model.alignX,
-                context.app().getCamera()
+                context.mainMenuAppState().getGameEngine().getCamera()
         );
         checkbox.setPosition(pos.x, pos.y);
+
 
         parent.attachChild(checkbox.getNode());
         return checkbox;

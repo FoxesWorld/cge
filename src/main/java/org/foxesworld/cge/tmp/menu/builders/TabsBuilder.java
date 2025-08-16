@@ -170,9 +170,9 @@ public class TabsBuilder implements ComponentBuilder<TabsXml> {
         tabComponent.finalizeLayout(finalContentWidth, finalContentHeight);
 
         // Position the whole tabs component in parent as before (center by model.width if provided)
-        Vector2f pos = MenuUtils.calculatePosition(model.x, model.y, model.alignX, context.app().getCamera());
+        Vector2f pos = MenuUtils.calculatePosition(model.x, model.y, model.alignX, context.mainMenuAppState().getGameEngine().getCamera());
         // compute outer width used for centering: prefer model.width if present, otherwise rely on tabs width or content width
-        float outerWidth = MenuUtils.parseSize(model.width, context.app().getCamera().getWidth());
+        float outerWidth = MenuUtils.parseSize(model.width, context.mainMenuAppState().getGameEngine().getCamera().getWidth());
         if (outerWidth <= 0f) {
             // Prefer tabComponent.getWidth() if it reports an actual size, else fallback to content width
             float reported = tabComponent.getWidth();

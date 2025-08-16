@@ -11,12 +11,10 @@ import java.util.List;
  * A context object that holds shared resources and collects generated components
  * during the menu building process.
  */
-public record BuildContext(
-        CalistaGameEngine app,
-        List<UIComponent> allComponents
-) {
-    public BuildContext(CalistaGameEngine app) {
-        this(app, new ArrayList<>());
+public record BuildContext(MainMenuAppState mainMenuAppState, List<UIComponent> allComponents) {
+
+    public BuildContext(MainMenuAppState mainMenuAppState) {
+        this(mainMenuAppState, new ArrayList<>());
     }
 
     /**

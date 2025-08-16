@@ -1,0 +1,14 @@
+{
+  "graphics": {
+    "vsync": true,
+    "shadows": false,
+    "bloom": true
+  },
+  "audio": {
+    "master": 1.0,
+    "music": 0.0
+  },
+  "controls": {
+    "sensitivity": 1.0
+  }
+}

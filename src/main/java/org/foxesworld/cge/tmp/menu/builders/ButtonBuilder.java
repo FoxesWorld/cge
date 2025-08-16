@@ -12,14 +12,14 @@ public class ButtonBuilder implements ComponentBuilder<ButtonXml> {
 
     @Override
     public ViceButton build(ButtonXml model, Node parent, BuildContext context) {
-        Runnable action = MenuUtils.createActionFromClassName(model.action, context.app());
-        ViceButton button = new ViceButton(model.id, context.app().getAssetManager(), model.text, ViceButton.Style.getViceStyle(), action,  model.iconPath, model.iconSize);
+        Runnable action = MenuUtils.createActionFromClassName(model.action, context.mainMenuAppState().getGameEngine());
+        ViceButton button = new ViceButton(model.id, context.mainMenuAppState().getGameEngine().getAssetManager(), model.text, ViceButton.Style.getViceStyle(), action,  model.iconPath, model.iconSize);
 
-        float width = MenuUtils.parseSize(model.width, context.app().getCamera().getWidth());
-        float height = MenuUtils.parseSize(model.height, context.app().getCamera().getHeight());
+        float width = MenuUtils.parseSize(model.width, context.mainMenuAppState().getGameEngine().getCamera().getWidth());
+        float height = MenuUtils.parseSize(model.height, context.mainMenuAppState().getGameEngine().getCamera().getHeight());
         button.setSize(width, height);
 
-        Vector2f pos = MenuUtils.calculatePosition(model.x, model.y, model.alignX, context.app().getCamera());
+        Vector2f pos = MenuUtils.calculatePosition(model.x, model.y, model.alignX, context.mainMenuAppState().getGameEngine().getCamera());
         pos.x -= width / 2f;
         button.setPosition(pos.x, pos.y);
 

@@ -16,11 +16,11 @@ public class ImageBuilder implements ComponentBuilder<ImageXml> {
     @Override
     public ViceImage build(ImageXml model, Node parent, BuildContext context) {
         // Парсим размеры: использует ту же утилиту, что и ButtonBuilder
-        float width = MenuUtils.parseSize(model.width, context.app().getCamera().getWidth());
-        float height = MenuUtils.parseSize(model.height, context.app().getCamera().getHeight());
+        float width = MenuUtils.parseSize(model.width, context.mainMenuAppState().getGameEngine().getCamera().getWidth());
+        float height = MenuUtils.parseSize(model.height, context.mainMenuAppState().getGameEngine().getCamera().getHeight());
 
         // Создаём компонент (используем конструктор с простыми параметрами)
-        ViceImage image = new ViceImage(model.id, context.app().getAssetManager(), model.path, width, height);
+        ViceImage image = new ViceImage(model.id, context.mainMenuAppState().getGameEngine().getAssetManager(), model.path, width, height);
 
         // Tint
         if (model.tint != null && !model.tint.isBlank()) {
@@ -37,12 +37,12 @@ public class ImageBuilder implements ComponentBuilder<ImageXml> {
 
         // Corner radius: парсим как размер (поддерживает %, vw/vh по MenuUtils.parseSize)
         try {
-            float corner = MenuUtils.parseSize(model.cornerRadius, Math.min(context.app().getCamera().getWidth(), context.app().getCamera().getHeight()));
+            float corner = MenuUtils.parseSize(model.cornerRadius, Math.min(context.mainMenuAppState().getGameEngine().getCamera().getWidth(), context.mainMenuAppState().getGameEngine().getCamera().getHeight()));
             image.setCornerRadius(corner);
         } catch (Exception ignored) {}
 
         // Позиция: рассчитываем по x/y/alignX/alignY (как у ButtonBuilder)
-        Vector2f pos = MenuUtils.calculatePosition(model.x, model.y, model.alignX, context.app().getCamera());
+        Vector2f pos = MenuUtils.calculatePosition(model.x, model.y, model.alignX, context.mainMenuAppState().getGameEngine().getCamera());
         // Больше не делаем ручного сдвига по ширине — ViceImage учитывает areaOrigin.
 
         // Прикрепляем в сцену

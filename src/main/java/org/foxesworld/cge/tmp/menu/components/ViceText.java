@@ -57,11 +57,11 @@ public final class ViceText extends UIComponent implements InteractiveComponent 
     // Новый: конструктор с явным стилем
     public ViceText(BuildContext context, TextXml textXml, Style style) {
         super(textXml.id);
-        this.app = context.app();
+        this.app = context.mainMenuAppState().getGameEngine();
         this.textXml = textXml;
         this.fontSizeRaw = textXml.fontSize;
         this.style = style != null ? style : Style.defaultStyle();
-        this.ttfRenderer = new TTFrenderer(context.app().getAssetManager());
+        this.ttfRenderer = new TTFrenderer(app.getAssetManager());
         //this.textNode = new Node("ViceText: " + textXml.text);
 
         this.baseWidth = app.getContext().getSettings().getWidth();

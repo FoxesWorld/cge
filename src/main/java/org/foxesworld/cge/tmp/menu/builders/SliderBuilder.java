@@ -16,18 +16,19 @@ public class SliderBuilder implements ComponentBuilder<SliderXml> {
     @Override
     public ViceSlider build(SliderXml model, Node parent, BuildContext context) {
         ViceSlider slider = new ViceSlider(
-                context.app().getAssetManager(),
+                context.mainMenuAppState().getGameEngine().getAssetManager(),
                 model
         );
-
-        float width = MenuUtils.parseSize(String.valueOf(model.width), context.app().getCamera().getWidth());
+        String[] binds = model.bind.split("\\.");
+        slider.setValue((Float) context.mainMenuAppState().getNestedFieldValue(context.mainMenuAppState().getSettingsInstance(), binds[0], binds[1]));
+        float width = MenuUtils.parseSize(String.valueOf(model.width), context.mainMenuAppState().getGameEngine().getCamera().getWidth());
         slider.setSize(width);
 
         Vector2f pos = MenuUtils.calculatePosition(
                 model.x,
                 model.y,
                 model.alignX,
-                context.app().getCamera()
+                context.mainMenuAppState().getGameEngine().getCamera()
         );
         slider.setPosition(pos.x, pos.y);
 

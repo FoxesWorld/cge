@@ -9,7 +9,7 @@ import com.jme3.scene.Node;
  */
 public abstract class UIComponent extends Node {
 
-    protected String id;
+    protected String id, bind;
     protected float dpiScale = 1.0f;
     private float width, height;
 
@@ -35,6 +35,10 @@ public abstract class UIComponent extends Node {
     public void dispose() {
         removeFromParent();
         detachAllChildren();
+    }
+
+    public String getBind() {
+        return bind;
     }
 
     public float getHeight() { return height; }

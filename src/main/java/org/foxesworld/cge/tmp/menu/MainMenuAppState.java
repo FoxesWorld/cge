@@ -13,19 +13,25 @@ import com.jme3.post.filters.DepthOfFieldFilter;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.tmp.menu.components.ViceMenuBackground;
 import org.foxesworld.cge.tmp.menu.xml.SceneXml;
+import org.foxesworld.cge.ue.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.File;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Field;
+import java.lang.reflect.InvocationTargetException;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * Main menu state — upgraded for AAA feel:
- *  - smooth DOF transitions (blend)
- *  - Bloom filter
- *  - asynchronous background loading via Application.enqueue()
- *  - robust lifecycle and safe cleanup
- *  - ambient + directional lights configured for cinematic look
+ * - smooth DOF transitions (blend)
+ * - Bloom filter
+ * - asynchronous background loading via Application.enqueue()
+ * - robust lifecycle and safe cleanup
+ * - ambient + directional lights configured for cinematic look
  */
 public final class MainMenuAppState extends BaseAppState {
 
@@ -33,6 +39,9 @@ public final class MainMenuAppState extends BaseAppState {
 
     private static final String MAIN_MENU_XML = "assets/Interface/main_menu.xml";
 
+    private Settings settingsInstance;
+    private final Class<?> settingsClass;
+    private final Path settingsPath = Path.of(new File("settings.json").toURI());
     private XmlMenuBuilder builder;
     private ViceMenuBackground background;
     private MenuScreenHandler screenHandler;
@@ -57,13 +66,20 @@ public final class MainMenuAppState extends BaseAppState {
     private AmbientLight ambientLight;
     private DirectionalLight directionalLight;
 
-    public MainMenuAppState() { }
+    public MainMenuAppState(Class<?> settingsClass) {
+        this.settingsClass = settingsClass;
+    }
 
     @Override
     protected void initialize(Application app) {
         this.calistaGameEngine = (CalistaGameEngine) app;
-        this.builder = new XmlMenuBuilder((CalistaGameEngine) getApplication());
+        this.builder = new XmlMenuBuilder(this);
         this.screenHandler = new MenuScreenHandler(this);
+        SettingsManager settingsManager = new SettingsManager(settingsPath.toString());
+        if(settingsPath.toFile().exists()) {
+            LOG.info("Loading settings from {}", settingsPath);
+            settingsInstance = settingsManager.load();
+        }
 
         // Prepare post processor and filters but don't attach yet
         fpp = new FilterPostProcessor(app.getAssetManager());
@@ -87,6 +103,23 @@ public final class MainMenuAppState extends BaseAppState {
 
         LOG.info("MainMenuAppState initialized (DOF + Bloom configured)");
     }
+
+    public Object getNestedFieldValue(Object obj, String... fieldNames) {
+        Object current = obj;
+        for (String fieldName : fieldNames) {
+            Field f = null;
+            try {
+                f = current.getClass().getDeclaredField(fieldName);
+
+                f.setAccessible(true);
+                current = f.get(current);
+            } catch (NoSuchFieldException | IllegalAccessException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        return current;
+    }
+
 
     @Override
     protected void cleanup(Application application) {
@@ -191,7 +224,11 @@ public final class MainMenuAppState extends BaseAppState {
     public void showSettingsScreen() {
         // enable DOF blend target — UI will call setDofEnabledSmooth(true) already
         setDofEnabledSmooth(true);
-        if (screenHandler != null) screenHandler.showSettings();
+        screenHandler.showSettings();
+    }
+
+    public void showAboutScreen() {
+        screenHandler.showAbout();
     }
 
     public void showMainMenuScreen() {
@@ -266,7 +303,11 @@ public final class MainMenuAppState extends BaseAppState {
 
         // cleanup UI
         if (screenHandler != null) {
-            try { screenHandler.cleanup(); } catch (Exception ex) { LOG.warn("screenHandler cleanup error", ex); }
+            try {
+                screenHandler.cleanup();
+            } catch (Exception ex) {
+                LOG.warn("screenHandler cleanup error", ex);
+            }
             screenHandler = null;
         }
 
@@ -287,7 +328,7 @@ public final class MainMenuAppState extends BaseAppState {
 
         // remove post processor
         try {
-            ((SimpleApplication) getApplication()).getViewPort().removeProcessor(fpp);
+            getApplication().getViewPort().removeProcessor(fpp);
         } catch (Exception ex) {
             LOG.warn("Failed to remove FPP from viewport", ex);
         }
@@ -300,7 +341,7 @@ public final class MainMenuAppState extends BaseAppState {
     }
 
     // Expose helpers for other systems
-    public CalistaGameEngine getCalistaGameEngine() {
+    public CalistaGameEngine getGameEngine() {
         return calistaGameEngine;
     }
 
@@ -310,5 +351,21 @@ public final class MainMenuAppState extends BaseAppState {
 
     public boolean isBackgroundReady() {
         return backgroundReady.get();
+    }
+
+    public Path getSettingsPath() {
+        return settingsPath;
+    }
+
+    public Class<?> getSettingsClass() {
+        return settingsClass;
+    }
+
+    public Object getSettingsInstance() {
+        return settingsInstance;
+    }
+
+    public void setSettingsInstance(Settings settingsInstance) {
+        this.settingsInstance = settingsInstance;
     }
 }

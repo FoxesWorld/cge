@@ -200,6 +200,11 @@ public final class ViceCheckbox extends UIComponent implements InteractiveCompon
     @Override public void handleMouseRelease() {}
     public void setPosition(float x, float y) { setLocalTranslation(x, y, 0); }
     public boolean isChecked() { return isChecked; }
+
+    public void setChecked(boolean checked) {
+        isChecked = checked;
+    }
+
     public String getBind() { return bind; }
 
     @Override

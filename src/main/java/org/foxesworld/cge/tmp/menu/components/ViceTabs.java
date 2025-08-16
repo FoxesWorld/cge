@@ -121,7 +121,7 @@ public final class ViceTabs extends UIComponent implements InteractiveComponent 
     }
 
     private Geometry createBackground(ColorRGBA color, String name) {
-        AssetManager am = buildContext.app().getAssetManager();
+        AssetManager am = buildContext.mainMenuAppState().getGameEngine().getAssetManager();
         Material mat = new Material(am, "Common/MatDefs/Misc/Unshaded.j3md");
         mat.setColor("Color", color);
         mat.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
@@ -142,7 +142,7 @@ public final class ViceTabs extends UIComponent implements InteractiveComponent 
     public void addTab(TabXml tabXml, Node content, List<UIComponent> createdObjects) {
         int index = tabs.size();
         String name = "tab-" + index;
-        ViceButton button = new ViceButton(name, buildContext.app().getAssetManager(), tabXml.title, buttonStyle,
+        ViceButton button = new ViceButton(name, buildContext.mainMenuAppState().getGameEngine().getAssetManager(), tabXml.title, buttonStyle,
                 () -> selectTab(index), tabXml.iconPath, tabXml.iconSize);
 
         // сохраняем таб, но не прикрепляем contentNode — это сделается в selectTab
@@ -379,7 +379,7 @@ public final class ViceTabs extends UIComponent implements InteractiveComponent 
             tabs.get(foundIndex).button.setHovered(true);
             // play sound — buildContext может вернуть null-менеджер, но по контракту он должен существовать
             try {
-                buildContext.app().getSoundManager().play("ui.toggle");
+                buildContext.mainMenuAppState().getGameEngine().getSoundManager().play("ui.toggle");
             } catch (Exception ignored) {
             }
         }

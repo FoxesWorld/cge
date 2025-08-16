@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<menu>
+    <screen>
+
+
+        <panel id="settings" anchor="CENTER" spacing="20" dpiScale="1.0" width="95%" bgColor="#000000" cornerRadius="20" bgAlpha="0.95">
+            <components>
+                <button iconPath="assets/Interface/ui/icons/back.png" iconSize="40" action="org.foxesworld.cge.tmp.menu.actions.GoBackToMainMenuAction" text="BACK" />
+                <text id="version" fontPath="assets/Interface/fonts/FSElliotPro.ttf" text="Calista Game Engine (CGE) — это кастомный игровой движок на Java/JME3/LWJGL, созданный для высококлассных проектов уровня AAA. Он разработан с нуля с упором на модульность, производительность и гибкость, чтобы любой компонент игры можно было подменить или расширить без переработки всего проекта." color="#FFFFFF" fontSize="15vw" />
+            </components>
+        </panel>
+    </screen>
+</menu>

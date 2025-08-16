@@ -23,11 +23,11 @@
 
                     <!-- ТРЕТЬЯ ВКЛАДКА: УПРАВЛЕНИЕ -->
                     <tab iconPath="assets/Interface/ui/icons/process.png" title="CONTROLS">
-                        <slider text="MOUSE SENSITIVITY" x="50" value="0.8" bind="audio.master"/>
+                        <slider text="MOUSE SENSITIVITY" x="50" value="0.8" bind="controls.sensitivity"/>
                         <text text="KEY BINDINGS..." fontSize="28vw" x="50"/>
                     </tab>
                 </tabs>
-                <button id="quit" action="org.foxesworld.cge.tmp.menu.actions.PlaySound" iconPath="assets/Interface/ui/icons/apply.png" iconSize="40" height="95" text="Применить" />
+                <button id="quit" action="org.foxesworld.cge.tmp.menu.actions.SaveSettingsAction" iconPath="assets/Interface/ui/icons/apply.png" iconSize="40" height="95" text="Применить" />
             </components>
         </panel>
     </screen>

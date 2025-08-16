@@ -48,7 +48,7 @@ public class PanelBuilder implements ComponentBuilder<PanelXml> {
         Panel.Style style = new Panel.Style(bgColor, cornerRadius);
 
         // === Create Panel ===
-        Panel panel = new Panel(panelId, context.app(), style, padding, spacing);
+        Panel panel = new Panel(panelId, context.mainMenuAppState().getGameEngine(), style, padding, spacing);
         panel.setDpiScale(model.getDpiScale());
 
         // === Set Anchor ===

@@ -10,7 +10,6 @@ import com.jme3.scene.shape.Quad;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Unmarshaller;
-import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.utils.ColorUtils;
 import org.foxesworld.cge.tmp.menu.components.UIComponent;
 import org.foxesworld.cge.tmp.menu.xml.*;
@@ -31,8 +30,8 @@ public final class XmlMenuBuilder {
     private final ComponentRegistry registry;
     private final JAXBContext jaxbContext;
 
-    public XmlMenuBuilder(CalistaGameEngine app) {
-        this.context = new BuildContext(app);
+    public XmlMenuBuilder(MainMenuAppState mainMenuAppState) {
+        this.context = new BuildContext(mainMenuAppState);
         this.registry = new ComponentRegistry(this);
         this.jaxbContext = createJaxbContext();
     }
@@ -91,7 +90,7 @@ public final class XmlMenuBuilder {
     }
 
     private void createScreenBackground(ScreenXml model, Node parent) {
-        Camera camera = context.app().getCamera();
+        Camera camera = context.mainMenuAppState().getGameEngine().getCamera();
         Quad backgroundQuad = new Quad(camera.getWidth(), camera.getHeight());
         Geometry backgroundGeom = new Geometry("ScreenBackground", backgroundQuad);
         ColorRGBA color = ColorRGBA.Black;
@@ -101,11 +100,15 @@ public final class XmlMenuBuilder {
             LOGGER.error("Invalid HEX color format for bgColor: '{}'. Using default.", model.bgColor);
         }
         if (model.bgAlpha != null) color.a = model.bgAlpha;
-        Material mat = new Material(context.app().getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
+        Material mat = new Material(context.mainMenuAppState().getGameEngine().getAssetManager(), "Common/MatDefs/Misc/Unshaded.j3md");
         mat.setColor("Color", color);
         mat.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
         backgroundGeom.setMaterial(mat);
         backgroundGeom.setLocalTranslation(0, 0, -1);
         parent.attachChild(backgroundGeom);
+    }
+
+    public BuildContext getContext() {
+        return context;
     }
 }

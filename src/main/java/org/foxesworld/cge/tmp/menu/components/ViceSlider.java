@@ -52,7 +52,6 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
     private TrueTypeContainer ttc;
 
     private final AssetManager assetManager;
-    private final String bind;
 
     private float value;
     private float displayedValue;
@@ -369,5 +368,9 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
     @Override
     public String getClickSound() {
         return "ui.press";
+    }
+
+    public float getValue() {
+        return value;
     }
 }

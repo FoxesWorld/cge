@@ -1,6 +1,5 @@
 package org.foxesworld.cge.tmp.menu;
 
-import com.jme3.audio.AudioNode;
 import com.jme3.input.InputManager;
 import com.jme3.input.MouseInput;
 import com.jme3.input.controls.ActionListener;
@@ -9,7 +8,6 @@ import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.math.Vector2f;
 import com.jme3.scene.Node;
-import com.jme3.scene.shape.Quad;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.tmp.menu.components.UIComponent;
 import org.foxesworld.cge.tmp.menu.components.utils.InteractiveComponent;
@@ -25,6 +23,7 @@ import java.util.Comparator;
 public final class MenuScreenHandler {
     private static final String MAIN_MENU_XML = "assets/Interface/main_menu.xml";
     private static final String SETTINGS_MENU_XML = "assets/Interface/settings_menu.xml";
+    private static final String ABOUT_XML = "assets/Interface/about.xml";
     private final Node guiNode;
     private final CalistaGameEngine engine;
     private final XmlMenuBuilder builder;
@@ -35,7 +34,7 @@ public final class MenuScreenHandler {
      * Создаёт обработчик экранов.
      */
     public MenuScreenHandler(MainMenuAppState app) {
-        this.engine = app.getCalistaGameEngine();
+        this.engine = app.getGameEngine();
         this.guiNode = engine.getGuiNode();
         this.builder = app.getBuilder();
         this.inputHandler = new InputHandler(engine.getInputManager());
@@ -54,7 +53,11 @@ public final class MenuScreenHandler {
     public void showMainMenu() { switchScreen(MAIN_MENU_XML); }
 
     /** Переход к настройкам. */
-    public void showSettings() { switchScreen(SETTINGS_MENU_XML); }
+    public void showSettings() {
+        switchScreen(SETTINGS_MENU_XML);
+    }
+
+    public void showAbout() { switchScreen(ABOUT_XML); }
 
     private void switchScreen(String xml) {
         if (currentMenu != null && currentMenu.uiNode() != null) {

@@ -29,7 +29,7 @@ public class TextBuilder implements ComponentBuilder<TextXml> {
                 model.x,
                 model.y,
                 model.alignX,
-                context.app().getCamera()
+                context.mainMenuAppState().getGameEngine().getCamera()
         );
         title.setPosition(pos.x, pos.y);
         if(model.getAnchor() != null) {

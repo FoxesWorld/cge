@@ -20,11 +20,14 @@ import com.jme3.texture.Texture2D;
 import com.jme3.ui.Picture;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.tmp.menu.MainMenuAppState;
+import org.foxesworld.cge.ue.Settings;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -103,6 +106,7 @@ public class LoadingAppState extends BaseAppState {
     }
 
     private void registerInputs() {
+        inputManager.setCursorVisible(true);
         if (isSkippable) {
             inputManager.addMapping(ACTION_SKIP, new MouseButtonTrigger(MouseInput.BUTTON_LEFT));
             inputManager.addListener(skipListener, ACTION_SKIP);
@@ -246,7 +250,7 @@ public class LoadingAppState extends BaseAppState {
     }
 
     private static AppState createStateChain(List<LogoConfig> configs) {
-        AppState nextState = new MainMenuAppState();
+        AppState nextState = new MainMenuAppState(Settings.class);
         for (int i = configs.size() - 1; i >= 0; i--) {
             nextState = new LoadingAppState(configs.get(i), nextState);
         }
