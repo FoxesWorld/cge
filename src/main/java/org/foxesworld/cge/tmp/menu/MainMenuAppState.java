@@ -13,14 +13,11 @@ import com.jme3.post.filters.DepthOfFieldFilter;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.tmp.menu.components.ViceMenuBackground;
 import org.foxesworld.cge.tmp.menu.xml.SceneXml;
-import org.foxesworld.cge.ue.Settings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.File;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -39,7 +36,7 @@ public final class MainMenuAppState extends BaseAppState {
 
     private static final String MAIN_MENU_XML = "assets/Interface/main_menu.xml";
 
-    private Settings settingsInstance;
+    public static Settings settingsInstance;
     private final Class<?> settingsClass;
     private final Path settingsPath = Path.of(new File("settings.json").toURI());
     private XmlMenuBuilder builder;
@@ -76,9 +73,12 @@ public final class MainMenuAppState extends BaseAppState {
         this.builder = new XmlMenuBuilder(this);
         this.screenHandler = new MenuScreenHandler(this);
         SettingsManager settingsManager = new SettingsManager(settingsPath.toString());
-        if(settingsPath.toFile().exists()) {
+        if(doesSettingsExist()) {
             LOG.info("Loading settings from {}", settingsPath);
             settingsInstance = settingsManager.load();
+        } else {
+            settingsInstance = new Settings();
+            settingsManager.save(settingsInstance);
         }
 
         // Prepare post processor and filters but don't attach yet
@@ -104,13 +104,12 @@ public final class MainMenuAppState extends BaseAppState {
         LOG.info("MainMenuAppState initialized (DOF + Bloom configured)");
     }
 
-    public Object getNestedFieldValue(Object obj, String... fieldNames) {
-        Object current = obj;
+    public static Object getSettingsValue(String... fieldNames) {
+        Object current = settingsInstance;
         for (String fieldName : fieldNames) {
-            Field f = null;
+            Field f;
             try {
                 f = current.getClass().getDeclaredField(fieldName);
-
                 f.setAccessible(true);
                 current = f.get(current);
             } catch (NoSuchFieldException | IllegalAccessException e) {
@@ -367,5 +366,9 @@ public final class MainMenuAppState extends BaseAppState {
 
     public void setSettingsInstance(Settings settingsInstance) {
         this.settingsInstance = settingsInstance;
+    }
+
+    public boolean doesSettingsExist(){
+        return settingsPath.toFile().exists();
     }
 }

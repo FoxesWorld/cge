@@ -24,8 +24,10 @@ public class CheckboxBuilder implements ComponentBuilder<CheckboxXml> {
 
         float size = MenuUtils.parseSize(model.size, context.mainMenuAppState().getGameEngine().getCamera().getHeight());
         checkbox.setSize(size);
-        String[] binds = model.bind.split("\\.");
-        checkbox.setChecked((Boolean) context.mainMenuAppState().getNestedFieldValue(context.mainMenuAppState().getSettingsInstance(), binds[0], binds[1]));
+
+            String[] binds = model.bind.split("\\.");
+            checkbox.setChecked((Boolean) context.mainMenuAppState().getSettingsValue(binds[0], binds[1]));
+
         Vector2f pos = MenuUtils.calculatePosition(
                 model.x,
                 model.y,

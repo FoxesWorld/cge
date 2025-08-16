@@ -59,7 +59,6 @@ public final class ViceCheckbox extends UIComponent implements InteractiveCompon
     public ViceCheckbox(AssetManager assets, String fontPath, CheckboxXml checkboxXml) {
         super(checkboxXml.id);
         this.bind = checkboxXml.bind;
-        this.isChecked = checkboxXml.checked;
 
         setName("ViceCheckbox:" + id);
 

@@ -1,14 +1,15 @@
 {
   "graphics": {
     "vsync": true,
-    "shadows": false,
-    "bloom": true
+    "shadows": true,
+    "bloom": true,
+    "ssao": true
   },
   "audio": {
     "master": 1.0,
-    "music": 0.0
+    "music": 0.18400005
   },
   "controls": {
-    "sensitivity": 1.0
+    "sensitivity": 0.5
   }
 }

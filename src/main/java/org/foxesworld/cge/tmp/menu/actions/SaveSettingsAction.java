@@ -4,11 +4,10 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.jme3.app.Application;
 import org.foxesworld.cge.tmp.menu.MainMenuAppState;
-import org.foxesworld.cge.tmp.menu.actions.MenuAction;
 import org.foxesworld.cge.tmp.menu.components.UIComponent;
 import org.foxesworld.cge.tmp.menu.components.ViceCheckbox;
 import org.foxesworld.cge.tmp.menu.components.ViceSlider;
-import org.foxesworld.cge.ue.Settings;
+import org.foxesworld.cge.tmp.menu.Settings;
 
 import java.io.IOException;
 import java.lang.reflect.Constructor;
@@ -23,11 +22,11 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * Более компактная и оптимизированная версия SaveSettingsAction.
- * - Меньше дублирования рефлексии
- * - Надёжная сборка сериализуемого объекта (static + instance)
- * - Корректная запись JSON через Gson
- * - Более явные логи для отладки
+ * A more compact and optimized version of SaveSettingsAction.
+ * - Less reflection duplication
+ * - Reliable assembly of the serializable object (static + instance)
+ * - Correct JSON writing via Gson
+ * - Clearer logs for debugging
  */
 public class SaveSettingsAction implements MenuAction {
 
@@ -35,8 +34,8 @@ public class SaveSettingsAction implements MenuAction {
     private MainMenuAppState mainMenuAppState;
 
     @Override
-    public void execute(Application app) {
-        mainMenuAppState = app.getStateManager().getState(MainMenuAppState.class);
+    public void execute(MainMenuAppState mainMenuAppState) {
+        this.mainMenuAppState = mainMenuAppState;
         if (mainMenuAppState == null) throw new IllegalStateException("MainMenuAppState not found");
 
         settingsClass = mainMenuAppState.getSettingsClass();
@@ -57,7 +56,7 @@ public class SaveSettingsAction implements MenuAction {
             try {
                 setFieldValue(mainMenuAppState.getSettingsInstance(), path, value);
             } catch (Exception ex) {
-                logErr("Не удалось установить %s: %s", bind, ex.getMessage());
+                logErr("Failed to set %s: %s", bind, ex.getMessage());
             }
         }
 
@@ -65,7 +64,7 @@ public class SaveSettingsAction implements MenuAction {
         try {
             saveSettingsJsonToFileWithGson(mainMenuAppState.getSettingsPath());
         } catch (Exception e) {
-            logErr("Ошибка при сохранении JSON: %s", e.getMessage());
+            logErr("Error saving JSON: %s", e.getMessage());
         }
     }
 
@@ -77,7 +76,7 @@ public class SaveSettingsAction implements MenuAction {
         Object currentInstance = rootInstance;
         Class<?> currentClass = (rootInstance != null) ? rootInstance.getClass() : settingsClass;
 
-        // Пройти все части пути, кроме последней
+        // Walk all parts of the path except the last
         for (int i = 0; i < path.length - 1; i++) {
             String part = path[i];
 
@@ -91,12 +90,12 @@ public class SaveSettingsAction implements MenuAction {
                         Class<?> nestedType = getter.getReturnType();
                         nested = createAndAssignNested(currentInstance, currentClass, part, nestedType, getter);
                     }
-                    if (nested == null) throw new RuntimeException("Не удалось получить nested instance для " + part);
+                    if (nested == null) throw new RuntimeException("Failed to obtain nested instance for " + part);
                     currentInstance = nested;
                     currentClass = currentInstance.getClass();
                     continue;
                 }
-                throw new NoSuchFieldException("Не найден nested field '" + part + "' in " + currentClass.getName());
+                throw new NoSuchFieldException("Nested field '" + part + "' not found in " + currentClass.getName());
             }
 
             f.setAccessible(true);
@@ -117,7 +116,7 @@ public class SaveSettingsAction implements MenuAction {
             currentClass = currentInstance.getClass();
         }
 
-        // Устанавливаем последнее поле
+        // Set the last field
         String last = path[path.length - 1];
 
         Field target = findFieldInClassHierarchy(currentClass, last);
@@ -129,7 +128,7 @@ public class SaveSettingsAction implements MenuAction {
                 currentInstance = ensureInstance(currentInstance, currentClass);
                 target.set(currentInstance, converted);
             }
-            log("Установлено %s = %s", String.join(".", path), converted);
+            log("Set %s = %s", String.join(".", path), converted);
             return;
         }
 
@@ -138,28 +137,28 @@ public class SaveSettingsAction implements MenuAction {
             Class<?> param = setter.getParameterTypes()[0];
             Object converted = convertValueToFieldType(value, param);
             invokeSetter(setter, ensureInstance(currentInstance, currentClass), converted);
-            log("Установлено через сеттер %s = %s", String.join(".", path), converted);
+            log("Set via setter %s = %s", String.join(".", path), converted);
             return;
         }
 
-        // 마지막 попытка — static поле в корневом классе
+        // Final attempt — static field in the root class
         Field staticCandidate = findFieldInClassHierarchy(settingsClass, last);
         if (staticCandidate != null && Modifier.isStatic(staticCandidate.getModifiers())) {
             staticCandidate.setAccessible(true);
             Object converted = convertValueToFieldType(value, staticCandidate.getType());
             staticCandidate.set(null, converted);
-            log("Установлено static %s = %s", last, converted);
+            log("Set static %s = %s", last, converted);
             return;
         }
 
-        throw new NoSuchFieldException("Не найдено поле/сеттер '" + last + "' в " + currentClass.getName());
+        throw new NoSuchFieldException("Field/setter '" + last + "' not found in " + currentClass.getName());
     }
 
     // ---------------------- serialization ----------------------
 
     private void saveSettingsJsonToFileWithGson(Path out) throws IOException {
         Object toSerialize = buildSerializableSettingsObject();
-        if (toSerialize == null) throw new IllegalStateException("Нет объекта настроек для сериализации");
+        if (toSerialize == null) throw new IllegalStateException("No settings object to serialize");
 
         Gson gson = new GsonBuilder().setPrettyPrinting().create();
         String json = gson.toJson(toSerialize);
@@ -171,14 +170,14 @@ public class SaveSettingsAction implements MenuAction {
     }
 
     /**
-     * Собираем Map из static полей (graphicsSettings -> graphics) и дополняем их из instance, если он есть.
+     * Collect a Map from static fields (graphicsSettings -> graphics) and supplement them with instance fields if present.
      */
     private Object buildSerializableSettingsObject() {
         if (settingsClass == null) return null;
 
         Map<String, Object> result = new LinkedHashMap<>();
 
-        // static поля
+        // static fields
         for (Field f : settingsClass.getDeclaredFields()) {
             try {
                 if (!Modifier.isStatic(f.getModifiers())) continue;
@@ -231,7 +230,7 @@ public class SaveSettingsAction implements MenuAction {
             mainMenuAppState.setSettingsInstance((Settings) settingsClass.getDeclaredConstructor().newInstance());
         } catch (Exception e) {
             mainMenuAppState.setSettingsInstance(null);
-            logErr("Не удалось создать instance: %s", e.getMessage());
+            logErr("Failed to create instance: %s", e.getMessage());
         }
     }
 
@@ -339,7 +338,7 @@ public class SaveSettingsAction implements MenuAction {
             } catch (Exception ignored) {
             }
         }
-        return created; // вернуть даже если не удалось записать — читающие методы всё равно увидят его
+        return created; // return even if we failed to write it — readers will still see it
     }
 
     private void assignField(Field f, Object onInstance, Object value, boolean isStatic) throws IllegalAccessException {
@@ -355,7 +354,7 @@ public class SaveSettingsAction implements MenuAction {
         if (Modifier.isStatic(f.getModifiers())) return f.get(null);
         if (currentInstance == null) {
             currentInstance = createInstance(currentClass, null);
-            if (currentInstance == null) throw new RuntimeException("Не удалось создать экземпляр " + currentClass.getName());
+            if (currentInstance == null) throw new RuntimeException("Failed to create instance " + currentClass.getName());
         }
         return f.get(currentInstance);
     }
@@ -363,7 +362,7 @@ public class SaveSettingsAction implements MenuAction {
     private Object ensureInstance(Object inst, Class<?> cls) {
         if (inst != null) return inst;
         Object created = createInstance(cls, null);
-        if (created == null) throw new RuntimeException("Невозможно создать экземпляр для " + cls.getName());
+        if (created == null) throw new RuntimeException("Unable to create instance for " + cls.getName());
         return created;
     }
 
@@ -408,7 +407,7 @@ public class SaveSettingsAction implements MenuAction {
             }
             return null;
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            logErr("Ошибка создания %s: %s", clazz.getName(), e.getMessage());
+            logErr("Failed to create %s: %s", clazz.getName(), e.getMessage());
             return null;
         }
     }
@@ -436,7 +435,7 @@ public class SaveSettingsAction implements MenuAction {
                 if (fieldType == byte.class || fieldType == Byte.class) return Byte.parseByte(s);
                 if (fieldType == char.class || fieldType == Character.class) return s.length() > 0 ? s.charAt(0) : '\0';
             } catch (NumberFormatException ex) {
-                throw new IllegalArgumentException("Невозможно конвертировать '" + s + "' в " + fieldType.getSimpleName(), ex);
+                throw new IllegalArgumentException("Unable to convert '" + s + "' to " + fieldType.getSimpleName(), ex);
             }
         }
 

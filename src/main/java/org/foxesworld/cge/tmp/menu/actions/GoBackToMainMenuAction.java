@@ -10,13 +10,11 @@ public class GoBackToMainMenuAction implements MenuAction {
     private static final Logger LOGGER = LoggerFactory.getLogger(GoBackToMainMenuAction.class);
 
     @Override
-    public void execute(Application app) {
-        AppStateManager stateManager = app.getStateManager();
-        MainMenuAppState menuState = stateManager.getState(MainMenuAppState.class);
+    public void execute(MainMenuAppState mainMenuAppState) {
 
-        if (menuState != null) {
+        if (mainMenuAppState != null) {
             LOGGER.info("Executing action: Go Back To Main Menu");
-            menuState.showMainMenuScreen();
+            mainMenuAppState.showMainMenuScreen();
         } else {
             LOGGER.warn("Cannot go back to main menu: MainMenuAppState is not active.");
         }

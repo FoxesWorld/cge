@@ -2,10 +2,8 @@ package org.foxesworld.cge.tmp.menu.components;
 
 import com.atr.jme.font.shape.TrueTypeContainer;
 import com.jme3.app.Application;
-import com.jme3.asset.AssetManager;
 import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
-import com.jme3.scene.Node;
 import org.foxesworld.cge.core.io.TTFrenderer;
 import org.foxesworld.cge.core.utils.ColorUtils;
 import org.foxesworld.cge.tmp.menu.BuildContext;
@@ -16,10 +14,8 @@ import org.slf4j.LoggerFactory;
 import java.util.Optional;
 
 /**
- * UI текстовый элемент с адаптивным масштабированием и выравниванием
- * Оптимизирован: шрифт создаётся один раз, при ресайзе масштабируется геометрия
- *
- * Теперь поддерживает текстовый Style (вложенный класс Style).
+ * UI текстовый элемент с улучшенным позиционированием и масштабированием.
+ * Поддерживает layout box (setSize), режим scaleToFit, pixel snapping и стиль.
  */
 public final class ViceText extends UIComponent implements InteractiveComponent {
 
@@ -38,23 +34,32 @@ public final class ViceText extends UIComponent implements InteractiveComponent 
 
     private int baseWidth;
     private int baseHeight;
-    private float baseFontSize;
+    private float baseFontSize; // base px used when generating font
 
     private int lastWindowWidth = -1;
     private int lastWindowHeight = -1;
 
     private Anchor anchor = Anchor.CENTER;
-    private Vector2f position = new Vector2f();
+    private Vector2f position = new Vector2f(); // position of layout box origin (top-left)
 
-    // новый: стиль текста
     private Style style;
 
-    // Конструктор: прежний сохраняется и использует стиль из xml или дефолтный
+    // layout box: where text should be laid out (in pixels, parent coordinates)
+    // By default equals full window size.
+    private float layoutWidth = Float.POSITIVE_INFINITY;
+    private float layoutHeight = Float.POSITIVE_INFINITY;
+
+    // behavior flags
+    private boolean scaleToFit = false; // если true — масштабируем текст чтобы он поместился в layout
+    private boolean pixelSnap = true;    // округлять позицию до пикселя
+
+    // текущ applied scale (localScale applied to ttc)
+    private float appliedScale = 1f;
+
     public ViceText(BuildContext context, TextXml textXml) {
         this(context, textXml, Style.fromTextXml(textXml));
     }
 
-    // Новый: конструктор с явным стилем
     public ViceText(BuildContext context, TextXml textXml, Style style) {
         super(textXml.id);
         this.app = context.mainMenuAppState().getGameEngine();
@@ -62,28 +67,34 @@ public final class ViceText extends UIComponent implements InteractiveComponent 
         this.fontSizeRaw = textXml.fontSize;
         this.style = style != null ? style : Style.defaultStyle();
         this.ttfRenderer = new TTFrenderer(app.getAssetManager());
-        //this.textNode = new Node("ViceText: " + textXml.text);
 
         this.baseWidth = app.getContext().getSettings().getWidth();
         this.baseHeight = app.getContext().getSettings().getHeight();
         this.baseFontSize = parseFontSize(fontSizeRaw, baseWidth, baseHeight) * getDPIScale();
 
+        // default layout = full window
+        this.layoutWidth = baseWidth;
+        this.layoutHeight = baseHeight;
+
         createFontOnce();
-        updateScale();
+        updateScaleAndPosition();
     }
 
     private void createFontOnce() {
-        // Генерируем шрифт согласно style
-        int fontSizePx = Math.max(6, Math.round(baseFontSize)); // нижняя граница
+        int fontSizePx = Math.max(6, Math.round(baseFontSize));
         ttfRenderer.generateFont(style.fontPath, style.fontWeight, fontSizePx);
         ttfRenderer.generateText(style.color, textXml.text);
         ttc = ttfRenderer.getTextGeometry();
         this.attachChild(ttc);
+
+        // ensure neutral scale initially
+        appliedScale = 1f;
+        ttc.setLocalScale(appliedScale);
     }
 
     private float getDPIScale() {
         int baseDpi = 96;
-        int dpi = app.getContext().getSettings().getSamples(); // Если хранится в Settings
+        int dpi = app.getContext().getSettings().getSamples();
         if (dpi <= 0) dpi = baseDpi;
         return dpi / (float) baseDpi;
     }
@@ -93,7 +104,6 @@ public final class ViceText extends UIComponent implements InteractiveComponent 
                 .map(String::trim)
                 .map(String::toLowerCase)
                 .orElse("");
-
         try {
             if (value.endsWith("vmin")) {
                 int minSide = Math.min(width, height);
@@ -115,54 +125,109 @@ public final class ViceText extends UIComponent implements InteractiveComponent 
         }
     }
 
-    private void updateScale() {
+    /**
+     * Recalculate scale and position. Called on resize, setSize, setAnchor/setPosition etc.
+     * - scaleFactor is desired size / baseFontSize
+     * - if scaleToFit enabled, we additionally clamp scale so text fits in layout
+     */
+    private void updateScaleAndPosition() {
+        if (ttc == null) return;
+
         int currentWidth = app.getContext().getSettings().getWidth();
         int currentHeight = app.getContext().getSettings().getHeight();
 
         float currentSize = parseFontSize(fontSizeRaw, currentWidth, currentHeight) * getDPIScale();
-        float scaleFactor = currentSize / baseFontSize;
+        float desiredScale = currentSize / baseFontSize;
 
-        if (ttc != null) {
-            ttc.setLocalScale(scaleFactor);
-            updatePosition();
+        // neutral text geometry sizes (without localScale)
+        float geomW = ttc.getTextWidth();
+        float geomH = ttc.getTextHeight();
+
+        float finalScale = desiredScale;
+
+        if (scaleToFit && geomW > 0f && geomH > 0f) {
+            float maxW = Float.isInfinite(layoutWidth) ? Float.POSITIVE_INFINITY : layoutWidth;
+            float maxH = Float.isInfinite(layoutHeight) ? Float.POSITIVE_INFINITY : layoutHeight;
+
+            // compute scale that would make geometry fit into layout
+            float scaleForWidth = maxW / geomW;
+            float scaleForHeight = maxH / geomH;
+
+            float fitScale = Math.min(scaleForWidth, scaleForHeight);
+
+            // only scale down (avoid upscaling beyond desiredScale unless fitScale > desiredScale and we want upscaling)
+            finalScale = Math.min(desiredScale, fitScale);
+            // if fitScale is huge (layout infinite) then finalScale remains desiredScale
         }
+
+        appliedScale = finalScale;
+
+        ttc.setLocalScale(appliedScale);
+
+        // update position after scale change
+        updatePosition();
     }
 
     private void updatePosition() {
-        float textWidth = getWidth();
+        if (ttc == null) return;
+
+        float textWidth = getWidth();   // already multiplied by localScale
         float textHeight = getHeight();
-        float x = position.x;
-        float y = position.y;
+
+        // layout origin (top-left) is position.x, position.y
+        float layoutX = position.x;
+        float layoutY = position.y;
+
+        float tx = layoutX;
+        float ty = layoutY;
 
         switch (anchor) {
             case TOP_LEFT:
-                this.setLocalTranslation(x, y, 0);
+                tx = layoutX;
+                ty = layoutY;
                 break;
             case TOP_CENTER:
-                this.setLocalTranslation(x - textWidth / 2f, y, 0);
+                tx = layoutX + (layoutWidth - textWidth) / 2f;
+                ty = layoutY;
                 break;
             case TOP_RIGHT:
-                this.setLocalTranslation(x - textWidth, y, 0);
+                tx = layoutX + layoutWidth - textWidth;
+                ty = layoutY;
                 break;
             case CENTER_LEFT:
-                this.setLocalTranslation(x, y - textHeight / 2f, 0);
+                tx = layoutX;
+                ty = layoutY + (layoutHeight - textHeight) / 2f;
                 break;
             case CENTER:
-                this.setLocalTranslation(x - textWidth / 2f, y - textHeight / 2f, 0);
+                tx = layoutX + (layoutWidth - textWidth) / 2f;
+                ty = layoutY + (layoutHeight - textHeight) / 2f;
                 break;
             case CENTER_RIGHT:
-                this.setLocalTranslation(x - textWidth, y - textHeight / 2f, 0);
+                tx = layoutX + layoutWidth - textWidth;
+                ty = layoutY + (layoutHeight - textHeight) / 2f;
                 break;
             case BOTTOM_LEFT:
-                this.setLocalTranslation(x, y - textHeight, 0);
+                tx = layoutX;
+                ty = layoutY + layoutHeight - textHeight;
                 break;
             case BOTTOM_CENTER:
-                this.setLocalTranslation(x - textWidth / 2f, y - textHeight, 0);
+                tx = layoutX + (layoutWidth - textWidth) / 2f;
+                ty = layoutY + layoutHeight - textHeight;
                 break;
             case BOTTOM_RIGHT:
-                this.setLocalTranslation(x - textWidth, y - textHeight, 0);
+                tx = layoutX + layoutWidth - textWidth;
+                ty = layoutY + layoutHeight - textHeight;
                 break;
         }
+
+        if (pixelSnap) {
+            tx = Math.round(tx);
+            ty = Math.round(ty);
+        }
+
+        // TrueTypeContainer expects Y-up or Y-down depending on your coordinate system.
+        // Original code used setLocalTranslation(x,y,0) directly. We keep same.
+        this.setLocalTranslation(tx, ty, 0);
     }
 
     @Override
@@ -173,39 +238,32 @@ public final class ViceText extends UIComponent implements InteractiveComponent 
         if (currentWidth != lastWindowWidth || currentHeight != lastWindowHeight) {
             lastWindowWidth = currentWidth;
             lastWindowHeight = currentHeight;
-            updateScale();
+            // if window size changed, layout default (if user didn't call setSize) should track window
+            if (Float.isInfinite(layoutWidth) || Float.isInfinite(layoutHeight)) {
+                layoutWidth = currentWidth;
+                layoutHeight = currentHeight;
+            }
+            updateScaleAndPosition();
         }
     }
 
-    public void setPosition(float x, float y) {
+    // --- public API improvements ---
+
+    /**
+     * Set layout box (in pixels). position is treated as top-left corner of this box.
+     * Use Float.POSITIVE_INFINITY to indicate 'no limit' (default).
+     */
+    @Override
+    public void setSize(float width, float height) {
+        if (width > 0) this.layoutWidth = width; else this.layoutWidth = Float.POSITIVE_INFINITY;
+        if (height > 0) this.layoutHeight = height; else this.layoutHeight = Float.POSITIVE_INFINITY;
+        updateScaleAndPosition();
+    }
+
+    public void setLayoutOrigin(float x, float y) {
         this.position.set(x, y);
-        updatePosition();
+        updateScaleAndPosition();
     }
-
-    public void setAnchor(Anchor anchor) {
-        this.anchor = anchor;
-        updatePosition();
-    }
-
-    @Override
-    public boolean intersects(Vector2f cursor) {
-        return false;
-    }
-
-    @Override
-    public void setActive(boolean active) {}
-
-    @Override
-    public void setHovered(boolean hovered) {}
-
-    @Override
-    public void handleMousePress(Vector2f cursor) {}
-
-    @Override
-    public void handleMouseDrag(Vector2f cursor) {}
-
-    @Override
-    public void handleMouseRelease() {}
 
     @Override
     public float getHeight() {
@@ -214,13 +272,54 @@ public final class ViceText extends UIComponent implements InteractiveComponent 
     }
 
     @Override
-    public void setSize(float width, float height) {}
-
-    @Override
     public float getWidth() {
         if (ttc == null) return 0f;
         return ttc.getTextWidth() * ttc.getLocalScale().x;
     }
+
+    public void setPosition(float x, float y) {
+        setLayoutOrigin(x, y);
+    }
+
+    public void setAnchor(Anchor anchor) {
+        this.anchor = anchor;
+        updateScaleAndPosition();
+    }
+
+    public void setScaleToFit(boolean scaleToFit) {
+        this.scaleToFit = scaleToFit;
+        updateScaleAndPosition();
+    }
+
+    public void setPixelSnap(boolean pixelSnap) {
+        this.pixelSnap = pixelSnap;
+        updateScaleAndPosition();
+    }
+
+    @Override
+    public boolean intersects(Vector2f cursor) {
+        // simple bbox check against layout or text depending on needs
+        float tx = getLocalTranslation().x;
+        float ty = getLocalTranslation().y;
+        float w = getWidth();
+        float h = getHeight();
+        return cursor.x >= tx && cursor.x <= tx + w && cursor.y >= ty && cursor.y <= ty + h;
+    }
+
+    @Override
+    public void setActive(boolean active) { /* noop */ }
+
+    @Override
+    public void setHovered(boolean hovered) { /* noop */ }
+
+    @Override
+    public void handleMousePress(Vector2f cursor) { /* noop */ }
+
+    @Override
+    public void handleMouseDrag(Vector2f cursor) { /* noop */ }
+
+    @Override
+    public void handleMouseRelease() { /* noop */ }
 
     /**
      * Сеттер стиля: регенерирует шрифт/текст в соответствии с новым стилем.
@@ -228,20 +327,20 @@ public final class ViceText extends UIComponent implements InteractiveComponent 
     public void setStyle(Style newStyle) {
         if (newStyle == null) return;
         this.style = newStyle;
-        // удаляем старую геометрию и создаём заново
         if (ttc != null) {
             this.detachChild(ttc);
             ttc = null;
         }
         createFontOnce();
-        updateScale();
+        updateScaleAndPosition();
     }
 
+    // Style class unchanged
     public static final class Style {
         public final String fontPath;
-        public final com.atr.jme.font.util.Style fontWeight; // используй com.atr... полностью
+        public final com.atr.jme.font.util.Style fontWeight;
         public final ColorRGBA color;
-        public final float letterSpacing; // не используется сейчас, но доступно для будущей логики
+        public final float letterSpacing;
         public final float lineSpacing;
         public final boolean useShadow;
         public final ColorRGBA shadowColor;
@@ -281,11 +380,7 @@ public final class ViceText extends UIComponent implements InteractiveComponent 
         public static Style fromTextXml(TextXml xml) {
             String font = Optional.ofNullable(xml.fontPath).filter(s -> !s.isBlank()).orElse("assets/Interface/fonts/Docker One.ttf");
             com.atr.jme.font.util.Style w = com.atr.jme.font.util.Style.Plain;
-            // Если в xml есть поле weight, можно распарсить (просто пример; TextXml может не иметь)
-            // try { w = com.atr.jme.font.util.Style.valueOf(xml.weight.toUpperCase()); } catch(...) {}
-
             ColorRGBA col = ColorUtils.fromHexString(Optional.ofNullable(xml.color).orElse("#FFFFFF"));
-
             return new Style(font, w, col, 0f, 0f, false, new ColorRGBA(0,0,0,0.5f), new Vector2f(1f, -1f));
         }
     }
@@ -293,4 +388,8 @@ public final class ViceText extends UIComponent implements InteractiveComponent 
     public Style getStyle() {
         return style;
     }
+
+    // simple logging helpers
+    private void log(String fmt, Object... args) { System.out.println("[ViceText] " + String.format(fmt, args)); }
+    private void logErr(String fmt, Object... args) { System.err.println("[ViceText] " + String.format(fmt, args)); }
 }

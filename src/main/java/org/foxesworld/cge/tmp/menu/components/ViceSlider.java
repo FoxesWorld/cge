@@ -89,7 +89,6 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
         super(sliderXml.id);
         this.assetManager = assetManager;
         this.bind = sliderXml.bind;
-        this.value = FastMath.clamp(sliderXml.value, 0f, 1f);
         this.displayedValue = this.value;
         this.fillColor = sliderXml.fillColor.isEmpty() ? DEFAULT_FILL_COLOR.clone() : ColorUtils.fromHexString(sliderXml.fillColor);
         this.borderColor = DEFAULT_BORDER_COLOR.clone();

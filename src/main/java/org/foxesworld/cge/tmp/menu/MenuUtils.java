@@ -42,7 +42,7 @@ public final class MenuUtils {
         try {
             Class<?> actionClass = Class.forName(className);
             MenuAction menuAction = (MenuAction) actionClass.getDeclaredConstructor().newInstance();
-            return () -> menuAction.execute(app);
+            return () -> menuAction.execute(app.getStateManager().getState(MainMenuAppState.class));
         } catch (Exception e) {
             LOGGER.error("Failed to create action from class name: '{}'. Button will be inactive.", className, e);
             return () -> {};

@@ -1,15 +1,14 @@
 package org.foxesworld.cge.tmp.menu.actions;
 
-import com.jme3.app.Application;
 import com.jme3.app.state.AppStateManager;
 import org.foxesworld.cge.tmp.menu.MainMenuAppState;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
+@Deprecated
 public class PlaySound implements MenuAction {
 
     @Override
-    public void execute(Application app) {
+
+    public void execute(MainMenuAppState app) {
         AppStateManager stateManager = app.getStateManager();
         MainMenuAppState menuState = stateManager.getState(MainMenuAppState.class);
         menuState.getGameEngine().getSoundManager().play("ui.submit");

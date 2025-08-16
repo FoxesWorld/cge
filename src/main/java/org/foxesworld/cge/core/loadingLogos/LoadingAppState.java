@@ -20,14 +20,12 @@ import com.jme3.texture.Texture2D;
 import com.jme3.ui.Picture;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.tmp.menu.MainMenuAppState;
-import org.foxesworld.cge.ue.Settings;
+import org.foxesworld.cge.tmp.menu.Settings;
 
-import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.lang.reflect.Type;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
 import java.util.List;
 
 /**

@@ -10,13 +10,11 @@ public class OpenAboutAction implements MenuAction {
     private static final Logger LOGGER = LoggerFactory.getLogger(OpenSettingsAction.class);
 
     @Override
-    public void execute(Application app) {
-        AppStateManager stateManager = app.getStateManager();
-        MainMenuAppState menuState = stateManager.getState(MainMenuAppState.class);
+    public void execute(MainMenuAppState menuAppState) {
 
-        if (menuState != null) {
+        if (menuAppState != null) {
             LOGGER.info("Executing action: Open Settings Screen");
-            menuState.showAboutScreen();
+            menuAppState.showAboutScreen();
         } else {
             LOGGER.warn("Cannot open settings: MainMenuAppState is not active.");
         }
