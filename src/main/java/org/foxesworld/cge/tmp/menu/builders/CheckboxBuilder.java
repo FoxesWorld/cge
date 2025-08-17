@@ -3,6 +3,7 @@ package org.foxesworld.cge.tmp.menu.builders;
 import com.jme3.math.Vector2f;
 import com.jme3.scene.Node;
 import org.foxesworld.cge.tmp.menu.BuildContext;
+import org.foxesworld.cge.tmp.menu.MainMenuAppState;
 import org.foxesworld.cge.tmp.menu.MenuUtils;
 import org.foxesworld.cge.tmp.menu.components.ViceButton;
 import org.foxesworld.cge.tmp.menu.components.ViceCheckbox;
@@ -26,7 +27,7 @@ public class CheckboxBuilder implements ComponentBuilder<CheckboxXml> {
         checkbox.setSize(size);
 
             String[] binds = model.bind.split("\\.");
-            checkbox.setChecked((Boolean) context.mainMenuAppState().getSettingsValue(binds[0], binds[1]));
+            checkbox.setChecked((Boolean) MainMenuAppState.getSettingsValue(binds[0], binds[1]));
 
         Vector2f pos = MenuUtils.calculatePosition(
                 model.x,

@@ -2,377 +2,249 @@ package org.foxesworld.cge.tmp.menu.actions;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import com.jme3.app.Application;
 import org.foxesworld.cge.tmp.menu.MainMenuAppState;
+import org.foxesworld.cge.tmp.menu.Settings;
 import org.foxesworld.cge.tmp.menu.components.UIComponent;
 import org.foxesworld.cge.tmp.menu.components.ViceCheckbox;
 import org.foxesworld.cge.tmp.menu.components.ViceSlider;
-import org.foxesworld.cge.tmp.menu.Settings;
 
 import java.io.IOException;
-import java.lang.reflect.Constructor;
-import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
+import java.lang.reflect.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
-import java.util.LinkedHashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
- * A more compact and optimized version of SaveSettingsAction.
- * - Less reflection duplication
- * - Reliable assembly of the serializable object (static + instance)
- * - Correct JSON writing via Gson
- * - Clearer logs for debugging
+ * Lightweight, non-repetitive SaveSettingsAction.
+ * - minimal duplication
+ * - clear small helpers for reflection tasks
+ * - prefers serializing real instance via Gson
  */
-public class SaveSettingsAction implements MenuAction {
+public final class SaveSettingsAction implements MenuAction {
 
-    private Class<?> settingsClass;
     private MainMenuAppState mainMenuAppState;
+    private Class<?> settingsClass;
 
     @Override
     public void execute(MainMenuAppState mainMenuAppState) {
-        this.mainMenuAppState = mainMenuAppState;
-        if (mainMenuAppState == null) throw new IllegalStateException("MainMenuAppState not found");
-
-        settingsClass = mainMenuAppState.getSettingsClass();
+        this.mainMenuAppState = Objects.requireNonNull(mainMenuAppState, "mainMenuAppState");
+        this.settingsClass = mainMenuAppState.getSettingsClass();
         if (settingsClass == null) throw new IllegalStateException("settingsClass is null");
 
-        tryCreateInstance();
+        ensureSettingsInstance();
 
-        for (UIComponent component : mainMenuAppState.getBuilder().getContext().allComponents()) {
-            String bind = component.getBind();
+        // apply UI values to settings instance (or static fields)
+        for (UIComponent comp : mainMenuAppState.getBuilder().getContext().allComponents()) {
+            String bind = comp.getBind();
             if (bind == null || bind.isBlank()) continue;
 
-            Object value = (component instanceof ViceCheckbox c) ? c.isChecked()
-                    : (component instanceof ViceSlider s) ? s.getValue() : null;
-
+            Object value = (comp instanceof ViceCheckbox cb) ? cb.isChecked()
+                    : (comp instanceof ViceSlider s) ? s.getValue() : null;
             if (value == null) continue;
 
-            String[] path = bind.split("\\.");
             try {
-                setFieldValue(mainMenuAppState.getSettingsInstance(), path, value);
-            } catch (Exception ex) {
-                logErr("Failed to set %s: %s", bind, ex.getMessage());
+                setByPath(mainMenuAppState.getSettingsInstance(), bind.split("\\."), value);
+            } catch (Exception e) {
+                logErr("Failed to set '%s' : %s", bind, e.toString());
             }
         }
 
-
+        // write JSON
         try {
-            saveSettingsJsonToFileWithGson(mainMenuAppState.getSettingsPath());
+            saveJson(mainMenuAppState.getSettingsPath());
         } catch (Exception e) {
-            logErr("Error saving JSON: %s", e.getMessage());
+            logErr("Save JSON failed: %s", e.toString());
         }
     }
 
-    // ---------------------- core: setFieldValue ----------------------
+    // ---------------------- core: set by dotted path ----------------------
 
-    private void setFieldValue(Object rootInstance, String[] path, Object value) throws Exception {
+    private void setByPath(Object rootInstance, String[] path, Object value) throws Exception {
         if (path.length == 0) throw new IllegalArgumentException("Empty path");
 
-        Object currentInstance = rootInstance;
-        Class<?> currentClass = (rootInstance != null) ? rootInstance.getClass() : settingsClass;
+        Object container = rootInstance;
+        Class<?> containerClass = (container != null) ? container.getClass() : settingsClass;
 
-        // Walk all parts of the path except the last
+        // walk until container for last segment
         for (int i = 0; i < path.length - 1; i++) {
-            String part = path[i];
-
-            Field f = findFieldFlexible(currentClass, part);
-
-            if (f == null) {
-                Method getter = findGetterFlexible(currentClass, part);
-                if (getter != null) {
-                    Object nested = invokeGetter(getter, currentInstance);
-                    if (nested == null) {
-                        Class<?> nestedType = getter.getReturnType();
-                        nested = createAndAssignNested(currentInstance, currentClass, part, nestedType, getter);
-                    }
-                    if (nested == null) throw new RuntimeException("Failed to obtain nested instance for " + part);
-                    currentInstance = nested;
-                    currentClass = currentInstance.getClass();
-                    continue;
-                }
-                throw new NoSuchFieldException("Nested field '" + part + "' not found in " + currentClass.getName());
-            }
-
-            f.setAccessible(true);
-            boolean isStatic = Modifier.isStatic(f.getModifiers());
-            Object nestedInstance = isStatic ? f.get(null) : ensureInstanceAndGetField(currentInstance, currentClass, f);
-
-            if (nestedInstance == null) {
-                Object created = createInstance(f.getType(), currentInstance);
-                if (created != null) {
-                    assignField(f, currentInstance, created, isStatic);
-                    nestedInstance = created;
-                }
-            }
-
-            if (nestedInstance == null) throw new RuntimeException("Nested instance is null for " + part);
-
-            currentInstance = nestedInstance;
-            currentClass = currentInstance.getClass();
+            String segment = path[i];
+            Object next = resolveOrCreateNested(container, containerClass, segment);
+            if (next == null) throw new NoSuchFieldException("No nested target for '" + segment + "' in " + containerClass.getName());
+            container = next;
+            containerClass = container.getClass();
         }
 
-        // Set the last field
         String last = path[path.length - 1];
 
-        Field target = findFieldInClassHierarchy(currentClass, last);
-        if (target != null) {
-            target.setAccessible(true);
-            Object converted = convertValueToFieldType(value, target.getType());
-            if (Modifier.isStatic(target.getModifiers())) target.set(null, converted);
-            else {
-                currentInstance = ensureInstance(currentInstance, currentClass);
-                target.set(currentInstance, converted);
-            }
-            log("Set %s = %s", String.join(".", path), converted);
-            return;
-        }
+        // try field then setter on container
+        if (trySetField(container, containerClass, last, value)) return;
+        if (tryInvokeSetter(container, containerClass, last, value)) return;
 
-        Method setter = findSetterFlexible(currentClass, last);
-        if (setter != null) {
-            Class<?> param = setter.getParameterTypes()[0];
-            Object converted = convertValueToFieldType(value, param);
-            invokeSetter(setter, ensureInstance(currentInstance, currentClass), converted);
-            log("Set via setter %s = %s", String.join(".", path), converted);
-            return;
-        }
-
-        // Final attempt — static field in the root class
-        Field staticCandidate = findFieldInClassHierarchy(settingsClass, last);
+        // last resort: static field on root settingsClass
+        Field staticCandidate = findField(settingsClass, last);
         if (staticCandidate != null && Modifier.isStatic(staticCandidate.getModifiers())) {
-            staticCandidate.setAccessible(true);
-            Object converted = convertValueToFieldType(value, staticCandidate.getType());
-            staticCandidate.set(null, converted);
-            log("Set static %s = %s", last, converted);
+            setFieldValue(null, staticCandidate, convert(value, staticCandidate.getType()));
+            log("Set static %s = %s", last, value);
             return;
         }
 
-        throw new NoSuchFieldException("Field/setter '" + last + "' not found in " + currentClass.getName());
+        throw new NoSuchFieldException("No field/setter '" + last + "' found in " + containerClass.getName());
     }
 
-    // ---------------------- serialization ----------------------
-
-    private void saveSettingsJsonToFileWithGson(Path out) throws IOException {
-        Object toSerialize = buildSerializableSettingsObject();
-        if (toSerialize == null) throw new IllegalStateException("No settings object to serialize");
-
-        Gson gson = new GsonBuilder().setPrettyPrinting().create();
-        String json = gson.toJson(toSerialize);
-
-        Path parent = (out.getParent() == null) ? Path.of(".") : out.getParent();
-        Files.createDirectories(parent);
-        Files.writeString(out, json, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-        log("JSON saved to %s", out.toAbsolutePath());
-    }
-
-    /**
-     * Collect a Map from static fields (graphicsSettings -> graphics) and supplement them with instance fields if present.
-     */
-    private Object buildSerializableSettingsObject() {
-        if (settingsClass == null) return null;
-
-        Map<String, Object> result = new LinkedHashMap<>();
-
-        // static fields
-        for (Field f : settingsClass.getDeclaredFields()) {
-            try {
-                if (!Modifier.isStatic(f.getModifiers())) continue;
-                f.setAccessible(true);
-                Object val = f.get(null);
-                if (val == null) continue;
-                String name = f.getName();
-                if (name.endsWith("Settings")) name = name.substring(0, name.length() - "Settings".length());
-                result.put(name, val);
-            } catch (Throwable t) {
-                logErr("skip static field %s: %s", f.getName(), t.getMessage());
+    private Object resolveOrCreateNested(Object currentInstance, Class<?> currentClass, String name) throws Exception {
+        // 1) field flexible (name, nameSettings, by type simple name)
+        Field f = findFieldFlexible(currentClass, name);
+        if (f != null) {
+            Object nested = getFieldValue(currentInstance, f);
+            if (nested == null) {
+                nested = createForField(f, currentInstance);
+                if (nested != null) assignFieldValue(currentInstance, f, nested);
             }
+            return nested;
         }
 
-        // instance fields override/complete static ones
-        Object toRead = mainMenuAppState.getSettingsInstance();
-        if (toRead == null) {
-            try {
-                toRead = settingsClass.getDeclaredConstructor().newInstance();
-            } catch (Exception ignored) {
-                toRead = null;
-            }
-        }
-
-        if (toRead != null) {
-            Class<?> cur = toRead.getClass();
-            while (cur != null && cur != Object.class) {
-                for (Field f : cur.getDeclaredFields()) {
-                    try {
-                        if (Modifier.isStatic(f.getModifiers())) continue;
-                        f.setAccessible(true);
-                        Object val = f.get(toRead);
-                        if (val != null) result.putIfAbsent(f.getName(), val);
-                    } catch (Throwable ignored) {
+        // 2) getter + setter (getX/isX + setX)
+        Method getter = findGetter(currentClass, name);
+        if (getter != null) {
+            Object nested = invokeSafe(getter, currentInstance);
+            if (nested == null) {
+                Class<?> nestedType = getter.getReturnType();
+                Object created = createInstance(nestedType, currentInstance);
+                if (created != null) {
+                    if (!invokeSetterIfExists(currentInstance, currentClass, name, created)) {
+                        // fallback: try to find matching field and assign
+                        Field pf = findFieldFlexible(currentClass, name);
+                        if (pf != null) assignFieldValue(currentInstance, pf, created);
                     }
+                    nested = created;
                 }
-                cur = cur.getSuperclass();
             }
+            return nested;
         }
 
-        if (result.isEmpty()) return (mainMenuAppState.getSettingsInstance() != null) ? mainMenuAppState.getSettingsInstance() : result;
-        return result;
+        // 3) nothing found
+        return null;
     }
 
-    // ---------------------- small helpers ----------------------
+    // ---------------------- try set helpers ----------------------
 
-    private void tryCreateInstance() {
-        if (mainMenuAppState.getSettingsInstance() != null) return;
-        try {
-            mainMenuAppState.setSettingsInstance((Settings) settingsClass.getDeclaredConstructor().newInstance());
-        } catch (Exception e) {
-            mainMenuAppState.setSettingsInstance(null);
-            logErr("Failed to create instance: %s", e.getMessage());
-        }
+    private boolean trySetField(Object targetInstance, Class<?> cls, String fieldName, Object value) throws Exception {
+        Field f = findField(cls, fieldName);
+        if (f == null) return false;
+        Object converted = convert(value, f.getType());
+        setFieldValue(Modifier.isStatic(f.getModifiers()) ? null : ensureInstance(targetInstance, cls), f, converted);
+        log("Set field %s.%s = %s", cls.getSimpleName(), fieldName, String.valueOf(converted));
+        return true;
     }
 
-    private Field findFieldInClassHierarchy(Class<?> cls, String name) {
+    private boolean tryInvokeSetter(Object targetInstance, Class<?> cls, String prop, Object value) throws Exception {
+        Method setter = findSetter(cls, prop);
+        if (setter == null) return false;
+        Class<?> param = setter.getParameterTypes()[0];
+        Object converted = convert(value, param);
+        invokeSafe(setter, ensureInstance(targetInstance, cls), converted);
+        log("Set via setter %s.%s = %s", cls.getSimpleName(), prop, String.valueOf(converted));
+        return true;
+    }
+
+    // ---------------------- reflection small tools ----------------------
+
+    private Field findField(Class<?> cls, String name) {
         Class<?> cur = cls;
-        while (cur != null) {
-            try {
-                Field f = cur.getDeclaredField(name);
-                return f;
-            } catch (NoSuchFieldException ignored) {
-                cur = cur.getSuperclass();
-            }
+        while (cur != null && cur != Object.class) {
+            try { return cur.getDeclaredField(name); } catch (NoSuchFieldException ignored) { cur = cur.getSuperclass(); }
         }
         return null;
     }
 
     private Field findFieldFlexible(Class<?> cls, String prop) {
-        Field f = findFieldInClassHierarchy(cls, prop);
+        Field f = findField(cls, prop);
         if (f != null) return f;
-        f = findFieldInClassHierarchy(cls, prop + "Settings");
+        f = findField(cls, prop + "Settings");
         if (f != null) return f;
-        return findFieldByTypeSimpleName(cls, prop);
-    }
-
-    private Field findFieldByTypeSimpleName(Class<?> cls, String simpleName) {
+        // by simple type name
         Class<?> cur = cls;
-        while (cur != null) {
-            for (Field f : cur.getDeclaredFields()) {
-                if (f.getType() != null && f.getType().getSimpleName().equalsIgnoreCase(simpleName)) return f;
+        while (cur != null && cur != Object.class) {
+            for (Field ff : cur.getDeclaredFields()) {
+                if (ff.getType() != null && ff.getType().getSimpleName().equalsIgnoreCase(prop)) return ff;
             }
             cur = cur.getSuperclass();
         }
         return null;
     }
 
-    private Method findGetterFlexible(Class<?> cls, String prop) {
+    private Method findGetter(Class<?> cls, String prop) {
         String cap = capitalize(prop);
         Method m = findMethod(cls, "get" + cap);
-        if (m != null) return m;
-        m = findMethod(cls, "is" + cap);
-        return m;
+        return m != null ? m : findMethod(cls, "is" + cap);
     }
 
-    private Method findSetterFlexible(Class<?> cls, String prop) {
+    private Method findSetter(Class<?> cls, String prop) {
         String cap = capitalize(prop);
-        // try to find any setX with one parameter
-        for (Method m : cls.getMethods()) {
-            if (m.getName().equals("set" + cap) && m.getParameterCount() == 1) return m;
-        }
+        // public methods first
+        for (Method m : cls.getMethods()) if (m.getName().equals("set" + cap) && m.getParameterCount() == 1) return m;
+        // declared methods next
         Class<?> cur = cls;
-        while (cur != null) {
-            for (Method m : cur.getDeclaredMethods()) {
-                if (m.getName().equals("set" + cap) && m.getParameterCount() == 1) return m;
-            }
+        while (cur != null && cur != Object.class) {
+            for (Method m : cur.getDeclaredMethods()) if (m.getName().equals("set" + cap) && m.getParameterCount() == 1) return m;
             cur = cur.getSuperclass();
         }
         return null;
     }
 
     private Method findMethod(Class<?> cls, String name) {
-        try {
-            Method m = cls.getDeclaredMethod(name);
-            return m;
-        } catch (NoSuchMethodException ignored) {
-        }
-        try {
-            return cls.getMethod(name);
-        } catch (NoSuchMethodException ignored) {
-        }
+        try { return cls.getDeclaredMethod(name); } catch (NoSuchMethodException ignored) {}
+        try { return cls.getMethod(name); } catch (NoSuchMethodException ignored) {}
         return null;
     }
 
-    private Object invokeGetter(Method getter, Object instance) {
-        try {
-            if (Modifier.isStatic(getter.getModifiers())) return getter.invoke(null);
-            if (instance == null) return getter.invoke(null);
-            return getter.invoke(instance);
-        } catch (Exception e) {
-            return null;
-        }
-    }
-
-    private Object createAndAssignNested(Object currentInstance, Class<?> currentClass, String prop, Class<?> nestedType, Method getter) {
-        Object created = createInstance(nestedType, currentInstance);
-        if (created == null) return null;
-        // try setter
-        Method setter = findSetterFlexible(currentClass, prop);
-        try {
-            if (setter != null) {
-                if (Modifier.isStatic(setter.getModifiers())) setter.invoke(null, created);
-                else {
-                    Object inst = ensureInstance(currentInstance, currentClass);
-                    setter.invoke(inst, created);
-                }
-                return created;
-            }
-        } catch (Exception ignored) {
-        }
-        // try to write into a matching field
-        Field f = findFieldFlexible(currentClass, prop);
-        if (f != null) {
-            try {
-                assignField(f, currentInstance, created, Modifier.isStatic(f.getModifiers()));
-                return created;
-            } catch (Exception ignored) {
-            }
-        }
-        return created; // return even if we failed to write it — readers will still see it
-    }
-
-    private void assignField(Field f, Object onInstance, Object value, boolean isStatic) throws IllegalAccessException {
+    private Object getFieldValue(Object instance, Field f) throws IllegalAccessException {
         f.setAccessible(true);
-        if (isStatic) f.set(null, value);
-        else {
-            Object inst = ensureInstance(onInstance, f.getDeclaringClass());
-            f.set(inst, value);
-        }
+        return Modifier.isStatic(f.getModifiers()) ? f.get(null) : (instance == null ? null : f.get(instance));
     }
 
-    private Object ensureInstanceAndGetField(Object currentInstance, Class<?> currentClass, Field f) throws IllegalAccessException {
-        if (Modifier.isStatic(f.getModifiers())) return f.get(null);
-        if (currentInstance == null) {
-            currentInstance = createInstance(currentClass, null);
-            if (currentInstance == null) throw new RuntimeException("Failed to create instance " + currentClass.getName());
-        }
-        return f.get(currentInstance);
+    private void setFieldValue(Object instanceOrNull, Field f, Object value) throws IllegalAccessException {
+        f.setAccessible(true);
+        if (Modifier.isStatic(f.getModifiers())) f.set(null, value);
+        else f.set(instanceOrNull, value);
     }
 
-    private Object ensureInstance(Object inst, Class<?> cls) {
-        if (inst != null) return inst;
-        Object created = createInstance(cls, null);
-        if (created == null) throw new RuntimeException("Unable to create instance for " + cls.getName());
-        return created;
-    }
-
-    private void invokeSetter(Method setter, Object instance, Object arg) {
+    private void assignFieldValue(Object onInstance, Field f, Object value) {
         try {
-            if (Modifier.isStatic(setter.getModifiers())) setter.invoke(null, arg);
-            else setter.invoke(instance, arg);
+            f.setAccessible(true);
+            if (Modifier.isStatic(f.getModifiers())) f.set(null, value);
+            else {
+                Object inst = ensureInstance(onInstance, f.getDeclaringClass());
+                f.set(inst, value);
+            }
+        } catch (IllegalAccessException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
+    private boolean invokeSetterIfExists(Object instance, Class<?> cls, String prop, Object arg) {
+        Method setter = findSetter(cls, prop);
+        if (setter == null) return false;
+        invokeSafe(setter, instance, arg);
+        return true;
+    }
+
+    private Object invokeSafe(Method m, Object instance, Object... args) {
+        try {
+            if (Modifier.isStatic(m.getModifiers())) return m.invoke(null, args);
+            if (instance == null) return m.invoke(null, args);
+            return m.invoke(instance, args);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    // ---------------------- creation helpers ----------------------
+
+    private Object createForField(Field f, Object outerInstance) {
+        Class<?> t = f.getType();
+        return createInstance(t, outerInstance);
     }
 
     private Object createInstance(Class<?> clazz, Object outerInstance) {
@@ -382,76 +254,80 @@ public class SaveSettingsAction implements MenuAction {
             noArg.setAccessible(true);
             return noArg.newInstance();
         } catch (NoSuchMethodException ignored) {
-            // try single-arg constructor for inner classes
+            // try single-arg constructor matching outerInstance
             if (outerInstance != null) {
                 for (Constructor<?> ctor : clazz.getDeclaredConstructors()) {
-                    Class<?>[] params = ctor.getParameterTypes();
-                    if (params.length == 1 && params[0].isAssignableFrom(outerInstance.getClass())) {
+                    Class<?>[] ps = ctor.getParameterTypes();
+                    if (ps.length == 1 && ps[0].isAssignableFrom(outerInstance.getClass())) {
                         try {
                             ctor.setAccessible(true);
                             return ctor.newInstance(outerInstance);
-                        } catch (Throwable ignored2) {
-                        }
+                        } catch (Throwable ignored2) {}
                     }
                 }
             }
-            // fallback: try any no-arg declared constructor
+            // fallback: any zero-arg declared constructor attempt
             for (Constructor<?> ctor : clazz.getDeclaredConstructors()) {
                 if (ctor.getParameterCount() == 0) {
-                    try {
-                        ctor.setAccessible(true);
-                        return ctor.newInstance();
-                    } catch (Throwable ignored2) {
-                    }
+                    try { ctor.setAccessible(true); return ctor.newInstance(); } catch (Throwable ignored2) {}
                 }
             }
             return null;
         } catch (InstantiationException | IllegalAccessException | InvocationTargetException e) {
-            logErr("Failed to create %s: %s", clazz.getName(), e.getMessage());
-            return null;
+            throw new RuntimeException(e);
         }
     }
 
-    private Object convertValueToFieldType(Object value, Class<?> fieldType) {
-        if (value == null) return null;
-        if (fieldType.isInstance(value)) return value;
+    private Object ensureInstance(Object instance, Class<?> cls) {
+        if (instance != null) return instance;
+        Object created = createInstance(cls, null);
+        if (created == null) throw new RuntimeException("Cannot create instance for " + cls.getName());
+        return created;
+    }
 
-        if (fieldType.isEnum()) {
-            @SuppressWarnings("unchecked") Class<Enum> ecl = (Class<Enum>) fieldType;
-            return Enum.valueOf(ecl, value.toString());
+    // ---------------------- conversion ----------------------
+
+    private Object convert(Object value, Class<?> targetType) {
+        if (value == null) return null;
+        if (targetType.isInstance(value)) return value;
+
+        if (targetType.isEnum()) {
+            @SuppressWarnings("unchecked") Class<Enum> ec = (Class<Enum>) targetType;
+            return Enum.valueOf(ec, value.toString());
         }
 
-        if (fieldType == boolean.class || fieldType == Boolean.class) return Boolean.parseBoolean(value.toString());
+        if (targetType == boolean.class || targetType == Boolean.class) return Boolean.parseBoolean(value.toString());
 
-        if (Number.class.isAssignableFrom(primitiveWrapperOf(fieldType)) || fieldType.isPrimitive()) {
-            if (value instanceof Number n) return convertNumber(n, fieldType);
+        if (targetType == String.class) return value.toString();
+
+        // numeric conversions
+        if (Number.class.isAssignableFrom(primitiveWrapperOf(targetType)) || targetType.isPrimitive()) {
+            if (value instanceof Number n) return convertNumber(n, targetType);
             String s = value.toString();
             try {
-                if (fieldType == int.class || fieldType == Integer.class) return Integer.parseInt(s);
-                if (fieldType == long.class || fieldType == Long.class) return Long.parseLong(s);
-                if (fieldType == float.class || fieldType == Float.class) return Float.parseFloat(s);
-                if (fieldType == double.class || fieldType == Double.class) return Double.parseDouble(s);
-                if (fieldType == short.class || fieldType == Short.class) return Short.parseShort(s);
-                if (fieldType == byte.class || fieldType == Byte.class) return Byte.parseByte(s);
-                if (fieldType == char.class || fieldType == Character.class) return s.length() > 0 ? s.charAt(0) : '\0';
+                if (targetType == int.class || targetType == Integer.class) return Integer.parseInt(s);
+                if (targetType == long.class || targetType == Long.class) return Long.parseLong(s);
+                if (targetType == float.class || targetType == Float.class) return Float.parseFloat(s);
+                if (targetType == double.class || targetType == Double.class) return Double.parseDouble(s);
+                if (targetType == short.class || targetType == Short.class) return Short.parseShort(s);
+                if (targetType == byte.class || targetType == Byte.class) return Byte.parseByte(s);
+                if (targetType == char.class || targetType == Character.class) return s.isEmpty() ? '\0' : s.charAt(0);
             } catch (NumberFormatException ex) {
-                throw new IllegalArgumentException("Unable to convert '" + s + "' to " + fieldType.getSimpleName(), ex);
+                throw new IllegalArgumentException("Cannot convert '" + s + "' to " + targetType.getSimpleName(), ex);
             }
         }
-
-        if (fieldType == String.class) return value.toString();
 
         return value;
     }
 
-    private Object convertNumber(Number n, Class<?> fieldType) {
-        if (fieldType == int.class || fieldType == Integer.class) return n.intValue();
-        if (fieldType == long.class || fieldType == Long.class) return n.longValue();
-        if (fieldType == float.class || fieldType == Float.class) return n.floatValue();
-        if (fieldType == double.class || fieldType == Double.class) return n.doubleValue();
-        if (fieldType == short.class || fieldType == Short.class) return n.shortValue();
-        if (fieldType == byte.class || fieldType == Byte.class) return n.byteValue();
-        if (fieldType == char.class || fieldType == Character.class) return (char) n.intValue();
+    private Object convertNumber(Number n, Class<?> t) {
+        if (t == int.class || t == Integer.class) return n.intValue();
+        if (t == long.class || t == Long.class) return n.longValue();
+        if (t == float.class || t == Float.class) return n.floatValue();
+        if (t == double.class || t == Double.class) return n.doubleValue();
+        if (t == short.class || t == Short.class) return n.shortValue();
+        if (t == byte.class || t == Byte.class) return n.byteValue();
+        if (t == char.class || t == Character.class) return (char) n.intValue();
         return n;
     }
 
@@ -468,9 +344,89 @@ public class SaveSettingsAction implements MenuAction {
         return c;
     }
 
-    private String capitalize(String s) { if (s == null || s.isEmpty()) return s; return Character.toUpperCase(s.charAt(0)) + s.substring(1); }
+    private String capitalize(String s) { return (s == null || s.isEmpty()) ? s : Character.toUpperCase(s.charAt(0)) + s.substring(1); }
+
+    // ---------------------- serialization ----------------------
+
+    private void saveJson(Path out) throws IOException {
+        Gson gson = new GsonBuilder().setPrettyPrinting().create();
+        Object instance = mainMenuAppState.getSettingsInstance();
+
+        String json;
+        if (instance != null) {
+            json = gson.toJson(instance);
+            write(out, json);
+            log("JSON (instance) saved to %s", out.toAbsolutePath());
+            return;
+        }
+
+        // fallback - produce map of static fields + (temp) instance fields
+        Map<String, Object> result = new LinkedHashMap<>();
+        // static fields
+        for (Field f : settingsClass.getDeclaredFields()) {
+            if (!Modifier.isStatic(f.getModifiers())) continue;
+            try {
+                f.setAccessible(true);
+                Object v = f.get(null);
+                if (v != null) {
+                    String name = f.getName();
+                    if (name.endsWith("Settings")) name = name.substring(0, name.length() - "Settings".length());
+                    result.put(name, v);
+                }
+            } catch (Throwable ignored) {}
+        }
+
+        // try temp instance
+        Object tmp = null;
+        try { tmp = settingsClass.getDeclaredConstructor().newInstance(); } catch (Throwable ignored) {}
+        if (tmp != null) {
+            Class<?> cur = tmp.getClass();
+            while (cur != null && cur != Object.class) {
+                for (Field f : cur.getDeclaredFields()) {
+                    if (Modifier.isStatic(f.getModifiers())) continue;
+                    try {
+                        f.setAccessible(true);
+                        Object v = f.get(tmp);
+                        if (v != null) result.putIfAbsent(f.getName(), v);
+                    } catch (Throwable ignored) {}
+                }
+                cur = cur.getSuperclass();
+            }
+        }
+
+        json = gson.toJson(result.isEmpty() ? (tmp != null ? tmp : Collections.emptyMap()) : result);
+        write(out, json);
+        log("JSON (fallback) saved to %s", out.toAbsolutePath());
+    }
+
+    private void write(Path out, String s) throws IOException {
+        Path parent = (out.getParent() == null) ? Path.of(".") : out.getParent();
+        Files.createDirectories(parent);
+        Files.writeString(out, s, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+    }
+
+    // ---------------------- small helpers / debug ----------------------
+
+    private void ensureSettingsInstance() {
+        if (mainMenuAppState.getSettingsInstance() != null) return;
+        try {
+            Object inst = settingsClass.getDeclaredConstructor().newInstance();
+            if (inst instanceof Settings) mainMenuAppState.setSettingsInstance((Settings) inst);
+            else mainMenuAppState.setSettingsInstance((Settings) inst); // best-effort cast (keeps previous API)
+            log("Created settings instance");
+        } catch (Throwable t) {
+            mainMenuAppState.setSettingsInstance(null);
+            logErr("Cannot create settings instance: %s", t.toString());
+        }
+    }
+
+    public void debugDumpSettings() {
+        Object inst = mainMenuAppState == null ? null : mainMenuAppState.getSettingsInstance();
+        if (inst == null) { logErr("dump: settingsInstance == null"); return; }
+        String json = new GsonBuilder().setPrettyPrinting().create().toJson(inst);
+        log("DEBUG DUMP:\n%s", json);
+    }
 
     private void log(String fmt, Object... args) { System.out.println("[SAVE SETTINGS] " + String.format(fmt, args)); }
     private void logErr(String fmt, Object... args) { System.err.println("[SAVE SETTINGS] " + String.format(fmt, args)); }
-
 }

@@ -369,6 +369,7 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
         return "ui.press";
     }
 
+    @Override
     public float getValue() {
         return value;
     }

@@ -25,7 +25,7 @@
                     <!-- ТРЕТЬЯ ВКЛАДКА: УПРАВЛЕНИЕ -->
                     <tab iconPath="assets/Interface/ui/icons/process.png" title="CONTROLS">
                         <slider text="MOUSE SENSITIVITY" bind="controls.sensitivity"/>
-                        <text text="KEY BINDINGS..." fontSize="28vw"/>
+                        <slider text="SMOOTHING"         bind="controls.smoothing"/>
                     </tab>
                 </tabs>
                 <button id="quit" action="org.foxesworld.cge.tmp.menu.actions.SaveSettingsAction" iconPath="assets/Interface/ui/icons/apply.png" iconSize="40" height="95" text="Применить" />

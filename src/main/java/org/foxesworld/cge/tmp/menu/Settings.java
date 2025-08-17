@@ -19,6 +19,7 @@ public class Settings {
 
     public class controls {
         public float sensitivity = 0.5f;
+        public float smoothing = 0.55f;
     }
 
     private final graphics graphics = new graphics();

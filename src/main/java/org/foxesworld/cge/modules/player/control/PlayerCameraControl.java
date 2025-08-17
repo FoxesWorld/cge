@@ -12,6 +12,7 @@ import com.jme3.scene.control.AbstractControl;
 import org.foxesworld.cge.modules.inputManager.InputManagerModule;
 import org.foxesworld.cge.modules.player.Player;
 import org.foxesworld.cge.modules.player.config.PlayerConfig;
+import org.foxesworld.cge.tmp.menu.MainMenuAppState;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -56,8 +57,8 @@ public final class PlayerCameraControl extends AbstractControl implements Analog
 
         PlayerConfig config = player.getPlayerConfig();
         this.eyeHeight = config.getPhysics().getEyeHeight();
-        this.sensitivity = config.getSensitivity();
-        this.rotationSmoothingFactor = FastMath.clamp(config.getMovement().getSmoothing(), 0f, 1f);
+        this.sensitivity = (float) MainMenuAppState.getSettingsValue("controls", "sensitivity");
+        this.rotationSmoothingFactor = FastMath.clamp((float) MainMenuAppState.getSettingsValue("controls", "smoothing"), 0f, 1f);
         this.minDistance = 1.0f;
         this.maxDistance = 16.0f;
         this.defaultDistance = 5.0f;
