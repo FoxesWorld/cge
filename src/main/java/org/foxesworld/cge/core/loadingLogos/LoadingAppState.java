@@ -83,7 +83,6 @@ public class LoadingAppState extends BaseAppState {
     }
 
     private void initializeLogo(Application app) {
-        CalistaGameEngine.INSTANCE.getSoundManager().play("ui.attention");
         logo = new Picture("Logo");
         Texture2D texture = (Texture2D) app.getAssetManager().loadTexture(config.imagePath);
 

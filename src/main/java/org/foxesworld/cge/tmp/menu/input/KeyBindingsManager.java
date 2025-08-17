@@ -1,5 +1,8 @@
 package org.foxesworld.cge.tmp.menu.input;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.reflect.TypeToken;
 import com.jme3.input.InputManager;
 import com.jme3.input.KeyInput;
 import com.jme3.input.controls.KeyTrigger;
@@ -8,28 +11,24 @@ import org.slf4j.LoggerFactory;
 import org.w3c.dom.*;
 
 import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.File;
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.lang.reflect.Type;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
 import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.prefs.Preferences;
 
 /**
  * Менеджер привязок клавиш.
  *
- * Поддерживает:
- *  - загрузку определений из XML (KeyBindings -> KeyBind elements),
- *  - хранение текущих привязок (и их сохранение в Preferences),
- *  - применение привязок в JME InputManager,
- *  - переназначение клавиш с опцией swap при конфликте,
- *  - слушатели изменений.
+ * Хранение пользовательских привязок теперь осуществляется в JSON файле (человеко-читаемый).
  */
 public final class KeyBindingsManager {
 
     private static final Logger LOG = LoggerFactory.getLogger(KeyBindingsManager.class);
-
-    // node в Preferences для сохранения пользовательских привязок
-    private static final String PREFS_NODE = "/org/foxesworld/cge/keybindings_v1";
 
     // префикс для mapping names в InputManager
     private static final String MAPPING_PREFIX = "kb_action_";
@@ -89,9 +88,6 @@ public final class KeyBindingsManager {
     // внутреннее хранилище — LinkedHashMap чтобы сохранять порядок из XML
     private final LinkedHashMap<String, KeyBind> binds = new LinkedHashMap<>();
 
-    // preferences node
-    private final Preferences prefs = Preferences.userRoot().node(PREFS_NODE);
-
     // jme InputManager (null-safe external)
     private final InputManager inputManager;
 
@@ -101,8 +97,31 @@ public final class KeyBindingsManager {
     }
     private final List<BindingChangeListener> listeners = new CopyOnWriteArrayList<>();
 
+    // JSON persistence
+    private final Path storageFile;
+    private final Gson gson;
+
+    /**
+     * Конструктор с дефолтным файлом хранения (~/.config/foxesworld/keybindings_v1.json).
+     */
     public KeyBindingsManager(InputManager inputManager) {
+        this(inputManager, new File("keybindings.json").toPath());
+    }
+
+    /**
+     * Конструктор, позволяющий задать конкретный файл для хранения.
+     * Если storageFile == null — используется дефолтный путь.
+     */
+    public KeyBindingsManager(InputManager inputManager, Path storageFile) {
         this.inputManager = inputManager;
+        this.gson = new GsonBuilder().setPrettyPrinting().create();
+        if (storageFile != null) {
+            this.storageFile = storageFile;
+        } else {
+            String userHome = System.getProperty("user.home");
+            Path cfg = Paths.get(userHome, ".config", "foxesworld");
+            this.storageFile = cfg.resolve("keybindings_v1.json");
+        }
     }
 
     // ========== XML парсинг ==========
@@ -110,7 +129,7 @@ public final class KeyBindingsManager {
     /**
      * Загружает определения привязок из XML-стрима.
      * Ожидается корневой элемент <KeyBindings> и элементы <KeyBind id="" action="" defaultKey=""/>
-     * После загрузки будут применены сохранённые в Preferences переопределения.
+     * После загрузки будут применены сохранённые в JSON переопределения.
      *
      * @param xmlStream InputStream XML (будет прочитан)
      * @throws Exception в случае ошибок парсинга
@@ -149,42 +168,74 @@ public final class KeyBindingsManager {
             binds.putAll(tmp);
         }
 
-        // restore user overrides
-        restoreFromPreferences();
+        // restore user overrides from JSON file
+        restoreFromFile();
     }
 
-    // ========== Persistence ==========
+    // ========== Persistence (JSON file) ==========
 
     /**
-     * Восстановить (override) сохранённые значения из Preferences.
-     * Для каждого KeyBind ищем запись prefs.get(id) и, если валидный ключ, применяем.
+     * Восстановить (override) сохранённые значения из JSON файла.
+     * Формат: { "bindId": "KEY_NAME", ... }
      */
-    public void restoreFromPreferences() {
-        synchronized (binds) {
-            for (KeyBind kb : binds.values()) {
-                String stored = prefs.get(kb.id, null);
-                if (stored == null) continue;
-                int code = parseKeyNameToCode(stored);
-                if (code >= 0) {
-                    kb.setCurrentKeyCode(code);
-                } else {
-                    LOG.warn("Unknown saved key '{}' for bind '{}', ignoring", stored, kb.id);
+    public void restoreFromFile() {
+        if (storageFile == null) return;
+        if (!Files.exists(storageFile)) return;
+
+        try {
+            String json = Files.readString(storageFile, StandardCharsets.UTF_8);
+            if (json == null || json.trim().isEmpty()) return;
+            Type mapType = new TypeToken<Map<String, String>>() {}.getType();
+            Map<String, String> stored = gson.fromJson(json, mapType);
+            if (stored == null) return;
+
+            synchronized (binds) {
+                for (KeyBind kb : binds.values()) {
+                    String val = stored.get(kb.id);
+                    if (val == null) continue;
+                    int code = parseKeyNameToCode(val);
+                    if (code >= 0) {
+                        kb.setCurrentKeyCode(code);
+                    } else {
+                        LOG.warn("Unknown saved key '{}' for bind '{}', ignoring", val, kb.id);
+                    }
                 }
             }
+        } catch (Exception ex) {
+            LOG.warn("Failed to restore keybindings from JSON '{}': {}", storageFile.toAbsolutePath(), ex.toString());
         }
     }
 
     /**
-     * Сохраняет текущие привязки (в виде строковых имён клавиш) в Preferences.
+     * Сохраняет текущие привязки (в виде строковых имён клавиш) в JSON файл.
      */
-    public void saveToPreferences() {
+    public void saveToFile() {
+        if (storageFile == null) return;
+        Map<String, String> out = new LinkedHashMap<>();
         synchronized (binds) {
             for (KeyBind kb : binds.values()) {
                 String name = keyCodeToName(kb.getCurrentKeyCode());
                 if (name == null) name = kb.defaultKey;
-                if (name != null) prefs.put(kb.id, name);
+                if (name != null) out.put(kb.id, name);
             }
-            try { prefs.flush(); } catch (Exception ignored) {}
+        }
+        try {
+            // ensure parent exists
+            Path parent = storageFile.getParent();
+            if (parent != null) Files.createDirectories(parent);
+
+            String json = gson.toJson(out);
+            Path tmp = storageFile.resolveSibling(storageFile.getFileName().toString() + ".tmp");
+            Files.writeString(tmp, json, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
+
+            try {
+                Files.move(tmp, storageFile, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            } catch (AtomicMoveNotSupportedException amnse) {
+                // fallback
+                Files.move(tmp, storageFile, StandardCopyOption.REPLACE_EXISTING);
+            }
+        } catch (IOException io) {
+            LOG.warn("Failed to save keybindings to JSON '{}': {}", storageFile.toAbsolutePath(), io.toString());
         }
     }
 
@@ -198,7 +249,7 @@ public final class KeyBindingsManager {
                 kb.setCurrentKeyCode(def);
             }
         }
-        saveToPreferences();
+        saveToFile();
         notifyAllBindingsChanged();
     }
 
@@ -256,14 +307,14 @@ public final class KeyBindingsManager {
                 otherKb.setCurrentKeyCode(oldCode);
                 target.setCurrentKeyCode(newKeyCode);
                 // notify listeners about both changes
-                notifyListenersForChange(otherKb.id, oldCode, otherKb.getCurrentKeyCode());
-                notifyListenersForChange(target.id, oldCode, newKeyCode); // oldCode here is previous target code
+                notifyListenersForChange(otherKb.id, otherKb.getCurrentKeyCode(), oldCode); // snapshot-ish
+                notifyListenersForChange(target.id, oldCode, newKeyCode);
             } else {
                 target.setCurrentKeyCode(newKeyCode);
                 notifyListenersForChange(target.id, oldCode, newKeyCode);
             }
-            // persist change
-            saveToPreferences();
+            // persist change to JSON file
+            saveToFile();
             return true;
         }
     }
@@ -329,7 +380,6 @@ public final class KeyBindingsManager {
         KeyBind oldKb, newKb;
         synchronized (binds) {
             oldKb = binds.get(id);
-            // make snapshots
             if (oldKb == null) return;
             newKb = new KeyBind(oldKb.id, oldKb.action, oldKb.defaultKey, newCode);
         }
@@ -386,5 +436,10 @@ public final class KeyBindingsManager {
      */
     public static String keyCodeToName(int code) {
         return CODE_TO_NAME.get(code);
+    }
+
+    // опционально: доступ к используемому файлу
+    public Path getStorageFile() {
+        return storageFile;
     }
 }

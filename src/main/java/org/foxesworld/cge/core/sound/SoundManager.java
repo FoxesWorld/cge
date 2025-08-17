@@ -9,6 +9,7 @@ import com.jme3.asset.AssetManager;
 import com.jme3.audio.AudioNode;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
+import org.foxesworld.cge.tmp.menu.MainMenuAppState;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -244,7 +245,7 @@ public class SoundManager {
         float volume = Math.max(0f, Math.min(1f, selected.volume * volumeMultiplier));
 
         try {
-            selected.audioNode.setVolume(volume);
+            selected.audioNode.setVolume(volume * (float) MainMenuAppState.getSettingsValue( "audio", "master"));
             try { selected.audioNode.setPitch(pitch); } catch (Throwable ignored) {}
             selected.audioNode.playInstance();
             //LOGGER.debug("Played sound: {} (event: {}, vol: {}, pitch: {})", selected.path, eventName, volume, pitch);

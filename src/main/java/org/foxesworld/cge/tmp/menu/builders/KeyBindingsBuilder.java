@@ -80,9 +80,8 @@ public class KeyBindingsBuilder implements ComponentBuilder<KeyBindingsXml> {
                 if (kbXml == null) continue;
                 Optional<KeyBindingsManager.KeyBind> maybe = manager.getBind(kbXml.id);
                 if (maybe.isPresent()) {
-                    //comp.addBinding(maybe.get());
-                    LOG.debug("Added binding row for id='{}' action='{}' default='{}'",
-                            kbXml.id, kbXml.action, kbXml.defaultKey);
+                    comp.addBinding(maybe.get());
+                    LOG.debug("Added binding row for id='{}' action='{}' default='{}'", kbXml.id, kbXml.action, kbXml.defaultKey);
                 } else {
                     // If manager doesn't have this id (shouldn't happen), log and skip
                     LOG.warn("KeyBind '{}' present in XML but missing in manager; skipping row.", kbXml.id);
@@ -98,8 +97,8 @@ public class KeyBindingsBuilder implements ComponentBuilder<KeyBindingsXml> {
         }
 
         // Finalize layout — choose width/height by count of binds (sane defaults)
-        int bindsCount = Math.max(0, model.getBindsSafe().size());
-        float width = Math.max(480f, Math.min(900f, 520f));
+        int bindsCount = model.getBindsSafe().size();
+        float width = Math.min(900f, 520f);
         float perRow = 46f;
         float height = Math.max(120f, bindsCount * perRow + 24f);
         try {

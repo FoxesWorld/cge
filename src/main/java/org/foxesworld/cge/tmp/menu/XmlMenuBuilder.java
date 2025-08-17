@@ -43,7 +43,8 @@ public final class XmlMenuBuilder {
         try {
             return JAXBContext.newInstance(
                     MenuXml.class, ScreenXml.class, SceneXml.class, ButtonXml.class,
-                    TextXml.class, TabsXml.class, TabXml.class, SliderXml.class, CheckboxXml.class, PanelXml.class, ImageXml.class
+                    TextXml.class, TabsXml.class, TabXml.class, SliderXml.class,
+                    CheckboxXml.class, PanelXml.class, ImageXml.class, KeyBindingsXml.class, KeyBindXml.class
             );
         } catch (JAXBException e) {
             throw new RuntimeException("Failed to initialize JAXBContext for menu building.", e);
@@ -81,6 +82,7 @@ public final class XmlMenuBuilder {
         ComponentBuilder<ComponentXml> builder = (ComponentBuilder<ComponentXml>) registry.getBuilderFor(model);
         if (builder != null) {
             UIComponent component = builder.build(model, parent, context);
+            System.out.println(component.getNode());
             context.addComponent(component);
             return component;
         } else {

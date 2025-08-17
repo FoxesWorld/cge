@@ -1,0 +1,7 @@
+{
+  "forward": "W",
+  "back": "S",
+  "left": "A",
+  "right": "D",
+  "jump": "SPACE"
+}

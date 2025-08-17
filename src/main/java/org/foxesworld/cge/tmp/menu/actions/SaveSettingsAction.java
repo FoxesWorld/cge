@@ -4,6 +4,7 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import org.foxesworld.cge.tmp.menu.MainMenuAppState;
 import org.foxesworld.cge.tmp.menu.Settings;
+import org.foxesworld.cge.tmp.menu.components.KeyBindingsComponent;
 import org.foxesworld.cge.tmp.menu.components.UIComponent;
 import org.foxesworld.cge.tmp.menu.components.ViceCheckbox;
 import org.foxesworld.cge.tmp.menu.components.ViceSlider;
@@ -37,11 +38,20 @@ public final class SaveSettingsAction implements MenuAction {
         // apply UI values to settings instance (or static fields)
         for (UIComponent comp : mainMenuAppState.getBuilder().getContext().allComponents()) {
             String bind = comp.getBind();
+            Object value = "";
             if (bind == null || bind.isBlank()) continue;
 
-            Object value = (comp instanceof ViceCheckbox cb) ? cb.isChecked()
-                    : (comp instanceof ViceSlider s) ? s.getValue() : null;
-            if (value == null) continue;
+            if(comp instanceof ViceCheckbox cb) {
+                value = cb.isChecked();
+            }
+
+            if(comp instanceof ViceSlider vs) {
+                value = vs.getValue();
+            }
+
+            if(comp instanceof KeyBindingsComponent kc) {
+                //System.out.println(kc.getValue());
+            }
 
             try {
                 setByPath(mainMenuAppState.getSettingsInstance(), bind.split("\\."), value);

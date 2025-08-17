@@ -1,6 +1,11 @@
 package org.foxesworld.cge.tmp.menu.components;
 
+import com.jme3.asset.AssetManager;
+import com.jme3.material.Material;
+import com.jme3.math.ColorRGBA;
 import com.jme3.math.Vector2f;
+import com.jme3.math.Vector3f;
+import com.jme3.scene.Geometry;
 import com.jme3.scene.Node;
 
 /**
@@ -18,6 +23,46 @@ public abstract class UIComponent extends Node {
         super(id);
         this.id = id;
     }
+
+
+    protected void drawBounds(AssetManager assetManager) {
+        detachChildNamed("bounds");
+
+        Node boundsNode = new Node("bounds");
+
+        float w = getWidth();
+        float h = getHeight();
+
+        // координаты углов
+        Vector3f topLeft     = new Vector3f(0,   h, 0);
+        Vector3f topRight    = new Vector3f(w,   h, 0);
+        Vector3f bottomLeft  = new Vector3f(0,   0, 0);
+        Vector3f bottomRight = new Vector3f(w,   0, 0);
+
+        // линии
+        Geometry top = makeLine(assetManager, topLeft, topRight);
+        Geometry bottom = makeLine(assetManager, bottomLeft, bottomRight);
+        Geometry left = makeLine(assetManager, topLeft, bottomLeft);
+        Geometry right = makeLine(assetManager, topRight, bottomRight);
+
+        boundsNode.attachChild(top);
+        boundsNode.attachChild(bottom);
+        boundsNode.attachChild(left);
+        boundsNode.attachChild(right);
+
+        attachChild(boundsNode);
+    }
+
+    private Geometry makeLine(AssetManager assetManager, Vector3f start, Vector3f end) {
+        Geometry geo = new Geometry("boundLine", new com.jme3.scene.shape.Line(start, end));
+
+        Material mat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        mat.setColor("Color", ColorRGBA.Red);
+
+        geo.setMaterial(mat);
+        return geo;
+    }
+
 
     public abstract void update(float tpf);
     public abstract boolean intersects(Vector2f cursor);

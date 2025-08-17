@@ -115,7 +115,7 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
         ttc = ttFrenderer.getTextGeometry();
 
         // thumb — сферка
-        Sphere sphere = new Sphere(16, 16, THUMB_RADIUS);
+        Sphere sphere = new Sphere(32, 32, THUMB_RADIUS);
         thumb = new Geometry("SliderThumb", sphere);
         thumbMaterial = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
         thumbMaterial.setColor("Color", currentFillColor);
