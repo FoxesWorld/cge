@@ -3,6 +3,9 @@ package org.foxesworld.cge.tmp.menu;
 import com.jme3.app.Application;
 import com.jme3.app.SimpleApplication;
 import com.jme3.app.state.BaseAppState;
+import com.jme3.input.InputManager;
+import com.jme3.input.RawInputListener;
+import com.jme3.input.event.*;
 import com.jme3.light.AmbientLight;
 import com.jme3.light.DirectionalLight;
 import com.jme3.math.ColorRGBA;
@@ -18,6 +21,7 @@ import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -26,6 +30,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
  * - robust async background loading
  * - safer cleanup on disable
  * - safer reflection helper for reading nested setting fields
+ *
+ * Now contains an input queue and a pollKeyEvent() method which returns the next
+ * KeyInputEvent (or null) — useful for components that want to "listen once" for a key.
  */
 public final class MainMenuAppState extends BaseAppState {
 
@@ -52,6 +59,16 @@ public final class MainMenuAppState extends BaseAppState {
     // lighting handles for cleanup
     private AmbientLight ambientLight;
     private DirectionalLight directionalLight;
+
+    // ---------- input buffering ----------
+    /**
+     * Queue of KeyInputEvent objects collected from RawInputListener.
+     * pollKeyEvent() returns and removes the head (or null if empty).
+     */
+    private final ConcurrentLinkedQueue<KeyInputEvent> keyEventQueue = new ConcurrentLinkedQueue<>();
+
+    /** Raw input listener instance (registered/unregistered in onEnable/onDisable). */
+    private final RawInputListener inputCollector = new InputCollector();
 
     public MainMenuAppState(Class<?> settingsClass) {
         this.settingsClass = settingsClass;
@@ -111,6 +128,14 @@ public final class MainMenuAppState extends BaseAppState {
         SimpleApplication app = (SimpleApplication) getApplication();
         app.getFlyByCamera().setEnabled(false);
         app.getInputManager().setCursorVisible(true);
+
+        // register our RawInputListener to collect key events for pollKeyEvent()
+        try {
+            InputManager im = app.getInputManager();
+            im.addRawInputListener(inputCollector);
+        } catch (Exception ex) {
+            LOG.warn("Failed to register RawInputListener for MainMenuAppState", ex);
+        }
 
         // lighting & scene
         setupLights(app);
@@ -206,6 +231,15 @@ public final class MainMenuAppState extends BaseAppState {
 
     @Override
     protected void onDisable() {
+        // unregister RawInputListener to avoid leaking events when menu is disabled
+        try {
+            getApplication().getInputManager().removeRawInputListener(inputCollector);
+            // also clear any accumulated events
+            keyEventQueue.clear();
+        } catch (Exception ex) {
+            LOG.warn("Failed to remove RawInputListener", ex);
+        }
+
         // UI cleanup
         if (screenHandler != null) {
             try {
@@ -237,6 +271,43 @@ public final class MainMenuAppState extends BaseAppState {
 
         LOG.info("MainMenuAppState disabled and cleaned up (effects removed)");
     }
+
+    // ------------------- input polling API -------------------
+
+    /**
+     * Return the next KeyInputEvent that was captured by the RawInputListener,
+     * or null if none available. The returned event is removed from internal queue.
+     * Caller is responsible for checking evt.isPressed() etc.
+     */
+    public KeyInputEvent pollKeyEvent() {
+        return keyEventQueue.poll();
+    }
+
+    // ------------------- internal input collector -------------------
+
+    /**
+     * Minimal RawInputListener that collects KeyInputEvent objects into a concurrent queue.
+     * We keep other RawInputListener methods no-op.
+     */
+    private final class InputCollector implements RawInputListener {
+
+        @Override
+        public void onKeyEvent(KeyInputEvent evt) {
+            // store the event for later polling; we don't filter here (caller may want press/release)
+            if (evt != null) keyEventQueue.add(evt);
+        }
+
+        // other input events are ignored
+        @Override public void beginInput() {}
+        @Override public void endInput() {}
+        @Override public void onMouseMotionEvent(MouseMotionEvent evt) {}
+        @Override public void onMouseButtonEvent(MouseButtonEvent evt) {}
+        @Override public void onJoyAxisEvent(JoyAxisEvent evt) {}
+        @Override public void onJoyButtonEvent(JoyButtonEvent evt) {}
+        @Override public void onTouchEvent(TouchEvent evt) {}
+    }
+
+    // ----------------- helpers & getters -----------------
 
     public CalistaGameEngine getGameEngine() {
         return calistaGameEngine;

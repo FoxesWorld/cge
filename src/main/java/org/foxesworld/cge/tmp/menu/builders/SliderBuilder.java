@@ -17,13 +17,13 @@ public class SliderBuilder implements ComponentBuilder<SliderXml> {
     @Override
     public ViceSlider build(SliderXml model, Node parent, BuildContext context) {
         ViceSlider slider = new ViceSlider(
-                context.mainMenuAppState().getGameEngine().getAssetManager(),
+                context,
                 model
         );
 
 
             String[] binds = model.bind.split("\\.");
-            slider.setValue((Float) MainMenuAppState.getSettingsValue(binds[0], binds[1]));
+            slider.setValue(MainMenuAppState.getSettingsValue(binds[0], binds[1]));
 
         float width = MenuUtils.parseSize(String.valueOf(model.width), context.mainMenuAppState().getGameEngine().getCamera().getWidth());
         slider.setSize(width);

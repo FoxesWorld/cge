@@ -150,7 +150,7 @@
       "volume": 1.0,
       "pitch": 1.2,
       "pitchVariance": 0.06,
-      "cooldownMs": 80
+      "cooldownMs": 150
     }
   ],
   "checkbox.toggle": [
@@ -167,6 +167,29 @@
       "pitch": 1.2,
       "pitchVariance": 0.06,
       "cooldownMs": 80
+    }
+  ],
+  "slider.drag": [
+    {
+      "path": "assets/Sounds/ui/slider/drag0.ogg",
+      "volume": 1.0,
+      "pitch": 1.2,
+      "pitchVariance": 0.06,
+      "cooldownMs": 250
+    },
+    {
+      "path": "assets/Sounds/ui/slider/drag1.ogg",
+      "volume": 1.0,
+      "pitch": 1.2,
+      "pitchVariance": 0.06,
+      "cooldownMs": 150
+    },
+    {
+      "path": "assets/Sounds/ui/slider/drag2.ogg",
+      "volume": 1.0,
+      "pitch": 1.2,
+      "pitchVariance": 0.06,
+      "cooldownMs": 150
     }
   ]
 }

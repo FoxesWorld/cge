@@ -56,7 +56,8 @@ public class PanelXml extends ComponentXml {
             @XmlElement(name = "checkbox", type = CheckboxXml.class),
             @XmlElement(name = "text", type = TextXml.class),
             @XmlElement(name = "tabs", type = TabsXml.class),
-            @XmlElement(name = "image", type = ImageXml.class)
+            @XmlElement(name = "image", type = ImageXml.class),
+            @XmlElement(name = "KeyBindings", type =  KeyBindingsXml.class)
     })
     private List<ComponentXml> components;
 

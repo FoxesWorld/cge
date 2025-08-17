@@ -335,7 +335,7 @@ public final class MovementControl extends AbstractControl {
             @Override public void onMouseButtonEvent(com.jme3.input.event.MouseButtonEvent evt) {}
             @Override public void onTouchEvent(com.jme3.input.event.TouchEvent evt) {}
             @Override public void onKeyEvent(KeyInputEvent evt) {
-                if (evt.getKeyCode() == KeyInput.KEY_R && evt.isPressed()) {
+                if (evt.getKeyCode() == KeyInput.KEY_ESCAPE && evt.isPressed()) {
                     onRawKeyR();
                     evt.setConsumed();
                 }
@@ -367,6 +367,7 @@ public final class MovementControl extends AbstractControl {
     }
 
     private void onRawKeyR() {
+        this.player.getPlayerModule().getGameEngine().stop();
         System.out.println("RawInputListener: R was pressed!");
     }
 

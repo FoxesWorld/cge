@@ -2,11 +2,9 @@ package org.foxesworld.cge.tmp.menu;
 
 import com.jme3.scene.Node;
 import org.foxesworld.cge.tmp.menu.components.*;
-import org.foxesworld.cge.tmp.menu.components.ViceButton;
 import org.foxesworld.cge.tmp.menu.xml.SceneXml;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * An immutable data container that holds the complete result of parsing a menu XML file.
@@ -39,43 +37,4 @@ public record MenuData(
         );
     }
 
-    /**
-     * @return A filtered, type-safe list of all {@link ViceButton} components.
-     */
-    public List<ViceButton> getButtons() {
-        return allComponents.stream()
-                .filter(ViceButton.class::isInstance)
-                .map(ViceButton.class::cast)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * @return A filtered, type-safe list of all {@link ViceSlider} components.
-     */
-    public List<ViceSlider> getSliders() {
-        return allComponents.stream()
-                .filter(ViceSlider.class::isInstance)
-                .map(ViceSlider.class::cast)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * @return A filtered, type-safe list of all {@link ViceCheckbox} components.
-     */
-    public List<ViceCheckbox> getCheckboxes() {
-        return allComponents.stream()
-                .filter(ViceCheckbox.class::isInstance)
-                .map(ViceCheckbox.class::cast)
-                .collect(Collectors.toList());
-    }
-
-    /**
-     * @return A filtered, type-safe list of all {@link ViceTabs} components.
-     */
-    public List<ViceTabs> getTabGroups() {
-        return allComponents.stream()
-                .filter(ViceTabs.class::isInstance)
-                .map(ViceTabs.class::cast)
-                .collect(Collectors.toList());
-    }
 }

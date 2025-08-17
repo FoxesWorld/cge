@@ -11,7 +11,7 @@
             lookAtY="2.0" />
 
     <screen>
-        <panel id="logoPanel" anchor="TOP_LEFT" y="-25%" x="4%" width="250"  dpiScale="1.0" spacing="5" bgColor="#000000" bgAlpha="0.3">
+        <panel id="logoPanel" anchor="TOP_LEFT" y="-25%" x="4%" width="250"  dpiScale="1.0" spacing="5" bgColor="#000000" bgAlpha="0.95">
             <components>
                 <image scaleMode="cover" path="assets/Interface/ui/engine.png" />
             </components>

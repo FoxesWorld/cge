@@ -26,6 +26,11 @@
                     <tab iconPath="assets/Interface/ui/icons/process.png" title="CONTROLS">
                         <slider text="MOUSE SENSITIVITY" bind="controls.sensitivity"/>
                         <slider text="SMOOTHING"         bind="controls.smoothing"/>
+                        <KeyBindings>
+                            <KeyBind id="pause" action="Pause" defaultKey="P"/>
+                            <KeyBind id="radar" action="Radar Zoom / Multiplayer Information" defaultKey="Z"/>
+                        </KeyBindings>
+
                     </tab>
                 </tabs>
                 <button id="quit" action="org.foxesworld.cge.tmp.menu.actions.SaveSettingsAction" iconPath="assets/Interface/ui/icons/apply.png" iconSize="40" height="95" text="Применить" />

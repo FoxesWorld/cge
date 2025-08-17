@@ -15,6 +15,7 @@ import com.jme3.scene.shape.Quad;
 import com.jme3.scene.shape.Sphere;
 import org.foxesworld.cge.core.io.TTFrenderer;
 import org.foxesworld.cge.core.utils.ColorUtils;
+import org.foxesworld.cge.tmp.menu.BuildContext;
 import org.foxesworld.cge.tmp.menu.components.utils.InteractiveComponent;
 import org.foxesworld.cge.tmp.menu.components.utils.SoundComponent;
 import org.foxesworld.cge.tmp.menu.xml.SliderXml;
@@ -51,9 +52,10 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
     private final TTFrenderer ttFrenderer;
     private TrueTypeContainer ttc;
 
+    private final BuildContext buildContext;
     private final AssetManager assetManager;
 
-    private float value;
+    //private float value;
     private float displayedValue;
 
     private final ColorRGBA fillColor;
@@ -85,11 +87,11 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
         void onValueChanged(float newValue);
     }
 
-    public ViceSlider(AssetManager assetManager, SliderXml sliderXml) {
+    public ViceSlider(BuildContext buildContext, SliderXml sliderXml) {
         super(sliderXml.id);
-        this.assetManager = assetManager;
+        this.buildContext = buildContext;
+        this.assetManager = buildContext.mainMenuAppState().getGameEngine().getAssetManager();
         this.bind = sliderXml.bind;
-        this.displayedValue = this.value;
         this.fillColor = sliderXml.fillColor.isEmpty() ? DEFAULT_FILL_COLOR.clone() : ColorUtils.fromHexString(sliderXml.fillColor);
         this.borderColor = DEFAULT_BORDER_COLOR.clone();
         this.currentFillColor = this.fillColor.clone();
@@ -208,13 +210,13 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
     public void setValue(float newValue) {
         if (Float.isNaN(newValue)) return;
         newValue = FastMath.clamp(newValue, 0f, 1f);
-        if (Math.abs(newValue - value) > 0.0001f) {
-            value = newValue;
-            displayedValue = value;
+        if (Math.abs(newValue - (float) getValue()) > 0.0001f) {
+            super.setValue(newValue);
+            displayedValue = (float) getValue();
             updateValueLabel();
             updateVisuals();
             if (valueChangeListener != null) {
-                valueChangeListener.onValueChanged(value);
+                valueChangeListener.onValueChanged((Float) getValue());
             }
         }
     }
@@ -239,6 +241,7 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
         Vector2f worldPos = new Vector2f(worldPos3.x, worldPos3.y);
         float relativeX = cursorPos.x - worldPos.x;
         setValue(relativeX / getWidth());
+        //this.buildContext.mainMenuAppState().getGameEngine().getSoundManager().play("ui.slider.drag");
     }
 
     @Override
@@ -277,11 +280,11 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
     public void update(float tpf) {
         timeAccumulator += tpf;
         // animate displayed value towards value
-        if (Math.abs(displayedValue - value) > 0.001f) {
+        if (Math.abs(displayedValue - (float) getValue()) > 0.001f) {
             displayedValue = FastMath.interpolateLinear(
                     FastMath.clamp(ANIMATION_SPEED * tpf, 0f, 1f),
                     displayedValue,
-                    value);
+                    (float) getValue());
             updateVisuals();
         }
 
@@ -369,8 +372,4 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
         return "ui.press";
     }
 
-    @Override
-    public float getValue() {
-        return value;
-    }
 }

@@ -23,22 +23,17 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
     private final Runnable action;
     private final Style style;
 
-    private final Node contentNode; // для иконки + текста
+    private final Node contentNode;
     private final Picture icon;
 
     private final Vector2f position = new Vector2f();
     private boolean isSelected = false, isHovered = false, isActive = true;
 
-    // --- Анимационные состояния ---
     private final ColorRGBA currentLabelColor = new ColorRGBA();
     private final ColorRGBA currentBackgroundColor = new ColorRGBA();
     private final Vector2f currentNudge = new Vector2f();
     private float time = 0f;
 
-    /**
-     * Замечание: com.atr.jme.font.util.Style — это enum шрифта (Bold/Plain/...).
-     * Чтобы не путаться, внутренний стиль компонента назван StyleRecord.
-     */
     public ViceButton(String id, AssetManager assetManager, String text, Style style, Runnable action, String iconPath, float iconSize) {
         super(id);
         this.assetManager = assetManager;
@@ -49,16 +44,12 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
         this.contentNode = new Node("ButtonContent");
         attachChild(contentNode);
 
-        // TTFrenderer: генерируем шрифт и текст
         ttfRenderer = new TTFrenderer(assetManager);
-        // используем путь из стиля, или запасной путь, если пустой
         String fontPath = (style.fontPath == null || style.fontPath.isBlank())
                 ? "assets/Interface/fonts/FSElliotPro.ttf" : style.fontPath;
-        // masterSize 16 — базовый атласный размер; масштаб управляется через animateScaleTo/setScaleInstant
         ttfRenderer.generateFont(fontPath, com.atr.jme.font.util.Style.Plain, 16);
         ttfRenderer.generateText(style.defaultColor(), text);
 
-        // --- Background ---
         Material bgMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
         ColorRGBA bgColor = ColorUtils.fromHexString(style.backgroundColor());
         bgMat.setColor("Color", bgColor);
@@ -68,7 +59,6 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
         attachChild(background);
         currentBackgroundColor.set(bgColor);
 
-        // --- Content (icon + text geometry) ---
         this.icon = new Picture("icon");
         if (iconPath != null) {
             icon.setImage(assetManager, iconPath, true);
@@ -91,22 +81,18 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
         float lerp = FastMath.clamp(tpf * style.animationSpeed(), 0, 1);
         boolean glow = isSelected || isHovered;
 
-        // Цвет метки
         ColorRGBA targetLabelColor = glow ? style.selectedColor() : style.defaultColor();
         currentLabelColor.interpolateLocal(targetLabelColor, lerp);
         ttfRenderer.setColor(currentLabelColor);
 
-        // Фон
         ColorRGBA targetBackgroundColor = glow ? ColorUtils.fromHexString(style.hoverBackgroundColor()) : ColorUtils.fromHexString(style.backgroundColor());
         currentBackgroundColor.interpolateLocal(targetBackgroundColor, lerp);
         background.getMaterial().setColor("Color", currentBackgroundColor);
 
-        // Nudge (сдвиг)
         Vector2f targetNudge = glow ? style.hoverNudge() : Vector2f.ZERO;
         currentNudge.interpolateLocal(targetNudge, lerp);
         contentNode.setLocalTranslation(currentNudge.x, currentNudge.y, 0);
 
-        // --- Управление масштабом шрифта: если ховер — анимируем к scaleHover, иначе к 1.0 ---
         float hoverScale = style.hoverFontScale();
         float animSpeed = style.fontAnimationSpeed();
         if (isHovered) {
@@ -115,10 +101,7 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
             ttfRenderer.animateScaleTo(1f, animSpeed);
         }
 
-        // обновляем рендерер шрифта (анимация масштаба применяется здесь)
         ttfRenderer.update(tpf);
-
-        // центрируем контент заново, чтобы учесть изменение размеров текста при анимации
         centerContent();
     }
 
@@ -142,7 +125,7 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
         float textW = ttfRenderer.getTextGeometry().getWidth();
         float totalW = iconW + gap + textW;
 
-        float startX = (getWidth() - totalW) / 10f; // можно подправить, если хочется точнее центрировать
+        float startX = (getWidth() - totalW) / 10f;
 
         float iconY = (getHeight() - icon.getHeight()) / 2f;
         float textY = (getHeight() - ttfRenderer.getTextGeometry().getHeight()) / 2f;
@@ -153,6 +136,7 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
 
         ttfRenderer.getTextGeometry().setLocalTranslation(startX + iconW + gap, textY, 1);
     }
+
     public void executeAction() {
         if (isActive && action != null) action.run();
     }
@@ -165,11 +149,8 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
                 && pos.y >= wp.y && pos.y <= wp.y + getHeight();
     }
 
-
     @Override
     public void setHovered(boolean hovered) {
-        // при изменении состояния ховера будем переключать флаг,
-        // фактическая анимация масштаба выполняется в update(tpf)
         this.isHovered = hovered;
     }
 
@@ -188,7 +169,6 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
         if (!active) isHovered = false;
     }
 
-    // Компонентный стиль — теперь расширен параметрами для управления шрифтом
     public static final class Style {
         public final ColorRGBA defaultColor;
         public final ColorRGBA selectedColor;
@@ -200,10 +180,8 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
         public final Vector2f hoverNudge;
         public final float animationSpeed;
         private float iconGap;
-
-        // font scaling params
-        public final float hoverFontScale;      // например 1.12f
-        public final float fontAnimationSpeed;  // скорость анимации масштаба (units/sec-ish)
+        public final float hoverFontScale;
+        public final float fontAnimationSpeed;
 
         public Style(ColorRGBA defaultColor,
                      ColorRGBA selectedColor,
@@ -258,8 +236,8 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
                     new Vector2f(20f, 0f),
                     15f,
                     8f,
-                    1.2f,   // hover font scale
-                    8f       // font animation speed
+                    1.2f,
+                    8f
             );
         }
 
@@ -296,5 +274,12 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
     @Override
     public String getClickSound() {
         return "ui.press";
+    }
+
+    public void setLabel(String text) {
+        if (text == null) text = "";
+        ttfRenderer.generateText(style.defaultColor(), text);
+        ttfRenderer.setColor(currentLabelColor);
+        centerContent();
     }
 }

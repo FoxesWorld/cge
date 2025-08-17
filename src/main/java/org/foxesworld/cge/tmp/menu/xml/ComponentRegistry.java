@@ -28,6 +28,7 @@ public class ComponentRegistry {
         register(TabsXml.class, new TabsBuilder(mainBuilder));
         register(PanelXml.class, new PanelBuilder(mainBuilder));
         register(ImageXml.class, new ImageBuilder());
+        register(KeyBindingsXml.class, new KeyBindingsBuilder(mainBuilder));
     }
 
     private <T extends ComponentXml> void register(Class<T> modelClass, ComponentBuilder<T> builder) {

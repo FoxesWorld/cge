@@ -53,9 +53,7 @@ public final class MenuScreenHandler {
     public void showMainMenu() { switchScreen(MAIN_MENU_XML); }
 
     /** Переход к настройкам. */
-    public void showSettings() {
-        switchScreen(SETTINGS_MENU_XML);
-    }
+    public void showSettings() { switchScreen(SETTINGS_MENU_XML);}
 
     public void showAbout() { switchScreen(ABOUT_XML); }
 
@@ -68,14 +66,12 @@ public final class MenuScreenHandler {
         guiNode.attachChild(currentMenu.uiNode());
     }
 
-    /** Обновляет все компоненты и ввод. */
     public void update(float tpf) {
         if (currentMenu == null) return;
         currentMenu.allComponents().forEach(c -> c.update(tpf));
         inputHandler.updateHover();
     }
 
-    /** Освобождает ресурсы и слушатели. */
     public void cleanup() {
         if (currentMenu != null && currentMenu.uiNode() != null) {
             currentMenu.uiNode().removeFromParent();
@@ -150,12 +146,10 @@ public final class MenuScreenHandler {
                 dragging = false;
                 InteractiveComponent release = findComponent(c);
 
-                // Звук по нажатию (если компонент поддерживает звук)
                 if (focused != null && focused == release && release instanceof SoundComponent component) {
                     engine.getSoundManager().play(component.getClickSound());
                 }
 
-                // Выполнение действия компонента по типу
                 if (focused instanceof ViceButton vb) {
                     vb.executeAction();
                 }

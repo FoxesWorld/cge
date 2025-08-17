@@ -19,7 +19,7 @@ public class CheckboxBuilder implements ComponentBuilder<CheckboxXml> {
     public ViceCheckbox build(CheckboxXml model, Node parent, BuildContext context) {
         ViceCheckbox checkbox = new ViceCheckbox(
                 context.mainMenuAppState().getGameEngine().getAssetManager(),
-                ViceButton.Style.getViceStyle().fontPath(),
+                ViceButton.Style.getViceStyle().fontPath,
                 model
         );
 

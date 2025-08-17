@@ -53,6 +53,7 @@ public final class SaveSettingsAction implements MenuAction {
         // write JSON
         try {
             saveJson(mainMenuAppState.getSettingsPath());
+            this.mainMenuAppState.getGameEngine().getSoundManager().play("ui.submit");
         } catch (Exception e) {
             logErr("Save JSON failed: %s", e.toString());
         }
