@@ -7,7 +7,7 @@
   },
   "audio": {
     "master": 1.0,
-    "music": 0.0
+    "music": 1.0
   },
   "controls": {
     "sensitivity": 0.3506667,

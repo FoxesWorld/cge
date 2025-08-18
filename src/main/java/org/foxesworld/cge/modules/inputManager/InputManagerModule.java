@@ -84,7 +84,7 @@ public final class InputManagerModule extends EngineModule<InputConfig> {
         inputManager.clearMappings();
         digitalActionStates.clear();
 
-        Map<String, String> keyMappings = getConfig().getKeyMappings();
+        Map<String, String> keyMappings = getConfig().getKeyMappings(); //Getting here
         if (keyMappings == null || keyMappings.isEmpty()) {
             LOGGER.warn("No key mappings found in the configuration. The map is empty or null.");
             return;

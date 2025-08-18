@@ -1,7 +1,8 @@
 {
-  "forward": "W",
-  "back": "S",
-  "left": "A",
-  "right": "D",
-  "jump": "SPACE"
+  "move_forward": "KEY_W",
+  "move_backward": "KEY_S",
+  "strafe_left": "KEY_A",
+  "strafe_right": "KEY_D",
+  "jump": "KEY_SPACE",
+  "sprint": "KEY_LCONTROL"
 }

@@ -1,93 +1,94 @@
-[19:34:12.789][INFO][TaskScheduler] TaskScheduler initialized [Compute Threads: 20, IO Pool: Cached, Max IO Threads: 80]
-[19:34:15.398][INFO][ModuleManager] ModuleManager initialized with modules directory: modules
-[19:34:15.410][INFO][SoundManager] Чтение внешнего файла для 'ui': assets/Sounds/ui/ui.json
-[19:34:15.421][INFO][SoundManager] Loaded sound event: ui.press (5 descriptors)
-[19:34:15.423][INFO][SoundManager] Loaded sound event: ui.hover (6 descriptors)
-[19:34:15.423][INFO][SoundManager] Loaded sound event: ui.attention (1 descriptors)
-[19:34:15.424][INFO][SoundManager] Loaded sound event: ui.enter (1 descriptors)
-[19:34:15.425][INFO][SoundManager] Loaded sound event: ui.success (3 descriptors)
-[19:34:15.425][INFO][SoundManager] Loaded sound event: ui.toggle (3 descriptors)
-[19:34:15.425][INFO][SoundManager] Loaded sound event: ui.submit (1 descriptors)
-[19:34:15.426][INFO][SoundManager] Loaded sound event: ui.checkbox.toggle (2 descriptors)
-[19:34:15.426][INFO][SoundManager] Loaded sound event: ui.slider.drag (3 descriptors)
-[19:34:15.426][INFO][SoundManager] Чтение внешнего файла для 'player': assets/Sounds/player/player.json
-[19:34:15.429][INFO][SoundManager] Loaded sound event: player.step (15 descriptors)
-[19:34:15.430][INFO][SoundManager] Loaded sound event: player.land (3 descriptors)
-[19:34:15.430][INFO][SoundManager] Loaded sound event: player.takeoff (2 descriptors)
-[19:34:15.431][INFO][SoundManager] Loaded sound event: player.inventory.change (3 descriptors)
-[19:34:23.802][DEBUG][ComponentRegistry] Registered component builder for TextXml
-[19:34:23.803][DEBUG][ComponentRegistry] Registered component builder for ButtonXml
-[19:34:23.803][DEBUG][ComponentRegistry] Registered component builder for SliderXml
-[19:34:23.804][DEBUG][ComponentRegistry] Registered component builder for CheckboxXml
-[19:34:23.805][DEBUG][ComponentRegistry] Registered component builder for TabsXml
-[19:34:23.806][DEBUG][ComponentRegistry] Registered component builder for PanelXml
-[19:34:23.807][DEBUG][ComponentRegistry] Registered component builder for ImageXml
-[19:34:23.808][DEBUG][ComponentRegistry] Registered component builder for KeyBindingsXml
-[19:34:23.912][INFO][MainMenuAppState] Loading settings from C:\Users\Aiden\Documents\GitHub\CGE\cge\settings.json
-[19:34:23.916][INFO][MainMenuAppState] MainMenuAppState initialized (post-processing removed)
-[19:34:23.929][DEBUG][PanelBuilder] --- Building Panel id='logoPanel ---'.
-[19:34:23.931][DEBUG][PanelBuilder] Panel 'logoPanel' has 1 children.
-[19:34:23.933][INFO][PanelBuilder] Child null
-[19:34:23.933][DEBUG][PanelBuilder] Panel 'logoPanel' attached to parent 'XmlUIRoot'.
-[19:34:23.933][DEBUG][PanelBuilder] --- Building Panel id='main_panel ---'.
-[19:34:23.933][DEBUG][PanelBuilder] Panel 'main_panel' has 4 children.
-[19:34:23.968][INFO][PanelBuilder] Child play
-[19:34:23.980][INFO][PanelBuilder] Child settings
-[19:34:23.987][INFO][PanelBuilder] Child settings
-[19:34:23.997][INFO][PanelBuilder] Child quit
-[19:34:23.997][DEBUG][PanelBuilder] Panel 'main_panel' attached to parent 'XmlUIRoot'.
-[19:34:23.997][DEBUG][PanelBuilder] --- Building Panel id='infoPanel ---'.
-[19:34:23.998][DEBUG][PanelBuilder] Panel 'infoPanel' has 3 children.
-[19:34:24.007][INFO][PanelBuilder] Child title
-[19:34:24.016][INFO][PanelBuilder] Child version
-[19:34:24.020][INFO][PanelBuilder] Child type
-[19:34:24.020][DEBUG][PanelBuilder] Panel 'infoPanel' attached to parent 'XmlUIRoot'.
-[19:34:24.027][DEBUG][PanelBuilder] --- Building Panel id='logoPanel ---'.
-[19:34:24.028][DEBUG][PanelBuilder] Panel 'logoPanel' has 1 children.
-[19:34:24.028][INFO][PanelBuilder] Child null
-[19:34:24.028][DEBUG][PanelBuilder] Panel 'logoPanel' attached to parent 'XmlUIRoot'.
-[19:34:24.028][DEBUG][PanelBuilder] --- Building Panel id='main_panel ---'.
-[19:34:24.029][DEBUG][PanelBuilder] Panel 'main_panel' has 4 children.
-[19:34:24.029][INFO][PanelBuilder] Child play
-[19:34:24.030][INFO][PanelBuilder] Child settings
-[19:34:24.031][INFO][PanelBuilder] Child settings
-[19:34:24.032][INFO][PanelBuilder] Child quit
-[19:34:24.032][DEBUG][PanelBuilder] Panel 'main_panel' attached to parent 'XmlUIRoot'.
-[19:34:24.032][DEBUG][PanelBuilder] --- Building Panel id='infoPanel ---'.
-[19:34:24.032][DEBUG][PanelBuilder] Panel 'infoPanel' has 3 children.
-[19:34:24.033][INFO][PanelBuilder] Child title
-[19:34:24.034][INFO][PanelBuilder] Child version
-[19:34:24.035][INFO][PanelBuilder] Child type
-[19:34:24.035][DEBUG][PanelBuilder] Panel 'infoPanel' attached to parent 'XmlUIRoot'.
-[19:34:24.048][INFO][MainMenuAppState] Background loaded and attached (async)
-[19:34:25.496][INFO][OpenSettingsAction] Executing action: Open Settings Screen
-[19:34:25.500][DEBUG][PanelBuilder] --- Building Panel id='settings ---'.
-[19:34:25.500][DEBUG][PanelBuilder] Panel 'settings' has 3 children.
-[19:34:25.504][INFO][PanelBuilder] Child null
-[19:34:25.565][DEBUG][KeyBindingsBuilder] Added binding row for id='forward' action='Forward' default='W'
-[19:34:25.565][DEBUG][KeyBindingsBuilder] Added binding row for id='back' action='Back' default='S'
-[19:34:25.566][DEBUG][KeyBindingsBuilder] Added binding row for id='left' action='Left' default='A'
-[19:34:25.566][DEBUG][KeyBindingsBuilder] Added binding row for id='right' action='Right' default='D'
-[19:34:25.566][DEBUG][KeyBindingsBuilder] Added binding row for id='jump' action='Jump' default='space'
-[19:34:25.574][INFO][PanelBuilder] Child null
-[19:34:25.579][INFO][PanelBuilder] Child quit
-[19:34:25.580][DEBUG][PanelBuilder] Panel 'settings' attached to parent 'XmlUIRoot'.
-[19:35:11.668][INFO][GoBackToMainMenuAction] Executing action: Go Back To Main Menu
-[19:35:11.671][DEBUG][PanelBuilder] --- Building Panel id='logoPanel ---'.
-[19:35:11.671][DEBUG][PanelBuilder] Panel 'logoPanel' has 1 children.
-[19:35:11.671][INFO][PanelBuilder] Child null
-[19:35:11.671][DEBUG][PanelBuilder] Panel 'logoPanel' attached to parent 'XmlUIRoot'.
-[19:35:11.671][DEBUG][PanelBuilder] --- Building Panel id='main_panel ---'.
-[19:35:11.671][DEBUG][PanelBuilder] Panel 'main_panel' has 4 children.
-[19:35:11.677][INFO][PanelBuilder] Child play
-[19:35:11.682][INFO][PanelBuilder] Child settings
-[19:35:11.686][INFO][PanelBuilder] Child settings
-[19:35:11.691][INFO][PanelBuilder] Child quit
-[19:35:11.691][DEBUG][PanelBuilder] Panel 'main_panel' attached to parent 'XmlUIRoot'.
-[19:35:11.692][DEBUG][PanelBuilder] --- Building Panel id='infoPanel ---'.
-[19:35:11.692][DEBUG][PanelBuilder] Panel 'infoPanel' has 3 children.
-[19:35:11.692][INFO][PanelBuilder] Child title
-[19:35:11.693][INFO][PanelBuilder] Child version
-[19:35:11.693][INFO][PanelBuilder] Child type
-[19:35:11.693][DEBUG][PanelBuilder] Panel 'infoPanel' attached to parent 'XmlUIRoot'.
-[19:35:13.085][INFO][MainMenuAppState] MainMenuAppState disabled and cleaned up (effects removed)
+[08:39:24.309][INFO][TaskScheduler] TaskScheduler initialized [Compute Threads: 20, IO Pool: Cached, Max IO Threads: 80]
+[08:39:26.864][INFO][ModuleManager] ModuleManager initialized with modules directory: modules
+[08:39:26.878][INFO][SoundManager] Чтение внешнего файла для 'ui': assets/Sounds/ui/ui.json
+[08:39:26.888][INFO][SoundManager] Loaded sound event: ui.press (5 descriptors)
+[08:39:26.889][INFO][SoundManager] Loaded sound event: ui.hover (6 descriptors)
+[08:39:26.889][INFO][SoundManager] Loaded sound event: ui.attention (1 descriptors)
+[08:39:26.889][INFO][SoundManager] Loaded sound event: ui.enter (1 descriptors)
+[08:39:26.890][INFO][SoundManager] Loaded sound event: ui.success (3 descriptors)
+[08:39:26.890][INFO][SoundManager] Loaded sound event: ui.toggle (3 descriptors)
+[08:39:26.891][INFO][SoundManager] Loaded sound event: ui.submit (1 descriptors)
+[08:39:26.891][INFO][SoundManager] Loaded sound event: ui.checkbox.toggle (2 descriptors)
+[08:39:26.891][INFO][SoundManager] Loaded sound event: ui.slider.drag (3 descriptors)
+[08:39:26.891][INFO][SoundManager] Чтение внешнего файла для 'player': assets/Sounds/player/player.json
+[08:39:26.893][INFO][SoundManager] Loaded sound event: player.step (15 descriptors)
+[08:39:26.893][INFO][SoundManager] Loaded sound event: player.land (3 descriptors)
+[08:39:26.894][INFO][SoundManager] Loaded sound event: player.takeoff (2 descriptors)
+[08:39:26.894][INFO][SoundManager] Loaded sound event: player.inventory.change (3 descriptors)
+[08:39:31.598][DEBUG][ComponentRegistry] Registered component builder for TextXml
+[08:39:31.599][DEBUG][ComponentRegistry] Registered component builder for ButtonXml
+[08:39:31.600][DEBUG][ComponentRegistry] Registered component builder for SliderXml
+[08:39:31.601][DEBUG][ComponentRegistry] Registered component builder for CheckboxXml
+[08:39:31.602][DEBUG][ComponentRegistry] Registered component builder for TabsXml
+[08:39:31.603][DEBUG][ComponentRegistry] Registered component builder for PanelXml
+[08:39:31.604][DEBUG][ComponentRegistry] Registered component builder for ImageXml
+[08:39:31.605][DEBUG][ComponentRegistry] Registered component builder for KeyBindingsXml
+[08:39:31.714][INFO][MainMenuAppState] Loading settings from C:\Users\Aiden\Documents\GitHub\CGE\cge\settings.json
+[08:39:31.718][INFO][MainMenuAppState] MainMenuAppState initialized (post-processing removed)
+[08:39:31.733][DEBUG][PanelBuilder] --- Building Panel id='logoPanel ---'.
+[08:39:31.735][DEBUG][PanelBuilder] Panel 'logoPanel' has 1 children.
+[08:39:31.737][INFO][PanelBuilder] Child null
+[08:39:31.737][DEBUG][PanelBuilder] Panel 'logoPanel' attached to parent 'XmlUIRoot'.
+[08:39:31.737][DEBUG][PanelBuilder] --- Building Panel id='main_panel ---'.
+[08:39:31.737][DEBUG][PanelBuilder] Panel 'main_panel' has 4 children.
+[08:39:31.771][INFO][PanelBuilder] Child play
+[08:39:31.780][INFO][PanelBuilder] Child settings
+[08:39:31.788][INFO][PanelBuilder] Child settings
+[08:39:31.803][INFO][PanelBuilder] Child quit
+[08:39:31.803][DEBUG][PanelBuilder] Panel 'main_panel' attached to parent 'XmlUIRoot'.
+[08:39:31.803][DEBUG][PanelBuilder] --- Building Panel id='infoPanel ---'.
+[08:39:31.803][DEBUG][PanelBuilder] Panel 'infoPanel' has 3 children.
+[08:39:31.814][INFO][PanelBuilder] Child title
+[08:39:31.822][INFO][PanelBuilder] Child version
+[08:39:31.825][INFO][PanelBuilder] Child type
+[08:39:31.826][DEBUG][PanelBuilder] Panel 'infoPanel' attached to parent 'XmlUIRoot'.
+[08:39:31.831][DEBUG][PanelBuilder] --- Building Panel id='logoPanel ---'.
+[08:39:31.831][DEBUG][PanelBuilder] Panel 'logoPanel' has 1 children.
+[08:39:31.832][INFO][PanelBuilder] Child null
+[08:39:31.832][DEBUG][PanelBuilder] Panel 'logoPanel' attached to parent 'XmlUIRoot'.
+[08:39:31.832][DEBUG][PanelBuilder] --- Building Panel id='main_panel ---'.
+[08:39:31.832][DEBUG][PanelBuilder] Panel 'main_panel' has 4 children.
+[08:39:31.833][INFO][PanelBuilder] Child play
+[08:39:31.834][INFO][PanelBuilder] Child settings
+[08:39:31.834][INFO][PanelBuilder] Child settings
+[08:39:31.835][INFO][PanelBuilder] Child quit
+[08:39:31.835][DEBUG][PanelBuilder] Panel 'main_panel' attached to parent 'XmlUIRoot'.
+[08:39:31.835][DEBUG][PanelBuilder] --- Building Panel id='infoPanel ---'.
+[08:39:31.835][DEBUG][PanelBuilder] Panel 'infoPanel' has 3 children.
+[08:39:31.836][INFO][PanelBuilder] Child title
+[08:39:31.837][INFO][PanelBuilder] Child version
+[08:39:31.837][INFO][PanelBuilder] Child type
+[08:39:31.838][DEBUG][PanelBuilder] Panel 'infoPanel' attached to parent 'XmlUIRoot'.
+[08:39:31.850][INFO][MainMenuAppState] Background loaded and attached (async)
+[08:39:33.442][INFO][OpenSettingsAction] Executing action: Open Settings Screen
+[08:39:33.445][DEBUG][PanelBuilder] --- Building Panel id='settings ---'.
+[08:39:33.446][DEBUG][PanelBuilder] Panel 'settings' has 3 children.
+[08:39:33.450][INFO][PanelBuilder] Child null
+[08:39:33.522][DEBUG][KeyBindingsBuilder] Added binding row for id='move_forward' action='Forward' default='W'
+[08:39:33.522][DEBUG][KeyBindingsBuilder] Added binding row for id='move_backward' action='Back' default='S'
+[08:39:33.522][DEBUG][KeyBindingsBuilder] Added binding row for id='strafe_left' action='Left' default='A'
+[08:39:33.522][DEBUG][KeyBindingsBuilder] Added binding row for id='strafe_right' action='Right' default='D'
+[08:39:33.522][DEBUG][KeyBindingsBuilder] Added binding row for id='jump' action='Jump' default='space'
+[08:39:33.522][DEBUG][KeyBindingsBuilder] Added binding row for id='sprint' action='Sprint' default='LSHIFT'
+[08:39:33.531][INFO][PanelBuilder] Child null
+[08:39:33.537][INFO][PanelBuilder] Child quit
+[08:39:33.538][DEBUG][PanelBuilder] Panel 'settings' attached to parent 'XmlUIRoot'.
+[08:41:02.240][INFO][GoBackToMainMenuAction] Executing action: Go Back To Main Menu
+[08:41:02.243][DEBUG][PanelBuilder] --- Building Panel id='logoPanel ---'.
+[08:41:02.243][DEBUG][PanelBuilder] Panel 'logoPanel' has 1 children.
+[08:41:02.272][INFO][PanelBuilder] Child null
+[08:41:02.273][DEBUG][PanelBuilder] Panel 'logoPanel' attached to parent 'XmlUIRoot'.
+[08:41:02.273][DEBUG][PanelBuilder] --- Building Panel id='main_panel ---'.
+[08:41:02.273][DEBUG][PanelBuilder] Panel 'main_panel' has 4 children.
+[08:41:02.279][INFO][PanelBuilder] Child play
+[08:41:02.285][INFO][PanelBuilder] Child settings
+[08:41:02.290][INFO][PanelBuilder] Child settings
+[08:41:02.296][INFO][PanelBuilder] Child quit
+[08:41:02.296][DEBUG][PanelBuilder] Panel 'main_panel' attached to parent 'XmlUIRoot'.
+[08:41:02.296][DEBUG][PanelBuilder] --- Building Panel id='infoPanel ---'.
+[08:41:02.296][DEBUG][PanelBuilder] Panel 'infoPanel' has 3 children.
+[08:41:02.297][INFO][PanelBuilder] Child title
+[08:41:02.297][INFO][PanelBuilder] Child version
+[08:41:02.298][INFO][PanelBuilder] Child type
+[08:41:02.298][DEBUG][PanelBuilder] Panel 'infoPanel' attached to parent 'XmlUIRoot'.
+[08:41:03.404][INFO][MainMenuAppState] MainMenuAppState disabled and cleaned up (effects removed)

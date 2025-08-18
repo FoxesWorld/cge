@@ -24,11 +24,12 @@
                         <slider text="MOUSE SENSITIVITY" bind="controls.sensitivity" />
                         <slider text="SMOOTHING"         bind="controls.smoothing"   />
                         <KeyBindings>
-                            <KeyBind id="forward" action="Forward" defaultKey="W"     />
-                            <KeyBind id="back"    action="Back"    defaultKey="S"     />
-                            <KeyBind id="left"    action="Left"    defaultKey="A"     />
-                            <KeyBind id="right"   action="Right"   defaultKey="D"     />
-                            <KeyBind id="jump"    action="Jump"    defaultKey="space" />
+                            <KeyBind id="move_forward"      action="Forward"  defaultKey="W"     />
+                            <KeyBind id="move_backward"     action="Back"     defaultKey="S"     />
+                            <KeyBind id="strafe_left"       action="Left"     defaultKey="A"     />
+                            <KeyBind id="strafe_right"      action="Right"    defaultKey="D"     />
+                            <KeyBind id="jump"              action="Jump"     defaultKey="space" />
+                            <KeyBind id="sprint"            action="Sprint"   defaultKey="LSHIFT" />
                         </KeyBindings>
 
                     </tab>
