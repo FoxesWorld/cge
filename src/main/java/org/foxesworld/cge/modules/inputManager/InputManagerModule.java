@@ -1,5 +1,7 @@
 package org.foxesworld.cge.modules.inputManager;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.jme3.app.Application;
 import com.jme3.input.InputManager;
 import com.jme3.input.KeyInput;
@@ -10,6 +12,9 @@ import org.apache.logging.log4j.Logger;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.core.module.EngineModule;
 
+import java.io.FileReader;
+import java.io.IOException;
+import java.lang.reflect.Type;
 import java.util.Map;
 import java.util.Optional;
 import java.util.OptionalInt;
@@ -43,6 +48,7 @@ public final class InputManagerModule extends EngineModule<InputConfig> {
 
     /**
      * Constructs the InputManagerModule.
+     *
      * @param app The CalistaGameEngine instance.
      */
     public InputManagerModule(CalistaGameEngine app) {
@@ -84,15 +90,30 @@ public final class InputManagerModule extends EngineModule<InputConfig> {
         inputManager.clearMappings();
         digitalActionStates.clear();
 
-        Map<String, String> keyMappings = getConfig().getKeyMappings(); //Getting here
-        if (keyMappings == null || keyMappings.isEmpty()) {
-            LOGGER.warn("No key mappings found in the configuration. The map is empty or null.");
-            return;
+        //TODO CHANGE FILENAME TO VARIABLE
+        try (FileReader reader = new FileReader("keybindings.json")) {
+            Type type = new TypeToken<Map<String, Object>>(){}.getType();
+            Map<String, String> keyMappings = new Gson().fromJson(reader, type);
+            //TODO TEMPORARY ASSIGNMENT  TO REPLACE TO SETTINGS
+            keyMappings.put("cam_left", "MOUSE_AXIS_X-");
+            keyMappings.put("cam_right", "MOUSE_AXIS_X+");
+            keyMappings.put("cam_up", "MOUSE_AXIS_Y-");
+            keyMappings.put("cam_down", "MOUSE_AXIS_Y+");
+            keyMappings.put("zoom_in", "MOUSE_AXIS_WHEEL-");
+            keyMappings.put("zoom_out", "MOUSE_AXIS_WHEEL+");
+            //TODO
+            if (keyMappings == null || keyMappings.isEmpty()) {
+                LOGGER.warn("No key mappings found in the configuration. The map is empty or null.");
+                return;
+            }
+
+            LOGGER.info("Found {} total mappings to apply.", keyMappings.size());
+            keyMappings.forEach(this::parseAndRegisterBinding);
+            LOGGER.info("InputManagerModule successfully applied all valid bindings.");
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
 
-        LOGGER.info("Found {} total mappings to apply.", keyMappings.size());
-        keyMappings.forEach(this::parseAndRegisterBinding);
-        LOGGER.info("InputManagerModule successfully applied all valid bindings.");
     }
 
     /**
@@ -144,9 +165,15 @@ public final class InputManagerModule extends EngineModule<InputConfig> {
 
         int axis;
         switch (parts[2].substring(0, 1).toUpperCase()) {
-            case "X": axis = MouseInput.AXIS_X; break;
-            case "Y": axis = MouseInput.AXIS_Y; break;
-            case "W": axis = MouseInput.AXIS_WHEEL; break;
+            case "X":
+                axis = MouseInput.AXIS_X;
+                break;
+            case "Y":
+                axis = MouseInput.AXIS_Y;
+                break;
+            case "W":
+                axis = MouseInput.AXIS_WHEEL;
+                break;
             default:
                 LOGGER.error("Invalid mouse axis specified in '{}'", triggerName);
                 return Optional.empty();
@@ -158,9 +185,12 @@ public final class InputManagerModule extends EngineModule<InputConfig> {
     private OptionalInt parseMouseButtonCode(String buttonName) {
         String name = buttonName.substring("BUTTON_".length()).toUpperCase();
         switch (name) {
-            case "LEFT": return OptionalInt.of(MouseInput.BUTTON_LEFT);
-            case "RIGHT": return OptionalInt.of(MouseInput.BUTTON_RIGHT);
-            case "MIDDLE": return OptionalInt.of(MouseInput.BUTTON_MIDDLE);
+            case "LEFT":
+                return OptionalInt.of(MouseInput.BUTTON_LEFT);
+            case "RIGHT":
+                return OptionalInt.of(MouseInput.BUTTON_RIGHT);
+            case "MIDDLE":
+                return OptionalInt.of(MouseInput.BUTTON_MIDDLE);
             default:
                 try {
                     // For BUTTON_0, BUTTON_1 etc.
@@ -184,11 +214,14 @@ public final class InputManagerModule extends EngineModule<InputConfig> {
     }
 
     @Override
-    protected void onEnable() {}
+    protected void onEnable() {
+    }
 
     @Override
-    protected void onDisable() {}
+    protected void onDisable() {
+    }
 
     @Override
-    protected void updateModule(float tpf) {}
+    protected void updateModule(float tpf) {
+    }
 }
