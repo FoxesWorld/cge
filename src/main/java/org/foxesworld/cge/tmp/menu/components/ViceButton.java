@@ -20,6 +20,7 @@ import java.util.Objects;
 /**
  * ViceButton — стильная "эпичная" кнопка с подсветкой, тенью и эффектами при ховере/нажатии.
  * Добавлена опция textAlign (LEFT/CENTER/RIGHT) и padding в Style.
+ * Исправлен nudge: теперь плавно смещает содержимое при наведении и при нажатии.
  */
 public final class ViceButton extends UIComponent implements InteractiveComponent, SoundComponent {
 
@@ -27,7 +28,6 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
 
     private final AssetManager assetManager;
     private final TTFrenderer ttfRenderer;
-    private Geometry shadowGeom;
     private Geometry background;
 
     private final Runnable action;
@@ -37,10 +37,12 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
     private final Picture icon;
 
     private final Vector2f position = new Vector2f();
+    private final Vector2f currentNudge = new Vector2f();
     private boolean isSelected = false;
     private boolean isHovered = false;
     private boolean isActive = true;
     private boolean pressed = false;
+    private boolean pressedInside = false;
 
     private final ColorRGBA currentLabelColor = new ColorRGBA();
     private final ColorRGBA currentBackgroundColor = new ColorRGBA();
@@ -64,13 +66,6 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
         String fontPath = (style.fontPath == null || style.fontPath.isBlank()) ? "assets/Interface/fonts/FSElliotPro.ttf" : style.fontPath;
         ttfRenderer.generateFont(fontPath, com.atr.jme.font.util.Style.Plain, Math.max(12, (int) (style.baseFontSize())));
         ttfRenderer.generateText(style.defaultColor(), text == null ? "" : text);
-
-        Material shadowMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
-        shadowMat.setColor("Color", new ColorRGBA(0f, 0f, 0f, 0.45f));
-        shadowGeom = new Geometry("btn-shadow", new RoundedQuad(1f, 1f, style.cornerRadius(), 16));
-        shadowGeom.setMaterial(shadowMat);
-        shadowGeom.setLocalTranslation(0f, -style.shadowOffset(), -2f);
-        attachChild(shadowGeom);
 
         Material bgMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
         ColorRGBA bgColor = ColorUtils.fromHexString(style.backgroundColor());
@@ -122,10 +117,13 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
         float curScale = FastMath.interpolateLinear(smooth, getLocalScale().x, targetScale);
         setLocalScale(curScale, curScale, 1f);
 
-        shadowGeom.setLocalScale(0.98f, 0.98f, 1f);
-        shadowGeom.setLocalTranslation(getWidth() / 2f, getHeight() / 2f - style.shadowOffset(), -2f);
+        // --- FIXED: nudge handling (smooth interpolation) ---
+        Vector2f targetNudge = pressed ? style.hoverNudge : (isHovered ? style.hoverNudge() : Vector2f.ZERO);
+        currentNudge.x = FastMath.interpolateLinear(smooth, currentNudge.x, targetNudge.x);
+        currentNudge.y = FastMath.interpolateLinear(smooth, currentNudge.y, targetNudge.y);
+        contentNode.setLocalTranslation(currentNudge.x, currentNudge.y, 0f);
 
-        centerContent();
+        formatContent();
         ttfRenderer.update(tpf);
     }
 
@@ -136,10 +134,7 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
         background.setMesh(new RoundedQuad(width, height, style.cornerRadius(), 16));
         background.setLocalTranslation(width / 2f, height / 2f, -1f);
 
-        shadowGeom.setMesh(new RoundedQuad(width * 0.98f, height * 0.98f, style.cornerRadius(), 16));
-        shadowGeom.setLocalTranslation(width / 2f, height / 2f - style.shadowOffset(), -2f);
-
-        centerContent();
+        formatContent();
     }
 
     public void setPosition(float x, float y) {
@@ -147,7 +142,7 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
         setLocalTranslation(x, y, 0);
     }
 
-    private void centerContent() {
+    private void formatContent() {
         float padding = Math.max(0f, style.padding());
         float iconW = (icon != null && icon.getWidth() > 0) ? icon.getWidth() : 0f;
         float gap = iconW > 0 ? style.iconGap() : 0f;
@@ -160,18 +155,11 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
         float startX;
         TextAlign align = style.textAlign();
 
-        switch (align) {
-            case LEFT:
-                startX = padding;
-                break;
-            case RIGHT:
-                startX = getWidth() - clampedTotalW - padding;
-                break;
-            default:
-            case CENTER:
-                startX = (getWidth() - clampedTotalW) / 2f;
-                break;
-        }
+        startX = switch (align) {
+            case LEFT -> padding;
+            case RIGHT -> getWidth() - clampedTotalW - padding;
+            default -> (getWidth() - clampedTotalW) / 2f;
+        };
 
         // if totalW was clamped, shrink text width allocation (we don't change mesh, but shift to avoid overflow)
         float iconOffset = Math.min(iconW, clampedTotalW);
@@ -183,11 +171,12 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
         }
 
         float textX = startX + iconOffset + (iconW > 0 ? gap : 0f);
-        ttfRenderer.getTextGeometry().setLocalTranslation(textX, (getHeight() - ttfRenderer.getTextGeometry().getHeight()) / 2f, 1f);
+        // apply currentNudge when positioning text so layout and nudge align visually
+        ttfRenderer.getTextGeometry().setLocalTranslation(textX + currentNudge.x, (getHeight() - ttfRenderer.getTextGeometry().getHeight()) / 2f + currentNudge.y, 1f);
     }
 
     public void executeAction() { if (isActive && action != null) action.run(); }
-    
+
     @Override
     public boolean intersects(Vector2f pos) {
         if (!isActive) return false;
@@ -211,23 +200,24 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
     @Override
     public void handleMousePress(Vector2f c) {
         if (!isActive) return;
-        if (intersects(c)) pressed = true;
+        pressed = true;
+        pressedInside = intersects(c);
     }
 
     @Override
     public void handleMouseDrag(Vector2f c) {
         if (!isActive) return;
-        if (pressed && !intersects(c)) pressed = false;
+        if (pressed) pressedInside = intersects(c);
     }
 
     @Override
     public void handleMouseRelease() {
         if (!isActive) return;
         boolean wasPressed = pressed;
+        boolean doTrigger = pressedInside && wasPressed;
         pressed = false;
-        if (wasPressed) {
-            executeAction();
-        }
+        pressedInside = false;
+        if (doTrigger) executeAction();
     }
 
     @Override
@@ -237,6 +227,9 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
             isHovered = false;
             pressed = false;
             isSelected = false;
+            pressedInside = false;
+            currentNudge.set(0f, 0f);
+            contentNode.setLocalTranslation(0f, 0f, 0f);
         }
     }
 
@@ -284,7 +277,7 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
             this.hoverBackgroundColor = hoverBackgroundColor;
             this.fontPath = fontPath;
             this.cornerRadius = cornerRadius;
-            this.hoverNudge = hoverNudge;
+            this.hoverNudge = hoverNudge == null ? new Vector2f(0f, 0f) : hoverNudge;
             this.animationSpeed = animationSpeed;
             this.iconGap = iconGap;
             this.hoverFontScale = hoverFontScale;
@@ -366,6 +359,6 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
         if (text == null) text = "";
         ttfRenderer.generateText(style.defaultColor(), text);
         ttfRenderer.setColor(currentLabelColor);
-        centerContent();
+        formatContent();
     }
 }
