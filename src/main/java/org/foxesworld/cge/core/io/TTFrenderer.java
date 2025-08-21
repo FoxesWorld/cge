@@ -230,4 +230,8 @@ public class TTFrenderer {
             throw new IllegalStateException("generateText() must be called before manipulating text");
         }
     }
+
+    public String getFontPath() {
+        return fontPath;
+    }
 }
