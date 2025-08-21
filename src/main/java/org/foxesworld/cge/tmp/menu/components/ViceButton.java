@@ -15,11 +15,21 @@ import org.foxesworld.cge.tmp.menu.components.utils.InteractiveComponent;
 import org.foxesworld.cge.tmp.menu.components.utils.RoundedQuad;
 import org.foxesworld.cge.tmp.menu.components.utils.SoundComponent;
 
+import java.util.Objects;
+
+/**
+ * ViceButton — стильная "эпичная" кнопка с подсветкой, тенью и эффектами при ховере/нажатии.
+ * Добавлена опция textAlign (LEFT/CENTER/RIGHT) и padding в Style.
+ */
 public final class ViceButton extends UIComponent implements InteractiveComponent, SoundComponent {
+
+    public enum TextAlign { LEFT, CENTER, RIGHT }
 
     private final AssetManager assetManager;
     private final TTFrenderer ttfRenderer;
-    private final Geometry background;
+    private Geometry shadowGeom;
+    private Geometry background;
+
     private final Runnable action;
     private final Style style;
 
@@ -27,44 +37,59 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
     private final Picture icon;
 
     private final Vector2f position = new Vector2f();
-    private boolean isSelected = false, isHovered = false, isActive = true;
+    private boolean isSelected = false;
+    private boolean isHovered = false;
+    private boolean isActive = true;
+    private boolean pressed = false;
 
     private final ColorRGBA currentLabelColor = new ColorRGBA();
     private final ColorRGBA currentBackgroundColor = new ColorRGBA();
-    private final Vector2f currentNudge = new Vector2f();
     private float time = 0f;
+
+    private float glowScale = 1f;
+    private float glowAlpha = 0f;
+    private float flashTimer = 0f;
 
     public ViceButton(String id, AssetManager assetManager, String text, Style style, Runnable action, String iconPath, float iconSize) {
         super(id);
-        this.assetManager = assetManager;
+        this.assetManager = Objects.requireNonNull(assetManager, "AssetManager");
         this.action = action;
-        this.style = style;
+        this.style = Objects.requireNonNull(style, "Style");
 
-        setName("ViceButton: " + text);
+        setName("ViceButton: " + (text == null ? "" : text));
         this.contentNode = new Node("ButtonContent");
         attachChild(contentNode);
 
         ttfRenderer = new TTFrenderer(assetManager);
-        String fontPath = (style.fontPath == null || style.fontPath.isBlank())
-                ? "assets/Interface/fonts/FSElliotPro.ttf" : style.fontPath;
-        ttfRenderer.generateFont(fontPath, com.atr.jme.font.util.Style.Plain, 16);
-        ttfRenderer.generateText(style.defaultColor(), text);
+        String fontPath = (style.fontPath == null || style.fontPath.isBlank()) ? "assets/Interface/fonts/FSElliotPro.ttf" : style.fontPath;
+        ttfRenderer.generateFont(fontPath, com.atr.jme.font.util.Style.Plain, Math.max(12, (int) (style.baseFontSize())));
+        ttfRenderer.generateText(style.defaultColor(), text == null ? "" : text);
+
+        Material shadowMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
+        shadowMat.setColor("Color", new ColorRGBA(0f, 0f, 0f, 0.45f));
+        shadowGeom = new Geometry("btn-shadow", new RoundedQuad(1f, 1f, style.cornerRadius(), 16));
+        shadowGeom.setMaterial(shadowMat);
+        shadowGeom.setLocalTranslation(0f, -style.shadowOffset(), -2f);
+        attachChild(shadowGeom);
 
         Material bgMat = new Material(assetManager, "Common/MatDefs/Misc/Unshaded.j3md");
         ColorRGBA bgColor = ColorUtils.fromHexString(style.backgroundColor());
         bgMat.setColor("Color", bgColor);
         bgMat.getAdditionalRenderState().setBlendMode(BlendMode.Alpha);
-        this.background = new Geometry("ButtonBackground");
-        this.background.setMaterial(bgMat);
+        background = new Geometry("ButtonBackground", new RoundedQuad(1f, 1f, style.cornerRadius(), 16));
+        background.setMaterial(bgMat);
+        background.setLocalTranslation(0, 0, -1f);
         attachChild(background);
         currentBackgroundColor.set(bgColor);
 
         this.icon = new Picture("icon");
-        if (iconPath != null) {
-            icon.setImage(assetManager, iconPath, true);
-            icon.setWidth(iconSize);
-            icon.setHeight(iconSize);
-            contentNode.attachChild(icon);
+        if (iconPath != null && !iconPath.isBlank()) {
+            try {
+                icon.setImage(assetManager, iconPath, true);
+                icon.setWidth(Math.max(0.1f, iconSize));
+                icon.setHeight(Math.max(0.1f, iconSize));
+                contentNode.attachChild(icon);
+            } catch (Exception ignored) {}
         }
 
         currentLabelColor.set(style.defaultColor());
@@ -78,31 +103,30 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
     @Override
     public void update(float tpf) {
         time += tpf;
-        float lerp = FastMath.clamp(tpf * style.animationSpeed(), 0, 1);
-        boolean glow = isSelected || isHovered;
+        float smooth = FastMath.clamp(tpf * style.animationSpeed(), 0f, 1f);
 
-        ColorRGBA targetLabelColor = glow ? style.selectedColor() : style.defaultColor();
-        currentLabelColor.interpolateLocal(targetLabelColor, lerp);
+        float targetGlowScale = (isHovered && isActive) ? style.hoverGlowScale() : 1f;
+        glowScale = FastMath.interpolateLinear(smooth, glowScale, targetGlowScale);
+        float targetGlowAlpha = (isHovered && isActive) ? style.maxGlowAlpha() : 0f;
+        glowAlpha = FastMath.interpolateLinear(smooth, glowAlpha, targetGlowAlpha);
+
+        ColorRGBA targetBg = (isHovered || pressed) ? ColorUtils.fromHexString(style.hoverBackgroundColor()) : ColorUtils.fromHexString(style.backgroundColor());
+        currentBackgroundColor.interpolateLocal(targetBg, smooth);
+        try { background.getMaterial().setColor("Color", currentBackgroundColor); } catch (Exception ignored) {}
+
+        ColorRGBA targetLabel = (isHovered || pressed) ? style.selectedColor() : style.defaultColor();
+        currentLabelColor.interpolateLocal(targetLabel, smooth);
         ttfRenderer.setColor(currentLabelColor);
 
-        ColorRGBA targetBackgroundColor = glow ? ColorUtils.fromHexString(style.hoverBackgroundColor()) : ColorUtils.fromHexString(style.backgroundColor());
-        currentBackgroundColor.interpolateLocal(targetBackgroundColor, lerp);
-        background.getMaterial().setColor("Color", currentBackgroundColor);
+        float targetScale = pressed ? style.pressedScale() : 1f;
+        float curScale = FastMath.interpolateLinear(smooth, getLocalScale().x, targetScale);
+        setLocalScale(curScale, curScale, 1f);
 
-        Vector2f targetNudge = glow ? style.hoverNudge() : Vector2f.ZERO;
-        currentNudge.interpolateLocal(targetNudge, lerp);
-        contentNode.setLocalTranslation(currentNudge.x, currentNudge.y, 0);
+        shadowGeom.setLocalScale(0.98f, 0.98f, 1f);
+        shadowGeom.setLocalTranslation(getWidth() / 2f, getHeight() / 2f - style.shadowOffset(), -2f);
 
-        float hoverScale = style.hoverFontScale();
-        float animSpeed = style.fontAnimationSpeed();
-        if (isHovered) {
-            ttfRenderer.animateScaleTo(hoverScale, animSpeed);
-        } else {
-            ttfRenderer.animateScaleTo(1f, animSpeed);
-        }
-
-        ttfRenderer.update(tpf);
         centerContent();
+        ttfRenderer.update(tpf);
     }
 
     public void setSize(float width, float height) {
@@ -111,6 +135,10 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
 
         background.setMesh(new RoundedQuad(width, height, style.cornerRadius(), 16));
         background.setLocalTranslation(width / 2f, height / 2f, -1f);
+
+        shadowGeom.setMesh(new RoundedQuad(width * 0.98f, height * 0.98f, style.cornerRadius(), 16));
+        shadowGeom.setLocalTranslation(width / 2f, height / 2f - style.shadowOffset(), -2f);
+
         centerContent();
     }
 
@@ -120,27 +148,46 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
     }
 
     private void centerContent() {
-        float iconW = icon.getWidth();
-        float gap = iconW > 0 ? style.iconGap() : 0;
+        float padding = Math.max(0f, style.padding());
+        float iconW = (icon != null && icon.getWidth() > 0) ? icon.getWidth() : 0f;
+        float gap = iconW > 0 ? style.iconGap() : 0f;
         float textW = ttfRenderer.getTextGeometry().getWidth();
         float totalW = iconW + gap + textW;
 
-        float startX = (getWidth() - totalW) / 10f;
+        // ensure totalW doesn't exceed available width
+        float availableW = Math.max(0f, getWidth() - 2f * padding);
+        float clampedTotalW = Math.min(totalW, availableW);
+        float startX;
+        TextAlign align = style.textAlign();
 
-        float iconY = (getHeight() - icon.getHeight()) / 2f;
-        float textY = (getHeight() - ttfRenderer.getTextGeometry().getHeight()) / 2f;
-
-        if (iconW > 0) {
-            icon.setLocalTranslation(startX, iconY, 0);
+        switch (align) {
+            case LEFT:
+                startX = padding;
+                break;
+            case RIGHT:
+                startX = getWidth() - clampedTotalW - padding;
+                break;
+            default:
+            case CENTER:
+                startX = (getWidth() - clampedTotalW) / 2f;
+                break;
         }
 
-        ttfRenderer.getTextGeometry().setLocalTranslation(startX + iconW + gap, textY, 1);
+        // if totalW was clamped, shrink text width allocation (we don't change mesh, but shift to avoid overflow)
+        float iconOffset = Math.min(iconW, clampedTotalW);
+        float textOffset = clampedTotalW - iconOffset - gap;
+        if (textOffset < 0f) textOffset = 0f;
+
+        if (iconW > 0 && icon != null) {
+            icon.setLocalTranslation(startX, (getHeight() - icon.getHeight()) / 2f, 0.5f);
+        }
+
+        float textX = startX + iconOffset + (iconW > 0 ? gap : 0f);
+        ttfRenderer.getTextGeometry().setLocalTranslation(textX, (getHeight() - ttfRenderer.getTextGeometry().getHeight()) / 2f, 1f);
     }
 
-    public void executeAction() {
-        if (isActive && action != null) action.run();
-    }
-
+    public void executeAction() { if (isActive && action != null) action.run(); }
+    
     @Override
     public boolean intersects(Vector2f pos) {
         if (!isActive) return false;
@@ -151,30 +198,53 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
 
     @Override
     public void setHovered(boolean hovered) {
+        if (!isActive) { this.isHovered = false; return; }
         this.isHovered = hovered;
     }
 
-    @Override
-    public void handleMousePress(Vector2f c) {}
+    public void handleMouseMove(Vector2f c) {
+        boolean contains = intersects(c);
+        if (!isActive) contains = false;
+        setHovered(contains);
+    }
 
     @Override
-    public void handleMouseDrag(Vector2f c) {}
+    public void handleMousePress(Vector2f c) {
+        if (!isActive) return;
+        if (intersects(c)) pressed = true;
+    }
 
     @Override
-    public void handleMouseRelease() {}
+    public void handleMouseDrag(Vector2f c) {
+        if (!isActive) return;
+        if (pressed && !intersects(c)) pressed = false;
+    }
+
+    @Override
+    public void handleMouseRelease() {
+        if (!isActive) return;
+        boolean wasPressed = pressed;
+        pressed = false;
+        if (wasPressed) {
+            executeAction();
+        }
+    }
 
     @Override
     public void setActive(boolean active) {
         this.isActive = active;
-        if (!active) isHovered = false;
+        if (!active) {
+            isHovered = false;
+            pressed = false;
+            isSelected = false;
+        }
     }
 
     public static final class Style {
         public final ColorRGBA defaultColor;
         public final ColorRGBA selectedColor;
-        public final ColorRGBA glowColor;
-        private String backgroundColor;
-        private String hoverBackgroundColor;
+        private final String backgroundColor;
+        private final String hoverBackgroundColor;
         public final String fontPath;
         private float cornerRadius;
         public final Vector2f hoverNudge;
@@ -183,9 +253,22 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
         public final float hoverFontScale;
         public final float fontAnimationSpeed;
 
+        // alignment & padding
+        private TextAlign textAlign = TextAlign.CENTER;
+        private float padding = 12f;
+
+        // epic parameters
+        private float hoverGlowScale = 1.08f;
+        private float maxGlowAlpha = 0.8f;
+        private float flashDuration = 0.12f;
+        private float flashPeakAlpha = 0.9f;
+        private float flashScale = 1.35f;
+        private float pressedScale = 0.96f;
+        private float shadowOffset = 6f;
+        private float baseFontSize = 18f;
+
         public Style(ColorRGBA defaultColor,
                      ColorRGBA selectedColor,
-                     ColorRGBA glowColor,
                      String backgroundColor,
                      String hoverBackgroundColor,
                      String fontPath,
@@ -197,7 +280,6 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
                      float fontAnimationSpeed) {
             this.defaultColor = defaultColor;
             this.selectedColor = selectedColor;
-            this.glowColor = glowColor;
             this.backgroundColor = backgroundColor;
             this.hoverBackgroundColor = hoverBackgroundColor;
             this.fontPath = fontPath;
@@ -211,7 +293,6 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
 
         public ColorRGBA defaultColor() { return defaultColor; }
         public ColorRGBA selectedColor() { return selectedColor; }
-        public ColorRGBA glowColor() { return glowColor; }
         public String backgroundColor() { return backgroundColor; }
         public String hoverBackgroundColor() { return hoverBackgroundColor; }
         public String fontPath() { return fontPath; }
@@ -222,59 +303,64 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
         public float hoverFontScale() { return hoverFontScale; }
         public float fontAnimationSpeed() { return fontAnimationSpeed; }
 
+        // alignment getters/setters
+        public TextAlign textAlign() { return textAlign; }
+        public void setTextAlign(TextAlign a) { this.textAlign = a == null ? TextAlign.CENTER : a; }
+
+        public float padding() { return padding; }
+        public void setPadding(float p) { this.padding = Math.max(0f, p); }
+
+        // epic getters
+        public float hoverGlowScale() { return hoverGlowScale; }
+        public float maxGlowAlpha() { return maxGlowAlpha; }
+        public float flashDuration() { return flashDuration; }
+        public float flashPeakAlpha() { return flashPeakAlpha; }
+        public float flashScale() { return flashScale; }
+        public float pressedScale() { return pressedScale; }
+        public float shadowOffset() { return shadowOffset; }
+        public float baseFontSize() { return baseFontSize; }
+
+        public void setCornerRadius(float cornerRadius) { this.cornerRadius = cornerRadius; }
+        public void setIconGap(float iconGap) { this.iconGap = iconGap; }
+
         public static Style getViceStyle() {
             String font = "assets/Interface/fonts/FSElliotPro.ttf";
-            ColorRGBA base = new ColorRGBA(1f, 0.2f, 0.6f, 1f);
-            return new Style(
+            ColorRGBA base = new ColorRGBA(1f, 0.25f, 0.7f, 1f);
+            Style s = new Style(
                     ColorRGBA.White.clone(),
                     base,
-                    base.mult(2.5f),
                     "#232425",
                     "#2f3240cc",
                     font,
-                    15f,
-                    new Vector2f(20f, 0f),
-                    15f,
+                    18f,
+                    new Vector2f(8f, 0f),
+                    12f,
                     8f,
-                    1.2f,
+                    1.12f,
                     8f
             );
+            s.hoverGlowScale = 1.08f;
+            s.textAlign = TextAlign.LEFT;
+            s.padding = 12f;
+            return s;
         }
 
-        public void setCornerRadius(float cornerRadius) {
-            this.cornerRadius = cornerRadius;
-        }
-
-        public void setBackgroundColor(String backgroundColor) {
-            this.backgroundColor = backgroundColor;
-        }
-
-        public void setHoverBackgroundColor(String hoverBackgroundColor) {
-            this.hoverBackgroundColor = hoverBackgroundColor;
-        }
-
-        public void setIconGap(float iconGap) {
-            this.iconGap = iconGap;
-        }
+        // tuning setters
+        public void setHoverGlowScale(float s) { this.hoverGlowScale = s; }
+        public void setFlashParams(float duration, float peakAlpha, float scale) { this.flashDuration = duration; this.flashPeakAlpha = peakAlpha; this.flashScale = scale; }
+        public void setPressedScale(float s) { this.pressedScale = s; }
+        public void setShadowOffset(float o) { this.shadowOffset = o; }
+        public void setBaseFontSize(float s) { this.baseFontSize = s; }
     }
 
-    public TTFrenderer getTtfRenderer() {
-        return ttfRenderer;
-    }
-
-    public boolean isActive() {
-        return isActive;
-    }
+    public TTFrenderer getTtfRenderer() { return ttfRenderer; }
+    public boolean isActive() { return isActive; }
 
     @Override
-    public String getHoverSound(){
-        return "ui.hover";
-    }
+    public String getHoverSound() { return "ui.hover"; }
 
     @Override
-    public String getClickSound() {
-        return "ui.press";
-    }
+    public String getClickSound() { return "ui.press"; }
 
     public void setLabel(String text) {
         if (text == null) text = "";

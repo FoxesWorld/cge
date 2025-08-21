@@ -22,40 +22,26 @@ import java.util.*;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
- * Менеджер привязок клавиш.
- *
- * Хранение пользовательских привязок теперь осуществляется в JSON файле (человеко-читаемый).
- * ВАЖНО: имена сохраняются с префиксами (например KEY_W, KEY_SPACE, KEY_LSHIFT).
+ * Менеджер привязок клавиш с хранением в JSON.
+ * Имя клавиши сохраняется с префиксом (например KEY_W, KEY_SPACE).
  */
 public final class KeyBindingsManager {
 
     private static final Logger LOG = LoggerFactory.getLogger(KeyBindingsManager.class);
-
-    /** Префикс для mapping names в InputManager */
     private static final String MAPPING_PREFIX = "kb_action_";
-
-    /** Отражённые мапы имя → keyCode и обратно. CODE_TO_NAME хранит префиксированные имена (KEY_...). */
     private static final Map<String, Integer> NAME_TO_CODE = new HashMap<>();
     private static final Map<Integer, String> CODE_TO_NAME = new HashMap<>();
 
     static {
         try {
-            // Заполним карты именами из KeyInput, **сохраняя полный KEY_* формат** в CODE_TO_NAME.
             for (Field f : KeyInput.class.getFields()) {
-                String fname = f.getName();           // например "KEY_A", "KEY_SPACE"
+                String fname = f.getName();
                 if (!fname.startsWith("KEY_")) continue;
                 int code = f.getInt(null);
-
-                // сохраняем полное имя с префиксом
                 NAME_TO_CODE.put(fname, code);
                 CODE_TO_NAME.put(code, fname);
-
-                // и сохраняем удобные алиасы (без префикса), чтобы парсинг принимал "W", "SPACE" и т.д.
-                String shortName = fname.substring(4); // KEY_A -> A, KEY_SPACE -> SPACE
-                NAME_TO_CODE.putIfAbsent(shortName, code);
+                NAME_TO_CODE.putIfAbsent(fname.substring(4), code);
             }
-
-            // дополнительные удобные алиасы (без префикса) — на всякий случай
             NAME_TO_CODE.putIfAbsent("ENTER", KeyInput.KEY_RETURN);
             NAME_TO_CODE.putIfAbsent("RETURN", KeyInput.KEY_RETURN);
             NAME_TO_CODE.putIfAbsent("ESC", KeyInput.KEY_ESCAPE);
@@ -69,13 +55,10 @@ public final class KeyBindingsManager {
             NAME_TO_CODE.putIfAbsent("DOWN", KeyInput.KEY_DOWN);
             NAME_TO_CODE.putIfAbsent("LEFT", KeyInput.KEY_LEFT);
             NAME_TO_CODE.putIfAbsent("RIGHT", KeyInput.KEY_RIGHT);
-
-            // ensure CODE_TO_NAME has entries for aliased codes (they already added from KeyInput loop)
-            // (no-op here, but kept for clarity)
             for (Map.Entry<String, Integer> e : NAME_TO_CODE.entrySet()) {
-                CODE_TO_NAME.putIfAbsent(e.getValue(), e.getKey().startsWith("KEY_") ? e.getKey() : "KEY_" + e.getKey());
+                CODE_TO_NAME.putIfAbsent(e.getValue(),
+                        e.getKey().startsWith("KEY_") ? e.getKey() : "KEY_" + e.getKey());
             }
-
         } catch (Exception ex) {
             LOG.warn("KeyInput reflection initialization failed", ex);
         }
@@ -83,10 +66,10 @@ public final class KeyBindingsManager {
 
     /** Модель одной привязки */
     public static final class KeyBind {
-        public final String id;         // уникальный id (из XML)
-        public final String action;     // человекочитаемое описание действия
-        public final String defaultKey; // строковое имя дефолтной клавиши, как в XML (может быть "SPACE" или "KEY_SPACE")
-        private volatile int currentKeyCode; // текущий KeyInput код (-1 == none)
+        public final String id;
+        public final String action;
+        public final String defaultKey;
+        private volatile int currentKeyCode;
 
         KeyBind(String id, String action, String defaultKey, int defaultKeyCode) {
             this.id = Objects.requireNonNull(id);
@@ -99,32 +82,21 @@ public final class KeyBindingsManager {
         void setCurrentKeyCode(int code) { this.currentKeyCode = code; }
     }
 
-    /** внутреннее хранилище — LinkedHashMap чтобы сохранять порядок из XML */
     private final LinkedHashMap<String, KeyBind> binds = new LinkedHashMap<>();
-
-    /** jme InputManager (null-safe external) */
     private final InputManager inputManager;
 
-    /** listeners для изменений привязок */
     public interface BindingChangeListener {
         void onBindingChanged(KeyBind oldBind, KeyBind newBind);
     }
     private final List<BindingChangeListener> listeners = new CopyOnWriteArrayList<>();
 
-    /** JSON persistence */
     private final Path storageFile;
     private final Gson gson;
 
-    /**
-     * Конструктор с дефолтным файлом хранения (./keybindings.json).
-     */
     public KeyBindingsManager(InputManager inputManager) {
         this(inputManager, new File("keybindings.json").toPath());
     }
 
-    /**
-     * Конструктор с указанным файлом хранения.
-     */
     public KeyBindingsManager(InputManager inputManager, Path storageFile) {
         this.inputManager = inputManager;
         this.gson = new GsonBuilder().setPrettyPrinting().create();
@@ -137,11 +109,8 @@ public final class KeyBindingsManager {
         }
     }
 
-    // ================= XML парсинг =================
-
     /**
      * Загружает определения привязок из XML-стрима.
-     * Ожидается корневой элемент <KeyBindings> и элементы <KeyBind id="" action="" defaultKey=""/>
      */
     public void loadDefinitionsFromXml(InputStream xmlStream) throws Exception {
         Objects.requireNonNull(xmlStream);
@@ -158,16 +127,13 @@ public final class KeyBindingsManager {
             Node n = nodes.item(i);
             if (n.getNodeType() != Node.ELEMENT_NODE) continue;
             Element el = (Element) n;
-
             String id = el.getAttribute("id");
             String action = el.getAttribute("action");
             String defaultKey = el.getAttribute("defaultKey");
-
-            if (id == null || id.isEmpty()) {
+            if (id.isEmpty()) {
                 LOG.warn("Skipping KeyBind with missing id (action='{}')", action);
                 continue;
             }
-
             int defaultCode = parseKeyNameToCode(defaultKey);
             KeyBind kb = new KeyBind(id, action, defaultKey, defaultCode);
             tmp.put(id, kb);
@@ -176,28 +142,22 @@ public final class KeyBindingsManager {
             binds.clear();
             binds.putAll(tmp);
         }
-
-        // restore user overrides from JSON file
         restoreFromFile();
     }
 
-    // ================= Persistence (JSON) =================
-
-    /** Восстановить (override) сохранённые значения из JSON файла. */
+    /** Восстановить сохранённые значения из JSON файла. */
     public void restoreFromFile() {
-        if (storageFile == null) { return;}
+        if (storageFile == null) return;
         if (!Files.exists(storageFile)) {
             saveToFile();
             return;
         }
-
         try {
             String json = Files.readString(storageFile, StandardCharsets.UTF_8);
-            if (json == null || json.trim().isEmpty()) return;
+            if (json.trim().isEmpty()) return;
             Type mapType = new TypeToken<Map<String, String>>() {}.getType();
             Map<String, String> stored = gson.fromJson(json, mapType);
             if (stored == null) return;
-
             synchronized (binds) {
                 for (KeyBind kb : binds.values()) {
                     String val = stored.get(kb.id);
@@ -215,33 +175,27 @@ public final class KeyBindingsManager {
         }
     }
 
-    /** Сохраняет текущие привязки в JSON файл. Имена будут в формате KEY_* (при возможности). */
+    /** Сохраняет текущие привязки в JSON файл. */
     public void saveToFile() {
         if (storageFile == null) return;
         Map<String, String> out = new LinkedHashMap<>();
         synchronized (binds) {
             for (KeyBind kb : binds.values()) {
-                String name = keyCodeToName(kb.getCurrentKeyCode()); // prefixed name if known
-                if (name == null) {
-                    // convert defaultKey to prefixed form when possible
-                    name = convertToPrefixedName(kb.defaultKey);
-                }
+                String name = keyCodeToName(kb.getCurrentKeyCode());
+                if (name == null) name = convertToPrefixedName(kb.defaultKey);
                 if (name != null) out.put(kb.id, name);
             }
         }
         try {
-            // ensure parent exists
             Path parent = storageFile.getParent();
             if (parent != null) Files.createDirectories(parent);
-
             String json = gson.toJson(out);
             Path tmp = storageFile.resolveSibling(storageFile.getFileName().toString() + ".tmp");
-            Files.writeString(tmp, json, StandardCharsets.UTF_8, StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
-
+            Files.writeString(tmp, json, StandardCharsets.UTF_8,
+                    StandardOpenOption.CREATE, StandardOpenOption.TRUNCATE_EXISTING);
             try {
                 Files.move(tmp, storageFile, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
             } catch (AtomicMoveNotSupportedException amnse) {
-                // fallback
                 Files.move(tmp, storageFile, StandardCopyOption.REPLACE_EXISTING);
             }
         } catch (IOException io) {
@@ -249,7 +203,7 @@ public final class KeyBindingsManager {
         }
     }
 
-    /** Сбросить все привязки к дефолтам (и сохранить). */
+    /** Сбросить все привязки к дефолтам. */
     public void resetToDefaults() {
         synchronized (binds) {
             for (KeyBind kb : binds.values()) {
@@ -260,8 +214,6 @@ public final class KeyBindingsManager {
         saveToFile();
         notifyAllBindingsChanged();
     }
-
-    // ================= Query API =================
 
     public Collection<KeyBind> getAllBinds() {
         synchronized (binds) {
@@ -288,15 +240,8 @@ public final class KeyBindingsManager {
         return findByKeyCode(keyCode).isPresent();
     }
 
-    // ================= Rebinding =================
-
     /**
      * Переназначить указанную привязку на новый keyCode.
-     *
-     * @param id             id привязки
-     * @param newKeyCode     новый KeyInput код
-     * @param swapIfConflict если true и ключ уже занят — выполнит swap между привязками.
-     * @return true если операция успешна
      */
     public boolean rebind(String id, int newKeyCode, boolean swapIfConflict) {
         Objects.requireNonNull(id);
@@ -305,12 +250,9 @@ public final class KeyBindingsManager {
             if (target == null) return false;
             int oldCode = target.getCurrentKeyCode();
             if (oldCode == newKeyCode) return true;
-
             Optional<KeyBind> other = findByKeyCode(newKeyCode);
             if (other.isPresent()) {
-                if (!swapIfConflict) {
-                    return false; // конфликт и не хотим менять
-                }
+                if (!swapIfConflict) return false;
                 KeyBind otherKb = other.get();
                 otherKb.setCurrentKeyCode(oldCode);
                 target.setCurrentKeyCode(newKeyCode);
@@ -325,9 +267,7 @@ public final class KeyBindingsManager {
         }
     }
 
-    // ================= InputManager integration =================
-
-    /** Применить все текущие бинды к InputManager (создаёт или перезаписывает mapping'и). */
+    /** Применить все бинды к InputManager. */
     public void applyAllToInputManager() {
         synchronized (binds) {
             for (KeyBind kb : binds.values()) {
@@ -338,33 +278,24 @@ public final class KeyBindingsManager {
 
     /** Применить одну привязку к InputManager. */
     public void applyBindingToInputManager(KeyBind kb) {
-        if (kb == null) return;
-        if (inputManager == null) {
-            LOG.debug("InputManager is null — skipping apply for {}", kb.id);
-            return;
-        }
+        if (kb == null || inputManager == null) return;
         String mapping = getMappingName(kb.id);
         try {
             try { inputManager.deleteMapping(mapping); } catch (Exception ignored) {}
             int code = kb.getCurrentKeyCode();
-            if (code >= 0) {
-                inputManager.addMapping(mapping, new KeyTrigger(code));
-            }
+            if (code >= 0) inputManager.addMapping(mapping, new KeyTrigger(code));
         } catch (Exception ex) {
-            LOG.warn("Failed to apply binding {} -> {} (mapping {})", kb.id, keyCodeToName(kb.getCurrentKeyCode()), mapping, ex);
+            LOG.warn("Failed to apply binding {} -> {} (mapping {})",
+                    kb.id, keyCodeToName(kb.getCurrentKeyCode()), mapping, ex);
         }
     }
 
-    /** Возвращает имя мэппинга, используемое в InputManager для данного id. */
     public static String getMappingName(String id) {
         return MAPPING_PREFIX + id;
     }
 
-    // ================= Listeners API =================
-
     public void addListener(BindingChangeListener listener) {
-        if (listener == null) return;
-        listeners.add(listener);
+        if (listener != null) listeners.add(listener);
     }
 
     public void removeListener(BindingChangeListener listener) {
@@ -379,7 +310,8 @@ public final class KeyBindingsManager {
             newKb = new KeyBind(oldKb.id, oldKb.action, oldKb.defaultKey, newCode);
         }
         for (BindingChangeListener l : listeners) {
-            try { l.onBindingChanged(oldKb, newKb); } catch (Exception ex) { LOG.warn("Listener failed", ex); }
+            try { l.onBindingChanged(oldKb, newKb); }
+            catch (Exception ex) { LOG.warn("Listener failed", ex); }
         }
     }
 
@@ -391,43 +323,33 @@ public final class KeyBindingsManager {
         }
     }
 
-    // ================= Key name/code utils =================
-
     /**
-     * Попытаться распарсить строковое имя клавиши (например "KEY_W", "W", "SPACE", "KEY_LSHIFT") в KeyInput код.
-     * Возвращает -1 если неизвестно.
+     * Преобразует строковое имя клавиши в KeyInput код.
      */
     public static int parseKeyNameToCode(String name) {
         if (name == null) return -1;
         String s = name.trim().toUpperCase();
         if (s.isEmpty()) return -1;
-
-        // 1) прямой поиск (поддерживает и "KEY_W" и алиасы "W", "SPACE")
         Integer code = NAME_TO_CODE.get(s);
         if (code != null) return code;
-
-        // 2) если ввели без префикса — попробуем добавить "KEY_" и искать
-        if (!s.startsWith("KEY_") && s.length() > 0) {
+        if (!s.startsWith("KEY_")) {
             code = NAME_TO_CODE.get("KEY_" + s);
             if (code != null) return code;
         }
-
         return -1;
     }
 
     /**
-     * Возвращает имя по коду в **префиксированном виде** (например "KEY_W") или null, если неизвестно.
+     * Возвращает имя по коду в префиксированном виде (например "KEY_W").
      */
     public static String keyCodeToName(int code) {
         return CODE_TO_NAME.get(code);
     }
 
-    /** Попытка конвертации значения defaultKey в префиксированную форму, если возможно. */
     private static String convertToPrefixedName(String raw) {
         if (raw == null) return null;
         String s = raw.trim().toUpperCase();
         if (s.isEmpty()) return null;
-        // если уже в префиксированном виде — вернуть как есть
         if (s.startsWith("KEY_") || s.startsWith("BUTTON_") || s.startsWith("MOUSE_")) return s;
         int code = parseKeyNameToCode(s);
         if (code >= 0) {
@@ -437,7 +359,6 @@ public final class KeyBindingsManager {
         return s;
     }
 
-    /** Опционально: доступ к используемому файлу */
     public Path getStorageFile() {
         return storageFile;
     }

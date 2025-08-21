@@ -12,8 +12,12 @@ public class ButtonBuilder implements ComponentBuilder<ButtonXml> {
 
     @Override
     public ViceButton build(ButtonXml model, Node parent, BuildContext context) {
+        ViceButton.Style style = ViceButton.Style.getViceStyle();
+        if(model.textAlign != null) {
+            style.setTextAlign(ViceButton.TextAlign.valueOf(model.textAlign.toUpperCase()));
+        }
         Runnable action = MenuUtils.createActionFromClassName(model.action, context.mainMenuAppState().getGameEngine());
-        ViceButton button = new ViceButton(model.id, context.mainMenuAppState().getGameEngine().getAssetManager(), model.text, ViceButton.Style.getViceStyle(), action,  model.iconPath, model.iconSize);
+        ViceButton button = new ViceButton(model.id, context.mainMenuAppState().getGameEngine().getAssetManager(), model.text, style, action,  model.iconPath, model.iconSize);
 
         float width = MenuUtils.parseSize(model.width, context.mainMenuAppState().getGameEngine().getCamera().getWidth());
         float height = MenuUtils.parseSize(model.height, context.mainMenuAppState().getGameEngine().getCamera().getHeight());

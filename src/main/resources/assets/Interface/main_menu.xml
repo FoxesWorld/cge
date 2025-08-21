@@ -21,7 +21,7 @@
             <components>
                 <button id="play" action="org.foxesworld.cge.tmp.menu.actions.StartGameAction" iconPath="assets/Interface/ui/icons/play.png"  iconSize="40" height="95" text="Играть" />
                 <button id="settings" action="org.foxesworld.cge.tmp.menu.actions.OpenSettingsAction" iconPath="assets/Interface/ui/icons/settings.png" iconSize="40" height="95" text="Настройки" />
-                <button id="settings" action="org.foxesworld.cge.tmp.menu.actions.OpenAboutAction" iconPath="assets/Interface/ui/icons/info.png" iconSize="40" height="95" text="Что это" />
+                <button id="settings"  textAlign="center" action="org.foxesworld.cge.tmp.menu.actions.OpenAboutAction" iconPath="assets/Interface/ui/icons/info.png" iconSize="40" height="95" text="Что это" />
                 <button id="quit" action="org.foxesworld.cge.tmp.menu.actions.QuitGameAction" iconPath="assets/Interface/ui/icons/quit.png" iconSize="40" height="95" text="Выход" />
             </components>
         </panel>

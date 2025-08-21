@@ -8,6 +8,7 @@ import com.jme3.input.controls.MouseAxisTrigger;
 import com.jme3.input.controls.MouseButtonTrigger;
 import com.jme3.math.Vector2f;
 import com.jme3.scene.Node;
+import com.jme3.scene.Spatial;
 import org.foxesworld.cge.CalistaGameEngine;
 import org.foxesworld.cge.tmp.menu.components.UIComponent;
 import org.foxesworld.cge.tmp.menu.components.utils.InteractiveComponent;
@@ -49,7 +50,7 @@ public final class MenuScreenHandler {
         showMainMenu();
     }
 
-    /** Переход к главному экрану. */
+
     public void showMainMenu() { switchScreen(MAIN_MENU_XML); }
 
     /** Переход к настройкам. */

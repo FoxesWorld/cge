@@ -317,6 +317,7 @@ public final class MainMenuAppState extends BaseAppState {
         return builder;
     }
 
+
     public void showAboutScreen() {
         screenHandler.showAbout();
     }

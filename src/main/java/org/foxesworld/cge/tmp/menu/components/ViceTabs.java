@@ -107,8 +107,8 @@ public final class ViceTabs extends UIComponent implements InteractiveComponent 
         this.buttonStyle = (buttonStyle != null) ? buttonStyle : ViceButton.Style.getViceStyle();
         // фиксируем оформление кнопок для табов: углы и цвета — можно вынести в конфиг позже
         this.buttonStyle.setCornerRadius(0);
-        this.buttonStyle.setBackgroundColor("#ffffff");
-        this.buttonStyle.setHoverBackgroundColor("#000000");
+        //this.buttonStyle.setBackgroundColor("#ffffff");
+        //this.buttonStyle.setHoverBackgroundColor("#000000");
 
         this.orientation = (orientation == null) ? Orientation.HORIZONTAL : orientation;
 

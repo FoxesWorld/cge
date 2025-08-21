@@ -10,6 +10,9 @@ public class ButtonXml extends ComponentXml {
     public String action;
 
     @XmlAttribute
+    public String textAlign;
+
+    @XmlAttribute
     public float iconSize = 100f;
 
     @XmlAttribute
@@ -26,7 +29,6 @@ public class ButtonXml extends ComponentXml {
      * These will be used if 'width' or 'height' are not specified in the XML tag.
      */
     public ButtonXml() {
-        // Устанавливаем значения по умолчанию
         this.width = "400";
         this.height = "55";
     }

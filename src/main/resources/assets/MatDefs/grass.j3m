@@ -1,6 +1,6 @@
 Material Grass : Common/MatDefs/Light/PBRLighting.j3md {
     MaterialParameters {
-        Texture BaseColorMap : ch2_dor_bushyground|Repeat
+        Texture BaseColorMap : box|Repeat
         Texture RoughnessMap : ch2_dor_bushyground_roughness|Repeat
         Texture MetallicMap : ch2_dor_bushyground_metallic|Repeat
         Texture GlossinessMap : ch2_dor_bushyground_ao|Repeat
