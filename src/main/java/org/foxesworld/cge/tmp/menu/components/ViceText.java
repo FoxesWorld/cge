@@ -11,8 +11,13 @@ import org.foxesworld.cge.tmp.menu.components.utils.InteractiveComponent;
 import org.foxesworld.cge.tmp.menu.xml.TextXml;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 
+/**
+ * ViceText — поддерживает перенос строк (word wrap) без вызова несуществующих API TrueTypeContainer.
+ */
 public final class ViceText extends UIComponent implements InteractiveComponent {
 
     public enum Anchor {
@@ -25,7 +30,8 @@ public final class ViceText extends UIComponent implements InteractiveComponent 
     private final TextXml textXml;
     private final String fontSizeRaw;
 
-    private TTFrenderer ttfRenderer;
+    private TTFrenderer ttfRenderer;        // для отображения
+    private TTFrenderer measureRenderer;    // для измерения строк (не трогает отображение)
     private TrueTypeContainer ttc;
 
     private int baseWidth;
@@ -48,6 +54,10 @@ public final class ViceText extends UIComponent implements InteractiveComponent 
 
     private float appliedScale = 1f;
 
+    // wrapping
+    private boolean wrapEnabled = true; // включено по умолчанию
+    // если нужен альтернативный режим — можно добавить enum, но сейчас используем только word wrap
+
     public ViceText(BuildContext context, TextXml textXml) {
         this(context, textXml, Style.fromTextXml(textXml));
     }
@@ -59,6 +69,7 @@ public final class ViceText extends UIComponent implements InteractiveComponent 
         this.fontSizeRaw = textXml.fontSize;
         this.style = style != null ? style : Style.defaultStyle();
         this.ttfRenderer = new TTFrenderer(app.getAssetManager());
+        this.measureRenderer = new TTFrenderer(app.getAssetManager());
 
         this.baseWidth = app.getContext().getSettings().getWidth();
         this.baseHeight = app.getContext().getSettings().getHeight();
@@ -73,7 +84,11 @@ public final class ViceText extends UIComponent implements InteractiveComponent 
 
     private void createFontOnce() {
         int fontSizePx = Math.max(6, Math.round(baseFontSize));
+        // генерируем шрифт в обоих рендерерах (отдельный контейнер для измерений)
         ttfRenderer.generateFont(style.fontPath, style.fontWeight, fontSizePx);
+        measureRenderer.generateFont(style.fontPath, style.fontWeight, fontSizePx);
+
+        // generate initial text into display renderer
         ttfRenderer.generateText(style.color, textXml.text);
         ttc = ttfRenderer.getTextGeometry();
         this.attachChild(ttc);
@@ -114,14 +129,142 @@ public final class ViceText extends UIComponent implements InteractiveComponent 
         }
     }
 
+    /**
+     * Измерить ширину строки в «геометрических» единицах (без учёта appliedScale).
+     * Использует отдельный measureRenderer, чтобы не менять отображаемый ttc до завершения обёртки.
+     */
+    private float measureWidth(String s) {
+        if (s == null || s.isEmpty()) return 0f;
+        measureRenderer.generateText(style.color, s);
+        TrueTypeContainer mt = measureRenderer.getTextGeometry();
+        if (mt == null) return 0f;
+        return mt.getTextWidth();
+    }
+
+    /**
+     * Строит строку с '\n' согласно ограничению maxGeomWidth (в геометрических единицах).
+     * Поддерживает явные \n (абзацы), перенос по словам и разрезание слишком длинных слов.
+     */
+    private String buildWrappedString(String text, float maxGeomWidth) {
+        if (!wrapEnabled || maxGeomWidth <= 0f || Float.isInfinite(maxGeomWidth)) {
+            return text;
+        }
+        String[] paragraphs = text.split("\n", -1);
+        List<String> outParagraphs = new ArrayList<>(paragraphs.length);
+
+        for (String para : paragraphs) {
+            String trimmedPara = para.replaceAll("\\s+", " ").trim();
+            if (trimmedPara.isEmpty()) {
+                // preserve empty line
+                outParagraphs.add("");
+                continue;
+            }
+
+            String[] words = trimmedPara.split(" ");
+            StringBuilder current = new StringBuilder();
+            for (int i = 0; i < words.length; i++) {
+                String w = words[i];
+                if (current.length() == 0) {
+                    // try to fit the word into an empty line
+                    float wWidth = measureWidth(w);
+                    if (wWidth <= maxGeomWidth) {
+                        current.append(w);
+                    } else {
+                        // word itself too long -> split by characters
+                        List<String> parts = breakLongWord(w, maxGeomWidth);
+                        // first part goes to current line (since current empty)
+                        if (!parts.isEmpty()) {
+                            current.append(parts.get(0));
+                            // push current, then push remaining parts each as lines
+                            outParagraphs.add(current.toString());
+                            for (int p = 1; p < parts.size(); p++) outParagraphs.add(parts.get(p));
+                            current = new StringBuilder();
+                        }
+                    }
+                } else {
+                    // candidate = current + " " + w
+                    String cand = current.toString() + " " + w;
+                    float candWidth = measureWidth(cand);
+                    if (candWidth <= maxGeomWidth) {
+                        current.append(" ").append(w);
+                    } else {
+                        // flush current line, start new line with word
+                        outParagraphs.add(current.toString());
+                        current = new StringBuilder();
+                        // try to fit word in empty line (recursion of the same logic)
+                        float wWidth = measureWidth(w);
+                        if (wWidth <= maxGeomWidth) {
+                            current.append(w);
+                        } else {
+                            List<String> parts = breakLongWord(w, maxGeomWidth);
+                            if (!parts.isEmpty()) {
+                                current.append(parts.get(0));
+                                outParagraphs.add(current.toString());
+                                for (int p = 1; p < parts.size(); p++) outParagraphs.add(parts.get(p));
+                                current = new StringBuilder();
+                            }
+                        }
+                    }
+                }
+            } // words loop
+
+            if (current.length() > 0) outParagraphs.add(current.toString());
+        }
+
+        // join paragraphs with newline (preserves explicit blank lines)
+        StringBuilder res = new StringBuilder();
+        for (int i = 0; i < outParagraphs.size(); i++) {
+            if (i > 0) res.append('\n');
+            res.append(outParagraphs.get(i));
+        }
+        return res.toString();
+    }
+
+    /**
+     * Разбивает очень длинное слово на части по символам, чтобы каждая часть помещалась в maxGeomWidth.
+     * Возвращает список частей в порядке.
+     */
+    private List<String> breakLongWord(String word, float maxGeomWidth) {
+        List<String> parts = new ArrayList<>();
+        if (word == null || word.isEmpty()) return parts;
+        int start = 0;
+        int len = word.length();
+        while (start < len) {
+            // binary search longest suffix that fits
+            int lo = start + 1;
+            int hi = len;
+            int best = start;
+            while (lo <= hi) {
+                int mid = (lo + hi) >>> 1;
+                String candidate = word.substring(start, mid);
+                float w = measureWidth(candidate);
+                if (w <= maxGeomWidth) { best = mid; lo = mid + 1; }
+                else hi = mid - 1;
+            }
+            if (best == start) {
+                // single character doesn't fit (extremely narrow max width) -> force one char
+                best = Math.min(start + 1, len);
+            }
+            parts.add(word.substring(start, best));
+            start = best;
+        }
+        return parts;
+    }
+
+    /**
+     * Основной пересчёт масштаба и позиции.
+     * Также выполняет wrapping: формирует итоговый текст с '\n' и генерирует его в ttfRenderer.
+     */
     private void updateScaleAndPosition() {
         if (ttc == null) return;
         int currentWidth = app.getContext().getSettings().getWidth();
         int currentHeight = app.getContext().getSettings().getHeight();
         float currentSize = parseFontSize(fontSizeRaw, currentWidth, currentHeight) * getDPIScale();
         float desiredScale = currentSize / baseFontSize;
+
         float geomW = ttc.getTextWidth();
         float geomH = ttc.getTextHeight();
+
         float finalScale = desiredScale;
         if (scaleToFit && geomW > 0f && geomH > 0f) {
             float maxW = Float.isInfinite(layoutWidth) ? Float.POSITIVE_INFINITY : layoutWidth;
@@ -132,6 +275,29 @@ public final class ViceText extends UIComponent implements InteractiveComponent 
             finalScale = Math.min(desiredScale, fitScale);
         }
         appliedScale = finalScale;
+
+        // wrapping: вычисляем максимальную ширину в геометрических единицах (до масштаба)
+        if (wrapEnabled && !Float.isInfinite(layoutWidth) && layoutWidth > 0f) {
+            float maxGeomWidth = layoutWidth / Math.max(1e-6f, appliedScale);
+            String wrapped = buildWrappedString(textXml.text == null ? "" : textXml.text, maxGeomWidth);
+            // regenerate final text into visible renderer
+            // detach old ttc first
+            try {
+                if (ttc != null && ttc.getParent() != null) this.detachChild(ttc);
+            } catch (Throwable ignored) {}
+            ttfRenderer.generateText(style.color, wrapped);
+            ttc = ttfRenderer.getTextGeometry();
+            if (ttc.getParent() == null) this.attachChild(ttc);
+        } else {
+            // no wrap: render raw text
+            try {
+                if (ttc != null && ttc.getParent() != null) this.detachChild(ttc);
+            } catch (Throwable ignored) {}
+            ttfRenderer.generateText(style.color, textXml.text == null ? "" : textXml.text);
+            ttc = ttfRenderer.getTextGeometry();
+            if (ttc.getParent() == null) this.attachChild(ttc);
+        }
+
         ttc.setLocalScale(appliedScale);
         updatePosition();
     }
@@ -255,17 +421,29 @@ public final class ViceText extends UIComponent implements InteractiveComponent 
         updateScaleAndPosition();
     }
 
+    /**
+     * Устанавливает текст. Если wrapEnabled=true и задан layoutWidth — будет применён перенос.
+     */
     public void setText(String newText) {
         if (newText == null) newText = "";
         textXml.text = newText;
-        if (ttc != null) {
-            this.detachChild(ttc);
-            ttc = null;
-        }
-        ttfRenderer.generateText(style.color, newText);
-        ttc = ttfRenderer.getTextGeometry();
-        this.attachChild(ttc);
         updateScaleAndPosition();
+    }
+
+    /**
+     * Явно установить текст и применить перенос (использует текущий layoutWidth).
+     */
+    public void setWrappedText(String newText) {
+        setText(newText);
+    }
+
+    public void setWrapEnabled(boolean enabled) {
+        this.wrapEnabled = enabled;
+        updateScaleAndPosition();
+    }
+
+    public boolean isWrapEnabled() {
+        return wrapEnabled;
     }
 
     public Style getStyle() {

@@ -202,6 +202,7 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
         if (!isActive) return;
         pressed = true;
         pressedInside = intersects(c);
+        ttfRenderer.setMasterSize(14);
     }
 
     @Override

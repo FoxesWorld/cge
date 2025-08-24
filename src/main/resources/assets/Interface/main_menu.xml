@@ -11,7 +11,7 @@
             lookAtY="2.0" />
 
     <screen>
-        <panel id="logoPanel" anchor="TOP_LEFT" y="-25%" x="4%" width="250"  dpiScale="1.0" spacing="5" bgColor="#000000" bgAlpha="0.95">
+        <panel id="logoPanel" anchor="TOP_LEFT" x="5%" y="-10%" dpiScale="1.2" bgColor="#000000" bgAlpha="0.95">
             <components>
                 <image scaleMode="cover" path="assets/Interface/ui/engine.png" />
             </components>
@@ -21,7 +21,7 @@
             <components>
                 <button id="play" action="org.foxesworld.cge.tmp.menu.actions.StartGameAction" iconPath="assets/Interface/ui/icons/play.png"  iconSize="40" height="95" text="Играть" />
                 <button id="settings" action="org.foxesworld.cge.tmp.menu.actions.OpenSettingsAction" iconPath="assets/Interface/ui/icons/settings.png" iconSize="40" height="95" text="Настройки" />
-                <button id="settings"  textAlign="center" action="org.foxesworld.cge.tmp.menu.actions.OpenAboutAction" iconPath="assets/Interface/ui/icons/info.png" iconSize="40" height="95" text="Что это" />
+                <button id="about"   action="org.foxesworld.cge.tmp.menu.actions.OpenAboutAction" iconPath="assets/Interface/ui/icons/info.png" iconSize="40" height="95" text="Что это" /> <!-- textAlign="center" -->
                 <button id="quit" action="org.foxesworld.cge.tmp.menu.actions.QuitGameAction" iconPath="assets/Interface/ui/icons/quit.png" iconSize="40" height="95" text="Выход" />
             </components>
         </panel>
