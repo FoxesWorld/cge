@@ -218,7 +218,6 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
         boolean doTrigger = pressedInside && wasPressed;
         pressed = false;
         pressedInside = false;
-        if (doTrigger) executeAction();
     }
 
     @Override
