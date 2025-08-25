@@ -30,7 +30,7 @@
         <panel id="infoPanel" anchor="BOTTOM_CENTER" dpiScale="1.0" height="12%" width="100%" bgColor="#1d84de" cornerRadius="0" bgAlpha="0.5">
             <components>
                 <text anchor="TOP_LEFT" id="title" text="Calista Game Engine" color="#1baade" fontSize="20vh" />
-                <text id="version" fontPath="assets/Interface/fonts/Intro-Black.ttf" text="ALPHA PreBuild 0.0.6.4-r" color="#00bbff" fontSize="15vw" />
+                <text id="version" fontPath="assets/Interface/fonts/Intro-Black.ttf" text="ALPHA PreBuild 0.0.6.5-r" color="#00bbff" fontSize="15vw" />
                 <text id="type" fontPath="assets/Interface/fonts/FSElliotPro.ttf" text="EXPERIMENTAL" color="#ff00a9" fontSize="14vw" />
             </components>
         </panel>

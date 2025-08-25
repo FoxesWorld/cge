@@ -284,6 +284,26 @@ public final class ViceCheckbox extends UIComponent implements InteractiveCompon
     @Override public void setHovered(boolean hovered) { if (isActive) this.isHovered = hovered; }
 
     @Override
+    public void handleMouseEnter(Vector2f cursor) {
+
+    }
+
+    @Override
+    public void handleMouseExit(Vector2f cursor) {
+
+    }
+
+    @Override
+    public void handleMouseMove(Vector2f cursor) {
+
+    }
+
+    @Override
+    public void handleMouseClick(Vector2f cursor) {
+
+    }
+
+    @Override
     public boolean intersects(Vector2f cursor) {
         Vector3f world = getWorldTranslation();
         float left = world.x;
@@ -292,8 +312,28 @@ public final class ViceCheckbox extends UIComponent implements InteractiveCompon
     }
 
     @Override public void handleMousePress(Vector2f cursor) {}
+
+    @Override
+    public void handleMouseDoubleClick(Vector2f cursor) {
+
+    }
+
+    @Override
+    public void handleMouseRelease(Vector2f cursor) {
+
+    }
+
     @Override public void handleMouseDrag(Vector2f cursor) {}
-    @Override public void handleMouseRelease() {}
+
+    @Override
+    public void handleMouseScroll(Vector2f cursor, float delta) {
+
+    }
+
+    @Override
+    public void handleDoubleClick(Vector2f cursor) {
+
+    }
 
     public void setPosition(float x, float y) { setLocalTranslation(x, y, 0f); }
     public boolean isChecked() { return isChecked; }

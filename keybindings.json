@@ -4,5 +4,5 @@
   "strafe_left": "KEY_A",
   "strafe_right": "KEY_D",
   "jump": "KEY_SPACE",
-  "sprint": "KEY_LCONTROL"
+  "sprint": "KEY_LSHIFT"
 }

@@ -1,0 +1,11 @@
+{
+  "theme": [
+    {
+      "path": "assets/Sounds/music/theme.ogg",
+      "volume": 0.75,
+      "pitch": 1.00,
+      "pitchVariance": 0.1,
+      "cooldownMs": 80
+    }
+  ]
+}

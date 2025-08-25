@@ -206,13 +206,50 @@ public final class ViceImage extends UIComponent implements InteractiveComponent
     public void setHovered(boolean hovered) { this.isHovered = hovered; }
 
     @Override
+    public void handleMouseEnter(Vector2f cursor) {
+
+    }
+
+    @Override
+    public void handleMouseExit(Vector2f cursor) {
+
+    }
+
+    @Override
+    public void handleMouseMove(Vector2f cursor) {
+
+    }
+
+    @Override
+    public void handleMouseClick(Vector2f cursor) {
+
+    }
+
+    @Override
     public void handleMousePress(Vector2f c) { }
+
+    @Override
+    public void handleMouseDoubleClick(Vector2f cursor) {
+
+    }
+
+    @Override
+    public void handleMouseRelease(Vector2f cursor) {
+
+    }
 
     @Override
     public void handleMouseDrag(Vector2f c) { }
 
     @Override
-    public void handleMouseRelease() { }
+    public void handleMouseScroll(Vector2f cursor, float delta) {
+
+    }
+
+    @Override
+    public void handleDoubleClick(Vector2f cursor) {
+
+    }
 
     @Override
     public void setActive(boolean active) {

@@ -257,6 +257,16 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
     }
 
     @Override
+    public void handleMouseDoubleClick(Vector2f cursor) {
+
+    }
+
+    @Override
+    public void handleMouseRelease(Vector2f cursor) {
+        dragging = false;
+    }
+
+    @Override
     public void handleMouseDrag(Vector2f cursor) {
         if (!dragging) {
             // be robust: if drag started outside press, start dragging when moving inside
@@ -266,10 +276,15 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
     }
 
     @Override
-    public void handleMouseRelease() {
-        // stop dragging
-        dragging = false;
+    public void handleMouseScroll(Vector2f cursor, float delta) {
+
     }
+
+    @Override
+    public void handleDoubleClick(Vector2f cursor) {
+
+    }
+
 
     @Override
     public void setSize(float width, float height) {
@@ -347,6 +362,26 @@ public final class ViceSlider extends UIComponent implements InteractiveComponen
     @Override
     public void setHovered(boolean hovered) {
         this.hovered = hovered;
+    }
+
+    @Override
+    public void handleMouseEnter(Vector2f cursor) {
+
+    }
+
+    @Override
+    public void handleMouseExit(Vector2f cursor) {
+
+    }
+
+    @Override
+    public void handleMouseMove(Vector2f cursor) {
+
+    }
+
+    @Override
+    public void handleMouseClick(Vector2f cursor) {
+
     }
 
     /**

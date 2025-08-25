@@ -303,8 +303,12 @@ public final class KeyBindingsComponent extends UIComponent implements Interacti
             LOG.warn("Rebind failed (swap) for {} -> {}; trying non-swap", listeningBindId, keyCode);
             manager.rebind(listeningBindId, keyCode, false);
         }
-        manager.saveToFile();
-        manager.applyAllToInputManager();
+        try {
+            manager.saveToFile();
+            manager.applyAllToInputManager();
+        } catch (Exception ex) {
+            LOG.warn("Failed to persist/apply keybindings after rebind: {}", ex.toString());
+        }
 
         stopRemapListening();
         updateAllBindingsVisuals();
@@ -385,15 +389,42 @@ public final class KeyBindingsComponent extends UIComponent implements Interacti
     }
 
     public void handleMouseMove(Vector2f cursor) {
-        int hoverIndex = -1;
-        int idx = 0;
-        for (Row r : rows.values()) {
-            if (r.remapButton.intersects(cursor)) { hoverIndex = idx; break; }
-            idx++;
-        }
+        int hoverIndex = findRowIndexAt(cursor);
         if (hoverIndex != selectedRowIndex) {
             selectedRowIndex = hoverIndex;
             highlightSelection();
+        }
+    }
+
+    private int findRowIndexAt(Vector2f cursor) {
+        int idx = 0;
+        for (Row r : rows.values()) {
+            try {
+                if (r.remapButton.intersects(cursor)) return idx;
+            } catch (Throwable ignored) {}
+            idx++;
+        }
+        return -1;
+    }
+
+    @Override
+    public void handleMouseClick(Vector2f cursor) {
+        int idx = findRowIndexAt(cursor);
+        if (idx >= 0) {
+            selectedRowIndex = idx;
+            highlightSelection();
+            // execute the remap action (same as pressing the remap button)
+            int i = 0;
+            for (Row r : rows.values()) {
+                if (i == idx) {
+                    try { r.remapButton.executeAction(); } catch (Throwable t) { LOG.warn("Remap execute failed on click for {}", r.bind.id, t); }
+                    break;
+                }
+                i++;
+            }
+        } else {
+            // click outside rows stops remap listening
+            stopRemapListening();
         }
     }
 
@@ -412,10 +443,69 @@ public final class KeyBindingsComponent extends UIComponent implements Interacti
     }
 
     @Override
-    public void handleMouseDrag(Vector2f cursor) { /* nop */ }
+    public void handleMouseDoubleClick(Vector2f cursor) {
+        // alias to handleDoubleClick for compatibility
+        handleDoubleClick(cursor);
+    }
 
     @Override
-    public void handleMouseRelease() { /* nop */ }
+    public void handleMouseRelease(Vector2f cursor) {
+        // basic behavior: if releasing outside while listening -> cancel
+        if (listeningBindId != null) {
+            // if release outside listening button, cancel listening
+            Row listeningRow = rows.get(listeningBindId);
+            if (listeningRow != null && !listeningRow.remapButton.intersects(cursor)) {
+                stopRemapListening();
+            }
+        }
+    }
+
+    @Override
+    public void handleMouseDrag(Vector2f cursor) { /* nop (rows aren't draggable) */ }
+
+    @Override
+    public void handleMouseScroll(Vector2f cursor, float delta) {
+        // delta > 0 = scroll up, delta < 0 = scroll down
+        if (rows.isEmpty()) return;
+        if (cursor == null) return;
+        // only react if cursor is inside this component
+        if (!intersects(cursor)) return;
+        if (delta > 0f) moveSelection(-1);
+        else if (delta < 0f) moveSelection(1);
+    }
+
+    @Override
+    public void handleDoubleClick(Vector2f cursor) {
+        int idx = findRowIndexAt(cursor);
+        if (idx < 0) return;
+        int i = 0;
+        for (Row r : rows.values()) {
+            if (i == idx) {
+                // double-click: reset to default if possible
+                try {
+                    String defName = r.bind.defaultKey;
+                    int defCode = KeyBindingsManager.parseKeyNameToCode(defName);
+                    if (defCode >= 0) {
+                        boolean ok = manager.rebind(r.bind.id, defCode, false);
+                        if (!ok) {
+                            LOG.warn("Double-click reset failed for {} -> {}; trying non-swap", r.bind.id, defCode);
+                            manager.rebind(r.bind.id, defCode, false);
+                        }
+                        try { manager.saveToFile(); } catch (Throwable ignored) {}
+                        try { manager.applyAllToInputManager(); } catch (Throwable ignored) {}
+                        updateAllBindingsVisuals();
+                    } else {
+                        // if default unknown, do nothing but log
+                        LOG.debug("Double-click: default key unknown for bind {}", r.bind.id);
+                    }
+                } catch (Exception ex) {
+                    LOG.warn("Failed to reset binding on double-click for {}: {}", r.bind.id, ex.toString());
+                }
+                return;
+            }
+            i++;
+        }
+    }
 
     /**
      * intersects adjusted for center-origin component.
@@ -439,6 +529,23 @@ public final class KeyBindingsComponent extends UIComponent implements Interacti
 
     @Override
     public void setHovered(boolean hovered) { /* n/a */ }
+
+    @Override
+    public void handleMouseEnter(Vector2f cursor) {
+        // Highlight row under cursor on enter
+        int idx = findRowIndexAt(cursor);
+        if (idx >= 0) {
+            selectedRowIndex = idx;
+            highlightSelection();
+        }
+    }
+
+    @Override
+    public void handleMouseExit(Vector2f cursor) {
+        // Remove hover highlight when leaving component
+        selectedRowIndex = -1;
+        highlightSelection();
+    }
 
     // ---------- Cleanup ----------
 

@@ -229,9 +229,47 @@ public class Panel extends UIComponent implements InteractiveComponent {
                 pos.y >= wp.y && pos.y <= wp.y + getHeight();
     }
     @Override public void setHovered(boolean hovered) {}
+
+    @Override
+    public void handleMouseEnter(Vector2f cursor) {
+
+    }
+
+    @Override
+    public void handleMouseExit(Vector2f cursor) {
+
+    }
+
+    @Override
+    public void handleMouseMove(Vector2f cursor) {
+
+    }
+
+    @Override
+    public void handleMouseClick(Vector2f cursor) {
+
+    }
+
     @Override public void handleMousePress(Vector2f cursor) {}
+
+    @Override
+    public void handleMouseDoubleClick(Vector2f cursor) {
+
+    }
+
     @Override public void handleMouseDrag(Vector2f cursor) {}
-    @Override public void handleMouseRelease() {}
+
+    @Override
+    public void handleMouseScroll(Vector2f cursor, float delta) {
+
+    }
+
+    @Override
+    public void handleDoubleClick(Vector2f cursor) {
+
+    }
+
+    @Override public void handleMouseRelease(Vector2f cursor) {}
     @Override public void setActive(boolean active) {}
 
     public record Style(ColorRGBA backgroundColor, float cornerRadius) {

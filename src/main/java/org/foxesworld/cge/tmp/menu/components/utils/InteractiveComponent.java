@@ -4,10 +4,9 @@ import com.jme3.math.Vector2f;
 
 /**
  * An extension of MenuComponent for elements that can directly handle user input events like
- * hover states and mouse clicks.
+ * hover states, mouse clicks, and advanced mouse interactions.
  */
 public interface InteractiveComponent {
-
 
     /**
      * Sets the active state of the component. An inactive component should not
@@ -26,11 +25,47 @@ public interface InteractiveComponent {
     void setHovered(boolean hovered);
 
     /**
-     * Handles a mouse press event over this component.
+     * Handles a mouse enter event (cursor entered component bounds).
      *
      * @param cursor The cursor position in the component's parent coordinate space.
      */
+    void handleMouseEnter(Vector2f cursor);
+
+    /**
+     * Handles a mouse exit event (cursor left component bounds).
+     *
+     * @param cursor The cursor position in the component's parent coordinate space.
+     */
+    void handleMouseExit(Vector2f cursor);
+
+    /**
+     * Handles a mouse move event inside this component.
+     *
+     * @param cursor The cursor position in the component's parent coordinate space.
+     */
+    void handleMouseMove(Vector2f cursor);
+
+    /**
+     * Handles a full click (press + release inside).
+     */
+    void handleMouseClick(Vector2f cursor);
+
+    /**
+     * Handles a mouse press event over this component.
+     */
     void handleMousePress(Vector2f cursor);
+
+    /**
+     * Handles a double click.
+     */
+    void handleMouseDoubleClick(Vector2f cursor);
+
+    /**
+     * Handles a mouse release event that originated on this component.
+     *
+     * @param cursor The cursor position in the component's parent coordinate space.
+     */
+    void handleMouseRelease(Vector2f cursor);
 
     /**
      * Handles a mouse drag event that originated on this component.
@@ -40,9 +75,25 @@ public interface InteractiveComponent {
     void handleMouseDrag(Vector2f cursor);
 
     /**
-     * Handles a mouse release event that originated on this component.
+     * Handles a mouse wheel scroll event.
+     *
+     * @param cursor The cursor position in the component's parent coordinate space.
+     * @param delta  The scroll amount (positive = up, negative = down).
      */
-    void handleMouseRelease();
+    void handleMouseScroll(Vector2f cursor, float delta);
 
-    boolean intersects(Vector2f tmp2);
+    /**
+     * Handles a double click event on this component.
+     *
+     * @param cursor The cursor position in the component's parent coordinate space.
+     */
+    void handleDoubleClick(Vector2f cursor);
+
+    /**
+     * Checks if the given cursor position intersects this component.
+     *
+     * @param cursor The cursor position in the component's parent coordinate space.
+     * @return true if the cursor is inside this component, false otherwise.
+     */
+    boolean intersects(Vector2f cursor);
 }

@@ -364,13 +364,50 @@ public final class ViceText extends UIComponent implements InteractiveComponent 
     public void setHovered(boolean hovered) {}
 
     @Override
+    public void handleMouseEnter(Vector2f cursor) {
+
+    }
+
+    @Override
+    public void handleMouseExit(Vector2f cursor) {
+
+    }
+
+    @Override
+    public void handleMouseMove(Vector2f cursor) {
+
+    }
+
+    @Override
+    public void handleMouseClick(Vector2f cursor) {
+
+    }
+
+    @Override
     public void handleMousePress(Vector2f cursor) {}
+
+    @Override
+    public void handleMouseDoubleClick(Vector2f cursor) {
+
+    }
+
+    @Override
+    public void handleMouseRelease(Vector2f cursor) {
+
+    }
 
     @Override
     public void handleMouseDrag(Vector2f cursor) {}
 
     @Override
-    public void handleMouseRelease() {}
+    public void handleMouseScroll(Vector2f cursor, float delta) {
+
+    }
+
+    @Override
+    public void handleDoubleClick(Vector2f cursor) {
+
+    }
 
     public void setStyle(Style newStyle) {
         if (newStyle == null) return;

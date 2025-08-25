@@ -2,6 +2,9 @@
   "ui": {
     "readFrom": "assets/Sounds/ui/ui.json"
   },
+  "music": {
+    "readFrom": "assets/Sounds/music/music.json"
+  },
   "player": {
     "readFrom": "assets/Sounds/player/player.json"
   }

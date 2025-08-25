@@ -17,11 +17,6 @@ import org.foxesworld.cge.tmp.menu.components.utils.SoundComponent;
 
 import java.util.Objects;
 
-/**
- * ViceButton — стильная "эпичная" кнопка с подсветкой, тенью и эффектами при ховере/нажатии.
- * Добавлена опция textAlign (LEFT/CENTER/RIGHT) и padding в Style.
- * Исправлен nudge: теперь плавно смещает содержимое при наведении и при нажатии.
- */
 public final class ViceButton extends UIComponent implements InteractiveComponent, SoundComponent {
 
     public enum TextAlign { LEFT, CENTER, RIGHT }
@@ -103,7 +98,13 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
         float targetGlowScale = (isHovered && isActive) ? style.hoverGlowScale() : 1f;
         glowScale = FastMath.interpolateLinear(smooth, glowScale, targetGlowScale);
         float targetGlowAlpha = (isHovered && isActive) ? style.maxGlowAlpha() : 0f;
-        glowAlpha = FastMath.interpolateLinear(smooth, glowAlpha, targetGlowAlpha);
+        // if flashing, allow glowAlpha to be driven by flash initially
+        if (flashTimer > 0f) {
+            // flash just sets glowAlpha to peak; we'll decay it in the timer logic below
+            glowAlpha = Math.max(glowAlpha, style.maxGlowAlpha());
+        } else {
+            glowAlpha = FastMath.interpolateLinear(smooth, glowAlpha, targetGlowAlpha);
+        }
 
         ColorRGBA targetBg = (isHovered || pressed) ? ColorUtils.fromHexString(style.hoverBackgroundColor()) : ColorUtils.fromHexString(style.backgroundColor());
         currentBackgroundColor.interpolateLocal(targetBg, smooth);
@@ -113,12 +114,25 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
         currentLabelColor.interpolateLocal(targetLabel, smooth);
         ttfRenderer.setColor(currentLabelColor);
 
+        // flash handling: apply temporary scale bump & glow
+        float flashScaleMul = 1f;
+        if (flashTimer > 0f) {
+            flashTimer = Math.max(0f, flashTimer - tpf);
+            float frac = flashTimer / Math.max(1e-6f, style.flashDuration());
+            // ease-out effect (increase near start, fall to 0)
+            float ease = (float)Math.pow(frac, 0.5);
+            flashScaleMul = 1f + (style.flashScale() - 1f) * ease;
+            glowAlpha = Math.max(glowAlpha, style.flashPeakAlpha() * ease);
+            // also nudge label color slightly towards selected color during flash
+            ttfRenderer.setColor(currentLabelColor);
+        }
+
         float targetScale = pressed ? style.pressedScale() : 1f;
-        float curScale = FastMath.interpolateLinear(smooth, getLocalScale().x, targetScale);
+        float curScale = FastMath.interpolateLinear(smooth, getLocalScale().x, targetScale * flashScaleMul);
         setLocalScale(curScale, curScale, 1f);
 
-        // --- FIXED: nudge handling (smooth interpolation) ---
-        Vector2f targetNudge = pressed ? style.hoverNudge : (isHovered ? style.hoverNudge() : Vector2f.ZERO);
+        // nudge handling (smooth interpolation)
+        Vector2f targetNudge = pressed ? style.hoverNudge() : (isHovered ? style.hoverNudge() : Vector2f.ZERO);
         currentNudge.x = FastMath.interpolateLinear(smooth, currentNudge.x, targetNudge.x);
         currentNudge.y = FastMath.interpolateLinear(smooth, currentNudge.y, targetNudge.y);
         contentNode.setLocalTranslation(currentNudge.x, currentNudge.y, 0f);
@@ -149,7 +163,6 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
         float textW = ttfRenderer.getTextGeometry().getWidth();
         float totalW = iconW + gap + textW;
 
-        // ensure totalW doesn't exceed available width
         float availableW = Math.max(0f, getWidth() - 2f * padding);
         float clampedTotalW = Math.min(totalW, availableW);
         float startX;
@@ -161,7 +174,6 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
             default -> (getWidth() - clampedTotalW) / 2f;
         };
 
-        // if totalW was clamped, shrink text width allocation (we don't change mesh, but shift to avoid overflow)
         float iconOffset = Math.min(iconW, clampedTotalW);
         float textOffset = clampedTotalW - iconOffset - gap;
         if (textOffset < 0f) textOffset = 0f;
@@ -171,7 +183,6 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
         }
 
         float textX = startX + iconOffset + (iconW > 0 ? gap : 0f);
-        // apply currentNudge when positioning text so layout and nudge align visually
         ttfRenderer.getTextGeometry().setLocalTranslation(textX + currentNudge.x, (getHeight() - ttfRenderer.getTextGeometry().getHeight()) / 2f + currentNudge.y, 1f);
     }
 
@@ -191,6 +202,25 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
         this.isHovered = hovered;
     }
 
+    @Override
+    public void handleMouseEnter(Vector2f cursor) {
+        if (!isActive) return;
+        setHovered(true);
+        // small immediate emphasis
+        glowAlpha = Math.max(glowAlpha, 0.6f);
+        // slightly increase text size for feel (master size tweak)
+        try { ttfRenderer.setMasterSize((int)(style.baseFontSize() * 1.05f)); } catch (Throwable ignored) {}
+    }
+
+    @Override
+    public void handleMouseExit(Vector2f cursor) {
+        if (!isActive) return;
+        setHovered(false);
+        pressedInside = false;
+        // restore master size
+        try { ttfRenderer.setMasterSize((int)style.baseFontSize()); } catch (Throwable ignored) {}
+    }
+
     public void handleMouseMove(Vector2f c) {
         boolean contains = intersects(c);
         if (!isActive) contains = false;
@@ -198,11 +228,46 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
     }
 
     @Override
+    public void handleMouseClick(Vector2f cursor) {
+        if (!isActive) return;
+        // Immediate click action (defensive)
+        if (intersects(cursor)) {
+            // small flash + execute
+            triggerFlash(style.flashDuration() * 0.6f);
+            executeAction();
+        }
+    }
+
+    @Override
     public void handleMousePress(Vector2f c) {
         if (!isActive) return;
         pressed = true;
         pressedInside = intersects(c);
-        ttfRenderer.setMasterSize(14);
+        ttfRenderer.setMasterSize((int)(style.baseFontSize() * style.hoverFontScale()));
+    }
+
+    @Override
+    public void handleMouseDoubleClick(Vector2f cursor) {
+        // default: treat as a stronger click + flash
+        if (!isActive) return;
+        if (intersects(cursor)) {
+            triggerFlash(style.flashDuration());
+            executeAction();
+        }
+    }
+
+    @Override
+    public void handleMouseRelease(Vector2f cursor) {
+        if (!isActive) return;
+        boolean wasPressed = pressed;
+        boolean doTrigger = pressedInside && wasPressed && intersects(cursor);
+        pressed = false;
+        pressedInside = false;
+        try { ttfRenderer.setMasterSize((int)style.baseFontSize()); } catch (Throwable ignored) {}
+        if (doTrigger) {
+            // slight flash and execute
+            triggerFlash(style.flashDuration() * 0.7f);
+        }
     }
 
     @Override
@@ -212,13 +277,16 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
     }
 
     @Override
-    public void handleMouseRelease() {
-        if (!isActive) return;
-        boolean wasPressed = pressed;
-        boolean doTrigger = pressedInside && wasPressed;
-        pressed = false;
-        pressedInside = false;
+    public void handleMouseScroll(Vector2f cursor, float delta) {
+        // no-op by default; could be used for stepper buttons
     }
+
+    @Override
+    public void handleDoubleClick(Vector2f cursor) {
+        handleMouseDoubleClick(cursor);
+    }
+
+
 
     @Override
     public void setActive(boolean active) {
@@ -230,14 +298,23 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
             pressedInside = false;
             currentNudge.set(0f, 0f);
             contentNode.setLocalTranslation(0f, 0f, 0f);
+            try { ttfRenderer.setMasterSize((int)style.baseFontSize()); } catch (Throwable ignored) {}
         }
+    }
+
+    private void triggerFlash(float dur) {
+        this.flashTimer = Math.max(this.flashTimer, Math.max(0.01f, dur));
+        // set immediate visual peak
+        glowAlpha = Math.max(glowAlpha, style.flashPeakAlpha());
+        // push background towards hover immediately
+        try { currentBackgroundColor.set(ColorUtils.fromHexString(style.hoverBackgroundColor())); } catch (Throwable ignored) {}
     }
 
     public static final class Style {
         public final ColorRGBA defaultColor;
         public final ColorRGBA selectedColor;
-        private final String backgroundColor;
-        private final String hoverBackgroundColor;
+        private String backgroundColor;
+        private String hoverBackgroundColor;
         public final String fontPath;
         private float cornerRadius;
         public final Vector2f hoverNudge;
@@ -246,11 +323,9 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
         public final float hoverFontScale;
         public final float fontAnimationSpeed;
 
-        // alignment & padding
         private TextAlign textAlign = TextAlign.CENTER;
         private float padding = 12f;
 
-        // epic parameters
         private float hoverGlowScale = 1.08f;
         private float maxGlowAlpha = 0.8f;
         private float flashDuration = 0.12f;
@@ -296,14 +371,12 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
         public float hoverFontScale() { return hoverFontScale; }
         public float fontAnimationSpeed() { return fontAnimationSpeed; }
 
-        // alignment getters/setters
         public TextAlign textAlign() { return textAlign; }
         public void setTextAlign(TextAlign a) { this.textAlign = a == null ? TextAlign.CENTER : a; }
 
         public float padding() { return padding; }
         public void setPadding(float p) { this.padding = Math.max(0f, p); }
 
-        // epic getters
         public float hoverGlowScale() { return hoverGlowScale; }
         public float maxGlowAlpha() { return maxGlowAlpha; }
         public float flashDuration() { return flashDuration; }
@@ -338,9 +411,14 @@ public final class ViceButton extends UIComponent implements InteractiveComponen
             return s;
         }
 
-        // tuning setters
-        public void setHoverGlowScale(float s) { this.hoverGlowScale = s; }
-        public void setFlashParams(float duration, float peakAlpha, float scale) { this.flashDuration = duration; this.flashPeakAlpha = peakAlpha; this.flashScale = scale; }
+        public void setBackgroundColor(String backgroundColor) {
+            this.backgroundColor = backgroundColor;
+        }
+
+        public void setHoverBackgroundColor(String hoverBackgroundColor) {
+            this.hoverBackgroundColor = hoverBackgroundColor;
+        }
+
         public void setPressedScale(float s) { this.pressedScale = s; }
         public void setShadowOffset(float o) { this.shadowOffset = o; }
         public void setBaseFontSize(float s) { this.baseFontSize = s; }
